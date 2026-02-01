@@ -66,7 +66,9 @@ def _sidebar():
         st.session_state._prev_provider = provider
         st.session_state["_model_input"] = PROVIDERS[provider]["default_model"]
     elif "_model_input" not in st.session_state:
-        st.session_state["_model_input"] = PROVIDERS.get(provider, {}).get("default_model", "")
+        st.session_state["_model_input"] = PROVIDERS.get(provider, {}).get(
+            "default_model", ""
+        )
 
     model = st.sidebar.text_input("Model", key="_model_input")
 
