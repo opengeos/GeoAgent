@@ -1,0 +1,31 @@
+on:
+    push:
+        branches:
+            - main
+            - master
+    pull_request:
+        branches:
+            - main
+            - master
+
+
+name: Linux installation
+jobs:
+    test-ubuntu:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version: ["3.12"]
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Install package
+              run: pip install .
+            - name: Test import
+              run: python -c "import geoagent; print('geoagent import successful')"
