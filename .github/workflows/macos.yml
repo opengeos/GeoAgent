@@ -1,0 +1,42 @@
+on:
+    push:
+        branches:
+            - main
+            - master
+    pull_request:
+        branches:
+            - main
+            - master
+
+name: macOS build
+jobs:
+    test-macOS:
+        runs-on: ${{ matrix.os }}
+        name: ${{ matrix.os }} (${{ matrix.python-version}})
+
+        strategy:
+            fail-fast: false
+            matrix:
+              os: ["macOS-latest"]
+              python-version: ["3.12"]
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+
+          - name: Set up Python
+            uses: actions/setup-python@v5
+            with:
+              python-version: ${{ matrix.python-version}}
+          - name: Install GDAL
+            run: |
+              brew install gdal
+          - name: Test GDAL installation
+            run: |
+              gdalinfo --version
+          - name: Install dependencies
+            run: |
+                python -m pip install --upgrade pip
+                pip install --no-cache-dir Cython
+                pip install -r requirements.txt
+                pip install .
