@@ -58,6 +58,8 @@ class STACSearchWrapper:
             search_params["datetime"] = datetime
         if collections:
             search_params["collections"] = collections
+        if "query" in kwargs:
+            search_params["query"] = kwargs.pop("query")
         search_params["limit"] = max_items
 
         search = self.client.search(**search_params)
@@ -374,6 +376,13 @@ class DataAgent:
                 for kw in ["ndvi", "evi", "vegetation", "spectral", "band", "imagery"]
             ):
                 params["collections"] = ["sentinel-2-l2a"]
+
+        # Add cloud cover filter if specified
+        max_cloud = plan.parameters.get("max_cloud_cover") or plan.parameters.get(
+            "cloud_cover"
+        )
+        if max_cloud is not None:
+            params["query"] = {"eo:cloud_cover": {"lt": max_cloud}}
 
         # Add limit to prevent too many results
         params["max_items"] = plan.parameters.get("max_items", 10)

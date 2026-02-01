@@ -29,6 +29,7 @@ from .models import (  # noqa: E402
 from .data_agent import DataAgent  # noqa: E402
 from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402
+from .planner import Planner  # noqa: E402
 from .llm import get_default_llm  # noqa: E402
 
 
@@ -74,6 +75,7 @@ class GeoAgent:
         self.catalogs = catalogs or []
 
         # Initialize specialized agents
+        self.planner = Planner(self.llm)
         self.data_agent = DataAgent(self.llm)
         self.analysis_agent = AnalysisAgent(self.llm)
         self.viz_agent = VizAgent(self.llm)
@@ -467,8 +469,8 @@ class GeoAgent:
     def _parse_query(self, query: str) -> PlannerOutput:
         """Parse natural language query into structured plan.
 
-        Uses geocoding for location resolution and regex for date parsing
-        to handle arbitrary locations and time ranges.
+        Uses LLM for intent/parameter extraction, then geocodes the location.
+        Falls back to regex-based parsing if LLM fails.
 
         Args:
             query: Natural language query
@@ -478,16 +480,60 @@ class GeoAgent:
         """
         logger.debug(f"Parsing query: {query}")
 
+        try:
+            # Use LLM-based planner for robust parsing
+            plan = self.planner.parse_query(query)
+            logger.info(
+                f"LLM parsed: location={plan.location}, time={plan.time_range}, "
+                f"dataset={plan.dataset}, params={plan.parameters}"
+            )
+
+            # Geocode location name to bbox if needed
+            if plan.location and "name" in plan.location and "bbox" not in plan.location:
+                geocoded = self._geocode_location(plan.location["name"])
+                if geocoded:
+                    plan.location = geocoded
+                else:
+                    logger.warning(f"Could not geocode: {plan.location['name']}")
+
+            # Post-process: LLM sometimes puts time_range in parameters
+            if plan.time_range is None and "time_range" in plan.parameters:
+                tr = plan.parameters.pop("time_range")
+                if isinstance(tr, (list, tuple)) and len(tr) == 2:
+                    plan.time_range = {
+                        "start_date": tr[0],
+                        "end_date": tr[1],
+                    }
+
+            # Post-process: normalize cloud cover thresholds
+            cc = plan.parameters.get("cloud_cover")
+            if cc is not None:
+                # "cloud-free" (0) is unrealistic; use 10% threshold
+                if cc <= 0:
+                    plan.parameters["cloud_cover"] = 10
+                plan.parameters["max_cloud_cover"] = plan.parameters.pop("cloud_cover")
+
+            return plan
+
+        except Exception as e:
+            logger.warning(f"LLM planner failed ({e}), falling back to regex parser")
+            return self._parse_query_fallback(query)
+
+    def _parse_query_fallback(self, query: str) -> PlannerOutput:
+        """Fallback regex-based query parser when LLM is unavailable.
+
+        Args:
+            query: Natural language query
+
+        Returns:
+            PlannerOutput with parsed parameters
+        """
         query_lower = query.lower()
         intent = query.strip()
 
-        # --- Extract location via geocoding ---
         location = self._extract_location(query)
-
-        # --- Extract time range ---
         time_range = self._extract_time_range(query_lower)
 
-        # --- Extract dataset preference ---
         dataset = None
         if "sentinel" in query_lower or "sentinel-2" in query_lower:
             dataset = "sentinel-2"
@@ -496,7 +542,6 @@ class GeoAgent:
         elif "modis" in query_lower:
             dataset = "modis"
 
-        # --- Extract additional parameters ---
         parameters = {}
         if "cloud-free" in query_lower or "cloud free" in query_lower:
             parameters["max_cloud_cover"] = 10
@@ -505,22 +550,46 @@ class GeoAgent:
         elif "cloud cover" in query_lower or "cloudy" in query_lower:
             parameters["max_cloud_cover"] = 20
 
-        plan = PlannerOutput(
+        return PlannerOutput(
             intent=intent,
             location=location,
             time_range=time_range,
             dataset=dataset,
             parameters=parameters,
-            confidence=0.8 if location else 0.5,
+            confidence=0.5,
         )
 
-        logger.debug(
-            f"Plan: location={location}, time_range={time_range}, dataset={dataset}"
-        )
-        return plan
+    def _geocode_location(self, place_name: str) -> Optional[Dict[str, Any]]:
+        """Geocode a place name to a bbox.
+
+        Args:
+            place_name: Place name string (e.g., "Knoxville", "San Francisco")
+
+        Returns:
+            Location dict with bbox and name, or None
+        """
+        try:
+            from geopy.geocoders import Nominatim
+
+            geolocator = Nominatim(user_agent="geoagent")
+            result = geolocator.geocode(place_name, exactly_one=True, timeout=5)
+
+            if result:
+                lat, lon = result.latitude, result.longitude
+                bbox = [lon - 0.1, lat - 0.1, lon + 0.1, lat + 0.1]
+                name = result.address.split(",")[0]
+                logger.info(f"Geocoded '{place_name}' -> {name} ({lat:.4f}, {lon:.4f})")
+                return {"bbox": bbox, "name": name}
+        except ImportError:
+            logger.warning("geopy not installed")
+        except Exception as e:
+            logger.warning(f"Geocoding failed for '{place_name}': {e}")
+
+        # Try fallback city lookup
+        return self._extract_location_fallback(place_name.lower())
 
     def _extract_location(self, query: str) -> Optional[Dict[str, Any]]:
-        """Extract location from query using geocoding.
+        """Extract location from query using geocoding (for regex fallback parser).
 
         Tries to find a place name in the query and geocode it to a bbox.
 
