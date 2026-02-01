@@ -11,11 +11,13 @@ class TestImports(unittest.TestCase):
     def test_package_import(self):
         """Test top-level package import."""
         import geoagent
+
         self.assertIsNotNone(geoagent.__version__)
 
     def test_llm_import(self):
         """Test LLM module import."""
         from geoagent.core.llm import get_llm, get_default_llm, PROVIDERS
+
         self.assertIn("openai", PROVIDERS)
         self.assertIn("anthropic", PROVIDERS)
         self.assertIn("google", PROVIDERS)
@@ -24,6 +26,7 @@ class TestImports(unittest.TestCase):
     def test_catalog_registry(self):
         """Test catalog registry import and basic functionality."""
         from geoagent.catalogs.registry import CatalogRegistry
+
         reg = CatalogRegistry()
         catalogs = reg.list_catalogs()
         self.assertGreater(len(catalogs), 0)
@@ -34,6 +37,7 @@ class TestImports(unittest.TestCase):
     def test_planner_import(self):
         """Test planner module import."""
         from geoagent.core.planner import Planner, PlannerOutput, Intent
+
         self.assertEqual(Intent.SEARCH.value, "search")
         self.assertEqual(Intent.ANALYZE.value, "analyze")
         self.assertEqual(Intent.VISUALIZE.value, "visualize")
@@ -47,6 +51,7 @@ class TestImports(unittest.TestCase):
             AnalysisResult,
             GeoAgentResponse,
         )
+
         self.assertIsNotNone(PlannerOutput)
         self.assertIsNotNone(DataResult)
         self.assertIsNotNone(AnalysisResult)
@@ -55,6 +60,7 @@ class TestImports(unittest.TestCase):
     def test_agent_import(self):
         """Test GeoAgent class import."""
         from geoagent.core.agent import GeoAgent
+
         self.assertTrue(hasattr(GeoAgent, "chat"))
         self.assertTrue(hasattr(GeoAgent, "search"))
         self.assertTrue(hasattr(GeoAgent, "analyze"))
@@ -67,6 +73,7 @@ class TestImports(unittest.TestCase):
         from geoagent.core.tools.raster import load_raster, compute_index
         from geoagent.core.tools.vector import read_vector
         from geoagent.core.tools.viz import show_on_map
+
         self.assertIsNotNone(search_stac)
         self.assertIsNotNone(query_spatial_data)
         self.assertIsNotNone(load_raster)
@@ -76,6 +83,7 @@ class TestImports(unittest.TestCase):
     def test_available_providers(self):
         """Test checking available providers."""
         from geoagent.core.llm import check_api_keys
+
         keys = check_api_keys()
         self.assertIsInstance(keys, dict)
         self.assertIn("openai", keys)
@@ -83,6 +91,7 @@ class TestImports(unittest.TestCase):
     def test_add_custom_catalog(self):
         """Test adding a custom catalog to the registry."""
         from geoagent.catalogs.registry import CatalogRegistry
+
         reg = CatalogRegistry()
         reg.add_catalog(
             name="test_catalog",

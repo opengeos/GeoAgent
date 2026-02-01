@@ -25,7 +25,9 @@ try:
     MAPLIBRE_AVAILABLE = True
 except ImportError:
     MAPLIBRE_AVAILABLE = False
-    logger.warning("leafmap.maplibregl not available. Maps will be created as placeholders.")
+    logger.warning(
+        "leafmap.maplibregl not available. Maps will be created as placeholders."
+    )
 
 from .models import PlannerOutput, DataResult, AnalysisResult, GeoAgentResponse
 from .data_agent import DataAgent
@@ -218,10 +220,10 @@ class GeoAgent:
 
     def visualize(self, query: str) -> GeoAgentResponse:
         """Run full pipeline including MapLibre GL visualization.
-        
+
         Args:
             query: Natural language query for complete analysis
-            
+
         Returns:
             GeoAgentResponse with MapLibre map visualization
         """
