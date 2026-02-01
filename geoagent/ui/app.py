@@ -1,7 +1,7 @@
 """Solara chat UI for GeoAgent.
 
 Features:
-- Persistent map widget rendered via leafmap's to_solara()
+- Map widget rendered via leafmap's to_solara()
 - Chat interface with status updates
 - Sidebar with provider/model selection
 """
@@ -9,7 +9,7 @@ Features:
 from __future__ import annotations
 
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import solara
 from leafmap.maplibregl import Map as MapLibreMap
@@ -30,30 +30,11 @@ processing: solara.Reactive[bool] = solara.reactive(False)
 status_text: solara.Reactive[str] = solara.reactive("")
 last_code: solara.Reactive[str] = solara.reactive("")
 
-# Agent — stored outside reactive to persist across renders
 _agent_store: Dict[str, Any] = {"agent": None, "key": None}
-
-PROVIDER_LIST = list(PROVIDERS.keys())
-
-
-# ---------------------------------------------------------------------------
-# Map state
-# ---------------------------------------------------------------------------
-
-# The current map instance; replaced after each successful query
 _map_store: Dict[str, Any] = {"map": None}
-# Bump this counter to force MapPanel re-render after a new map is set
 map_version: solara.Reactive[int] = solara.reactive(0)
 
-
-def _create_default_map() -> MapLibreMap:
-    """Create the default basemap."""
-    return MapLibreMap(
-        center=[0, 20],
-        zoom=2,
-        height="100%",
-        style="dark-matter",
-    )
+PROVIDER_LIST = list(PROVIDERS.keys())
 
 
 # ---------------------------------------------------------------------------
@@ -74,6 +55,15 @@ def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
     return _agent_store["agent"]
 
 
+def _create_default_map() -> MapLibreMap:
+    return MapLibreMap(
+        center=[0, 20],
+        zoom=2,
+        height="600px",
+        style="dark-matter",
+    )
+
+
 def _run_query(query: str):
     """Run a GeoAgent query in a background thread."""
     processing.value = True
@@ -89,7 +79,6 @@ def _run_query(query: str):
         status_text.value = "📡 Searching data & analyzing…"
         result = agent.chat(query)
 
-        # Build summary
         if result.success:
             items = result.data.total_items if result.data else 0
             parts = []
@@ -112,13 +101,11 @@ def _run_query(query: str):
 
         messages.value = [*messages.value, {"role": "assistant", "content": text}]
 
-        # Update map from result
         if result.map is not None:
             status_text.value = "🗺️ Rendering map…"
             _map_store["map"] = result.map
             map_version.value += 1
 
-        # Store code
         code = result.code or ""
         if (
             not code
@@ -127,7 +114,6 @@ def _run_query(query: str):
         ):
             code = result.analysis.code_generated
         last_code.value = code
-
         status_text.value = ""
 
     except Exception as e:
@@ -148,12 +134,11 @@ def _run_query(query: str):
 @solara.component
 def ChatMessage(msg: Dict[str, str]):
     role = msg["role"]
-    icon = "mdi-account" if role == "user" else "mdi-earth"
-    color = "primary" if role == "user" else "success"
-    with solara.Row(style={"margin": "4px 0"}):
-        solara.v.Icon(
-            children=[icon], color=color, style_="margin-right: 8px; margin-top: 4px;"
-        )
+    is_user = role == "user"
+    icon = "mdi-account" if is_user else "mdi-earth"
+    color = "primary" if is_user else "success"
+    with solara.Row():
+        solara.v.Icon(children=[icon], color=color)
         solara.Markdown(msg["content"])
 
 
@@ -163,17 +148,14 @@ def ChatPanel():
 
     solara.Markdown("### 💬 Chat")
 
-    # Messages
     for msg in messages.value:
         ChatMessage(msg)
 
-    # Status indicator
     if status_text.value:
         with solara.Row():
             solara.v.ProgressCircular(indeterminate=True, size=20, width=2)
             solara.Text(status_text.value)
 
-    # Input
     def on_send():
         q = query.strip()
         if q and not processing.value:
@@ -197,17 +179,14 @@ def ChatPanel():
 @solara.component
 def MapPanel():
     show_code, set_show_code = solara.use_state(False)
-
-    # Read map_version to trigger re-render when map changes
     _ = map_version.value
 
-    # Get current map (result map or default)
     m = _map_store.get("map")
     if m is None:
         m = _create_default_map()
 
     solara.Markdown("### 🗺️ Map")
-    m.to_solara(map_only=True)
+    m.element()
 
     if last_code.value:
         solara.Button(
@@ -246,12 +225,7 @@ def Sidebar():
         _map_store["map"] = None
         map_version.value += 1
 
-    solara.Button(
-        "New Chat",
-        on_click=on_new_chat,
-        outlined=True,
-        style={"margin-top": "12px"},
-    )
+    solara.Button("New Chat", on_click=on_new_chat, outlined=True)
 
 
 @solara.component
