@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="AI Agent for geospatial data analysis and visualiation">
+        <meta name="description" content="An AI agent for geospatial data analysis and visualization">
       
       
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://opengeos.github.io/GeoAgent/usage/">
+        <link rel="canonical" href="https://geoagent.gishub.org/usage/">
       
       
         <link rel="prev" href="../installation/">
@@ -75,7 +75,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -133,7 +133,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
@@ -295,6 +295,55 @@
       
   
   
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
@@ -317,9 +366,10 @@
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
     
@@ -333,6 +383,24 @@
       
         
       
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -351,60 +419,160 @@
 
       </a>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../contributing/" class="md-nav__link">
         
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  <span class="md-ellipsis">
+  
     
   
-    Contributing
   
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
       
+        Basic Usage
+      
+    </span>
+  </a>
   
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat Interface
+      
+    </span>
+  </a>
   
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#targeted-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Targeted Operations
+      
+    </span>
+  </a>
   
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stac-catalog-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STAC Catalog Search
+      
+    </span>
+  </a>
   
-    <li class="md-nav__item">
-      <a href="../faq/" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-tools-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Tools Directly
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using Tools Directly">
+      <ul class="md-nav__list">
         
+          <li class="md-nav__item">
+  <a href="#stac-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STAC Search
+      
+    </span>
+  </a>
   
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#duckdb-spatial-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DuckDB Spatial Queries
+      
+    </span>
+  </a>
   
-  <span class="md-ellipsis">
-    
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raster-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raster Analysis
+      
+    </span>
+  </a>
   
-    FAQ
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maplibre-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapLibre Visualization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#llm-provider-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LLM Provider Selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-transparency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Transparency
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
   
 
-    
-  </span>
-  
-  
-
-      </a>
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -416,7 +584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../changelog/" class="md-nav__link">
+      <a href="https://github.com/opengeos/GeoAgent/releases" class="md-nav__link">
         
   
   
@@ -469,6 +637,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -478,10 +673,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -499,8 +694,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -538,6 +733,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/stac_search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stac search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/maplibre_viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maplibre viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -560,10 +811,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -581,8 +832,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -606,7 +857,7 @@
   <span class="md-ellipsis">
     
   
-    geoagent module
+    GeoAgent
   
 
     
@@ -627,14 +878,210 @@
   
   
     <li class="md-nav__item">
-      <a href="../common/" class="md-nav__link">
+      <a href="../models/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    common module
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysis_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viz_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalogs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
   
 
     
@@ -675,6 +1122,141 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#targeted-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Targeted Operations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stac-catalog-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STAC Catalog Search
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-tools-directly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Tools Directly
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Using Tools Directly">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stac-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        STAC Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#duckdb-spatial-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DuckDB Spatial Queries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#raster-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raster Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maplibre-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapLibre Visualization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#llm-provider-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LLM Provider Selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-transparency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Transparency
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -697,9 +1279,228 @@
 
 
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h1>
-<p>To use GeoAgent in a project:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>import geoagent
+<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
+<p>The simplest way to use GeoAgent is through the <code>GeoAgent</code> class:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
+
+<span class="c1"># Initialize with default LLM (auto-detects from environment)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">()</span>
+
+<span class="c1"># Or specify a provider and model</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-20250514&quot;</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;llama3.1&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
+<h2 id="chat-interface">Chat Interface<a class="headerlink" href="#chat-interface" title="Permanent link">&para;</a></h2>
+<p>Use <code>chat()</code> for the full pipeline (plan, search, analyze, visualize):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;Show NDVI for San Francisco in July 2024&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access the results</span>
+<span class="n">result</span><span class="o">.</span><span class="n">plan</span>       <span class="c1"># PlannerOutput with parsed intent and parameters</span>
+<span class="n">result</span><span class="o">.</span><span class="n">data</span>       <span class="c1"># DataResult with retrieved data references</span>
+<span class="n">result</span><span class="o">.</span><span class="n">analysis</span>   <span class="c1"># AnalysisResult with computed values</span>
+<span class="n">result</span><span class="o">.</span><span class="n">map</span>        <span class="c1"># Interactive leafmap MapLibre map</span>
+<span class="n">result</span><span class="o">.</span><span class="n">code</span>       <span class="c1"># Generated Python code for reproducibility</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="targeted-operations">Targeted Operations<a class="headerlink" href="#targeted-operations" title="Permanent link">&para;</a></h2>
+<p>Use specific methods when you only need part of the pipeline:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># Search for data only</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;Find Sentinel-2 imagery of Tokyo from March 2024&quot;</span><span class="p">)</span>
+
+<span class="c1"># Search and analyze</span>
+<span class="n">analysis</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="s2">&quot;Calculate NDVI for the Amazon in 2023&quot;</span><span class="p">)</span>
+
+<span class="c1"># Full pipeline with visualization</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="s2">&quot;Show land cover change in Dubai from 2020 to 2024&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="stac-catalog-search">STAC Catalog Search<a class="headerlink" href="#stac-catalog-search" title="Permanent link">&para;</a></h2>
+<p>Search across multiple STAC catalogs directly:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.catalogs.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">CatalogRegistry</span>
+
+<span class="n">reg</span> <span class="o">=</span> <span class="n">CatalogRegistry</span><span class="p">()</span>
+
+<span class="c1"># List available catalogs</span>
+<span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">reg</span><span class="o">.</span><span class="n">list_catalogs</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cat</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">cat</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get a client for a specific catalog</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">get_client</span><span class="p">(</span><span class="s2">&quot;earth_search&quot;</span><span class="p">)</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">get_client</span><span class="p">(</span><span class="s2">&quot;planetary_computer&quot;</span><span class="p">)</span>
+
+<span class="c1"># Add a custom catalog</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">add_catalog</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_catalog&quot;</span><span class="p">,</span>
+    <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://stac.example.com&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;My custom STAC catalog&quot;</span>
+<span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="using-tools-directly">Using Tools Directly<a class="headerlink" href="#using-tools-directly" title="Permanent link">&para;</a></h2>
+<p>Each tool can be used independently:</p>
+<h3 id="stac-search">STAC Search<a class="headerlink" href="#stac-search" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.tools.stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">search_stac</span>
+
+<span class="n">items</span> <span class="o">=</span> <span class="n">search_stac</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+    <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="s2">&quot;Sentinel-2 imagery&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;catalog&quot;</span><span class="p">:</span> <span class="s2">&quot;earth_search&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bbox&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">122.5</span><span class="p">,</span> <span class="mf">37.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">122.0</span><span class="p">,</span> <span class="mf">38.0</span><span class="p">],</span>
+    <span class="s2">&quot;datetime_range&quot;</span><span class="p">:</span> <span class="s2">&quot;2024-07-01/2024-07-31&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;collections&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sentinel-2-l2a&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;max_items&quot;</span><span class="p">:</span> <span class="mi">5</span>
+<span class="p">})</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="duckdb-spatial-queries">DuckDB Spatial Queries<a class="headerlink" href="#duckdb-spatial-queries" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.tools.duckdb_tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">query_spatial_data</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">query_spatial_data</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+    <span class="s2">&quot;sql&quot;</span><span class="p">:</span> <span class="s2">&quot;SELECT * FROM read_parquet(&#39;data.parquet&#39;) LIMIT 10&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="s2">&quot;path/to/data.parquet&quot;</span>
+<span class="p">})</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="raster-analysis">Raster Analysis<a class="headerlink" href="#raster-analysis" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.tools.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_raster</span><span class="p">,</span> <span class="n">compute_index</span>
+
+<span class="c1"># Load a COG</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">load_raster</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+    <span class="s2">&quot;url_or_path&quot;</span><span class="p">:</span> <span class="s2">&quot;https://example.com/cog.tif&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bbox&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">122.5</span><span class="p">,</span> <span class="mf">37.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">122.0</span><span class="p">,</span> <span class="mf">38.0</span><span class="p">]</span>
+<span class="p">})</span>
+
+<span class="c1"># Compute NDVI</span>
+<span class="n">ndvi</span> <span class="o">=</span> <span class="n">compute_index</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+    <span class="s2">&quot;dataset&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+    <span class="s2">&quot;index_name&quot;</span><span class="p">:</span> <span class="s2">&quot;ndvi&quot;</span>
+<span class="p">})</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="maplibre-visualization">MapLibre Visualization<a class="headerlink" href="#maplibre-visualization" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.tools.viz</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_on_map</span><span class="p">,</span> <span class="n">add_cog_layer</span>
+
+<span class="c1"># Create a map with layers</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">show_on_map</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
+    <span class="s2">&quot;layers&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;cog&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;https://example.com/cog.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Satellite&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;center&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">37.77</span><span class="p">,</span> <span class="o">-</span><span class="mf">122.42</span><span class="p">],</span>
+    <span class="s2">&quot;zoom&quot;</span><span class="p">:</span> <span class="mi">10</span>
+<span class="p">})</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="llm-provider-selection">LLM Provider Selection<a class="headerlink" href="#llm-provider-selection" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.llm</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm</span><span class="p">,</span> <span class="n">get_available_providers</span><span class="p">,</span> <span class="n">check_api_keys</span>
+
+<span class="c1"># Check what&#39;s available</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">get_available_providers</span><span class="p">())</span>  <span class="c1"># [&#39;openai&#39;, &#39;ollama&#39;]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">check_api_keys</span><span class="p">())</span>           <span class="c1"># {&#39;openai&#39;: True, &#39;anthropic&#39;: False, ...}</span>
+
+<span class="c1"># Create a specific LLM</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="code-transparency">Code Transparency<a class="headerlink" href="#code-transparency" title="Permanent link">&para;</a></h2>
+<p>One of GeoAgent's key features is showing the Python code it generates:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;Calculate mean NDVI for Central Park, NYC in August 2024&quot;</span><span class="p">)</span>
+
+<span class="c1"># Print the generated code</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+<span class="c1"># Output:</span>
+<span class="c1"># import rioxarray</span>
+<span class="c1"># import xarray as xr</span>
+<span class="c1"># ds = rioxarray.open_rasterio(&quot;s3://...&quot;)</span>
+<span class="c1"># nir = ds.sel(band=&quot;B08&quot;)</span>
+<span class="c1"># red = ds.sel(band=&quot;B04&quot;)</span>
+<span class="c1"># ndvi = (nir - red) / (nir + red)</span>
+<span class="c1"># mean_ndvi = float(ndvi.mean())</span>
+</code></pre></div></td></tr></table></div>
+<p>This makes workflows reproducible and educational. Researchers can take the generated code, modify it, and integrate it into their own scripts.</p>
 
 
 
@@ -722,7 +1523,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 01:38:21 UTC"><span class="timeago" datetime="2026-02-01T01:38:21+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 01:38:21 UTC">2026-02-01</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 06:02:26 UTC"><span class="timeago" datetime="2026-02-01T06:02:26+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 06:02:26 UTC">2026-02-01</span>
   </span>
 
     
@@ -768,7 +1569,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Copyright &copy; 2026 - 2026 Qiusheng Wu
+      Copyright &copy; 2026 Qiusheng Wu
     </div>
   
   
@@ -792,7 +1593,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>

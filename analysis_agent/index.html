@@ -1,0 +1,2520 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI agent for geospatial data analysis and visualization">
+      
+      
+        <meta name="author" content="Qiusheng Wu">
+      
+      
+        <link rel="canonical" href="https://geoagent.gishub.org/analysis_agent/">
+      
+      
+        <link rel="prev" href="../data_agent/">
+      
+      
+        <link rel="next" href="../viz_agent/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Analysis Agent - GeoAgent</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans:300,300i,400,400i,700,700i%7CRegular:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Google Sans";--md-code-font:"Regular"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../css/timeago.css">
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#analysis-agent" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="GeoAgent" class="md-header__button md-logo" aria-label="GeoAgent" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GeoAgent
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Analysis Agent
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/opengeos/GeoAgent" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="GeoAgent" class="md-nav__button md-logo" aria-label="GeoAgent" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GeoAgent
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/opengeos/GeoAgent" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/opengeos/GeoAgent/releases" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/opengeos/GeoAgent/issues" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Intro
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/stac_search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stac search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/maplibre_viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maplibre viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geoagent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeoAgent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../planner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis Agent
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis_agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="analysis_agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent.AnalysisAgent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AnalysisAgent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AnalysisAgent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent.AnalysisAgent.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent.AnalysisAgent.analyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyze()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viz_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalogs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis_agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="analysis_agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent.AnalysisAgent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AnalysisAgent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AnalysisAgent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent.AnalysisAgent.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.analysis_agent.AnalysisAgent.analyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyze()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+
+  
+  
+
+
+<h1 id="analysis-agent">Analysis Agent<a class="headerlink" href="#analysis-agent" title="Permanent link">&para;</a></h1>
+<p>The Analysis Agent performs geospatial analysis with transparent, reproducible code generation.</p>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.core.analysis_agent" class="doc doc-heading">
+        <code>geoagent.core.analysis_agent</code>
+
+
+
+<a href="#geoagent.core.analysis_agent" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Analysis Agent for performing geospatial analysis operations.</p>
+<p>The Analysis Agent takes data references and performs various geospatial
+analyses while generating transparent Python code for reproducibility.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h4 id="geoagent.core.analysis_agent.AnalysisAgent" class="doc doc-heading">
+        <code>
+AnalysisAgent        </code>
+
+
+
+<a href="#geoagent.core.analysis_agent.AnalysisAgent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Agent responsible for geospatial analysis operations.</p>
+<p>The Analysis Agent performs raster and vector analysis operations
+and generates Python code showing exactly what was computed.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/analysis_agent.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">AnalysisAgent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Agent responsible for geospatial analysis operations.</span>
+
+<span class="sd">    The Analysis Agent performs raster and vector analysis operations</span>
+<span class="sd">    and generates Python code showing exactly what was computed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">llm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Analysis Agent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            llm: Language model instance for analysis planning</span>
+<span class="sd">            tools: Dictionary of available analysis tools (raster, vector, etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">llm</span> <span class="o">=</span> <span class="n">llm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tools</span> <span class="o">=</span> <span class="n">tools</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_tools</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup and initialize analysis tools.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># TODO: Import and register RasterAnalysisTool and VectorAnalysisTool</span>
+            <span class="c1"># once the tool implementations are finalized.</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Analysis tools setup (using placeholders)&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Some analysis tools not available: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Graceful fallback - tools will be added when available</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform analysis on the provided data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Original query plan with analysis intent</span>
+<span class="sd">            data: Data retrieved by the Data Agent</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with computed results and generated code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting analysis for intent: </span><span class="si">{</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Determine analysis type based on intent and data type</span>
+            <span class="n">analysis_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_analysis_type</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;land_cover&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_land_cover</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;elevation&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_elevation</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;spectral_index&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_spectral_index</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;zonal_statistics&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_zonal_statistics</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;time_series&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_time_series</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;change_detection&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_change_detection</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;vector_analysis&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_vector_analysis</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_general_analysis</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">result_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)},</span>
+                <span class="n">code_generated</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;# Analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_determine_analysis_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine the type of analysis to perform.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan with intent</span>
+<span class="sd">            data: Available data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Analysis type string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intent</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">analysis_type_hint</span> <span class="o">=</span> <span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">analysis_type</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="c1"># Check plan.analysis_type first (most reliable signal from planner)</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;land_cover&quot;</span><span class="p">,</span> <span class="s2">&quot;classification&quot;</span><span class="p">,</span> <span class="s2">&quot;lulc&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;land_cover&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;elevation&quot;</span><span class="p">,</span> <span class="s2">&quot;dem&quot;</span><span class="p">,</span> <span class="s2">&quot;terrain&quot;</span><span class="p">,</span> <span class="s2">&quot;slope&quot;</span><span class="p">,</span> <span class="s2">&quot;hillshade&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;elevation&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ndvi&quot;</span><span class="p">,</span> <span class="s2">&quot;evi&quot;</span><span class="p">,</span> <span class="s2">&quot;savi&quot;</span><span class="p">,</span> <span class="s2">&quot;ndbi&quot;</span><span class="p">,</span> <span class="s2">&quot;ndwi&quot;</span><span class="p">,</span> <span class="s2">&quot;mndwi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;spectral_index&quot;</span>
+
+        <span class="c1"># Land cover analysis (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;land_cover&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;land cover&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;landcover&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;lulc&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;land use&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;classification&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;land_cover&quot;</span>
+
+        <span class="c1"># DEM / elevation analysis (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;dem&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;terrain&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;slope&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;hillshade&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;topograph&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;elevation&quot;</span>
+
+        <span class="c1"># Spectral index analysis</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">index</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;ndvi&quot;</span><span class="p">,</span> <span class="s2">&quot;evi&quot;</span><span class="p">,</span> <span class="s2">&quot;savi&quot;</span><span class="p">,</span> <span class="s2">&quot;ndbi&quot;</span><span class="p">,</span> <span class="s2">&quot;spectral&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;spectral_index&quot;</span>
+
+        <span class="c1"># Zonal statistics</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;zonal&quot;</span><span class="p">,</span> <span class="s2">&quot;statistics&quot;</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="s2">&quot;aggregate&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;zonal_statistics&quot;</span>
+
+        <span class="c1"># Time series analysis</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;time series&quot;</span><span class="p">,</span> <span class="s2">&quot;temporal&quot;</span><span class="p">,</span> <span class="s2">&quot;trend&quot;</span><span class="p">,</span> <span class="s2">&quot;change over time&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;time_series&quot;</span>
+
+        <span class="c1"># Change detection</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="s2">&quot;detection&quot;</span><span class="p">,</span> <span class="s2">&quot;difference&quot;</span><span class="p">,</span> <span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;change_detection&quot;</span>
+
+        <span class="c1"># Vector operations</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;vector&quot;</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;buffer&quot;</span><span class="p">,</span> <span class="s2">&quot;intersect&quot;</span><span class="p">,</span> <span class="s2">&quot;union&quot;</span><span class="p">,</span> <span class="s2">&quot;clip&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;vector_analysis&quot;</span>
+
+        <span class="k">return</span> <span class="s2">&quot;general&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_spectral_index</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute spectral indices from satellite imagery.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan with index specifications</span>
+<span class="sd">            data: Satellite imagery data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with computed indices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intent</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="c1"># Determine which index to compute</span>
+        <span class="k">if</span> <span class="s2">&quot;ndvi&quot;</span> <span class="ow">in</span> <span class="n">intent</span><span class="p">:</span>
+            <span class="n">index_type</span> <span class="o">=</span> <span class="s2">&quot;ndvi&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;evi&quot;</span> <span class="ow">in</span> <span class="n">intent</span><span class="p">:</span>
+            <span class="n">index_type</span> <span class="o">=</span> <span class="s2">&quot;evi&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;savi&quot;</span> <span class="ow">in</span> <span class="n">intent</span><span class="p">:</span>
+            <span class="n">index_type</span> <span class="o">=</span> <span class="s2">&quot;savi&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">index_type</span> <span class="o">=</span> <span class="s2">&quot;ndvi&quot;</span>  <span class="c1"># Default</span>
+
+        <span class="c1"># Try real computation first</span>
+        <span class="k">if</span> <span class="n">index_type</span> <span class="o">==</span> <span class="s2">&quot;ndvi&quot;</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_ndvi_real</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Real NDVI computation failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Fall back to mock if real computation fails</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="n">index_type</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_ndvi_real</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Actually compute NDVI from STAC item COG bands.</span>
+
+<span class="sd">        Uses rasterio to read red/NIR bands and compute NDVI,</span>
+<span class="sd">        then saves result as a temporary GeoTIFF for visualization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">rasterio</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.windows</span><span class="w"> </span><span class="kn">import</span> <span class="n">from_bounds</span>
+
+        <span class="c1"># Find first item with red and nir bands</span>
+        <span class="c1"># Planetary Computer uses B04 (red) and B08 (NIR); other catalogs use</span>
+        <span class="c1"># lowercase &quot;red&quot;/&quot;nir&quot;</span>
+        <span class="n">RED_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;B04&quot;</span><span class="p">,</span> <span class="s2">&quot;b04&quot;</span><span class="p">,</span> <span class="s2">&quot;Red&quot;</span><span class="p">]</span>
+        <span class="n">NIR_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;nir&quot;</span><span class="p">,</span> <span class="s2">&quot;B08&quot;</span><span class="p">,</span> <span class="s2">&quot;b08&quot;</span><span class="p">,</span> <span class="s2">&quot;Nir&quot;</span><span class="p">,</span> <span class="s2">&quot;NIR&quot;</span><span class="p">]</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">red_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">nir_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="n">assets</span> <span class="o">=</span> <span class="n">candidate</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">found_red</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">RED_KEYS</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">found_nir</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">NIR_KEYS</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">found_red</span> <span class="ow">and</span> <span class="n">found_nir</span><span class="p">:</span>
+                <span class="n">red_href</span> <span class="o">=</span> <span class="n">assets</span><span class="p">[</span><span class="n">found_red</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">nir_href</span> <span class="o">=</span> <span class="n">assets</span><span class="p">[</span><span class="n">found_nir</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">red_href</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nir_href</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">):</span>
+                    <span class="n">item</span> <span class="o">=</span> <span class="n">candidate</span>
+                    <span class="n">red_key</span> <span class="o">=</span> <span class="n">found_red</span>
+                    <span class="n">nir_key</span> <span class="o">=</span> <span class="n">found_nir</span>
+                    <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No STAC item found with red and nir COG bands&quot;</span><span class="p">)</span>
+
+        <span class="n">red_url</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">red_key</span><span class="p">][</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
+        <span class="n">nir_url</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">nir_key</span><span class="p">][</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
+        <span class="n">item_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing NDVI for item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Read within bbox if available (windowed read for performance)</span>
+        <span class="n">bbox_wgs84</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="ow">and</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">bbox_wgs84</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">red_url</span><span class="p">)</span> <span class="k">as</span> <span class="n">red_src</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bbox_wgs84</span><span class="p">:</span>
+                <span class="c1"># Transform bbox from WGS84 to raster CRS if needed</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transformer</span>
+
+                <span class="n">raster_crs</span> <span class="o">=</span> <span class="n">red_src</span><span class="o">.</span><span class="n">crs</span>
+                <span class="k">if</span> <span class="n">raster_crs</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">raster_crs</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;EPSG:4326&quot;</span><span class="p">:</span>
+                    <span class="n">transformer</span> <span class="o">=</span> <span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span>
+                        <span class="s2">&quot;EPSG:4326&quot;</span><span class="p">,</span> <span class="n">raster_crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">bbox_wgs84</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox_wgs84</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">bbox_wgs84</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">bbox_wgs84</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+                    <span class="n">bbox_native</span> <span class="o">=</span> <span class="p">[</span><span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">bbox_native</span> <span class="o">=</span> <span class="n">bbox_wgs84</span>
+
+                <span class="n">window</span> <span class="o">=</span> <span class="n">from_bounds</span><span class="p">(</span><span class="o">*</span><span class="n">bbox_native</span><span class="p">,</span> <span class="n">red_src</span><span class="o">.</span><span class="n">transform</span><span class="p">)</span>
+                <span class="c1"># Ensure window has positive dimensions</span>
+                <span class="n">window</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">round_offsets</span><span class="p">()</span><span class="o">.</span><span class="n">round_lengths</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bbox too small for raster resolution&quot;</span><span class="p">)</span>
+                <span class="n">red</span> <span class="o">=</span> <span class="n">red_src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+                <span class="n">win_transform</span> <span class="o">=</span> <span class="n">red_src</span><span class="o">.</span><span class="n">window_transform</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">red</span> <span class="o">=</span> <span class="n">red_src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+                <span class="n">win_transform</span> <span class="o">=</span> <span class="n">red_src</span><span class="o">.</span><span class="n">transform</span>
+                <span class="n">window</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">red_profile</span> <span class="o">=</span> <span class="n">red_src</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">nir_url</span><span class="p">)</span> <span class="k">as</span> <span class="n">nir_src</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">nir</span> <span class="o">=</span> <span class="n">nir_src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nir</span> <span class="o">=</span> <span class="n">nir_src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Compute NDVI</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+            <span class="n">ndvi</span> <span class="o">=</span> <span class="p">(</span><span class="n">nir</span> <span class="o">-</span> <span class="n">red</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">nir</span> <span class="o">+</span> <span class="n">red</span><span class="p">)</span>
+            <span class="n">ndvi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ndvi</span><span class="p">),</span> <span class="n">ndvi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+        <span class="c1"># Compute statistics</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">ndvi</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ndvi</span><span class="p">)]</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">valid</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">valid</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">valid</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">valid</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;pixels&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)),</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Save NDVI as temporary GeoTIFF</span>
+        <span class="n">ndvi_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;ndvi_</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">.tif&quot;</span><span class="p">)</span>
+        <span class="n">out_profile</span> <span class="o">=</span> <span class="n">red_profile</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">out_profile</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span>
+            <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
+            <span class="n">compress</span><span class="o">=</span><span class="s2">&quot;deflate&quot;</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">ndvi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">ndvi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">win_transform</span><span class="p">,</span>
+            <span class="n">nodata</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">ndvi_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">out_profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ndvi</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NDVI saved to </span><span class="si">{</span><span class="n">ndvi_path</span><span class="si">}</span><span class="s2">, mean=</span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Generate reproducible code</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import os</span>
+<span class="s2">import rasterio</span>
+<span class="s2">import numpy as np</span>
+<span class="s2">from rasterio.windows import from_bounds</span>
+<span class="s2">from pyproj import Transformer</span>
+
+<span class="s2">os.environ[&quot;AWS_NO_SIGN_REQUEST&quot;] = &quot;YES&quot;</span>
+
+<span class="s2">red_url = &quot;</span><span class="si">{</span><span class="n">red_url</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">nir_url = &quot;</span><span class="si">{</span><span class="n">nir_url</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">bbox_wgs84 = </span><span class="si">{</span><span class="n">bbox_wgs84</span><span class="si">}</span><span class="s2">  # [west, south, east, north] in EPSG:4326</span>
+
+<span class="s2"># Read red and NIR bands (windowed read within bbox)</span>
+<span class="s2">with rasterio.open(red_url) as red_src:</span>
+<span class="s2">    # Transform bbox to raster CRS</span>
+<span class="s2">    transformer = Transformer.from_crs(&quot;EPSG:4326&quot;, red_src.crs, always_xy=True)</span>
+<span class="s2">    x_min, y_min = transformer.transform(bbox_wgs84[0], bbox_wgs84[1])</span>
+<span class="s2">    x_max, y_max = transformer.transform(bbox_wgs84[2], bbox_wgs84[3])</span>
+<span class="s2">    window = from_bounds(x_min, y_min, x_max, y_max, red_src.transform)</span>
+<span class="s2">    red = red_src.read(1, window=window).astype(&quot;float32&quot;)</span>
+<span class="s2">    profile = red_src.profile.copy()</span>
+<span class="s2">    transform = red_src.window_transform(window)</span>
+
+<span class="s2">with rasterio.open(nir_url) as nir_src:</span>
+<span class="s2">    nir = nir_src.read(1, window=window).astype(&quot;float32&quot;)</span>
+
+<span class="s2"># Compute NDVI = (NIR - Red) / (NIR + Red)</span>
+<span class="s2">ndvi = (nir - red) / (nir + red)</span>
+<span class="s2">ndvi = np.where(np.isfinite(ndvi), ndvi, np.nan)</span>
+
+<span class="s2">print(f&quot;NDVI shape: </span><span class="se">{{</span><span class="s2">ndvi.shape</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">print(f&quot;NDVI range: </span><span class="se">{{</span><span class="s2">np.nanmin(ndvi):.3f</span><span class="se">}}</span><span class="s2"> to </span><span class="se">{{</span><span class="s2">np.nanmax(ndvi):.3f</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">print(f&quot;NDVI mean: </span><span class="se">{{</span><span class="s2">np.nanmean(ndvi):.3f</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ndvi&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;item_id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+            <span class="s2">&quot;ndvi_stats&quot;</span><span class="p">:</span> <span class="n">stats</span><span class="p">,</span>
+            <span class="s2">&quot;ndvi_path&quot;</span><span class="p">:</span> <span class="n">ndvi_path</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ndvi&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ndvi_path&quot;</span><span class="p">:</span> <span class="n">ndvi_path</span><span class="p">,</span>
+            <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;RdYlGn&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;vmin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span>
+            <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;NDVI - </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_land_cover</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle land cover data - passthrough with appropriate viz hints.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Land cover data from STAC</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with land cover viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;land_cover&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for land cover data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;io-lulc-9-class&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=1,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> land cover items&quot;)</span>
+
+<span class="s2"># Visualize</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;io-lulc-9-class&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        assets=[&quot;data&quot;],</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Land Cover&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;land_cover&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;asset_key&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Land Cover - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">location_name</span> <span class="k">else</span> <span class="s2">&quot;Land Cover&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_elevation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle DEM/elevation data - passthrough with appropriate viz hints.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: DEM data from STAC</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with elevation viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for DEM data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;cop-dem-glo-30&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=1,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> DEM items&quot;)</span>
+
+<span class="s2"># Visualize</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;cop-dem-glo-30&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        assets=[&quot;data&quot;],</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Elevation (DEM)&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;terrain&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;asset_key&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Elevation (DEM) - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">location_name</span>
+                <span class="k">else</span> <span class="s2">&quot;Elevation (DEM)&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_zonal_statistics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute zonal statistics for areas of interest.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan with zones specification</span>
+<span class="sd">            data: Raster or vector data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with computed statistics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;raster&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">raster_tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">[</span><span class="s2">&quot;raster&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Extract zones from plan parameters or location</span>
+                <span class="n">zones</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zones&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">raster_tool</span><span class="o">.</span><span class="n">zonal_statistics</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">zones</span><span class="p">)</span>
+                <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_zonal_code</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">zones</span><span class="p">)</span>
+
+                <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;choropleth&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;color_column&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">result_data</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                    <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Zonal statistics failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;zonal&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;zonal&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_time_series</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute time series analysis from temporal data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan with temporal specifications</span>
+<span class="sd">            data: Time series data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with time series analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;raster&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">raster_tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">[</span><span class="s2">&quot;raster&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Extract location for time series</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">raster_tool</span><span class="o">.</span><span class="n">time_series_analysis</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span>
+                <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_timeseries_code</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span>
+
+                <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;time_series&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x_column&quot;</span><span class="p">:</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;y_column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Time Series Analysis&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">result_data</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                    <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time series analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;time_series&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;time_series&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_change_detection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform change detection analysis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan with change detection parameters</span>
+<span class="sd">            data: Multi-temporal data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with change analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;raster&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">raster_tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">[</span><span class="s2">&quot;raster&quot;</span><span class="p">]</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">raster_tool</span><span class="o">.</span><span class="n">change_detection</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+                <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_change_code</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+
+                <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;change_map&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;RdYlBu&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;center_zero&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">result_data</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                    <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Change detection failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_perform_vector_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform vector analysis operations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan with vector operations</span>
+<span class="sd">            data: Vector data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with vector analysis results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;vector&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">vector_tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="p">[</span><span class="s2">&quot;vector&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Determine vector operation</span>
+                <span class="n">intent</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="s2">&quot;buffer&quot;</span> <span class="ow">in</span> <span class="n">intent</span><span class="p">:</span>
+                    <span class="n">distance</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;distance&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">vector_tool</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
+                    <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_buffer_code</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="s2">&quot;intersect&quot;</span> <span class="ow">in</span> <span class="n">intent</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">vector_tool</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+                    <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_intersect_code</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">vector_tool</span><span class="o">.</span><span class="n">general_analysis</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
+                    <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_general_vector_code</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
+
+                <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;vector_map&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">result_data</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                    <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Vector analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;vector&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_mock_analysis</span><span class="p">(</span><span class="s2">&quot;vector&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_perform_general_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform general analysis when specific type cannot be determined.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Available data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with general analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Basic data summary</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;data_summary&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;total_items&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+                <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">data_type</span><span class="p">,</span>
+                <span class="s2">&quot;intent&quot;</span><span class="p">:</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;items_preview&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# General analysis for: </span><span class="si">{</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span>
+<span class="s2"># Data type: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">data_type</span><span class="si">}</span>
+<span class="s2"># Total items: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="si">}</span>
+
+<span class="s2">import json</span>
+<span class="s2">data_summary = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">print(&quot;Analysis Summary:&quot;, data_summary)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;summary&quot;</span><span class="p">,</span> <span class="s2">&quot;show_data_info&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span> <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_index_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">index_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate Python code for spectral index calculation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            items: STAC items or data references</span>
+<span class="sd">            index_type: Type of spectral index</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Generated Python code string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">index_type</span> <span class="o">==</span> <span class="s2">&quot;ndvi&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# NDVI Calculation</span>
+<span class="s2">import rasterio</span>
+<span class="s2">import numpy as np</span>
+
+<span class="s2"># Load red and NIR bands from STAC items</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def calculate_ndvi(red_band, nir_band):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Calculate NDVI from red and NIR bands.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    ndvi = (nir_band - red_band) / (nir_band + red_band)</span>
+<span class="s2">    return ndvi</span>
+
+<span class="s2"># Process each item</span>
+<span class="s2">for item in items:</span>
+<span class="s2">    red_asset = item[&#39;assets&#39;][&#39;red&#39;][&#39;href&#39;]</span>
+<span class="s2">    nir_asset = item[&#39;assets&#39;][&#39;nir&#39;][&#39;href&#39;]</span>
+
+<span class="s2">    with rasterio.open(red_asset) as red_src:</span>
+<span class="s2">        red = red_src.read(1).astype(float)</span>
+
+<span class="s2">    with rasterio.open(nir_asset) as nir_src:</span>
+<span class="s2">        nir = nir_src.read(1).astype(float)</span>
+
+<span class="s2">    ndvi = calculate_ndvi(red, nir)</span>
+<span class="s2">    print(f&quot;NDVI calculated for </span><span class="se">{{</span><span class="s2">item[&#39;id&#39;]</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">    print(f&quot;NDVI range: </span><span class="se">{{</span><span class="s2">np.nanmin(ndvi):.3f</span><span class="se">}}</span><span class="s2"> to </span><span class="se">{{</span><span class="s2">np.nanmax(ndvi):.3f</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="k">elif</span> <span class="n">index_type</span> <span class="o">==</span> <span class="s2">&quot;evi&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# EVI Calculation</span>
+<span class="s2">import rasterio</span>
+<span class="s2">import numpy as np</span>
+
+<span class="s2"># Enhanced Vegetation Index calculation</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def calculate_evi(red, nir, blue, G=2.5, C1=6.0, C2=7.5, L=1.0):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Calculate EVI from RGB and NIR bands.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    evi = G * ((nir - red) / (nir + C1*red - C2*blue + L))</span>
+<span class="s2">    return evi</span>
+
+<span class="s2"># Process items for EVI</span>
+<span class="s2">for item in items:</span>
+<span class="s2">    # Load required bands</span>
+<span class="s2">    red_asset = item[&#39;assets&#39;][&#39;red&#39;][&#39;href&#39;]</span>
+<span class="s2">    nir_asset = item[&#39;assets&#39;][&#39;nir&#39;][&#39;href&#39;]</span>
+<span class="s2">    blue_asset = item[&#39;assets&#39;][&#39;blue&#39;][&#39;href&#39;]</span>
+
+<span class="s2">    # Calculate EVI</span>
+<span class="s2">    evi = calculate_evi(red, nir, blue)</span>
+<span class="s2">    print(f&quot;EVI calculated for </span><span class="se">{{</span><span class="s2">item[&#39;id&#39;]</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">index_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> calculation code would be generated here&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_zonal_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">zones</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate code for zonal statistics.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Zonal Statistics Calculation</span>
+<span class="s2">import rasterio</span>
+<span class="s2">import geopandas as gpd</span>
+<span class="s2">from rasterio.mask import mask</span>
+<span class="s2">import numpy as np</span>
+
+<span class="s2"># Load raster data</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">zones = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">zones</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def zonal_statistics(raster_path, zones_geom):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Calculate zonal statistics for geometries.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    with rasterio.open(raster_path) as src:</span>
+<span class="s2">        # Mask raster with each zone</span>
+<span class="s2">        stats = []</span>
+<span class="s2">        for zone in zones_geom:</span>
+<span class="s2">            masked, transform = mask(src, [zone], crop=True)</span>
+<span class="s2">            data = masked[0]</span>
+<span class="s2">            valid_data = data[data != src.nodata]</span>
+
+<span class="s2">            if len(valid_data) &gt; 0:</span>
+<span class="s2">                zone_stats = </span><span class="se">{{</span>
+<span class="s2">                    &#39;mean&#39;: float(np.mean(valid_data)),</span>
+<span class="s2">                    &#39;median&#39;: float(np.median(valid_data)),</span>
+<span class="s2">                    &#39;std&#39;: float(np.std(valid_data)),</span>
+<span class="s2">                    &#39;min&#39;: float(np.min(valid_data)),</span>
+<span class="s2">                    &#39;max&#39;: float(np.max(valid_data))</span>
+<span class="s2">                </span><span class="se">}}</span>
+<span class="s2">            else:</span>
+<span class="s2">                zone_stats = </span><span class="se">{{</span><span class="s2">&#39;mean&#39;: None, &#39;median&#39;: None</span><span class="se">}}</span>
+
+<span class="s2">            stats.append(zone_stats)</span>
+
+<span class="s2">    return stats</span>
+
+<span class="s2"># Calculate statistics for each zone</span>
+<span class="s2">print(&quot;Computing zonal statistics...&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_timeseries_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">location</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate code for time series analysis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Time Series Analysis</span>
+<span class="s2">import rasterio</span>
+<span class="s2">import pandas as pd</span>
+<span class="s2">import numpy as np</span>
+<span class="s2">from datetime import datetime</span>
+
+<span class="s2"># Time series data</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">location = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">location</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def extract_time_series(items, point_location):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Extract time series values at a location.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    ts_data = []</span>
+
+<span class="s2">    for item in items:</span>
+<span class="s2">        # Get date from item</span>
+<span class="s2">        date_str = item[&#39;properties&#39;][&#39;datetime&#39;]</span>
+<span class="s2">        date = pd.to_datetime(date_str)</span>
+
+<span class="s2">        # Extract value at location</span>
+<span class="s2">        asset_href = item[&#39;assets&#39;][&#39;red&#39;][&#39;href&#39;]  # or chosen band</span>
+<span class="s2">        with rasterio.open(asset_href) as src:</span>
+<span class="s2">            # Convert location to raster coordinates</span>
+<span class="s2">            row, col = src.index(location[&#39;lon&#39;], location[&#39;lat&#39;])</span>
+<span class="s2">            value = src.read(1)[row, col]</span>
+
+<span class="s2">            ts_data.append(</span><span class="se">{{</span>
+<span class="s2">                &#39;date&#39;: date,</span>
+<span class="s2">                &#39;value&#39;: float(value) if value != src.nodata else None</span>
+<span class="s2">            </span><span class="se">}}</span><span class="s2">)</span>
+
+<span class="s2">    return pd.DataFrame(ts_data)</span>
+
+<span class="s2"># Extract time series</span>
+<span class="s2">ts_df = extract_time_series(items, location)</span>
+<span class="s2">print(&quot;Time series extracted:&quot;)</span>
+<span class="s2">print(ts_df.head())</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_change_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate code for change detection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Change Detection Analysis</span>
+<span class="s2">import rasterio</span>
+<span class="s2">import numpy as np</span>
+
+<span class="s2"># Multi-temporal data</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def detect_change(before_raster, after_raster):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Compute change between two raster datasets.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    with rasterio.open(before_raster) as src1:</span>
+<span class="s2">        before = src1.read(1).astype(float)</span>
+
+<span class="s2">    with rasterio.open(after_raster) as src2:</span>
+<span class="s2">        after = src2.read(1).astype(float)</span>
+
+<span class="s2">    # Calculate change</span>
+<span class="s2">    change = after - before</span>
+<span class="s2">    percent_change = ((after - before) / before) * 100</span>
+
+<span class="s2">    return </span><span class="se">{{</span>
+<span class="s2">        &#39;absolute_change&#39;: change,</span>
+<span class="s2">        &#39;percent_change&#39;: percent_change,</span>
+<span class="s2">        &#39;change_stats&#39;: </span><span class="se">{{</span>
+<span class="s2">            &#39;mean_change&#39;: float(np.nanmean(change)),</span>
+<span class="s2">            &#39;std_change&#39;: float(np.nanstd(change))</span>
+<span class="s2">        </span><span class="se">}}</span>
+<span class="s2">    </span><span class="se">}}</span>
+
+<span class="s2"># Detect changes between time periods</span>
+<span class="s2">if len(items) &gt;= 2:</span>
+<span class="s2">    before_asset = items[0][&#39;assets&#39;][&#39;red&#39;][&#39;href&#39;]</span>
+<span class="s2">    after_asset = items[-1][&#39;assets&#39;][&#39;red&#39;][&#39;href&#39;]</span>
+
+<span class="s2">    change_result = detect_change(before_asset, after_asset)</span>
+<span class="s2">    print(&quot;Change detection completed&quot;)</span>
+<span class="s2">    print(f&quot;Mean change: </span><span class="se">{{</span><span class="s2">change_result[&#39;change_stats&#39;][&#39;mean_change&#39;]:.3f</span><span class="se">}}</span><span class="s2">&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_buffer_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">distance</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate code for buffer analysis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Buffer Analysis</span>
+<span class="s2">import geopandas as gpd</span>
+
+<span class="s2"># Vector data</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">buffer_distance = </span><span class="si">{</span><span class="n">distance</span><span class="si">}</span>
+
+<span class="s2">def create_buffer(geometries, distance):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Create buffer around geometries.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    gdf = gpd.GeoDataFrame(items)</span>
+<span class="s2">    buffered = gdf.buffer(distance)</span>
+<span class="s2">    return buffered</span>
+
+<span class="s2"># Create buffers</span>
+<span class="s2">buffered_geoms = create_buffer(items, buffer_distance)</span>
+<span class="s2">print(f&quot;Created buffers with </span><span class="se">{{</span><span class="s2">buffer_distance</span><span class="se">}}</span><span class="s2">m radius&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_intersect_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate code for intersection analysis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Intersection Analysis</span>
+<span class="s2">import geopandas as gpd</span>
+
+<span class="s2"># Vector data for intersection</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def intersect_geometries(geom_list):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Find intersections between geometries.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    gdf1 = gpd.GeoDataFrame([geom_list[0]])</span>
+<span class="s2">    gdf2 = gpd.GeoDataFrame([geom_list[1]])</span>
+
+<span class="s2">    intersection = gpd.overlay(gdf1, gdf2, how=&#39;intersection&#39;)</span>
+<span class="s2">    return intersection</span>
+
+<span class="s2"># Perform intersection</span>
+<span class="s2">intersections = intersect_geometries(items)</span>
+<span class="s2">print(&quot;Intersection analysis completed&quot;)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_general_vector_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate general vector analysis code.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# General Vector Analysis: </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span>
+<span class="s2">import geopandas as gpd</span>
+<span class="s2">import pandas as pd</span>
+
+<span class="s2"># Vector data</span>
+<span class="s2">items = </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">items</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span>
+
+<span class="s2">def analyze_vector_data(data, intent):</span>
+<span class="s2">    </span><span class="se">\&quot;\&quot;\&quot;</span><span class="s2">Perform general vector analysis.</span><span class="se">\&quot;\&quot;\&quot;</span>
+<span class="s2">    gdf = gpd.GeoDataFrame(data)</span>
+
+<span class="s2">    analysis_result = </span><span class="se">{{</span>
+<span class="s2">        &#39;total_features&#39;: len(gdf),</span>
+<span class="s2">        &#39;geometry_types&#39;: gdf.geom_type.value_counts().to_dict(),</span>
+<span class="s2">        &#39;bounds&#39;: gdf.total_bounds.tolist(),</span>
+<span class="s2">        &#39;area_stats&#39;: </span><span class="se">{{</span>
+<span class="s2">            &#39;mean_area&#39;: float(gdf.area.mean()),</span>
+<span class="s2">            &#39;total_area&#39;: float(gdf.area.sum())</span>
+<span class="s2">        </span><span class="se">}}</span><span class="s2"> if &#39;Polygon&#39; in gdf.geom_type.values else None</span>
+<span class="s2">    </span><span class="se">}}</span>
+
+<span class="s2">    return analysis_result</span>
+
+<span class="s2"># Analyze vector data</span>
+<span class="s2">result = analyze_vector_data(items, &quot;</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">print(&quot;Vector analysis completed:&quot;)</span>
+<span class="s2">print(result)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_index_viz_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get visualization hints for spectral indices.&quot;&quot;&quot;</span>
+        <span class="n">index_configs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;ndvi&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;RdYlGn&quot;</span><span class="p">,</span> <span class="s2">&quot;vmin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;NDVI&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;evi&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;Greens&quot;</span><span class="p">,</span> <span class="s2">&quot;vmin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;EVI&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;savi&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;YlOrRd&quot;</span><span class="p">,</span> <span class="s2">&quot;vmin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;SAVI&quot;</span><span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">index_configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">index_type</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">index_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()}</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_mock_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">analysis_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create mock analysis result when tools are not available.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analysis_type: Type of analysis attempted</span>
+<span class="sd">            data: Input data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Mock AnalysisResult for development</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating mock </span><span class="si">{</span><span class="n">analysis_type</span><span class="si">}</span><span class="s2"> analysis result&quot;</span><span class="p">)</span>
+
+        <span class="n">mock_result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="n">analysis_type</span><span class="p">,</span>
+            <span class="s2">&quot;data_processed&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;mock&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;summary&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Mock </span><span class="si">{</span><span class="n">analysis_type</span><span class="si">}</span><span class="s2"> analysis completed&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;ndvi&quot;</span><span class="p">:</span>
+            <span class="n">mock_result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">&quot;ndvi_stats&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">0.65</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">0.18</span><span class="p">}}</span>
+            <span class="p">)</span>
+
+        <span class="n">mock_code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;# Mock </span><span class="si">{</span><span class="n">analysis_type</span><span class="si">}</span><span class="s2"> analysis</span>
+<span class="s2"># This is a placeholder while tools are being developed</span>
+
+<span class="s2">import numpy as np</span>
+<span class="s2">import matplotlib.pyplot as plt</span>
+
+<span class="s2"># Mock analysis for </span><span class="si">{</span><span class="n">analysis_type</span><span class="si">}</span>
+<span class="s2">print(&quot;Mock </span><span class="si">{</span><span class="n">analysis_type</span><span class="si">}</span><span class="s2"> analysis completed&quot;)</span>
+<span class="s2">result = </span><span class="si">{</span><span class="n">mock_result</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">mock_result</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">mock_code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">analysis_type</span><span class="p">,</span> <span class="s2">&quot;mock&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="p">)</span>
+</code></pre></div>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.analysis_agent.AnalysisAgent.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+<a href="#geoagent.core.analysis_agent.AnalysisAgent.__init__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+    <div class="doc doc-contents ">
+
+      <p>Initialize the Analysis Agent.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>llm</code></td>
+        <td><code>Any</code></td>
+        <td><p>Language model instance for analysis planning</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>tools</code></td>
+        <td><code>Optional[Dict[str, Any]]</code></td>
+        <td><p>Dictionary of available analysis tools (raster, vector, etc.)</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/analysis_agent.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">llm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the Analysis Agent.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        llm: Language model instance for analysis planning</span>
+<span class="sd">        tools: Dictionary of available analysis tools (raster, vector, etc.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">llm</span> <span class="o">=</span> <span class="n">llm</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tools</span> <span class="o">=</span> <span class="n">tools</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_setup_tools</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.analysis_agent.AnalysisAgent.analyze" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.analysis_agent.AnalysisAgent.analyze" class="headerlink" title="Permanent link">&para;</a></h5>
+
+    <div class="doc doc-contents ">
+
+      <p>Perform analysis on the provided data.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>plan</code></td>
+        <td><code>PlannerOutput</code></td>
+        <td><p>Original query plan with analysis intent</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>data</code></td>
+        <td><code>DataResult</code></td>
+        <td><p>Data retrieved by the Data Agent</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>AnalysisResult</code></td>
+      <td><p>AnalysisResult with computed results and generated code</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/analysis_agent.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform analysis on the provided data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        plan: Original query plan with analysis intent</span>
+<span class="sd">        data: Data retrieved by the Data Agent</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        AnalysisResult with computed results and generated code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting analysis for intent: </span><span class="si">{</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Determine analysis type based on intent and data type</span>
+        <span class="n">analysis_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_analysis_type</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;land_cover&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_land_cover</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;elevation&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_elevation</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;spectral_index&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_spectral_index</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;zonal_statistics&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_zonal_statistics</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;time_series&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_time_series</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;change_detection&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_change_detection</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;vector_analysis&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_vector_analysis</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_general_analysis</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)},</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;# Analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 06:02:26 UTC"><span class="timeago" datetime="2026-02-01T06:02:26+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 06:02:26 UTC">2026-02-01</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 06:02:26 UTC"><span class="timeago" datetime="2026-02-01T06:02:26+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 06:02:26 UTC">2026-02-01</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Qiusheng Wu
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../js/timeago.min.js"></script>
+      
+        <script src="../js/timeago_mkdocs_material.js"></script>
+      
+    
+  </body>
+</html>

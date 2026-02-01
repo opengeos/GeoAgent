@@ -1,39 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/</loc>
+         <loc>https://geoagent.gishub.org/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/changelog/</loc>
+         <loc>https://geoagent.gishub.org/analysis_agent/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/common/</loc>
+         <loc>https://geoagent.gishub.org/catalogs/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/contributing/</loc>
+         <loc>https://geoagent.gishub.org/contributing/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/faq/</loc>
+         <loc>https://geoagent.gishub.org/data_agent/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/geoagent/</loc>
+         <loc>https://geoagent.gishub.org/geoagent/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/installation/</loc>
+         <loc>https://geoagent.gishub.org/installation/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/usage/</loc>
+         <loc>https://geoagent.gishub.org/llm/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
     <url>
-         <loc>https://opengeos.github.io/GeoAgent/examples/intro/</loc>
+         <loc>https://geoagent.gishub.org/models/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/planner/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/tools/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/usage/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/viz_agent/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/examples/intro/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/examples/maplibre_viz/</loc>
+         <lastmod>2026-02-01</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/examples/stac_search/</loc>
          <lastmod>2026-02-01</lastmod>
     </url>
 </urlset>
