@@ -61,6 +61,9 @@ class CatalogRegistry:
     def __init__(self):
         """Initialize the catalog registry with built-in catalogs."""
         self._catalogs: Dict[str, CatalogInfo] = BUILTIN_CATALOGS.copy()
+        # Cache for catalog collections: {catalog_name: [{"id": str, "title": str}, ...]}
+        # Cached per session to avoid repeated network calls
+        self.__class__._collection_cache = getattr(self.__class__, "_collection_cache", {})
 
     def list_catalogs(self) -> List[CatalogInfo]:
         """
@@ -184,6 +187,40 @@ class CatalogRegistry:
         except Exception as e:
             raise RuntimeError(f"Failed to connect to catalog '{name}': {str(e)}")
 
+    def get_collection_index(self, catalog_name: str = "planetary_computer") -> List[Dict[str, str]]:
+        """Fetch and cache a simple index of collections for a catalog.
+
+        The index contains dicts with collection id and title, e.g.:
+        [{"id": "sentinel-2-l2a", "title": "Sentinel-2 Level-2A"}, ...]
+
+        Results are cached in-memory for the duration of the session.
+
+        Args:
+            catalog_name: Name of the catalog as registered in this registry
+
+        Returns:
+            List of dicts with keys "id" and "title"
+        """
+        # Return cached if available
+        cache = self.__class__._collection_cache
+        if catalog_name in cache:
+            return cache[catalog_name]
+
+        client = self.get_client(catalog_name)
+        collections: List[Dict[str, str]] = []
+        try:
+            for col in client.get_collections():
+                col_id = getattr(col, "id", None) or col.to_dict().get("id")
+                title = getattr(col, "title", None) or col.to_dict().get("title") or col_id
+                if col_id:
+                    collections.append({"id": col_id, "title": title})
+        except Exception as e:
+            raise RuntimeError(f"Failed to list collections for '{catalog_name}': {e}")
+
+        # Cache and return
+        cache[catalog_name] = collections
+        return collections
+
     def remove_catalog(self, name: str) -> bool:
         """
         Remove a catalog from the registry.
@@ -234,3 +271,8 @@ def get_catalog_client(name: Optional[str] = None) -> pystac_client.Client:
         Configured pystac_client.Client instance
     """
     return _global_registry.get_client(name)
+
+
+def get_collection_index(catalog_name: str = "planetary_computer") -> list:
+    """Convenience accessor for a catalog's collection index."""
+    return _global_registry.get_collection_index(catalog_name)

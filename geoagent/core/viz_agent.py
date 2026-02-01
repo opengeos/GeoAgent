@@ -638,6 +638,25 @@ class VizAgent:
         """
         intent_lower = intent.lower()
 
+        # DEM and land cover collections use "data" or "map" asset
+        if any(
+            term in intent_lower
+            for term in [
+                "dem",
+                "elevation",
+                "terrain",
+                "land_cover",
+                "land cover",
+                "landcover",
+                "lulc",
+                "land use",
+            ]
+        ):
+            if "data" in assets:
+                return ["data"]
+            if "map" in assets:
+                return ["map"]
+
         # For imagery/visual requests, prefer true color composite
         if "visual" in assets:
             return ["visual"]
@@ -716,6 +735,33 @@ class VizAgent:
             analysis: Analysis results
         """
         viz_hints = analysis.visualization_hints
+        viz_type = viz_hints.get("type", "") if viz_hints else ""
+
+        # Handle land cover and elevation data via STAC layer
+        if viz_type in ("land_cover", "elevation") and data and data.items:
+            item = data.items[0]
+            item_id = item.get("id", "")
+            collection = item.get("collection", "")
+
+            if MAPLIBRE_AVAILABLE and collection:
+                asset_key = viz_hints.get("asset_key", "data")
+                try:
+                    m.add_stac_layer(
+                        collection=collection,
+                        item=item_id,
+                        assets=[asset_key],
+                        titiler_endpoint="planetary-computer",
+                        name=viz_hints.get("title", item_id),
+                        fit_bounds=True,
+                    )
+                    logger.info(
+                        f"Added {viz_type} STAC layer: {collection}/{item_id}"
+                    )
+                    return
+                except Exception as e:
+                    logger.warning(
+                        f"Could not add {viz_type} STAC layer: {e}"
+                    )
 
         # Check if we have a computed NDVI raster to display
         ndvi_path = None
@@ -783,13 +829,13 @@ class VizAgent:
             viz_hints = analysis.visualization_hints
 
             if "colormap" in viz_hints and "vmin" in viz_hints and "vmax" in viz_hints:
-                # Add colorbar legend
+                # Add colorbar legend (leafmap maplibregl uses cmap/label)
                 if hasattr(m, "add_colorbar"):
                     m.add_colorbar(
-                        colors=viz_hints["colormap"],
+                        cmap=viz_hints["colormap"],
                         vmin=viz_hints["vmin"],
                         vmax=viz_hints["vmax"],
-                        caption=viz_hints.get("title", "Analysis Result"),
+                        label=viz_hints.get("title", "Analysis Result"),
                     )
 
         except Exception as e:

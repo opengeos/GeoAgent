@@ -1,6 +1,6 @@
 """Planner agent for parsing natural language queries into structured parameters."""
 
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 
 from pydantic import BaseModel, Field
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -22,8 +22,8 @@ class _PlannerLLMSchema(BaseModel):
         default=None,
         description="Location name (e.g. 'California') or bounding box as 'west,south,east,north'",
     )
-    time_range: Optional[Tuple[str, str]] = Field(
-        default=None, description="Start and end dates in YYYY-MM-DD format"
+    time_range: Optional[List[str]] = Field(
+        default=None, description="Start and end dates as a two-element list [YYYY-MM-DD, YYYY-MM-DD]"
     )
     dataset: Optional[str] = Field(
         default=None,
@@ -57,15 +57,22 @@ Time ranges should be converted to YYYY-MM-DD format:
 - "last year" -> ("2022-01-01", "2022-12-31")
 - "March 2024" -> ("2024-03-01", "2024-03-31")
 
-Common datasets and their collection names:
-- Landsat: "landsat-c2-l2"
-- Sentinel-2: "sentinel-2-l2a"
-- MODIS: "modis-*" (various products)
-- Sentinel-1: "sentinel-1-grd"
+Choose the most appropriate collection from the catalog list below.
+Set the `dataset` field to the exact collection ID.
+If no collection fits, leave dataset as None.
+
+{collections}
+
+CRITICAL RULES:
+- Only use "sentinel-2-l2a" when the user explicitly asks for satellite imagery, spectral indices (NDVI, EVI), or Sentinel-2
+- Do NOT set analysis_type to "ndvi" unless the user specifically asks for NDVI or vegetation index
+- For land cover queries, set analysis_type to "land_cover"
+- For DEM/elevation queries, set analysis_type to "elevation"
 
 Analysis types include:
 - Vegetation indices: "ndvi", "evi", "savi"
-- Land cover: "land_cover", "classification"
+- Land cover: "land_cover"
+- Elevation / DEM: "elevation"
 - Change detection: "change_detection"
 - Time series: "time_series"
 - Water indices: "ndwi", "mndwi"
@@ -104,13 +111,45 @@ Output: {{
     "parameters": {{"comparison_type": "temporal"}}
 }}
 
+Query: "Show land cover for California"
+Output: {{
+    "intent": "visualize",
+    "location": "California",
+    "dataset": "io-lulc-9-class",
+    "analysis_type": "land_cover"
+}}
+
+Query: "Show DEM for Yellowstone"
+Output: {{
+    "intent": "visualize",
+    "location": "Yellowstone",
+    "dataset": "cop-dem-glo-30",
+    "analysis_type": "elevation"
+}}
+
+Query: "Display elevation map of the Grand Canyon"
+Output: {{
+    "intent": "visualize",
+    "location": "Grand Canyon",
+    "dataset": "cop-dem-glo-30",
+    "analysis_type": "elevation"
+}}
+
+Query: "Show land use in Tokyo"
+Output: {{
+    "intent": "visualize",
+    "location": "Tokyo",
+    "dataset": "io-lulc-9-class",
+    "analysis_type": "land_cover"
+}}
+
 Extract information accurately and conservatively. If something is unclear, leave it as None rather than guessing."""
 
 
 class Planner:
     """Agent for parsing natural language queries into structured parameters."""
 
-    def __init__(self, llm: Optional[BaseChatModel] = None):
+    def __init__(self, llm: Optional[BaseChatModel] = None, collections: Optional[List[Dict[str, str]]] = None):
         """
         Initialize the planner agent.
 
@@ -118,8 +157,24 @@ class Planner:
             llm: Language model to use. Uses default if None.
         """
         self.llm = llm or get_default_llm(temperature=0.0)
+
+        # Format collections into a readable list for the system prompt
+        collections_text = ""
+        if collections:
+            lines = ["Available collections in the STAC catalog:"]
+            for c in collections:
+                cid = c.get("id", "")
+                title = c.get("title", "")
+                if title and title != cid:
+                    lines.append(f"- {cid}: {title}")
+                else:
+                    lines.append(f"- {cid}")
+            collections_text = "\n".join(lines)
+
+        # Use replace instead of format to avoid conflicts with {{ }} in examples
+        system_prompt = SYSTEM_PROMPT.replace("{collections}", collections_text)
         self.prompt = ChatPromptTemplate.from_messages(
-            [("system", SYSTEM_PROMPT), ("human", "{query}")]
+            [("system", system_prompt), ("human", "{query}")]
         )
 
         # Create the structured output chain using internal LLM schema
@@ -208,7 +263,7 @@ class Planner:
         return results
 
 
-def create_planner(llm: Optional[BaseChatModel] = None) -> Planner:
+def create_planner(llm: Optional[BaseChatModel] = None, collections: Optional[List[Dict[str, str]]] = None) -> Planner:
     """
     Create a planner instance.
 
@@ -218,10 +273,10 @@ def create_planner(llm: Optional[BaseChatModel] = None) -> Planner:
     Returns:
         Configured Planner instance
     """
-    return Planner(llm=llm)
+    return Planner(llm=llm, collections=collections)
 
 
-def parse_query(query: str, llm: Optional[BaseChatModel] = None) -> PlannerOutput:
+def parse_query(query: str, llm: Optional[BaseChatModel] = None, collections: Optional[List[Dict[str, str]]] = None) -> PlannerOutput:
     """
     Convenience function to parse a single query.
 
@@ -232,5 +287,5 @@ def parse_query(query: str, llm: Optional[BaseChatModel] = None) -> PlannerOutpu
     Returns:
         PlannerOutput with extracted information
     """
-    planner = create_planner(llm=llm)
+    planner = create_planner(llm=llm, collections=collections)
     return planner.parse_query(query)

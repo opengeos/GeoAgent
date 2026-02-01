@@ -80,9 +80,14 @@ nav:
         - Usage: usage.md
     - API Reference:
         - GeoAgent: geoagent.md
-        - Agents: agents.md
+        - Models: models.md
+        - Planner: planner.md
+        - Data Agent: data_agent.md
+        - Analysis Agent: analysis_agent.md
+        - Visualization Agent: viz_agent.md
+        - LLM: llm.md
+        - Catalogs: catalogs.md
         - Tools: tools.md
-        - Catalogs & LLM: catalogs.md
     - Examples:
         - examples/intro.ipynb
         - examples/stac_search.ipynb

@@ -14,7 +14,3 @@ GeoAgent includes a registry of pre-configured STAC catalog endpoints.
 ## Catalog Registry
 
 ::: geoagent.catalogs.registry
-
-## LLM Provider Abstraction
-
-::: geoagent.core.llm

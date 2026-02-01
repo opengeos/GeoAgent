@@ -359,30 +359,63 @@ class DataAgent:
 
         # Add collection/dataset filters
         if plan.dataset:
-            dataset_mapping = {
-                "sentinel-2": "sentinel-2-l2a",
-                "sentinel2": "sentinel-2-l2a",
-                "landsat": "landsat-c2-l2",
-                "modis": "modis",
-            }
-            collection = dataset_mapping.get(plan.dataset.lower(), plan.dataset)
-            params["collections"] = [collection]
+            # Use the planner-provided dataset directly as the collection ID
+            params["collections"] = [plan.dataset]
 
-        # Default to sentinel-2-l2a for raster/NDVI queries without explicit dataset
+        # Resolve collection from analysis_type or intent if not already set
         if "collections" not in params:
+            analysis_type = (plan.analysis_type or "").lower()
             intent_lower = plan.intent.lower()
-            if any(
+
+            # Check analysis_type first (most reliable signal from planner)
+            if analysis_type in ("land_cover", "classification", "lulc"):
+                params["collections"] = ["io-lulc-9-class"]
+            elif analysis_type in (
+                "elevation",
+                "dem",
+                "terrain",
+                "slope",
+                "hillshade",
+            ):
+                params["collections"] = ["cop-dem-glo-30"]
+            # Then check intent keywords
+            elif any(
                 kw in intent_lower
-                for kw in ["ndvi", "evi", "vegetation", "spectral", "band", "imagery"]
+                for kw in ["land cover", "landcover", "lulc", "land use"]
+            ):
+                params["collections"] = ["io-lulc-9-class"]
+            elif any(
+                kw in intent_lower
+                for kw in ["dem", "elevation", "terrain", "height", "topograph"]
+            ):
+                params["collections"] = ["cop-dem-glo-30"]
+            elif any(
+                kw in intent_lower
+                for kw in [
+                    "ndvi",
+                    "evi",
+                    "vegetation",
+                    "spectral",
+                    "band",
+                    "imagery",
+                ]
             ):
                 params["collections"] = ["sentinel-2-l2a"]
 
-        # Add cloud cover filter if specified
-        max_cloud = plan.parameters.get("max_cloud_cover") or plan.parameters.get(
-            "cloud_cover"
+        # Add cloud cover filter only for imagery collections (not DEM/land cover)
+        # Heuristic: imagery collections often contain these keywords
+        current_collections = set(params.get("collections", []))
+        imagery_keywords = ("sentinel", "landsat", "naip", "modis")
+        is_imagery = any(
+            any(kw in (c or "").lower() for kw in imagery_keywords)
+            for c in current_collections
         )
-        if max_cloud is not None:
-            params["query"] = {"eo:cloud_cover": {"lt": max_cloud}}
+        if is_imagery:
+            max_cloud = plan.parameters.get(
+                "max_cloud_cover"
+            ) or plan.parameters.get("cloud_cover")
+            if max_cloud is not None:
+                params["query"] = {"eo:cloud_cover": {"lt": max_cloud}}
 
         # Add limit to prevent too many results
         params["max_items"] = plan.parameters.get("max_items", 10)

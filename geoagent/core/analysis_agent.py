@@ -65,7 +65,11 @@ class AnalysisAgent:
             # Determine analysis type based on intent and data type
             analysis_type = self._determine_analysis_type(plan, data)
 
-            if analysis_type == "spectral_index":
+            if analysis_type == "land_cover":
+                return self._handle_land_cover(plan, data)
+            elif analysis_type == "elevation":
+                return self._handle_elevation(plan, data)
+            elif analysis_type == "spectral_index":
                 return self._compute_spectral_index(plan, data)
             elif analysis_type == "zonal_statistics":
                 return self._compute_zonal_statistics(plan, data)
@@ -98,6 +102,43 @@ class AnalysisAgent:
             Analysis type string
         """
         intent = plan.intent.lower()
+        analysis_type_hint = (plan.analysis_type or "").lower()
+
+        # Check plan.analysis_type first (most reliable signal from planner)
+        if analysis_type_hint in ("land_cover", "classification", "lulc"):
+            return "land_cover"
+        if analysis_type_hint in ("elevation", "dem", "terrain", "slope", "hillshade"):
+            return "elevation"
+        if analysis_type_hint in ("ndvi", "evi", "savi", "ndbi", "ndwi", "mndwi"):
+            return "spectral_index"
+
+        # Land cover analysis (from intent keywords)
+        if any(
+            term in intent
+            for term in [
+                "land_cover",
+                "land cover",
+                "landcover",
+                "lulc",
+                "land use",
+                "classification",
+            ]
+        ):
+            return "land_cover"
+
+        # DEM / elevation analysis (from intent keywords)
+        if any(
+            term in intent
+            for term in [
+                "dem",
+                "elevation",
+                "terrain",
+                "slope",
+                "hillshade",
+                "topograph",
+            ]
+        ):
+            return "elevation"
 
         # Spectral index analysis
         if any(
@@ -182,21 +223,32 @@ class AnalysisAgent:
         from rasterio.windows import from_bounds
 
         # Find first item with red and nir bands
+        # Planetary Computer uses B04 (red) and B08 (NIR); other catalogs use
+        # lowercase "red"/"nir"
+        RED_KEYS = ["red", "B04", "b04", "Red"]
+        NIR_KEYS = ["nir", "B08", "b08", "Nir", "NIR"]
+
         item = None
+        red_key = None
+        nir_key = None
         for candidate in data.items:
             assets = candidate.get("assets", {})
-            if "red" in assets and "nir" in assets:
-                red_href = assets["red"].get("href", "")
-                nir_href = assets["nir"].get("href", "")
+            found_red = next((k for k in RED_KEYS if k in assets), None)
+            found_nir = next((k for k in NIR_KEYS if k in assets), None)
+            if found_red and found_nir:
+                red_href = assets[found_red].get("href", "")
+                nir_href = assets[found_nir].get("href", "")
                 if red_href.startswith("http") and nir_href.startswith("http"):
                     item = candidate
+                    red_key = found_red
+                    nir_key = found_nir
                     break
 
         if item is None:
             raise ValueError("No STAC item found with red and nir COG bands")
 
-        red_url = item["assets"]["red"]["href"]
-        nir_url = item["assets"]["nir"]["href"]
+        red_url = item["assets"][red_key]["href"]
+        nir_url = item["assets"][nir_key]["href"]
         item_id = item.get("id", "unknown")
 
         logger.info(f"Computing NDVI for item {item_id}")
@@ -324,6 +376,155 @@ print(f"NDVI mean: {{np.nanmean(ndvi):.3f}}")
             "vmin": -0.2,
             "vmax": 0.8,
             "title": f"NDVI - {item_id}",
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_land_cover(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle land cover data - passthrough with appropriate viz hints.
+
+        Args:
+            plan: Query plan
+            data: Land cover data from STAC
+
+        Returns:
+            AnalysisResult with land cover viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        result_data = {
+            "analysis_type": "land_cover",
+            "data_type": "categorical",
+            "items_found": data.total_items,
+            "collection": (
+                data.items[0].get("collection", "") if data.items else ""
+            ),
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for land cover data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["io-lulc-9-class"],
+    bbox={bbox},
+    max_items=1,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} land cover items")
+
+# Visualize
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="io-lulc-9-class",
+        item=item.id,
+        assets=["data"],
+        titiler_endpoint="planetary-computer",
+        name="Land Cover",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "land_cover",
+            "asset_key": "data",
+            "title": f"Land Cover - {location_name}" if location_name else "Land Cover",
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_elevation(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle DEM/elevation data - passthrough with appropriate viz hints.
+
+        Args:
+            plan: Query plan
+            data: DEM data from STAC
+
+        Returns:
+            AnalysisResult with elevation viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        result_data = {
+            "analysis_type": "elevation",
+            "data_type": "continuous",
+            "items_found": data.total_items,
+            "collection": (
+                data.items[0].get("collection", "") if data.items else ""
+            ),
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for DEM data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["cop-dem-glo-30"],
+    bbox={bbox},
+    max_items=1,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} DEM items")
+
+# Visualize
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="cop-dem-glo-30",
+        item=item.id,
+        assets=["data"],
+        titiler_endpoint="planetary-computer",
+        name="Elevation (DEM)",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "elevation",
+            "colormap": "terrain",
+            "asset_key": "data",
+            "title": (
+                f"Elevation (DEM) - {location_name}"
+                if location_name
+                else "Elevation (DEM)"
+            ),
         }
 
         return AnalysisResult(

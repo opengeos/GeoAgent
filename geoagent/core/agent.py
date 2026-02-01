@@ -31,6 +31,7 @@ from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402
 from .planner import Planner  # noqa: E402
 from .llm import get_default_llm  # noqa: E402
+from geoagent.catalogs.registry import get_collection_index  # noqa: E402
 
 
 class AgentState(TypedDict):
@@ -74,8 +75,15 @@ class GeoAgent:
         self.model = model
         self.catalogs = catalogs or []
 
+        # Fetch available collections from the Planetary Computer STAC (with fallback)
+        try:
+            self.collection_index = get_collection_index()
+        except Exception as e:
+            logger.warning(f"Failed to fetch collection index: {e}. Proceeding without it.")
+            self.collection_index = []
+
         # Initialize specialized agents
-        self.planner = Planner(self.llm)
+        self.planner = Planner(self.llm, collections=self.collection_index)
         self.data_agent = DataAgent(self.llm)
         self.analysis_agent = AnalysisAgent(self.llm)
         self.viz_agent = VizAgent(self.llm)
@@ -333,9 +341,21 @@ class GeoAgent:
                 "trend",
                 "zonal",
             ]
-            state["should_analyze"] = any(
+            needs_analysis = any(
                 kw in intent_lower for kw in analysis_keywords
             )
+            # Land cover and elevation need analysis routing for proper viz hints
+            analysis_type_hint = (plan.analysis_type or "").lower()
+            if analysis_type_hint in (
+                "land_cover",
+                "classification",
+                "lulc",
+                "elevation",
+                "dem",
+                "terrain",
+            ):
+                needs_analysis = True
+            state["should_analyze"] = needs_analysis
 
             # Visualization is usually desired unless explicitly asking for just data
             viz_skip_keywords = ["download", "list", "count", "metadata"]
@@ -403,21 +423,17 @@ class GeoAgent:
                 f"{time_range.get('start_date', '')}/{time_range.get('end_date', '')}"
             )
 
-        # Build collection
+        # Build collection: use planner output directly; fallback to Sentinel-2 if absent
         dataset = plan.dataset
-        dataset_mapping = {
-            "sentinel-2": "sentinel-2-l2a",
-            "sentinel2": "sentinel-2-l2a",
-            "landsat": "landsat-c2-l2",
-        }
-        collection = (
-            dataset_mapping.get(dataset, dataset) if dataset else "sentinel-2-l2a"
-        )
+        collection = dataset if dataset else "sentinel-2-l2a"
 
-        # Cloud cover
+        # Cloud cover filter only for imagery collections
         cloud_filter = ""
+        imagery_collections = {
+            "sentinel-2-l2a", "landsat-c2-l2", "naip", "sentinel-1-grd",
+        }
         max_cc = plan.parameters.get("max_cloud_cover")
-        if max_cc is not None:
+        if max_cc is not None and collection in imagery_collections:
             cloud_filter = f'\n    query={{"eo:cloud_cover": {{"lt": {max_cc}}}}},'
 
         code = f'''import planetary_computer
