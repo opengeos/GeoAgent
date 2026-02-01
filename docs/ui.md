@@ -38,4 +38,4 @@ launch_ui()
 
 ## Module Reference
 
-::: geoagent.ui
+::: geoagent.ui.launch_ui
