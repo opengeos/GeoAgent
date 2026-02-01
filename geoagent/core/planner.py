@@ -85,30 +85,30 @@ Additional parameters can include:
 Examples:
 
 Query: "Show NDVI for California in summer 2023"
-Output: {
+Output: {{
     "intent": "analyze",
     "location": "California",
     "time_range": ["2023-06-01", "2023-08-31"],
     "dataset": "sentinel-2-l2a",
     "analysis_type": "ndvi"
-}
+}}
 
 Query: "Find Landsat images of the Amazon with less than 10% cloud cover"
-Output: {
+Output: {{
     "intent": "search",
     "location": "Amazon rainforest",
     "dataset": "landsat-c2-l2",
-    "parameters": {"cloud_cover": 10}
-}
+    "parameters": {{"cloud_cover": 10}}
+}}
 
 Query: "Compare forest cover between 2020 and 2024 in Brazil"
-Output: {
+Output: {{
     "intent": "compare",
     "location": "Brazil",
     "time_range": ["2020-01-01", "2024-12-31"],
     "analysis_type": "land_cover",
-    "parameters": {"comparison_type": "temporal"}
-}
+    "parameters": {{"comparison_type": "temporal"}}
+}}
 
 Extract information accurately and conservatively. If something is unclear, leave it as None rather than guessing."""
 
