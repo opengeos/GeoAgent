@@ -399,7 +399,9 @@ class GeoAgent:
         time_range = plan.time_range
         datetime_str = ""
         if time_range:
-            datetime_str = f"{time_range.get('start_date', '')}/{time_range.get('end_date', '')}"
+            datetime_str = (
+                f"{time_range.get('start_date', '')}/{time_range.get('end_date', '')}"
+            )
 
         # Build collection
         dataset = plan.dataset
@@ -408,7 +410,9 @@ class GeoAgent:
             "sentinel2": "sentinel-2-l2a",
             "landsat": "landsat-c2-l2",
         }
-        collection = dataset_mapping.get(dataset, dataset) if dataset else "sentinel-2-l2a"
+        collection = (
+            dataset_mapping.get(dataset, dataset) if dataset else "sentinel-2-l2a"
+        )
 
         # Cloud cover
         cloud_filter = ""
@@ -532,7 +536,7 @@ for item in items:
         else:
             assets_str = '"visual"'
 
-        code = f'''
+        code = f"""
 # Visualize on an interactive map
 import leafmap.maplibregl as leafmap
 
@@ -546,7 +550,7 @@ m.add_stac_layer(
     fit_bounds=True,
 )
 m
-'''
+"""
         return code
 
     def _should_analyze(self, state: AgentState) -> bool:
