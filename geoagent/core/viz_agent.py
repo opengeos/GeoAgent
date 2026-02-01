@@ -226,9 +226,10 @@ class VizAgent:
         try:
             if hasattr(target_map, "use_message_queue"):
                 target_map.use_message_queue(True)
-            if hasattr(target_map, "create_container") and getattr(
-                target_map, "container", None
-            ) is None:
+            if (
+                hasattr(target_map, "create_container")
+                and getattr(target_map, "container", None) is None
+            ):
                 target_map.create_container()
         except Exception as e:
             logger.debug(f"Could not prepare target map: {e}")
@@ -320,7 +321,9 @@ class VizAgent:
             try:
                 # Use add_stac_layer for best performance
                 if MAPLIBRE_AVAILABLE and collection:
-                    viz_assets = self._select_viz_assets(assets, plan.intent, collection)
+                    viz_assets = self._select_viz_assets(
+                        assets, plan.intent, collection
+                    )
                     if isinstance(viz_assets, list):
                         viz_assets = [a for a in viz_assets if a != "rendered_preview"]
                     elif viz_assets == "rendered_preview":
@@ -362,7 +365,12 @@ class VizAgent:
                     item_bbox = item.get("bbox")
                     if item_bbox and len(item_bbox) >= 4:
                         try:
-                            m.fit_bounds([[item_bbox[0], item_bbox[1]], [item_bbox[2], item_bbox[3]]])
+                            m.fit_bounds(
+                                [
+                                    [item_bbox[0], item_bbox[1]],
+                                    [item_bbox[2], item_bbox[3]],
+                                ]
+                            )
                             logger.info(f"Fitted bounds to: {item_bbox}")
                         except Exception as e:
                             logger.debug(f"Could not fit bounds: {e}")
@@ -664,16 +672,24 @@ class VizAgent:
                         v.get("href", "").startswith("mock://") for v in assets.values()
                     ):
                         if MAPLIBRE_AVAILABLE and collection:
-                            viz_assets = self._select_viz_assets(assets, plan.intent, collection)
+                            viz_assets = self._select_viz_assets(
+                                assets, plan.intent, collection
+                            )
                             if isinstance(viz_assets, list):
-                                viz_assets = [a for a in viz_assets if a != "rendered_preview"]
+                                viz_assets = [
+                                    a for a in viz_assets if a != "rendered_preview"
+                                ]
                             elif viz_assets == "rendered_preview":
                                 viz_assets = []
                             if not viz_assets:
-                                best_asset = self._select_best_asset(assets, plan.intent)
+                                best_asset = self._select_best_asset(
+                                    assets, plan.intent
+                                )
                                 if best_asset and best_asset != "rendered_preview":
                                     viz_assets = [best_asset]
-                            logger.info(f"Default viz: adding STAC layer {collection}/{item_id}")
+                            logger.info(
+                                f"Default viz: adding STAC layer {collection}/{item_id}"
+                            )
 
                             layer_kwargs = {
                                 "collection": collection,
@@ -697,7 +713,12 @@ class VizAgent:
                             item_bbox = item.get("bbox")
                             if item_bbox and len(item_bbox) >= 4:
                                 try:
-                                    m.fit_bounds([[item_bbox[0], item_bbox[1]], [item_bbox[2], item_bbox[3]]])
+                                    m.fit_bounds(
+                                        [
+                                            [item_bbox[0], item_bbox[1]],
+                                            [item_bbox[2], item_bbox[3]],
+                                        ]
+                                    )
                                 except Exception:
                                     center_lon = (item_bbox[0] + item_bbox[2]) / 2
                                     center_lat = (item_bbox[1] + item_bbox[3]) / 2
@@ -721,6 +742,7 @@ class VizAgent:
             except Exception as e:
                 logger.error(f"Could not add data to default visualization: {e}")
                 import traceback
+
                 traceback.print_exc()
 
         title = f"GeoAgent Map: {plan.intent}"
@@ -745,7 +767,9 @@ class VizAgent:
 
         return m
 
-    def _select_viz_assets(self, assets: Dict[str, Any], intent: str, collection: str = "") -> list:
+    def _select_viz_assets(
+        self, assets: Dict[str, Any], intent: str, collection: str = ""
+    ) -> list:
         """Select asset names for STAC layer visualization.
 
         Returns a list of asset keys suitable for add_stac_layer.
@@ -922,7 +946,9 @@ class VizAgent:
                         "collection": collection,
                         "item": item_id,
                         "assets": [asset_key],
-                        "name": viz_hints.get("title", f"{collection[:20]}_{item_id[:15]}"),
+                        "name": viz_hints.get(
+                            "title", f"{collection[:20]}_{item_id[:15]}"
+                        ),
                         "fit_bounds": True,
                         "overwrite": True,
                     }
@@ -942,7 +968,12 @@ class VizAgent:
                     item_bbox = item.get("bbox")
                     if item_bbox and len(item_bbox) >= 4:
                         try:
-                            m.fit_bounds([[item_bbox[0], item_bbox[1]], [item_bbox[2], item_bbox[3]]])
+                            m.fit_bounds(
+                                [
+                                    [item_bbox[0], item_bbox[1]],
+                                    [item_bbox[2], item_bbox[3]],
+                                ]
+                            )
                         except Exception:
                             center_lon = (item_bbox[0] + item_bbox[2]) / 2
                             center_lat = (item_bbox[1] + item_bbox[3]) / 2

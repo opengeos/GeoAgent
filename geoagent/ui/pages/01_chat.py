@@ -79,7 +79,9 @@ def _run_query(query: str, target_map) -> str:
 
         logger.info(f"Running query: {query}")
         result = agent.chat(query, target_map=target_map)
-        logger.info(f"Query result: success={result.success}, items={result.data.total_items if result.data else 0}")
+        logger.info(
+            f"Query result: success={result.success}, items={result.data.total_items if result.data else 0}"
+        )
 
         if result.success:
             items = result.data.total_items if result.data else 0
@@ -115,6 +117,7 @@ def _run_query(query: str, target_map) -> str:
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         logger.error(f"Query failed: {e}")
         return f"❌ Error: {e}"
@@ -140,9 +143,10 @@ def Page():
             map_widget_ref.current = widget
             if hasattr(widget, "use_message_queue"):
                 widget.use_message_queue(True)
-            if hasattr(widget, "create_container") and getattr(
-                widget, "container", None
-            ) is None:
+            if (
+                hasattr(widget, "create_container")
+                and getattr(widget, "container", None) is None
+            ):
                 widget.create_container()
             if hasattr(widget, "add_call"):
                 widget.add_call("resize")
@@ -179,7 +183,10 @@ def Page():
             response = _run_query(q, target_map)
 
             # Add response
-            messages.value = [*messages.value, {"role": "assistant", "content": response}]
+            messages.value = [
+                *messages.value,
+                {"role": "assistant", "content": response},
+            ]
 
             # Reset state
             processing.value = False
