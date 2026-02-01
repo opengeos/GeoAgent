@@ -29,6 +29,7 @@ MAP_HEIGHT_PX = 600
 # Session state helpers
 # ---------------------------------------------------------------------------
 
+
 def _ensure_state():
     defaults = {
         "messages": [],
@@ -52,6 +53,7 @@ def _make_agent(provider: str, model: str) -> GeoAgent:
 # ---------------------------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------------------------
+
 
 def _sidebar():
     st.sidebar.markdown("### Settings")
@@ -96,6 +98,7 @@ def _sidebar():
 # Rendering helpers
 # ---------------------------------------------------------------------------
 
+
 def _render_chat_history():
     """Render chat messages — text only, no maps in history."""
     for msg in st.session_state.messages:
@@ -137,6 +140,7 @@ def _build_summary(result: GeoAgentResponse) -> str:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     st.set_page_config(layout="wide", page_title=PAGE_TITLE, page_icon=PAGE_ICON)
@@ -189,7 +193,9 @@ def main():
                                     expanded=False,
                                 )
                             else:
-                                status.update(label="Completed with errors", state="error")
+                                status.update(
+                                    label="Completed with errors", state="error"
+                                )
 
                             summary = _build_summary(result)
                             st.write(summary)
@@ -199,8 +205,12 @@ def main():
 
                             # Cache latest map/code for right panel
                             try:
-                                if result.map is not None and hasattr(result.map, "to_html"):
-                                    st.session_state.last_map_html = result.map.to_html()
+                                if result.map is not None and hasattr(
+                                    result.map, "to_html"
+                                ):
+                                    st.session_state.last_map_html = (
+                                        result.map.to_html()
+                                    )
                                 else:
                                     st.session_state.last_map_html = None
                             except Exception:
@@ -208,7 +218,8 @@ def main():
 
                             code = result.code or (
                                 result.analysis.code_generated
-                                if result.analysis and getattr(result.analysis, "code_generated", None)
+                                if result.analysis
+                                and getattr(result.analysis, "code_generated", None)
                                 else ""
                             )
                             st.session_state.last_code = code or None
