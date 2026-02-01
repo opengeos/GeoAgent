@@ -95,16 +95,20 @@ class GeoAgent:
 
         logger.info("GeoAgent initialized successfully")
 
-    def chat(self, query: str) -> GeoAgentResponse:
+    def chat(self, query: str, target_map: Any = None) -> GeoAgentResponse:
         """Main method to process a natural language query.
 
         Args:
             query: Natural language geospatial analysis query
+            target_map: Optional existing map widget to render results on.
+                When provided, layers are added directly to this map
+                instead of creating a new one.
 
         Returns:
             GeoAgentResponse with complete pipeline results
         """
         logger.info(f"Processing query: {query}")
+        self._target_map = target_map
         start_time = time.time()
 
         try:
@@ -507,7 +511,10 @@ for item in items:
         try:
             if state["plan"]:
                 viz_map = self.viz_agent.create_visualization(
-                    state["plan"], state["data"], state["analysis"]
+                    state["plan"],
+                    state["data"],
+                    state["analysis"],
+                    target_map=getattr(self, "_target_map", None),
                 )
                 state["map"] = viz_map
 
@@ -672,12 +679,25 @@ m
         time_range = self._extract_time_range(query_lower)
 
         dataset = None
-        if "sentinel" in query_lower or "sentinel-2" in query_lower:
-            dataset = "sentinel-2"
+        analysis_type = None
+        if "sentinel-1" in query_lower:
+            dataset = "sentinel-1-grd"
+        elif "sentinel" in query_lower or "sentinel-2" in query_lower:
+            dataset = "sentinel-2-l2a"
         elif "landsat" in query_lower:
-            dataset = "landsat"
+            dataset = "landsat-c2-l2"
+        elif "naip" in query_lower:
+            dataset = "naip"
         elif "modis" in query_lower:
-            dataset = "modis"
+            dataset = "modis-09A1-061"
+        elif any(
+            kw in query_lower for kw in ["land cover", "landcover", "lulc", "land use"]
+        ):
+            dataset = "io-lulc-9-class"
+            analysis_type = "land_cover"
+        elif any(kw in query_lower for kw in ["dem", "elevation", "terrain"]):
+            dataset = "cop-dem-glo-30"
+            analysis_type = "elevation"
 
         parameters = {}
         if "cloud-free" in query_lower or "cloud free" in query_lower:
@@ -692,6 +712,7 @@ m
             location=location,
             time_range=time_range,
             dataset=dataset,
+            analysis_type=analysis_type,
             parameters=parameters,
             confidence=0.5,
         )

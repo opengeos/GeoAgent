@@ -79,6 +79,8 @@ class STACSearchWrapper:
             }
 
             for asset_key, asset in item.assets.items():
+                if asset_key == "rendered_preview":
+                    continue
                 item_data["assets"][asset_key] = {
                     "href": asset.href,
                     "type": asset.media_type,
