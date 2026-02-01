@@ -65,13 +65,10 @@ def _sidebar():
     if st.session_state._prev_provider != provider:
         st.session_state._prev_provider = provider
         st.session_state["_model_input"] = PROVIDERS[provider]["default_model"]
+    elif "_model_input" not in st.session_state:
+        st.session_state["_model_input"] = PROVIDERS.get(provider, {}).get("default_model", "")
 
-    default_model = PROVIDERS.get(provider, {}).get("default_model", "")
-    model = st.sidebar.text_input(
-        "Model",
-        value=st.session_state.get("_model_input", default_model),
-        key="_model_input",
-    )
+    model = st.sidebar.text_input("Model", key="_model_input")
 
     if st.sidebar.button("New Chat", use_container_width=True):
         st.session_state.messages = []
