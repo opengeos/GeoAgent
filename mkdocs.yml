@@ -1,16 +1,16 @@
 site_name: GeoAgent
-site_description: AI Agent for geospatial data analysis and visualiation
+site_description: An AI agent for geospatial data analysis and visualization
 site_author: Qiusheng Wu
-site_url: https://opengeos.github.io/GeoAgent
+site_url: https://geoagent.gishub.org
 repo_url: https://github.com/opengeos/GeoAgent
 
-copyright: "Copyright &copy; 2026 - 2026 Qiusheng Wu"
+copyright: "Copyright &copy; 2026 Qiusheng Wu"
 
 theme:
     palette:
         - scheme: default
-          #   primary: blue
-          #   accent: indigo
+          primary: blue
+          accent: indigo
           toggle:
               icon: material/toggle-switch-off-outline
               name: Switch to dark mode
@@ -23,14 +23,13 @@ theme:
     name: material
     icon:
         repo: fontawesome/brands/github
-    # logo: assets/logo.png
-    # favicon: assets/favicon.png
     features:
         - navigation.instant
         - navigation.tracking
         - navigation.top
         - search.highlight
         - search.share
+        - content.code.copy
     custom_dir: "docs/overrides"
     font:
         text: Google Sans
@@ -38,16 +37,21 @@ theme:
 
 plugins:
     - search
-    - mkdocstrings
+    - mkdocstrings:
+        handlers:
+            python:
+                options:
+                    show_source: true
+                    show_root_heading: true
+                    heading_level: 3
     - git-revision-date
     - git-revision-date-localized:
           enable_creation_date: true
           type: timeago
-    # - pdf-export
     - mkdocs-jupyter:
-          include_source: True
-          ignore_h1_titles: True
-          execute: True
+          include_source: true
+          ignore_h1_titles: true
+          execute: false
           allow_errors: false
           ignore: ["conf.py"]
           execute_ignore: ["*ignore.ipynb"]
@@ -63,24 +67,31 @@ markdown_extensions:
     - pymdownx.superfences
     - pymdownx.highlight:
           linenums: true
+    - pymdownx.tabbed:
+          alternate_style: true
     - toc:
           permalink: true
 
-# extra:
-#     analytics:
-#         provider: google
-#         property: UA-XXXXXXXXX-X
-
 nav:
     - Home: index.md
-    - Installation: installation.md
-    - Usage: usage.md
-    - Contributing: contributing.md
-    - FAQ: faq.md
-    - Changelog: changelog.md
+    - Getting Started:
+        - Installation: installation.md
+        - Usage: usage.md
+    - Changelog: https://github.com/opengeos/GeoAgent/releases
     - Report Issues: https://github.com/opengeos/GeoAgent/issues
+    - Contributing: contributing.md
     - Examples:
         - examples/intro.ipynb
+        - examples/stac_search.ipynb
+        - examples/maplibre_viz.ipynb
     - API Reference:
-          - geoagent module: geoagent.md
-          - common module: common.md
+        - GeoAgent: geoagent.md
+        - Models: models.md
+        - Planner: planner.md
+        - Data Agent: data_agent.md
+        - Analysis Agent: analysis_agent.md
+        - Visualization Agent: viz_agent.md
+        - LLM: llm.md
+        - Catalogs: catalogs.md
+        - Tools: tools.md
+

@@ -1,4 +1,5 @@
+# GeoAgent
 
-# geoagent module
+The main `GeoAgent` class orchestrates the 4-agent pipeline.
 
-::: geoagent.geoagent
+::: geoagent.core.agent
