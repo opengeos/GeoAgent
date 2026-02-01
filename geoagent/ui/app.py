@@ -64,9 +64,11 @@ def _sidebar():
     provider = st.sidebar.selectbox(
         "Provider",
         options=list(PROVIDERS.keys()),
-        index=list(PROVIDERS.keys()).index(st.session_state.provider)
-        if st.session_state.provider in PROVIDERS
-        else 0,
+        index=(
+            list(PROVIDERS.keys()).index(st.session_state.provider)
+            if st.session_state.provider in PROVIDERS
+            else 0
+        ),
         key="provider",
     )
 
@@ -105,9 +107,7 @@ def _render_assistant_block(result: GeoAgentResponse):
             loc_field = result.plan.location
             name = loc_field.get("name") if isinstance(loc_field, dict) else None
             loc = f" • {name}" if name else ""
-        st.write(
-            f"Intent: {intent or 'analysis'} • Dataset: {dataset or 'auto'}{loc}"
-        )
+        st.write(f"Intent: {intent or 'analysis'} • Dataset: {dataset or 'auto'}{loc}")
     else:
         st.error(result.error_message or "An error occurred.")
 
@@ -129,7 +129,9 @@ def _render_assistant_block(result: GeoAgentResponse):
 
     # Generated code
     code_text = result.code or (
-        result.analysis.code_generated if result.analysis and getattr(result.analysis, "code_generated", None) else ""
+        result.analysis.code_generated
+        if result.analysis and getattr(result.analysis, "code_generated", None)
+        else ""
     )
     if code_text:
         with st.expander("Generated Code", expanded=False):
@@ -197,4 +199,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
