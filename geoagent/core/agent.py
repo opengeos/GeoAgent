@@ -20,7 +20,12 @@ except ImportError:
         "LangGraph not available. GeoAgent will use simple sequential execution."
     )
 
-from .models import PlannerOutput, DataResult, AnalysisResult, GeoAgentResponse  # noqa: E402
+from .models import (
+    PlannerOutput,
+    DataResult,
+    AnalysisResult,
+    GeoAgentResponse,
+)  # noqa: E402
 from .data_agent import DataAgent  # noqa: E402
 from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402

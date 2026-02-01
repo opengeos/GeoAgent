@@ -16,10 +16,7 @@ class STACSearchWrapper:
     """Wrapper around pystac_client for STAC searches."""
 
     def __init__(self, catalog_url: str = None):
-        self.catalog_url = (
-            catalog_url
-            or "https://earth-search.aws.element84.com/v1"
-        )
+        self.catalog_url = catalog_url or "https://earth-search.aws.element84.com/v1"
         self._client = None
 
     @property

@@ -467,7 +467,9 @@ def zonal_stats(
                 # Flatten and remove nodata
                 values = masked_data.flatten()
                 values = (
-                    values[values != nodata_value] if nodata_value is not None else values
+                    values[values != nodata_value]
+                    if nodata_value is not None
+                    else values
                 )
                 values = values[~np.isnan(values)]
 

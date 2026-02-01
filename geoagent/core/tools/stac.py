@@ -66,12 +66,24 @@ def search_stac(
     # Validate bbox if provided
     if bbox:
         if len(bbox) != 4:
-            return [{"error": "bbox must have exactly 4 elements: [west, south, east, north]"}]
+            return [
+                {
+                    "error": "bbox must have exactly 4 elements: [west, south, east, north]"
+                }
+            ]
         west_val, south_val, east_val, north_val = bbox
         if west_val >= east_val:
-            return [{"error": f"Invalid bbox: west ({west_val}) must be less than east ({east_val})"}]
+            return [
+                {
+                    "error": f"Invalid bbox: west ({west_val}) must be less than east ({east_val})"
+                }
+            ]
         if south_val >= north_val:
-            return [{"error": f"Invalid bbox: south ({south_val}) must be less than north ({north_val})"}]
+            return [
+                {
+                    "error": f"Invalid bbox: south ({south_val}) must be less than north ({north_val})"
+                }
+            ]
 
     try:
         # Get catalog client
@@ -239,15 +251,18 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
                     ),
                     "temporal": (
                         [
-                            collection.extent.temporal.intervals[0][0].isoformat()
-                            if collection.extent.temporal.intervals[0][0]
-                            else None,
-                            collection.extent.temporal.intervals[0][1].isoformat()
-                            if collection.extent.temporal.intervals[0][1]
-                            else None,
+                            (
+                                collection.extent.temporal.intervals[0][0].isoformat()
+                                if collection.extent.temporal.intervals[0][0]
+                                else None
+                            ),
+                            (
+                                collection.extent.temporal.intervals[0][1].isoformat()
+                                if collection.extent.temporal.intervals[0][1]
+                                else None
+                            ),
                         ]
-                        if collection.extent
-                        and collection.extent.temporal.intervals
+                        if collection.extent and collection.extent.temporal.intervals
                         else None
                     ),
                 },
