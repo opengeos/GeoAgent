@@ -20,12 +20,12 @@ except ImportError:
     )
 
 try:
-    import leafmap
+    from leafmap.maplibregl import Map as MapLibreMap
 
-    LEAFMAP_AVAILABLE = True
+    MAPLIBRE_AVAILABLE = True
 except ImportError:
-    LEAFMAP_AVAILABLE = False
-    logger.warning("leafmap not available. Maps will be created as placeholders.")
+    MAPLIBRE_AVAILABLE = False
+    logger.warning("leafmap.maplibregl not available. Maps will be created as placeholders.")
 
 from .models import PlannerOutput, DataResult, AnalysisResult, GeoAgentResponse
 from .data_agent import DataAgent
@@ -217,13 +217,13 @@ class GeoAgent:
             )
 
     def visualize(self, query: str) -> GeoAgentResponse:
-        """Run full pipeline including visualization.
-
+        """Run full pipeline including MapLibre GL visualization.
+        
         Args:
             query: Natural language query for complete analysis
-
+            
         Returns:
-            GeoAgentResponse with map visualization
+            GeoAgentResponse with MapLibre map visualization
         """
         return self.chat(query)  # Full pipeline is the same as chat
 
