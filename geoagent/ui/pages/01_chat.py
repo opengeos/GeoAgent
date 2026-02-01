@@ -136,8 +136,10 @@ def create_map():
         zoom=2,
         height="750px",
         style="dark-matter",
-        sidebar_visible=True,
     )
+    # Use container sidebar (not floating) so widgets appear in to_solara()
+    m.add_floating_sidebar_flag = False
+    m.create_container(sidebar_visible=True)
 
     # --- Chat widgets (ipywidgets, not Solara) ---
     output = widgets.Output(
