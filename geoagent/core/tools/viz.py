@@ -533,9 +533,10 @@ def create_choropleth_map(
     scheme: str = "quantiles",
     k: int = 5,
     colormap: str = "viridis",
-    legend_title: Optional[str] = None
+    legend_title: Optional[str] = None,
+    opacity: float = 0.8
 ) -> Dict[str, Any]:
-    """Create a choropleth map from vector data with numeric attributes.
+    """Create a choropleth map using MapLibre backend from vector data with numeric attributes.
     
     Args:
         data_path: Path to vector data file
@@ -544,12 +545,13 @@ def create_choropleth_map(
         k: Number of classes
         colormap: Color scheme name
         legend_title: Custom legend title
+        opacity: Fill opacity (0.0 to 1.0)
         
     Returns:
         Dictionary with choropleth map results
     """
-    if not all([leafmap, gpd]):
-        return {"error": "leafmap and geopandas are required"}
+    if not all([Map, gpd]):
+        return {"error": "leafmap with MapLibre backend and geopandas are required"}
     
     try:
         # Load data
@@ -570,24 +572,65 @@ def create_choropleth_map(
                 "success": False
             }
         
-        # Create map
-        m = leafmap.Map()
+        # Create MapLibre map
+        m = Map(style="liberty")
         
-        # Add choropleth layer
-        m.add_data(
-            gdf,
-            column=column,
-            scheme=scheme,
-            k=k,
-            cmap=colormap,
-            legend_title=legend_title or column,
-            layer_name=f"Choropleth: {column}"
-        )
+        # Create choropleth using MapLibre's data-driven styling
+        try:
+            # Use leafmap's choropleth functionality for MapLibre
+            m.add_choropleth(
+                data=gdf,
+                column=column,
+                scheme=scheme,
+                k=k,
+                colormap=colormap,
+                legend_title=legend_title or column,
+                opacity=opacity
+            )
+        except AttributeError:
+            # Fallback: add as styled GeoJSON
+            from matplotlib import cm
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            # Classify data
+            if scheme == "quantiles":
+                breaks = gdf[column].quantile(np.linspace(0, 1, k+1)).tolist()
+            elif scheme == "equal_interval":
+                min_val, max_val = gdf[column].min(), gdf[column].max()
+                breaks = np.linspace(min_val, max_val, k+1).tolist()
+            else:  # natural_breaks fallback to quantiles
+                breaks = gdf[column].quantile(np.linspace(0, 1, k+1)).tolist()
+            
+            # Get colormap
+            cmap = cm.get_cmap(colormap)
+            colors = [cmap(i / (k-1)) for i in range(k)]
+            hex_colors = [f"#{int(c[0]*255):02x}{int(c[1]*255):02x}{int(c[2]*255):02x}" for c in colors]
+            
+            # Classify features and assign colors
+            gdf_copy = gdf.copy()
+            gdf_copy['color_class'] = pd.cut(gdf_copy[column], bins=breaks, labels=hex_colors, include_lowest=True)
+            gdf_copy['color_class'] = gdf_copy['color_class'].astype(str)
+            
+            # Convert to GeoJSON with color styling
+            geojson_data = json.loads(gdf_copy.to_json())
+            
+            # Add styled layer
+            m.add_geojson(
+                data=geojson_data,
+                layer_id=f"Choropleth: {column}",
+                paint={
+                    "fill-color": ["get", "color_class"],
+                    "fill-opacity": opacity,
+                    "stroke-color": "#333333",
+                    "stroke-width": 1
+                }
+            )
         
         # Zoom to data extent
         if not gdf.empty:
             bounds = gdf.total_bounds
-            m.zoom_to_bounds(bounds.tolist())
+            m.fit_bounds([[bounds[0], bounds[1]], [bounds[2], bounds[3]]])
         
         # Calculate statistics
         stats = {
@@ -602,7 +645,7 @@ def create_choropleth_map(
         try:
             map_html = m._repr_html_()
         except Exception:
-            map_html = "<p>Choropleth map created successfully but HTML export failed.</p>"
+            map_html = "<p>MapLibre choropleth map created successfully but HTML export failed.</p>"
         
         return {
             "map_html": map_html,
@@ -612,11 +655,172 @@ def create_choropleth_map(
             "colormap": colormap,
             "statistics": stats,
             "feature_count": len(gdf),
+            "backend": "maplibre",
             "success": True
         }
         
     except Exception as e:
-        logger.error(f"Error creating choropleth map: {e}")
+        logger.error(f"Error creating MapLibre choropleth map: {e}")
+        return {
+            "error": str(e),
+            "success": False
+        }
+
+
+@tool
+def add_pmtiles_layer(
+    url: str,
+    name: str = "PMTiles Layer",
+    style: Optional[Dict[str, Any]] = None,
+    source_layer: Optional[str] = None,
+    zoom_to_layer: bool = True
+) -> Dict[str, Any]:
+    """Add a PMTiles layer using MapLibre backend.
+    
+    PMTiles is a single-file archive format for storing and serving map tiles,
+    optimized for cloud storage and efficient vector tile delivery.
+    
+    Args:
+        url: URL to PMTiles archive (.pmtiles file)
+        name: Display name for the layer
+        style: MapLibre style specification for the layer
+        source_layer: Source layer name within the PMTiles archive
+        zoom_to_layer: Whether to zoom to layer extent
+        
+    Returns:
+        Dictionary with layer addition results
+        
+    Example:
+        >>> pmtiles_result = add_pmtiles_layer(
+        ...     url="https://example.com/buildings.pmtiles",
+        ...     name="Buildings",
+        ...     style={
+        ...         "fill-color": "#ff6b35",
+        ...         "fill-opacity": 0.7,
+        ...         "stroke-color": "#333333"
+        ...     }
+        ... )
+    """
+    if Map is None:
+        return {"error": "leafmap with MapLibre backend is required"}
+    
+    try:
+        # Create MapLibre map
+        m = Map(style="liberty")
+        
+        # Default style for PMTiles
+        if style is None:
+            style = {
+                "fill-color": "#3388ff",
+                "fill-opacity": 0.6,
+                "stroke-color": "#333333",
+                "stroke-width": 1
+            }
+        
+        # Add PMTiles layer
+        m.add_pmtiles(
+            url=url,
+            name=name,
+            style=style,
+            source_layer=source_layer,
+            zoom_to_layer=zoom_to_layer
+        )
+        
+        # Generate map HTML
+        try:
+            map_html = m._repr_html_()
+        except Exception:
+            map_html = f"<p>PMTiles layer '{name}' added successfully but HTML export failed.</p>"
+        
+        layer_info = {
+            "name": name,
+            "url": url,
+            "style": style,
+            "source_layer": source_layer,
+            "type": "pmtiles",
+            "backend": "maplibre"
+        }
+        
+        return {
+            "layer_added": layer_info,
+            "map_html": map_html,
+            "success": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Error adding PMTiles layer: {e}")
+        return {
+            "error": str(e),
+            "success": False
+        }
+
+
+@tool
+def create_3d_terrain_map(
+    center: Optional[List[float]] = None,
+    zoom: int = 10,
+    pitch: int = 60,
+    bearing: int = 0,
+    terrain_source: str = "mapbox"
+) -> Dict[str, Any]:
+    """Create a 3D terrain map using MapLibre backend.
+    
+    Args:
+        center: Map center [latitude, longitude]
+        zoom: Initial zoom level
+        pitch: Map pitch angle (0-60 degrees)
+        bearing: Map bearing/rotation (0-360 degrees)  
+        terrain_source: Terrain data source ("mapbox", "terrarium")
+        
+    Returns:
+        Dictionary with 3D map results
+    """
+    if Map is None:
+        return {"error": "leafmap with MapLibre backend is required"}
+    
+    try:
+        # Set default center if not provided
+        if center is None:
+            center = [46.0, 8.0]  # Swiss Alps default
+        
+        lat, lon = center
+        
+        # Create MapLibre map with 3D terrain
+        m = Map(
+            center=[lon, lat],
+            zoom=zoom,
+            pitch=pitch,
+            bearing=bearing,
+            style="liberty"
+        )
+        
+        # Enable 3D terrain
+        try:
+            m.add_terrain_source(terrain_source)
+            m.set_terrain(exaggeration=1.5)
+        except AttributeError:
+            logger.warning("3D terrain not supported in this version of leafmap")
+        
+        # Generate map HTML
+        try:
+            map_html = m._repr_html_()
+        except Exception:
+            map_html = "<p>3D terrain map created successfully but HTML export failed.</p>"
+        
+        return {
+            "map_html": map_html,
+            "center": center,
+            "zoom": zoom,
+            "pitch": pitch,
+            "bearing": bearing,
+            "terrain_source": terrain_source,
+            "type": "3d_terrain",
+            "backend": "maplibre",
+            "success": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating 3D terrain map: {e}")
         return {
             "error": str(e),
             "success": False
@@ -627,9 +831,9 @@ def create_choropleth_map(
 def save_map(
     map_html: str,
     output_path: str,
-    title: str = "GeoAgent Map"
+    title: str = "GeoAgent MapLibre Map"
 ) -> Dict[str, Any]:
-    """Save a map to an HTML file.
+    """Save a MapLibre map to an HTML file.
     
     Args:
         map_html: HTML content of the map
@@ -648,10 +852,24 @@ def save_map(
     <title>{title}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }}
+        h1 {{
+            color: #333;
+            text-align: center;
+        }}
+    </style>
 </head>
 <body>
     <h1>{title}</h1>
     {map_html}
+    <p style="text-align: center; color: #666; margin-top: 20px;">
+        Created with GeoAgent using MapLibre GL JS
+    </p>
 </body>
 </html>
 """
@@ -667,6 +885,7 @@ def save_map(
             "output_path": output_path,
             "file_size_bytes": file_size,
             "title": title,
+            "backend": "maplibre",
             "success": True
         }
         
