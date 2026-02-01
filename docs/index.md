@@ -9,7 +9,7 @@
 
 -   Free software: MIT License
 -   Documentation: <https://opengeos.github.io/geoagent>
-    
+
 
 ## Features
 
