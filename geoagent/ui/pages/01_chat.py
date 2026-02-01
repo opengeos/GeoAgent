@@ -61,7 +61,7 @@ def _make_map():
         use_message_queue=True,
         add_floating_sidebar=False,
         add_sidebar=True,
-        sidebar_visible=True,
+        sidebar_visible=False,
     )
     return m
 
