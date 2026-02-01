@@ -153,14 +153,18 @@ def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
         # Ollama has no API key requirement
         if env_var is None:
             try:
-                return get_llm(provider=provider_name, temperature=temperature, **kwargs)
+                return get_llm(
+                    provider=provider_name, temperature=temperature, **kwargs
+                )
             except ImportError:
                 continue
 
         # Check if API key is set
         if os.getenv(env_var):
             try:
-                return get_llm(provider=provider_name, temperature=temperature, **kwargs)
+                return get_llm(
+                    provider=provider_name, temperature=temperature, **kwargs
+                )
             except ImportError:
                 logger.warning(
                     f"{config['package']} not installed, skipping {provider_name}"

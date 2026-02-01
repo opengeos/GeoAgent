@@ -2,6 +2,7 @@
 
 This module provides tools for searching STAC (SpatioTemporal Asset Catalog) data.
 """
+
 from typing import List, Dict, Optional, Any, Union
 from datetime import datetime
 import logging
@@ -27,13 +28,13 @@ def search_stac(
     datetime_range: Optional[str] = None,
     collections: Optional[List[str]] = None,
     max_items: int = 10,
-    max_cloud_cover: Optional[float] = None
+    max_cloud_cover: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """Search any STAC catalog for items matching the given criteria.
-    
+
     This tool searches STAC catalogs to find satellite imagery and other geospatial
     assets based on location, time, and other filters.
-    
+
     Args:
         query: Free-text search query to describe what you're looking for
         catalog: STAC catalog identifier (e.g., 'microsoft-pc', 'earth-search')
@@ -42,7 +43,7 @@ def search_stac(
         collections: List of collection IDs to search within
         max_items: Maximum number of items to return (default: 10)
         max_cloud_cover: Maximum cloud cover percentage (0-100) to filter results
-        
+
     Returns:
         List of dictionaries containing item metadata with keys:
         - id: Item identifier
@@ -53,7 +54,7 @@ def search_stac(
         - collection: Collection ID
         - cloud_cover: Cloud cover percentage if available
         - geometry: Item geometry as GeoJSON
-        
+
     Example:
         >>> items = search_stac(
         ...     query="Sentinel-2 imagery of San Francisco",
@@ -72,47 +73,49 @@ def search_stac(
                 client = None
         else:
             client = None
-            
+
         if not client:
             # Default catalog URLs
             catalog_urls = {
                 "microsoft-pc": "https://planetarycomputer.microsoft.com/api/stac/v1",
                 "earth-search": "https://earth-search.aws.element84.com/v1",
                 "usgs-landsat": "https://landsatlook.usgs.gov/stac-server",
-                "cop-dem": "https://copernicus-dem-30m.s3.amazonaws.com/stac/catalog.json"
+                "cop-dem": "https://copernicus-dem-30m.s3.amazonaws.com/stac/catalog.json",
             }
-            
+
             catalog_url = catalog_urls.get(catalog, catalog)
             if not catalog_url.startswith("http"):
-                raise ValueError(f"Unknown catalog '{catalog}'. Available: {list(catalog_urls.keys())}")
-                
+                raise ValueError(
+                    f"Unknown catalog '{catalog}'. Available: {list(catalog_urls.keys())}"
+                )
+
             client = Client.open(catalog_url)
-        
+
         # Build search parameters
         search_params = {}
-        
+
         if bbox:
             search_params["bbox"] = bbox
-            
+
         if datetime_range:
             search_params["datetime"] = datetime_range
-            
+
         if collections:
             search_params["collections"] = collections
-            
+
         search_params["limit"] = max_items
-        
+
         # Perform search
         search = client.search(**search_params)
-        
+
         # Convert results to list of dicts
         results = []
         item_count = 0
-        
+
         for item in search.items():
             if item_count >= max_items:
                 break
-                
+
             # Check cloud cover filter if specified
             if max_cloud_cover is not None:
                 cloud_cover = None
@@ -121,10 +124,10 @@ def search_stac(
                 elif "view:sun_elevation" in item.properties:
                     # Some catalogs use different property names
                     cloud_cover = item.properties.get("cloudy_pixel_percentage")
-                    
+
                 if cloud_cover is not None and cloud_cover > max_cloud_cover:
                     continue
-            
+
             # Extract metadata
             item_data = {
                 "id": item.id,
@@ -133,9 +136,9 @@ def search_stac(
                 "collection": item.collection_id,
                 "geometry": item.geometry,
                 "properties": item.properties,
-                "assets": {}
+                "assets": {},
             }
-            
+
             # Extract asset information
             for asset_key, asset in item.assets.items():
                 item_data["assets"][asset_key] = {
@@ -143,30 +146,30 @@ def search_stac(
                     "type": asset.media_type,
                     "title": asset.title,
                     "description": asset.description,
-                    "roles": asset.roles if asset.roles else []
+                    "roles": asset.roles if asset.roles else [],
                 }
-            
+
             # Find thumbnail
             thumbnail_url = None
             for asset_key in ["thumbnail", "preview", "overview"]:
                 if asset_key in item.assets:
                     thumbnail_url = item.assets[asset_key].href
                     break
-                    
+
             item_data["thumbnail"] = thumbnail_url
-            
+
             # Add cloud cover if available
             cloud_cover = item.properties.get("eo:cloud_cover")
             if cloud_cover is None:
                 cloud_cover = item.properties.get("cloudy_pixel_percentage")
             item_data["cloud_cover"] = cloud_cover
-            
+
             results.append(item_data)
             item_count += 1
-            
+
         logger.info(f"Found {len(results)} STAC items for query: {query}")
         return results
-        
+
     except Exception as e:
         logger.error(f"Error searching STAC catalog: {e}")
         return [{"error": str(e), "query": query, "catalog": catalog}]
@@ -175,10 +178,10 @@ def search_stac(
 @tool
 def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
     """Get available collections from a STAC catalog.
-    
+
     Args:
         catalog: STAC catalog identifier
-        
+
     Returns:
         List of collection metadata dictionaries with keys:
         - id: Collection identifier
@@ -187,7 +190,7 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
         - extent: Spatial and temporal extent
         - license: License information
         - keywords: List of keywords
-        
+
     Example:
         >>> collections = get_stac_collections("microsoft-pc")
     """
@@ -200,7 +203,7 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
                 client = None
         else:
             client = None
-            
+
         if not client:
             # Default catalog URLs
             catalog_urls = {
@@ -208,10 +211,10 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
                 "earth-search": "https://earth-search.aws.element84.com/v1",
                 "usgs-landsat": "https://landsatlook.usgs.gov/stac-server",
             }
-            
+
             catalog_url = catalog_urls.get(catalog, catalog)
             client = Client.open(catalog_url)
-        
+
         collections = []
         for collection in client.get_collections():
             collection_data = {
@@ -221,17 +224,23 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
                 "keywords": collection.keywords or [],
                 "license": collection.license,
                 "extent": {
-                    "spatial": collection.extent.spatial.bboxes if collection.extent else None,
-                    "temporal": [
-                        interval[0].isoformat() if interval[0] else None,
-                        interval[1].isoformat() if interval[1] else None
-                    ] if collection.extent and collection.extent.temporal.intervals else None
-                }
+                    "spatial": (
+                        collection.extent.spatial.bboxes if collection.extent else None
+                    ),
+                    "temporal": (
+                        [
+                            interval[0].isoformat() if interval[0] else None,
+                            interval[1].isoformat() if interval[1] else None,
+                        ]
+                        if collection.extent and collection.extent.temporal.intervals
+                        else None
+                    ),
+                },
             }
             collections.append(collection_data)
-            
+
         return collections
-        
+
     except Exception as e:
         logger.error(f"Error getting STAC collections: {e}")
         return [{"error": str(e), "catalog": catalog}]

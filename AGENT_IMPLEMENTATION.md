@@ -9,7 +9,7 @@ This document describes the implemented core agent architecture for GeoAgent.
 1. **Core Data Models** (`geoagent/core/models.py`)
    - `PlannerOutput` - Structured query parameters
    - `DataResult` - Data retrieval results
-   - `AnalysisResult` - Analysis computation results  
+   - `AnalysisResult` - Analysis computation results
    - `GeoAgentResponse` - Complete pipeline response
 
 2. **Data Agent** (`geoagent/core/data_agent.py`)
@@ -55,7 +55,7 @@ result = agent.chat("Show NDVI for San Francisco in July 2024")
 result.map  # Display in Jupyter
 print(result.code)  # Show generated Python code
 
-# Just search for data  
+# Just search for data
 data = agent.search("Find Sentinel-2 imagery for California")
 
 # Search + analysis
@@ -78,7 +78,7 @@ response = agent.chat("query")
 
 ### 4-Agent Pipeline
 1. **Planner Agent** (simple implementation) - Parse natural language → structured parameters
-2. **Data Agent** - Search catalogs → retrieve data  
+2. **Data Agent** - Search catalogs → retrieve data
 3. **Analysis Agent** - Process data → compute results + generate code
 4. **Visualization Agent** - Create maps → leafmap visualization
 
@@ -102,7 +102,7 @@ print(result.analysis.code_generated)
 # Outputs:
 # import rasterio
 # import numpy as np
-# 
+#
 # def calculate_ndvi(red_band, nir_band):
 #     ndvi = (nir_band - red_band) / (nir_band + red_band)
 #     return ndvi
@@ -120,7 +120,7 @@ This provides:
 ### Tool Integration
 Tools are imported dynamically from `geoagent.core.tools.*`:
 - `stac.py` - STAC catalog search
-- `duckdb_tool.py` - Spatial SQL queries  
+- `duckdb_tool.py` - Spatial SQL queries
 - `raster.py` - Raster analysis operations
 - `vector.py` - Vector geometry processing
 - `viz.py` - Leafmap visualization helpers
@@ -142,7 +142,7 @@ python examples/basic_usage.py
 
 Expected output shows:
 - Agent initialization
-- Mock data search  
+- Mock data search
 - Mock analysis with code generation
 - Mock map creation
 - Execution timing
@@ -163,7 +163,7 @@ Expected output shows:
 
 ### Optional (Graceful fallbacks)
 - `leafmap` - Map visualizations
-- `langgraph` - Workflow orchestration  
+- `langgraph` - Workflow orchestration
 - `langchain-*` - LLM integrations
 - `rasterio`, `geopandas` - Geospatial processing (used by tools)
 
