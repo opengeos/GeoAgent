@@ -44,7 +44,7 @@ GeoAgent supports multiple LLM providers. You need at least one configured to us
 | OpenAI | `gpt-4.1` | `OPENAI_API_KEY` | *(included)* |
 | Anthropic | `claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY` | `pip install "geoagent[llm]"` |
 | Google Gemini | `gemini-2.5-flash` | `GOOGLE_API_KEY` | `pip install "geoagent[llm]"` |
-| Ollama (local) | `llama3.3` | *(none needed)* | `pip install "geoagent[ollama]"` |
+| Ollama (local) | `llama3.1` | *(none needed)* | `pip install "geoagent[ollama]"` |
 
 ### Setting API Keys
 
@@ -89,14 +89,14 @@ To run GeoAgent with a local LLM via [Ollama](https://ollama.com/), no API key i
 
 ```bash
 # Install Ollama and pull a model
-ollama pull llama3.3
+ollama pull llama3.1
 
 # Install the Ollama extra
 pip install "geoagent[ollama]"
 ```
 
 ```python
-agent = GeoAgent(provider="ollama", model="llama3.3")
+agent = GeoAgent(provider="ollama", model="llama3.1")
 ```
 
 ### Using a Custom LLM Instance

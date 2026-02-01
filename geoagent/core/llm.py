@@ -29,7 +29,7 @@ PROVIDERS: Dict[str, Dict[str, str]] = {
         "package": "langchain-google-genai",
     },
     "ollama": {
-        "default_model": "llama3.3",
+        "default_model": "llama3.1",
         "env_var": None,
         "package": "langchain-ollama",
     },
