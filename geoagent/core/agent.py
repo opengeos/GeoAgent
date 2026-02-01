@@ -4,7 +4,7 @@ This module contains the main GeoAgent class that orchestrates the entire
 geospatial analysis pipeline using multiple specialized agents.
 """
 
-from typing import Any, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional, TypedDict
 import logging
 import time
 
@@ -20,12 +20,12 @@ except ImportError:
         "LangGraph not available. GeoAgent will use simple sequential execution."
     )
 
-from .models import (
+from .models import (  # noqa: E402
     PlannerOutput,
     DataResult,
     AnalysisResult,
     GeoAgentResponse,
-)  # noqa: E402
+)
 from .data_agent import DataAgent  # noqa: E402
 from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402
@@ -467,8 +467,8 @@ class GeoAgent:
     def _parse_query(self, query: str) -> PlannerOutput:
         """Parse natural language query into structured plan.
 
-        This is a simplified parser. In a full implementation, this would
-        use a dedicated Planner Agent with more sophisticated NL understanding.
+        Uses geocoding for location resolution and regex for date parsing
+        to handle arbitrary locations and time ranges.
 
         Args:
             query: Natural language query
@@ -479,30 +479,15 @@ class GeoAgent:
         logger.debug(f"Parsing query: {query}")
 
         query_lower = query.lower()
-
-        # Extract intent
         intent = query.strip()
 
-        # Extract location (simple keyword matching)
-        location = None
-        if "san francisco" in query_lower:
-            location = {"bbox": [-122.5, 37.7, -122.3, 37.8], "name": "San Francisco"}
-        elif "new york" in query_lower:
-            location = {"bbox": [-74.1, 40.6, -73.9, 40.8], "name": "New York"}
-        elif "california" in query_lower:
-            location = {"bbox": [-124.4, 32.5, -114.1, 42.0], "name": "California"}
+        # --- Extract location via geocoding ---
+        location = self._extract_location(query)
 
-        # Extract time range (simple patterns)
-        time_range = None
-        if "2024" in query:
-            if "july" in query_lower or "jul" in query_lower:
-                time_range = {"start_date": "2024-07-01", "end_date": "2024-07-31"}
-            elif "june" in query_lower or "jun" in query_lower:
-                time_range = {"start_date": "2024-06-01", "end_date": "2024-06-30"}
-            else:
-                time_range = {"start_date": "2024-01-01", "end_date": "2024-12-31"}
+        # --- Extract time range ---
+        time_range = self._extract_time_range(query_lower)
 
-        # Extract dataset preference
+        # --- Extract dataset preference ---
         dataset = None
         if "sentinel" in query_lower or "sentinel-2" in query_lower:
             dataset = "sentinel-2"
@@ -511,7 +496,7 @@ class GeoAgent:
         elif "modis" in query_lower:
             dataset = "modis"
 
-        # Extract additional parameters
+        # --- Extract additional parameters ---
         parameters = {}
         if "cloud cover" in query_lower or "cloudy" in query_lower:
             parameters["max_cloud_cover"] = 20
@@ -522,8 +507,141 @@ class GeoAgent:
             time_range=time_range,
             dataset=dataset,
             parameters=parameters,
-            confidence=0.8,  # Simple confidence score
+            confidence=0.8 if location else 0.5,
         )
 
-        logger.debug(f"Plan created: {plan.intent}")
+        logger.debug(f"Plan: location={location}, time_range={time_range}, dataset={dataset}")
         return plan
+
+    def _extract_location(self, query: str) -> Optional[Dict[str, Any]]:
+        """Extract location from query using geocoding.
+
+        Tries to find a place name in the query and geocode it to a bbox.
+
+        Args:
+            query: Natural language query
+
+        Returns:
+            Location dict with bbox and name, or None
+        """
+        try:
+            from geopy.geocoders import Nominatim
+
+            geolocator = Nominatim(user_agent="geoagent")
+
+            # Try to extract place name - remove common non-location words
+            import re
+
+            # Remove analysis terms to isolate location
+            cleaned = re.sub(
+                r"\b(show|display|compute|calculate|analyze|find|get|plot|map|"
+                r"ndvi|evi|savi|imagery|image|satellite|sentinel-?\d*|landsat|"
+                r"modis|for|in|of|the|from|during|between|and|with|using|"
+                r"january|february|march|april|may|june|july|august|"
+                r"september|october|november|december|"
+                r"jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec|"
+                r"\d{4}|cloud\s*cover)\b",
+                "",
+                query,
+                flags=re.IGNORECASE,
+            ).strip()
+
+            # Clean up extra whitespace
+            cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,.-")
+
+            if not cleaned or len(cleaned) < 2:
+                logger.debug("No location found in query")
+                return None
+
+            logger.debug(f"Geocoding: '{cleaned}'")
+            result = geolocator.geocode(cleaned, exactly_one=True, timeout=5)
+
+            if result:
+                lat, lon = result.latitude, result.longitude
+                # Create bbox around the point (~0.1 degrees ≈ 10km)
+                bbox = [lon - 0.1, lat - 0.1, lon + 0.1, lat + 0.1]
+                name = result.address.split(",")[0]
+                logger.info(f"Geocoded '{cleaned}' -> {name} ({lat:.4f}, {lon:.4f})")
+                return {"bbox": bbox, "name": name}
+            else:
+                logger.warning(f"Could not geocode: '{cleaned}'")
+                return None
+
+        except ImportError:
+            logger.warning("geopy not installed, using fallback location parsing")
+            return self._extract_location_fallback(query.lower())
+        except Exception as e:
+            logger.warning(f"Geocoding failed: {e}")
+            return self._extract_location_fallback(query.lower())
+
+    def _extract_location_fallback(self, query_lower: str) -> Optional[Dict[str, Any]]:
+        """Fallback location extraction using hardcoded city lookups.
+
+        Args:
+            query_lower: Lowercased query string
+
+        Returns:
+            Location dict or None
+        """
+        cities = {
+            "san francisco": {"bbox": [-122.5, 37.7, -122.3, 37.8], "name": "San Francisco"},
+            "new york": {"bbox": [-74.1, 40.6, -73.9, 40.8], "name": "New York"},
+            "los angeles": {"bbox": [-118.4, 33.9, -118.1, 34.1], "name": "Los Angeles"},
+            "chicago": {"bbox": [-87.8, 41.7, -87.5, 42.0], "name": "Chicago"},
+            "seattle": {"bbox": [-122.4, 47.5, -122.2, 47.7], "name": "Seattle"},
+            "denver": {"bbox": [-105.1, 39.6, -104.8, 39.8], "name": "Denver"},
+            "houston": {"bbox": [-95.5, 29.6, -95.2, 29.9], "name": "Houston"},
+            "miami": {"bbox": [-80.3, 25.7, -80.1, 25.9], "name": "Miami"},
+            "california": {"bbox": [-124.4, 32.5, -114.1, 42.0], "name": "California"},
+        }
+        for city, loc in cities.items():
+            if city in query_lower:
+                return loc
+        return None
+
+    def _extract_time_range(self, query_lower: str) -> Optional[Dict[str, str]]:
+        """Extract time range from query text.
+
+        Handles patterns like 'July 2024', 'in 2025', 'June 2023', etc.
+
+        Args:
+            query_lower: Lowercased query string
+
+        Returns:
+            Dict with start_date and end_date, or None
+        """
+        import re
+
+        months = {
+            "january": ("01", "31"), "jan": ("01", "31"),
+            "february": ("02", "28"), "feb": ("02", "28"),
+            "march": ("03", "31"), "mar": ("03", "31"),
+            "april": ("04", "30"), "apr": ("04", "30"),
+            "may": ("05", "31"),
+            "june": ("06", "30"), "jun": ("06", "30"),
+            "july": ("07", "31"), "jul": ("07", "31"),
+            "august": ("08", "31"), "aug": ("08", "31"),
+            "september": ("09", "30"), "sep": ("09", "30"),
+            "october": ("10", "31"), "oct": ("10", "31"),
+            "november": ("11", "30"), "nov": ("11", "30"),
+            "december": ("12", "31"), "dec": ("12", "31"),
+        }
+
+        # Match "Month YYYY" or "YYYY" patterns
+        for month_name, (month_num, last_day) in months.items():
+            pattern = rf"\b{month_name}\s+(\d{{4}})\b"
+            match = re.search(pattern, query_lower)
+            if match:
+                year = match.group(1)
+                return {
+                    "start_date": f"{year}-{month_num}-01",
+                    "end_date": f"{year}-{month_num}-{last_day}",
+                }
+
+        # Match bare year
+        year_match = re.search(r"\b(20\d{2})\b", query_lower)
+        if year_match:
+            year = year_match.group(1)
+            return {"start_date": f"{year}-01-01", "end_date": f"{year}-12-31"}
+
+        return None
