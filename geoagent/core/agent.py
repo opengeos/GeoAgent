@@ -4,7 +4,7 @@ This module contains the main GeoAgent class that orchestrates the entire
 geospatial analysis pipeline using multiple specialized agents.
 """
 
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Callable, Dict, List, Optional, TypedDict
 import logging
 import time
 
@@ -95,7 +95,12 @@ class GeoAgent:
 
         logger.info("GeoAgent initialized successfully")
 
-    def chat(self, query: str, target_map: Any = None) -> GeoAgentResponse:
+    def chat(
+        self,
+        query: str,
+        target_map: Any = None,
+        status_callback: Optional[Callable[[str], None]] = None,
+    ) -> GeoAgentResponse:
         """Main method to process a natural language query.
 
         Args:
@@ -109,6 +114,7 @@ class GeoAgent:
         """
         logger.info(f"Processing query: {query}")
         self._target_map = target_map
+        self._status_callback = status_callback
         start_time = time.time()
 
         try:
@@ -159,6 +165,17 @@ class GeoAgent:
                 error_message=str(e),
                 execution_time=execution_time,
             )
+        finally:
+            self._status_callback = None
+
+    def _emit_status(self, stage: str) -> None:
+        callback = getattr(self, "_status_callback", None)
+        if callback is None:
+            return
+        try:
+            callback(stage)
+        except Exception as e:
+            logger.debug(f"Status callback failed: {e}")
 
     def search(self, query: str) -> DataResult:
         """Shortcut method to just search for data without analysis.
@@ -324,6 +341,7 @@ class GeoAgent:
             Updated state with plan
         """
         logger.debug("Executing planning node")
+        self._emit_status("planning")
 
         try:
             plan = self._parse_query(state["query"])
@@ -387,6 +405,7 @@ class GeoAgent:
             Updated state with data
         """
         logger.debug("Executing data fetching node")
+        self._emit_status("fetch_data")
 
         try:
             if state["plan"]:
@@ -477,6 +496,7 @@ for item in items:
             Updated state with analysis results
         """
         logger.debug("Executing analysis node")
+        self._emit_status("analysis")
 
         try:
             if state["plan"] and state["data"]:
@@ -507,6 +527,7 @@ for item in items:
             Updated state with map
         """
         logger.debug("Executing visualization node")
+        self._emit_status("visualize")
 
         try:
             if state["plan"]:
