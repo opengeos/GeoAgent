@@ -33,6 +33,83 @@ With all optional dependencies:
 pip install "geoagent[all]"
 ```
 
+## LLM Setup
+
+GeoAgent supports multiple LLM providers. You need at least one configured to use the agent.
+
+### Supported Providers
+
+| Provider | Default Model | API Key Env Variable | Install Extra |
+|----------|--------------|---------------------|---------------|
+| OpenAI | `gpt-4o` | `OPENAI_API_KEY` | *(included)* |
+| Anthropic | `claude-sonnet-4-20250514` | `ANTHROPIC_API_KEY` | `pip install "geoagent[llm]"` |
+| Google Gemini | `gemini-2.0-flash` | `GOOGLE_API_KEY` | `pip install "geoagent[llm]"` |
+| Ollama (local) | `llama3.1` | *(none needed)* | `pip install "geoagent[ollama]"` |
+
+### Setting API Keys
+
+Set your API key as an environment variable:
+
+```bash
+# OpenAI (included by default)
+export OPENAI_API_KEY="your-openai-key"
+
+# Anthropic
+export ANTHROPIC_API_KEY="your-anthropic-key"
+
+# Google Gemini
+export GOOGLE_API_KEY="your-google-key"
+```
+
+You can also add these to a `.env` file or your shell profile (`~/.bashrc`, `~/.zshrc`).
+
+### Choosing a Provider
+
+By default, GeoAgent auto-detects available providers by checking environment variables in order: OpenAI → Anthropic → Google → Ollama. The first available provider is used.
+
+To specify a provider and model explicitly:
+
+```python
+from geoagent import GeoAgent
+
+# Use the default provider (auto-detected)
+agent = GeoAgent()
+
+# Use a specific provider
+agent = GeoAgent(provider="anthropic")
+
+# Use a specific provider and model
+agent = GeoAgent(provider="openai", model="gpt-4o-mini")
+agent = GeoAgent(provider="google", model="gemini-2.5-flash")
+```
+
+### Using Ollama (Local LLMs)
+
+To run GeoAgent with a local LLM via [Ollama](https://ollama.com/), no API key is needed:
+
+```bash
+# Install Ollama and pull a model
+ollama pull llama3.1
+
+# Install the Ollama extra
+pip install "geoagent[ollama]"
+```
+
+```python
+agent = GeoAgent(provider="ollama", model="llama3.1")
+```
+
+### Using a Custom LLM Instance
+
+You can pass any LangChain-compatible chat model directly:
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o", temperature=0.0)
+agent = GeoAgent(llm=llm)
+```
+
 ## Quick Start
 
 ```python
