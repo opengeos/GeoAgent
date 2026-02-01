@@ -1,11 +1,10 @@
-"""GeoAgent Chat UI — map with chat sidebar."""
+"""GeoAgent Chat UI — Solara sidebar + persistent map."""
 
 from __future__ import annotations
 
 import threading
 from typing import Any, Dict, List
 
-import ipywidgets as widgets
 import solara
 import leafmap.maplibregl as leafmap
 
@@ -47,19 +46,29 @@ def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
     return _agent_store["agent"]
 
 
-def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Label):
+def _make_map():
+    """Create the default map (called once, memoized)."""
+    return leafmap.Map(
+        center=[0, 20],
+        zoom=2,
+        height="750px",
+        style="dark-matter",
+    )
+
+
+def _run_query(query: str, m):
     """Run a GeoAgent query in a background thread."""
     processing.value = True
-    status_label.value = "🔍 Parsing query…"
+    status_text.value = "🔍 Parsing query…"
     messages.value = [*messages.value, {"role": "user", "content": query}]
 
     try:
         prov = provider.value
         mdl = model.value or _get_default_model(prov)
-        status_label.value = "⚙️ Initializing agent…"
+        status_text.value = "⚙️ Initializing agent…"
         agent = _get_or_create_agent(prov, mdl)
 
-        status_label.value = "📡 Searching data & analyzing…"
+        status_text.value = "📡 Searching data & analyzing…"
         result = agent.chat(query, target_map=m)
 
         if result.success:
@@ -84,10 +93,6 @@ def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Labe
 
         messages.value = [*messages.value, {"role": "assistant", "content": text}]
 
-        # Show result in output
-        with output:
-            print(f"🌍 {text}")
-
         # Store code
         code = result.code or ""
         if (
@@ -97,117 +102,102 @@ def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Labe
         ):
             code = result.analysis.code_generated
         last_code.value = code
-        status_label.value = ""
 
     except Exception as e:
         import traceback
 
-        err_msg = f"❌ Error: {e}"
+        traceback.print_exc()
         messages.value = [
             *messages.value,
-            {"role": "assistant", "content": err_msg},
+            {"role": "assistant", "content": f"❌ Error: {e}"},
         ]
-        status_label.value = ""
-        with output:
-            print(f"🌍 {err_msg}")
-            traceback.print_exc()
     finally:
         processing.value = False
-        status_label.value = ""
+        status_text.value = ""
 
 
-def create_map():
-    """Create the map with chat sidebar."""
-    m = leafmap.Map(
-        center=[0, 20],
-        zoom=2,
-        height="750px",
-        style="dark-matter",
-    )
-    # Use container sidebar (not floating) so widgets appear in to_solara()
-    m.add_floating_sidebar_flag = False
-    m.create_container(sidebar_visible=True)
-
-    # --- Chat widgets (ipywidgets, not Solara) ---
-    output = widgets.Output(
-        layout=widgets.Layout(max_height="400px", overflow_y="auto")
-    )
-
-    query_input = widgets.Text(
-        placeholder="Ask about geospatial data…",
-        layout=widgets.Layout(width="100%"),
-    )
-
-    provider_dropdown = widgets.Dropdown(
-        options=PROVIDER_LIST,
-        value=provider.value,
-        description="Provider:",
-        layout=widgets.Layout(width="100%"),
-    )
-
-    model_input = widgets.Text(
-        value=model.value or _get_default_model(provider.value),
-        description="Model:",
-        layout=widgets.Layout(width="100%"),
-    )
-
-    status_label = widgets.Label(value="")
-
-    def on_provider_change(change):
-        provider.value = change["new"]
-        model_input.value = _get_default_model(change["new"])
-
-    provider_dropdown.observe(on_provider_change, names=["value"])
-
-    def on_model_change(change):
-        model.value = change["new"]
-
-    model_input.observe(on_model_change, names=["value"])
-
-    def do_submit(_=None):
-        q = query_input.value.strip()
-        if not q or processing.value:
-            return
-        # Show user message immediately
-        with output:
-            print(f"🧑 {q}")
-        query_input.value = ""
-        status_label.value = "⏳ Processing…"
-        threading.Thread(
-            target=_run_query,
-            args=(q, m, output, status_label),
-            daemon=True,
-        ).start()
-
-    query_input.on_submit(do_submit)
-
-    send_button = widgets.Button(
-        description="Send",
-        button_style="primary",
-        layout=widgets.Layout(width="100%"),
-    )
-    send_button.on_click(do_submit)
-
-    chat_box = widgets.VBox(
-        [
-            widgets.HTML("<h3>💬 GeoAgent Chat</h3>"),
-            provider_dropdown,
-            model_input,
-            widgets.HTML("<hr>"),
-            output,
-            widgets.HTML("<hr>"),
-            query_input,
-            send_button,
-            status_label,
-        ],
-        layout=widgets.Layout(padding="8px"),
-    )
-
-    m.add_to_sidebar(chat_box, label="Chat", widget_icon="mdi-chat")
-    return m
+# ---------------------------------------------------------------------------
+# Components
+# ---------------------------------------------------------------------------
 
 
 @solara.component
 def Page():
-    m = create_map()
-    return m.to_solara()
+    # Persist map across re-renders
+    m = solara.use_memo(_make_map, dependencies=[])
+
+    query, set_query = solara.use_state("")
+    show_code, set_show_code = solara.use_state(False)
+
+    with solara.Sidebar():
+        solara.Markdown("### 💬 GeoAgent Chat")
+
+        solara.Select(
+            label="Provider",
+            value=provider.value,
+            values=PROVIDER_LIST,
+            on_value=lambda v: (
+                setattr(provider, "value", v),
+                setattr(model, "value", _get_default_model(v)),
+            ),
+        )
+        solara.InputText(
+            label="Model",
+            value=model.value or _get_default_model(provider.value),
+            on_value=model.set,
+        )
+
+        solara.Markdown("---")
+
+        # Chat messages
+        for msg in messages.value:
+            icon = "🧑" if msg["role"] == "user" else "🌍"
+            solara.Markdown(f"{icon} {msg['content']}")
+
+        # Status
+        if status_text.value:
+            solara.Text(status_text.value)
+
+        solara.Markdown("---")
+
+        # Input
+        solara.InputText(
+            label="Ask about geospatial data…",
+            value=query,
+            on_value=set_query,
+            disabled=processing.value,
+        )
+
+        def on_send():
+            q = query.strip()
+            if q and not processing.value:
+                set_query("")
+                threading.Thread(target=_run_query, args=(q, m), daemon=True).start()
+
+        solara.Button(
+            "Send",
+            on_click=on_send,
+            disabled=processing.value or not query.strip(),
+            color="primary",
+        )
+
+        # Code toggle
+        if last_code.value:
+            solara.Button(
+                "Show Code" if not show_code else "Hide Code",
+                on_click=lambda: set_show_code(not show_code),
+                text=True,
+            )
+            if show_code:
+                solara.Preformatted(last_code.value)
+
+        # New Chat
+        def on_new_chat():
+            messages.value = []
+            last_code.value = ""
+            status_text.value = ""
+
+        solara.Button("New Chat", on_click=on_new_chat, outlined=True)
+
+    # Map as sole main content
+    m.element()
