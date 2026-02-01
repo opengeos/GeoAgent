@@ -207,6 +207,14 @@ def main():
                                 if result.map is not None and hasattr(
                                     result.map, "to_html"
                                 ):
+                                    # Sync leafmap calls → maplibre _message_queue
+                                    # so to_html() includes all added layers
+                                    if hasattr(result.map, "calls") and hasattr(
+                                        result.map, "_message_queue"
+                                    ):
+                                        result.map._message_queue = list(
+                                            result.map.calls
+                                        )
                                     st.session_state.last_map_html = (
                                         result.map.to_html()
                                     )
