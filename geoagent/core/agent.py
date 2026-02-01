@@ -4,9 +4,11 @@ This module contains the main GeoAgent class that orchestrates the entire
 geospatial analysis pipeline using multiple specialized agents.
 """
 
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, List, Optional, TypedDict
 import logging
 import time
+
+logger = logging.getLogger(__name__)
 
 try:
     from langgraph.graph import StateGraph, END
@@ -14,28 +16,15 @@ try:
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
-    logger = logging.getLogger(__name__)
     logger.warning(
         "LangGraph not available. GeoAgent will use simple sequential execution."
     )
 
-try:
-    from leafmap.maplibregl import Map as MapLibreMap
-
-    MAPLIBRE_AVAILABLE = True
-except ImportError:
-    MAPLIBRE_AVAILABLE = False
-    logger.warning(
-        "leafmap.maplibregl not available. Maps will be created as placeholders."
-    )
-
-from .models import PlannerOutput, DataResult, AnalysisResult, GeoAgentResponse
-from .data_agent import DataAgent
-from .analysis_agent import AnalysisAgent
-from .viz_agent import VizAgent
-from .llm import get_default_llm
-
-logger = logging.getLogger(__name__)
+from .models import PlannerOutput, DataResult, AnalysisResult, GeoAgentResponse  # noqa: E402
+from .data_agent import DataAgent  # noqa: E402
+from .analysis_agent import AnalysisAgent  # noqa: E402
+from .viz_agent import VizAgent  # noqa: E402
+from .llm import get_default_llm  # noqa: E402
 
 
 class AgentState(TypedDict):

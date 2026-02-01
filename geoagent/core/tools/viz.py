@@ -3,7 +3,7 @@
 This module provides tools for creating interactive maps using leafmap's MapLibre backend.
 """
 
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 import logging
 import tempfile
 import os
@@ -187,9 +187,6 @@ def show_on_map(
 
                 elif layer_type == "stac":
                     # Add STAC item layer using COG
-                    collection = layer.get("collection")
-                    item_id = layer.get("item_id")
-                    assets = layer.get("assets", ["visual"])
                     colormap = layer.get("colormap", "viridis")
 
                     if isinstance(data, str):
@@ -573,7 +570,6 @@ def create_choropleth_map(
         except AttributeError:
             # Fallback: add as styled GeoJSON
             from matplotlib import cm
-            import matplotlib.pyplot as plt
             import numpy as np
 
             # Classify data

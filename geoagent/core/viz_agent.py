@@ -4,8 +4,14 @@ The Visualization Agent creates interactive MapLibre GL visualizations using
 leafmap's maplibregl backend for high-performance 3D mapping.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 import logging
+import os
+
+# Enable anonymous access for public S3 COG data (e.g., Earth Search)
+# This avoids slow/failing AWS credential lookups for public buckets
+if "AWS_NO_SIGN_REQUEST" not in os.environ:
+    os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
 
 try:
     from leafmap.maplibregl import Map as MapLibreMap
@@ -118,7 +124,7 @@ def create_map(**kwargs):
         return MockMapLibreMap(**kwargs)
 
 
-from .models import DataResult, AnalysisResult, PlannerOutput
+from .models import DataResult, AnalysisResult, PlannerOutput  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -267,8 +273,8 @@ class VizAgent:
             center_lon = (bbox[0] + bbox[2]) / 2
             m.set_center(center_lon, center_lat, zoom=10)
 
-        # Add raster layers
-        for i, item in enumerate(data.items[:5]):  # Limit to 5 items
+        # Add raster layers (limit to first item for performance)
+        for i, item in enumerate(data.items[:1]):
             if "assets" in item:
                 # Determine best asset to visualize
                 asset_key = self._select_best_asset(item["assets"], plan.intent)
@@ -277,6 +283,11 @@ class VizAgent:
 
                     # Add layer with appropriate styling
                     layer_name = f"{item.get('id', f'Layer {i+1}')}"
+
+                    # Skip mock/placeholder URLs
+                    if asset_url.startswith("mock://"):
+                        logger.debug(f"Skipping mock URL for {layer_name}")
+                        continue
 
                     try:
                         if "viz" in self.tools:
@@ -549,7 +560,7 @@ class VizAgent:
                     geom = sg.shape(plan.location["geometry"])
                     centroid = geom.centroid
                     m.set_center(centroid.x, centroid.y, zoom=10)
-                except:
+                except Exception:
                     pass
 
         # Add basemap
@@ -565,9 +576,10 @@ class VizAgent:
                         asset_key = self._select_best_asset(item["assets"], plan.intent)
                         if asset_key and asset_key in item["assets"]:
                             asset_url = item["assets"][asset_key]["href"]
-                            m.add_cog_layer(
-                                asset_url, name="Data Layer", fit_bounds=True
-                            )
+                            if not asset_url.startswith("mock://"):
+                                m.add_cog_layer(
+                                    asset_url, name="Data Layer", fit_bounds=True
+                                )
 
                 elif data.data_type == "vector":
                     # Try to add vector data
@@ -663,7 +675,11 @@ class VizAgent:
                 asset_key = self._select_best_asset(data.items[0]["assets"], "ndvi")
                 if asset_key:
                     asset_url = data.items[0]["assets"][asset_key]["href"]
-                    m.add_cog_layer(asset_url, name="NDVI Analysis", fit_bounds=True)
+                    # Skip mock/placeholder URLs
+                    if not asset_url.startswith("mock://"):
+                        m.add_cog_layer(
+                            asset_url, name="NDVI Analysis", fit_bounds=True
+                        )
 
     def _add_title_to_map(self, m: Any, title: str):
         """Add title to the map.

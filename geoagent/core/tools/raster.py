@@ -3,7 +3,7 @@
 This module provides tools for raster data analysis using xarray and rioxarray.
 """
 
-from typing import List, Dict, Optional, Any, Union, Tuple
+from typing import List, Dict, Optional, Any
 import logging
 import numpy as np
 
@@ -13,8 +13,6 @@ try:
     import xarray as xr
     import rioxarray as rxr
     import rasterio
-    from rasterio.features import shapes
-    from rasterio.transform import from_bounds
 except ImportError:
     xr = rxr = rasterio = None
 
@@ -441,10 +439,9 @@ def zonal_stats(
         # Load vector zones
         zones = gpd.read_file(zones_path)
 
-        # Load raster
+        # Load raster metadata
         with rasterio.open(raster_path) as src:
-            raster_data = src.read(raster_band)
-            raster_transform = src.transform
+            nodata_value = src.nodata
             raster_crs = src.crs
 
         # Reproject zones to raster CRS if needed
@@ -459,17 +456,18 @@ def zonal_stats(
                 from rasterio.mask import mask
 
                 zone_geom = [zone.geometry.__geo_interface__]
-                masked_data, masked_transform = mask(
-                    rasterio.open(raster_path),
-                    zone_geom,
-                    crop=True,
-                    indexes=[raster_band],
-                )
+                with rasterio.open(raster_path) as src:
+                    masked_data, masked_transform = mask(
+                        src,
+                        zone_geom,
+                        crop=True,
+                        indexes=[raster_band],
+                    )
 
                 # Flatten and remove nodata
                 values = masked_data.flatten()
                 values = (
-                    values[values != src.nodata] if src.nodata is not None else values
+                    values[values != nodata_value] if nodata_value is not None else values
                 )
                 values = values[~np.isnan(values)]
 

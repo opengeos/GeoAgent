@@ -4,12 +4,77 @@ The Data Agent is responsible for searching and retrieving geospatial data
 based on structured query parameters from the Planner Agent.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import logging
 
 from .models import PlannerOutput, DataResult
 
 logger = logging.getLogger(__name__)
+
+
+class STACSearchWrapper:
+    """Wrapper around pystac_client for STAC searches."""
+
+    def __init__(self, catalog_url: str = None):
+        self.catalog_url = (
+            catalog_url
+            or "https://earth-search.aws.element84.com/v1"
+        )
+        self._client = None
+
+    @property
+    def client(self):
+        if self._client is None:
+            from pystac_client import Client
+
+            self._client = Client.open(self.catalog_url)
+        return self._client
+
+    def search(
+        self,
+        bbox=None,
+        datetime=None,
+        collections=None,
+        max_items=10,
+        **kwargs,
+    ):
+        """Search STAC catalog and return list of item dicts."""
+        search_params = {}
+        if bbox:
+            search_params["bbox"] = bbox
+        if datetime:
+            search_params["datetime"] = datetime
+        if collections:
+            search_params["collections"] = collections
+        search_params["limit"] = max_items
+
+        search = self.client.search(**search_params)
+
+        results = []
+        for item in search.items():
+            if len(results) >= max_items:
+                break
+
+            item_data = {
+                "id": item.id,
+                "collection": item.collection_id,
+                "geometry": item.geometry,
+                "bbox": list(item.bbox) if item.bbox else None,
+                "properties": item.properties,
+                "assets": {},
+            }
+
+            for asset_key, asset in item.assets.items():
+                item_data["assets"][asset_key] = {
+                    "href": asset.href,
+                    "type": asset.media_type,
+                    "title": asset.title,
+                    "roles": asset.roles if asset.roles else [],
+                }
+
+            results.append(item_data)
+
+        return results
 
 
 class DataAgent:
@@ -33,23 +98,11 @@ class DataAgent:
     def _setup_tools(self):
         """Setup and initialize data tools."""
         try:
-            # Import tools from the tools module
-            # Note: These imports will be available once tools are implemented
-            # For now, we'll use placeholders
-            # from ..tools.stac import STACSearchTool
-            # from ..tools.duckdb_tool import DuckDBTool
-
-            # TODO: Enable when actual tools are implemented
-            # if 'stac' not in self.tools:
-            #     self.tools['stac'] = STACSearchTool()
-            # if 'duckdb' not in self.tools:
-            #     self.tools['duckdb'] = DuckDBTool()
-
-            logger.info("Data tools setup (using placeholders)")
-
-        except ImportError as e:
+            if "stac" not in self.tools:
+                self.tools["stac"] = STACSearchWrapper()
+            logger.info("Data tools initialized (STAC search available)")
+        except Exception as e:
             logger.warning(f"Some data tools not available: {e}")
-            # Graceful fallback - tools will be added when available
 
     def search_data(self, plan: PlannerOutput) -> DataResult:
         """Search for geospatial data based on the query plan.
@@ -301,8 +354,17 @@ class DataAgent:
             collection = dataset_mapping.get(plan.dataset.lower(), plan.dataset)
             params["collections"] = [collection]
 
+        # Default to sentinel-2-l2a for raster/NDVI queries without explicit dataset
+        if "collections" not in params:
+            intent_lower = plan.intent.lower()
+            if any(
+                kw in intent_lower
+                for kw in ["ndvi", "evi", "vegetation", "spectral", "band", "imagery"]
+            ):
+                params["collections"] = ["sentinel-2-l2a"]
+
         # Add limit to prevent too many results
-        params["max_items"] = plan.parameters.get("max_items", 100)
+        params["max_items"] = plan.parameters.get("max_items", 10)
 
         return params
 

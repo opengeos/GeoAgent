@@ -6,7 +6,18 @@ to avoid circular dependencies between modules.
 
 from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
+from enum import Enum
+
 from pydantic import BaseModel, Field
+
+
+class Intent(str, Enum):
+    """Supported query intents."""
+
+    SEARCH = "search"
+    ANALYZE = "analyze"
+    VISUALIZE = "visualize"
+    COMPARE = "compare"
 
 
 class PlannerOutput(BaseModel):
@@ -25,6 +36,10 @@ class PlannerOutput(BaseModel):
     dataset: Optional[str] = Field(
         default=None,
         description="Preferred dataset or catalog (e.g., 'sentinel-2', 'landsat')",
+    )
+    analysis_type: Optional[str] = Field(
+        default=None,
+        description="Type of analysis requested (e.g., 'ndvi', 'change_detection')",
     )
     parameters: Dict[str, Any] = Field(
         default_factory=dict, description="Additional analysis parameters"

@@ -79,7 +79,7 @@ def get_llm(
             from langchain_openai import ChatOpenAI
         except ImportError:
             raise ImportError(
-                f"langchain-openai is not installed. Run: pip install langchain-openai"
+                "langchain-openai is not installed. Run: pip install langchain-openai"
             )
         return ChatOpenAI(
             model=resolved_model,
@@ -93,7 +93,7 @@ def get_llm(
             from langchain_anthropic import ChatAnthropic
         except ImportError:
             raise ImportError(
-                f"langchain-anthropic is not installed. Run: pip install langchain-anthropic"
+                "langchain-anthropic is not installed. Run: pip install langchain-anthropic"
             )
         return ChatAnthropic(
             model=resolved_model,
@@ -107,7 +107,7 @@ def get_llm(
             from langchain_google_genai import ChatGoogleGenerativeAI
         except ImportError:
             raise ImportError(
-                f"langchain-google-genai is not installed. Run: pip install langchain-google-genai"
+                "langchain-google-genai is not installed. Run: pip install langchain-google-genai"
             )
         return ChatGoogleGenerativeAI(
             model=resolved_model,
@@ -121,7 +121,7 @@ def get_llm(
             from langchain_ollama import ChatOllama
         except ImportError:
             raise ImportError(
-                f"langchain-ollama is not installed. Run: pip install langchain-ollama"
+                "langchain-ollama is not installed. Run: pip install langchain-ollama"
             )
         return ChatOllama(
             model=resolved_model,

@@ -3,9 +3,8 @@
 This module provides tools for vector data analysis using geopandas.
 """
 
-from typing import List, Dict, Optional, Any, Union, Tuple
+from typing import List, Dict, Optional, Any
 import logging
-from pathlib import Path
 
 from langchain_core.tools import tool
 
@@ -312,12 +311,8 @@ def buffer_analysis(
         elif unit == "meters" and gdf.crs and gdf.crs.is_geographic:
             # Convert to meters (approximate)
             # Use UTM zone for better accuracy
-            import pyproj
-
-            # Get centroid for UTM zone calculation
-            centroid = gdf.geometry.centroid.iloc[0]
+            # Use UTM zone for better accuracy
             utm_crs = gdf.estimate_utm_crs()
-            gdf_projected = gdf.to_crs(utm_crs)
             buffer_distance = distance
         elif unit == "degrees":
             buffer_distance = distance

@@ -34,15 +34,8 @@ class AnalysisAgent:
     def _setup_tools(self):
         """Setup and initialize analysis tools."""
         try:
-            # Import analysis tools from the tools module
-            # TODO: Enable when actual tools are implemented
-            # from ..tools.raster import RasterAnalysisTool
-            # from ..tools.vector import VectorAnalysisTool
-
-            # if 'raster' not in self.tools:
-            #     self.tools['raster'] = RasterAnalysisTool()
-            # if 'vector' not in self.tools:
-            #     self.tools['vector'] = VectorAnalysisTool()
+            # TODO: Import and register RasterAnalysisTool and VectorAnalysisTool
+            # once the tool implementations are finalized.
 
             logger.info("Analysis tools setup (using placeholders)")
 

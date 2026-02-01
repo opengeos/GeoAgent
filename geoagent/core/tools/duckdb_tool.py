@@ -5,8 +5,6 @@ This module provides tools for running spatial SQL queries using DuckDB.
 
 from typing import List, Dict, Optional, Any, Union
 import logging
-import tempfile
-import os
 
 from langchain_core.tools import tool
 
@@ -77,28 +75,31 @@ def query_spatial_data(
 
         # If data_path is provided, create a temporary view
         if data_path:
+            # Sanitize data_path to prevent SQL injection
+            safe_path = data_path.replace("'", "''")
+
             # Determine file format and create appropriate read statement
             if data_path.endswith((".parquet", ".pq")):
                 view_sql = (
-                    f"CREATE VIEW data AS SELECT * FROM read_parquet('{data_path}')"
+                    f"CREATE VIEW data AS SELECT * FROM read_parquet('{safe_path}')"
                 )
             elif data_path.endswith(".geojson"):
-                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{data_path}')"
+                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{safe_path}')"
             elif data_path.endswith(".csv"):
                 view_sql = (
-                    f"CREATE VIEW data AS SELECT * FROM read_csv_auto('{data_path}')"
+                    f"CREATE VIEW data AS SELECT * FROM read_csv_auto('{safe_path}')"
                 )
             elif data_path.endswith(".json"):
                 view_sql = (
-                    f"CREATE VIEW data AS SELECT * FROM read_json_auto('{data_path}')"
+                    f"CREATE VIEW data AS SELECT * FROM read_json_auto('{safe_path}')"
                 )
             elif data_path.endswith(".gpkg"):
-                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{data_path}')"
+                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{safe_path}')"
             elif data_path.endswith(".shp"):
-                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{data_path}')"
+                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{safe_path}')"
             else:
                 # Try to auto-detect
-                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{data_path}')"
+                view_sql = f"CREATE VIEW data AS SELECT * FROM st_read('{safe_path}')"
 
             conn.execute(view_sql)
 
@@ -130,7 +131,7 @@ def query_spatial_data(
             return results
 
         elif output_format == "summary":
-            summary = f"Query executed successfully.\n"
+            summary = "Query executed successfully.\n"
             summary += f"Columns: {', '.join(columns)}\n"
             summary += f"Rows returned: {len(result)}\n"
             if result:
@@ -156,7 +157,7 @@ def query_overture(
     sql: str,
     bbox: Optional[List[float]] = None,
     theme: str = "buildings",
-    release: str = "2024-07-22.0",
+    release: str = "2024-07-22.0",  # TODO: Update to latest Overture Maps release or fetch dynamically
 ) -> List[Dict[str, Any]]:
     """Query Overture Maps data using DuckDB spatial SQL.
 
@@ -209,7 +210,7 @@ def query_overture(
             "base": "type=land",
         }
 
-        type_pattern = type_patterns.get(theme, f"type=*")
+        type_pattern = type_patterns.get(theme, "type=*")
         data_url = f"{base_url}/{type_pattern}/*.parquet"
 
         # Create view with spatial filtering if bbox provided

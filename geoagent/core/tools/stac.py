@@ -3,19 +3,19 @@
 This module provides tools for searching STAC (SpatioTemporal Asset Catalog) data.
 """
 
-from typing import List, Dict, Optional, Any, Union
-from datetime import datetime
+from typing import List, Dict, Optional, Any
 import logging
 
 from langchain_core.tools import tool
 from pystac_client import Client
-from pystac import ItemCollection, Item
 
 try:
     from geoagent.catalogs.registry import CatalogRegistry
 except ImportError:
-    # Fallback if registry is not available
     CatalogRegistry = None
+    logging.getLogger(__name__).debug(
+        "CatalogRegistry not available; using built-in catalog URLs as fallback."
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,16 @@ def search_stac(
         ...     max_cloud_cover=20
         ... )
     """
+    # Validate bbox if provided
+    if bbox:
+        if len(bbox) != 4:
+            return [{"error": "bbox must have exactly 4 elements: [west, south, east, north]"}]
+        west_val, south_val, east_val, north_val = bbox
+        if west_val >= east_val:
+            return [{"error": f"Invalid bbox: west ({west_val}) must be less than east ({east_val})"}]
+        if south_val >= north_val:
+            return [{"error": f"Invalid bbox: south ({south_val}) must be less than north ({north_val})"}]
+
     try:
         # Get catalog client
         if CatalogRegistry:
@@ -229,10 +239,15 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
                     ),
                     "temporal": (
                         [
-                            interval[0].isoformat() if interval[0] else None,
-                            interval[1].isoformat() if interval[1] else None,
+                            collection.extent.temporal.intervals[0][0].isoformat()
+                            if collection.extent.temporal.intervals[0][0]
+                            else None,
+                            collection.extent.temporal.intervals[0][1].isoformat()
+                            if collection.extent.temporal.intervals[0][1]
+                            else None,
                         ]
-                        if collection.extent and collection.extent.temporal.intervals
+                        if collection.extent
+                        and collection.extent.temporal.intervals
                         else None
                     ),
                 },

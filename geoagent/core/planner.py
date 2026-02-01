@@ -1,27 +1,21 @@
 """Planner agent for parsing natural language queries into structured parameters."""
 
-from datetime import datetime
-from typing import Optional, Dict, Any, List, Union, Tuple
-from enum import Enum
+from typing import Optional, Dict, Any, List, Tuple
 
 from pydantic import BaseModel, Field
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
 from .llm import get_default_llm
+from .models import PlannerOutput, Intent
 
 
-class Intent(str, Enum):
-    """Supported query intents."""
+class _PlannerLLMSchema(BaseModel):
+    """Internal schema for LLM structured output parsing.
 
-    SEARCH = "search"
-    ANALYZE = "analyze"
-    VISUALIZE = "visualize"
-    COMPARE = "compare"
-
-
-class PlannerOutput(BaseModel):
-    """Structured output from the planner agent."""
+    Uses simple types that work well with LLM structured output,
+    then converts to the canonical PlannerOutput model.
+    """
 
     intent: Intent = Field(description="The primary intent of the query")
     location: Optional[str] = Field(
@@ -128,8 +122,39 @@ class Planner:
             [("system", SYSTEM_PROMPT), ("human", "{query}")]
         )
 
-        # Create the structured output chain
-        self.chain = self.prompt | self.llm.with_structured_output(PlannerOutput)
+        # Create the structured output chain using internal LLM schema
+        self.chain = self.prompt | self.llm.with_structured_output(_PlannerLLMSchema)
+
+    @staticmethod
+    def _convert_to_planner_output(result: _PlannerLLMSchema) -> PlannerOutput:
+        """Convert LLM schema output to the canonical PlannerOutput model."""
+        location = None
+        if result.location:
+            try:
+                parts = [float(x) for x in result.location.split(",")]
+                if len(parts) == 4:
+                    location = {"bbox": parts}
+                else:
+                    location = {"name": result.location}
+            except ValueError:
+                location = {"name": result.location}
+
+        time_range = None
+        if result.time_range:
+            time_range = {
+                "start_date": result.time_range[0],
+                "end_date": result.time_range[1],
+            }
+
+        return PlannerOutput(
+            intent=result.intent.value,
+            location=location,
+            time_range=time_range,
+            dataset=result.dataset,
+            analysis_type=result.analysis_type,
+            parameters=result.parameters,
+            confidence=1.0,
+        )
 
     def parse_query(self, query: str) -> PlannerOutput:
         """
@@ -148,8 +173,8 @@ class Planner:
             result = self.chain.invoke({"query": query})
 
             # Post-process and validate the result
-            if isinstance(result, PlannerOutput):
-                return result
+            if isinstance(result, _PlannerLLMSchema):
+                return self._convert_to_planner_output(result)
             else:
                 # Fallback if structured output fails
                 raise ValueError("Failed to get structured output from LLM")
@@ -175,7 +200,7 @@ class Planner:
             except Exception as e:
                 # Create a minimal output for failed queries
                 fallback = PlannerOutput(
-                    intent=Intent.SEARCH,
+                    intent=Intent.SEARCH.value,
                     parameters={"error": str(e), "original_query": query},
                 )
                 results.append(fallback)
