@@ -133,7 +133,7 @@ def create_map(target_map=None, **kwargs):
         return target_map
     if MAPLIBRE_AVAILABLE:
         kwargs["add_sidebar"] = True
-        kwargs["sidebar_visible"] = True
+        kwargs["sidebar_visible"] = False
         kwargs["add_floating_sidebar"] = False
         return MapLibreMap(**kwargs)
     else:
