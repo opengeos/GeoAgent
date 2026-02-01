@@ -133,7 +133,7 @@ geoagent ui
 Or run directly:
 
 ```bash
-solara run geoagent/ui/app.py
+solara run geoagent/ui/pages
 ```
 
 Features:

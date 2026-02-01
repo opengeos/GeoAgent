@@ -130,7 +130,7 @@ pip install "geoagent[ui]"
 geoagent ui
 ```
 
-See [Web UI](ui.md) for full details.
+The UI opens on a home page — click **Chat** to start querying. See [Web UI](ui.md) for full details.
 
 ## Architecture
 

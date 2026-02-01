@@ -8,8 +8,8 @@ import sys
 from typing import List, Optional
 
 
-# Path to the Solara app file
-APP_PATH = str(Path(__file__).with_name("app.py"))
+# Path to the Solara pages directory
+PAGES_DIR = str(Path(__file__).parent / "pages")
 
 
 def launch_ui(extra_args: Optional[List[str]] = None) -> int:
@@ -21,7 +21,7 @@ def launch_ui(extra_args: Optional[List[str]] = None) -> int:
     Returns:
         Process return code.
     """
-    cmd = [sys.executable, "-m", "solara", "run", APP_PATH]
+    cmd = [sys.executable, "-m", "solara", "run", PAGES_DIR]
     if extra_args:
         cmd.extend(extra_args)
     try:
@@ -32,4 +32,4 @@ def launch_ui(extra_args: Optional[List[str]] = None) -> int:
         )
 
 
-__all__ = ["APP_PATH", "launch_ui"]
+__all__ = ["PAGES_DIR", "launch_ui"]
