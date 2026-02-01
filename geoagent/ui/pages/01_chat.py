@@ -84,6 +84,10 @@ def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Labe
 
         messages.value = [*messages.value, {"role": "assistant", "content": text}]
 
+        # Show result in output
+        with output:
+            print(f"🌍 {text}")
+
         # Store code
         code = result.code or ""
         if (
@@ -96,19 +100,20 @@ def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Labe
         status_label.value = ""
 
     except Exception as e:
+        import traceback
+
+        err_msg = f"❌ Error: {e}"
         messages.value = [
             *messages.value,
-            {"role": "assistant", "content": f"❌ Error: {e}"},
+            {"role": "assistant", "content": err_msg},
         ]
         status_label.value = ""
+        with output:
+            print(f"🌍 {err_msg}")
+            traceback.print_exc()
     finally:
         processing.value = False
-        # Refresh chat display
-        with output:
-            output.clear_output()
-            for msg in messages.value:
-                role = "🧑" if msg["role"] == "user" else "🌍"
-                print(f"{role} {msg['content']}")
+        status_label.value = ""
 
 
 def create_map():
@@ -159,17 +164,29 @@ def create_map():
 
     model_input.observe(on_model_change, names=["value"])
 
-    def on_submit(sender):
+    def do_submit(_=None):
         q = query_input.value.strip()
-        if q and not processing.value:
-            query_input.value = ""
-            threading.Thread(
-                target=_run_query,
-                args=(q, m, output, status_label),
-                daemon=True,
-            ).start()
+        if not q or processing.value:
+            return
+        # Show user message immediately
+        with output:
+            print(f"🧑 {q}")
+        query_input.value = ""
+        status_label.value = "⏳ Processing…"
+        threading.Thread(
+            target=_run_query,
+            args=(q, m, output, status_label),
+            daemon=True,
+        ).start()
 
-    query_input.on_submit(on_submit)
+    query_input.on_submit(do_submit)
+
+    send_button = widgets.Button(
+        description="Send",
+        button_style="primary",
+        layout=widgets.Layout(width="100%"),
+    )
+    send_button.on_click(do_submit)
 
     chat_box = widgets.VBox(
         [
@@ -180,6 +197,7 @@ def create_map():
             output,
             widgets.HTML("<hr>"),
             query_input,
+            send_button,
             status_label,
         ],
         layout=widgets.Layout(padding="8px"),
