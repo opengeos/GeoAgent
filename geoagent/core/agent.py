@@ -169,13 +169,46 @@ class GeoAgent:
             self._status_callback = None
 
     def _emit_status(self, stage: str) -> None:
+        self._emit_status_detail(stage, None)
+
+    def _emit_status_detail(self, stage: str, detail: Optional[str]) -> None:
         callback = getattr(self, "_status_callback", None)
         if callback is None:
             return
+        payload = {"stage": stage}
+        if detail:
+            payload["detail"] = detail
         try:
-            callback(stage)
+            callback(payload)
+            return
+        except TypeError:
+            pass
+        try:
+            if detail:
+                callback(f"{stage} • {detail}")
+            else:
+                callback(stage)
         except Exception as e:
             logger.debug(f"Status callback failed: {e}")
+
+    @staticmethod
+    def _format_plan_detail(plan: PlannerOutput) -> str:
+        parts: List[str] = []
+        if plan.dataset:
+            parts.append(plan.dataset)
+        if plan.location:
+            name = plan.location.get("name")
+            if name:
+                parts.append(name)
+        if plan.time_range:
+            start = plan.time_range.get("start_date") or ""
+            end = plan.time_range.get("end_date") or ""
+            if start or end:
+                if start and end:
+                    parts.append(f"{start} → {end}")
+                else:
+                    parts.append(start or end)
+        return " • ".join([p for p in parts if p])
 
     def search(self, query: str) -> DataResult:
         """Shortcut method to just search for data without analysis.
@@ -341,7 +374,7 @@ class GeoAgent:
             Updated state with plan
         """
         logger.debug("Executing planning node")
-        self._emit_status("planning")
+        self._emit_status_detail("planning", "Parsing intent, location, and time range")
 
         try:
             plan = self._parse_query(state["query"])
@@ -388,6 +421,9 @@ class GeoAgent:
             logger.debug(
                 f"Plan created: analyze={state['should_analyze']}, visualize={state['should_visualize']}"
             )
+            plan_detail = self._format_plan_detail(plan)
+            if plan_detail:
+                self._emit_status_detail("planning", f"Plan ready • {plan_detail}")
 
         except Exception as e:
             state["error"] = f"Planning failed: {e}"
@@ -405,7 +441,11 @@ class GeoAgent:
             Updated state with data
         """
         logger.debug("Executing data fetching node")
-        self._emit_status("fetch_data")
+        if state["plan"]:
+            detail = self._format_plan_detail(state["plan"])
+        else:
+            detail = None
+        self._emit_status_detail("fetch_data", detail or "Searching catalogs")
 
         try:
             if state["plan"]:
@@ -417,6 +457,9 @@ class GeoAgent:
 
                 logger.debug(
                     f"Data fetched: {data.total_items} items of type {data.data_type}"
+                )
+                self._emit_status_detail(
+                    "fetch_data", f"Found {data.total_items} items"
                 )
             else:
                 state["error"] = "No plan available for data fetching"
@@ -496,7 +539,10 @@ for item in items:
             Updated state with analysis results
         """
         logger.debug("Executing analysis node")
-        self._emit_status("analysis")
+        detail = None
+        if state["plan"] and state["plan"].analysis_type:
+            detail = state["plan"].analysis_type.replace("_", " ")
+        self._emit_status_detail("analysis", detail or "Running analysis")
 
         try:
             if state["plan"] and state["data"]:
@@ -527,7 +573,10 @@ for item in items:
             Updated state with map
         """
         logger.debug("Executing visualization node")
-        self._emit_status("visualize")
+        detail = None
+        if state["plan"]:
+            detail = self._format_plan_detail(state["plan"])
+        self._emit_status_detail("visualize", detail or "Rendering map layers")
 
         try:
             if state["plan"]:

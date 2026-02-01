@@ -16,9 +16,12 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 import inspect
+import queue
+import threading
 
 import solara
 from solara.alias import rv as v
+from solara.datatypes import ResultState
 from solara.components.input import use_change
 import leafmap.maplibregl as leafmap
 
@@ -203,6 +206,10 @@ def Page():
 
     query, set_query = solara.use_state("")
     show_code, set_show_code = solara.use_state(False)
+    pending_query, set_pending_query = solara.use_state("")
+    request_id, set_request_id = solara.use_state(0)
+    handled_request_id, set_handled_request_id = solara.use_state(0)
+    status_snippet_ref = solara.use_ref("")
 
     def _on_mount():
         try:
@@ -221,6 +228,111 @@ def Page():
 
     solara.use_effect(_mount_effect, dependencies=[])
 
+    stage_labels = {
+        "planning": "🧭 Planning",
+        "fetch_data": "🔎 Searching data",
+        "analysis": "📊 Analyzing",
+        "visualize": "🗺️ Visualizing",
+    }
+
+    def on_stage(event):
+        if isinstance(event, dict):
+            stage = event.get("stage", "")
+            detail = event.get("detail") or event.get("message")
+        else:
+            stage = event
+            detail = None
+        label = stage_labels.get(stage, stage or "Working")
+        snippet = status_snippet_ref.current
+        if detail:
+            status_text.value = f"{label} • {detail}"
+        elif snippet:
+            status_text.value = f"{label} • {snippet}"
+        else:
+            status_text.value = label
+
+    def run_query(_cancel=None):
+        if not pending_query:
+            return None
+        rid = request_id
+        q = pending_query
+        events: queue.Queue = queue.Queue()
+        done = threading.Event()
+
+        def status_cb(event):
+            events.put(("status", event))
+
+        def worker():
+            try:
+                response = _run_query(q, m, status_callback=status_cb)
+                events.put(("response", response))
+            except Exception as exc:
+                events.put(("error", str(exc)))
+            finally:
+                done.set()
+
+        threading.Thread(target=worker, daemon=True).start()
+
+        while True:
+            try:
+                kind, payload = events.get(timeout=0.1)
+            except queue.Empty:
+                if done.is_set():
+                    break
+                continue
+            if kind == "status":
+                yield {"type": "status", "event": payload, "rid": rid}
+            elif kind == "response":
+                yield {"type": "response", "text": payload, "rid": rid}
+                break
+            elif kind == "error":
+                yield {"type": "error", "error": payload, "rid": rid}
+                break
+
+    query_result = solara.use_thread(run_query, dependencies=[request_id])
+
+    def handle_result():
+        if request_id == 0 or handled_request_id == request_id:
+            return None
+        value = query_result.value
+        if isinstance(value, dict) and value.get("rid") not in (None, request_id):
+            return None
+        if isinstance(value, dict) and value.get("type") == "status":
+            on_stage(value.get("event"))
+            return None
+        if isinstance(value, dict) and value.get("type") == "response":
+            response = value.get("text") or "❌ An error occurred."
+            messages.value = [
+                *messages.value,
+                {"role": "assistant", "content": response},
+            ]
+            processing.value = False
+            status_text.value = ""
+            set_handled_request_id(request_id)
+        elif isinstance(value, dict) and value.get("type") == "error":
+            err = value.get("error") or "An error occurred."
+            messages.value = [
+                *messages.value,
+                {"role": "assistant", "content": f"❌ Error: {err}"},
+            ]
+            processing.value = False
+            status_text.value = ""
+            set_handled_request_id(request_id)
+        elif query_result.state == ResultState.ERROR:
+            err = query_result.error or "An error occurred."
+            messages.value = [
+                *messages.value,
+                {"role": "assistant", "content": f"❌ Error: {err}"},
+            ]
+            processing.value = False
+            status_text.value = ""
+            set_handled_request_id(request_id)
+        return None
+
+    solara.use_effect(
+        handle_result, dependencies=[query_result.value, query_result.state, request_id]
+    )
+
     def do_send(text=None):
         """Send a query. *text* comes from Enter key; falls back to query state."""
         q = (text if isinstance(text, str) else query).strip()
@@ -233,33 +345,11 @@ def Page():
 
         # Set processing state
         processing.value = True
-
-        stage_labels = {
-            "planning": "🧭 Planning",
-            "fetch_data": "🔎 Searching data",
-            "analysis": "📊 Analyzing",
-            "visualize": "🗺️ Visualizing",
-        }
         snippet = q if len(q) <= 60 else f"{q[:57]}…"
-
-        def on_stage(stage: str):
-            label = stage_labels.get(stage, stage)
-            status_text.value = f"{label} • {snippet}"
-
-        status_text.value = f"{stage_labels['planning']} • {snippet}"
-
-        # Run query synchronously (important for map updates)
-        response = _run_query(q, m, status_callback=on_stage)
-
-        # Add response
-        messages.value = [
-            *messages.value,
-            {"role": "assistant", "content": response},
-        ]
-
-        # Reset state
-        processing.value = False
-        status_text.value = ""
+        status_snippet_ref.current = snippet
+        status_text.value = "🧭 Planning • Parsing intent, location, and time range"
+        set_pending_query(q)
+        set_request_id(request_id + 1)
 
     # ── Sidebar layout ──
     with solara.Sidebar():
@@ -303,21 +393,22 @@ def Page():
                     "flex": "1 1 auto",
                     "min-height": "0",
                     "overflow-y": "auto",
+                    "flex-direction": "column-reverse",
                     "padding": "4px 0",
                 }
             ):
+                # Status indicator (renders at bottom due to column-reverse)
+                if status_text.value:
+                    solara.Info(status_text.value)
+
                 if messages.value:
-                    for msg in messages.value:
+                    for msg in reversed(messages.value):
                         ChatMessage(role=msg["role"], content=msg["content"])
                 else:
                     solara.Text(
                         "No messages yet. Ask about geospatial data!",
                         style={"color": "#888", "font-style": "italic"},
                     )
-
-                # Status indicator
-                if status_text.value:
-                    solara.Info(status_text.value)
 
             solara.HTML(tag="hr", style={"margin": "4px 0"})
 
