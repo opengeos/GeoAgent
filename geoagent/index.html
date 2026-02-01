@@ -1393,7 +1393,12 @@ geospatial data analysis from natural language queries.</p>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GeoAgent initialized successfully&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">status_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Main method to process a natural language query.</span>
 
 <span class="sd">        Args:</span>
@@ -1407,6 +1412,7 @@ geospatial data analysis from natural language queries.</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing query: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_map</span> <span class="o">=</span> <span class="n">target_map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_callback</span> <span class="o">=</span> <span class="n">status_callback</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -1457,6 +1463,50 @@ geospatial data analysis from natural language queries.</p>
                 <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
                 <span class="n">execution_time</span><span class="o">=</span><span class="n">execution_time</span><span class="p">,</span>
             <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_status_callback</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="n">stage</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_emit_status_detail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_status_callback&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="n">stage</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">detail</span><span class="p">:</span>
+            <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;detail&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detail</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">detail</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2"> • </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">callback</span><span class="p">(</span><span class="n">stage</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status callback failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_format_plan_detail</span><span class="p">(</span><span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">parts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">time_range</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_date&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_date&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="ow">or</span> <span class="n">end</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">end</span><span class="p">:</span>
+                    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start</span> <span class="ow">or</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot; • &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shortcut method to just search for data without analysis.</span>
@@ -1622,6 +1672,7 @@ geospatial data analysis from natural language queries.</p>
 <span class="sd">            Updated state with plan</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing planning node&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="s2">&quot;planning&quot;</span><span class="p">,</span> <span class="s2">&quot;Parsing intent, location, and time range&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_query</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;query&quot;</span><span class="p">])</span>
@@ -1668,6 +1719,9 @@ geospatial data analysis from natural language queries.</p>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Plan created: analyze=</span><span class="si">{</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;should_analyze&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, visualize=</span><span class="si">{</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;should_visualize&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
+            <span class="n">plan_detail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_plan_detail</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">plan_detail</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="s2">&quot;planning&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Plan ready • </span><span class="si">{</span><span class="n">plan_detail</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Planning failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -1685,6 +1739,11 @@ geospatial data analysis from natural language queries.</p>
 <span class="sd">            Updated state with data</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing data fetching node&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_plan_detail</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="s2">&quot;fetch_data&quot;</span><span class="p">,</span> <span class="n">detail</span> <span class="ow">or</span> <span class="s2">&quot;Searching catalogs&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]:</span>
@@ -1696,6 +1755,9 @@ geospatial data analysis from natural language queries.</p>
 
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Data fetched: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="si">}</span><span class="s2"> items of type </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">data_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span>
+                    <span class="s2">&quot;fetch_data&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="si">}</span><span class="s2"> items&quot;</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;No plan available for data fetching&quot;</span>
@@ -1775,6 +1837,10 @@ geospatial data analysis from natural language queries.</p>
 <span class="sd">            Updated state with analysis results</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing analysis node&quot;</span><span class="p">)</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">analysis_type</span><span class="p">:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">analysis_type</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="s2">&quot;analysis&quot;</span><span class="p">,</span> <span class="n">detail</span> <span class="ow">or</span> <span class="s2">&quot;Running analysis&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]:</span>
@@ -1805,6 +1871,10 @@ geospatial data analysis from natural language queries.</p>
 <span class="sd">            Updated state with map</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing visualization node&quot;</span><span class="p">)</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]:</span>
+            <span class="n">detail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_plan_detail</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="s2">&quot;visualize&quot;</span><span class="p">,</span> <span class="n">detail</span> <span class="ow">or</span> <span class="s2">&quot;Rendering map layers&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]:</span>
@@ -2416,7 +2486,7 @@ geospatial data analysis from natural language queries.</p>
 
 
 <h5 id="geoagent.core.agent.GeoAgent.chat" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">status_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.agent.GeoAgent.chat" class="headerlink" title="Permanent link">&para;</a></h5>
@@ -2469,7 +2539,12 @@ instead of creating a new one.</p></td>
 </table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">status_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Main method to process a natural language query.</span>
 
 <span class="sd">    Args:</span>
@@ -2483,6 +2558,7 @@ instead of creating a new one.</p></td>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing query: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_target_map</span> <span class="o">=</span> <span class="n">target_map</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status_callback</span> <span class="o">=</span> <span class="n">status_callback</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -2533,6 +2609,8 @@ instead of creating a new one.</p></td>
             <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
             <span class="n">execution_time</span><span class="o">=</span><span class="n">execution_time</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_callback</span> <span class="o">=</span> <span class="kc">None</span>
 </code></pre></div>
         </details>
     </div>
