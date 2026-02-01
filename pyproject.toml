@@ -1,14 +1,17 @@
 [project]
 name = "GeoAgent"
 version = "0.0.1"
-dynamic = [
-    "dependencies",
-]
-description = "AI Agent for geospatial data analysis and visualiation"
+description = "An AI agent for geospatial data analysis and visualization"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 keywords = [
     "GeoAgent",
+    "geospatial",
+    "AI",
+    "agent",
+    "STAC",
+    "remote sensing",
+    "earth observation",
 ]
 license = {text = "MIT License"}
 authors = [
@@ -16,6 +19,7 @@ authors = [
 ]
 classifiers = [
     "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3.10",
@@ -24,31 +28,60 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 
+dependencies = [
+    "langgraph>=0.2",
+    "langchain>=0.3",
+    "langchain-core>=0.3",
+    "langchain-openai>=0.2",
+    "leafmap>=0.43",
+    "pystac-client>=0.8",
+    "xarray>=2024.1",
+    "rioxarray>=0.17",
+    "rasterio>=1.3",
+    "geopandas>=1.0",
+    "duckdb>=1.1",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "shapely>=2.0",
+    "pydantic>=2.0",
+]
+
 [project.entry-points."console_scripts"]
 geoagent = "geoagent.cli:main"
 
 [project.optional-dependencies]
+llm = [
+    "langchain-anthropic>=0.2",
+    "langchain-google-genai>=2.0",
+]
+
+ollama = [
+    "langchain-ollama>=0.2",
+]
+
+ui = [
+    "streamlit>=1.38",
+    "solara>=1.35",
+]
+
 all = [
-    "GeoAgent[extra]",
+    "GeoAgent[llm,ollama,ui]",
 ]
 
-extra = [
-    "pandas",
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+    "pre-commit>=4.0",
 ]
-
 
 [tool]
 [tool.setuptools.packages.find]
 include = ["geoagent*"]
-exclude = ["docs*"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-
+exclude = ["docs*", "tests*", "notebooks*"]
 
 [tool.distutils.bdist_wheel]
 universal = true
-
 
 [tool.bumpversion]
 current_version = "0.0.1"
@@ -65,13 +98,9 @@ filename = "geoagent/__init__.py"
 search = '__version__ = "{current_version}"'
 replace = '__version__ = "{new_version}"'
 
-
-[tool.flake8]
-exclude = [
-    "docs",
-]
-max-line-length = 88
-
+[tool.ruff]
+line-length = 88
+exclude = ["docs"]
 
 [project.urls]
 Homepage = "https://github.com/opengeos/GeoAgent"
