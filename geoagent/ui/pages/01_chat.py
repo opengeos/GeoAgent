@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import threading
 from typing import Any, Dict, List
 
 import solara
+import solara.lab
 import leafmap.maplibregl as leafmap
 
 from geoagent.core.agent import GeoAgent
 from geoagent.core.llm import get_llm, PROVIDERS
-from geoagent.core.models import GeoAgentResponse
 
 
 # ---------------------------------------------------------------------------
@@ -23,8 +22,10 @@ model: solara.Reactive[str] = solara.reactive("")
 processing: solara.Reactive[bool] = solara.reactive(False)
 status_text: solara.Reactive[str] = solara.reactive("")
 last_code: solara.Reactive[str] = solara.reactive("")
+pending_query: solara.Reactive[str] = solara.reactive("")
 
 _agent_store: Dict[str, Any] = {"agent": None, "key": None}
+_map_ref: Dict[str, Any] = {"map": None}
 PROVIDER_LIST = list(PROVIDERS.keys())
 
 
@@ -48,16 +49,22 @@ def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
 
 def _make_map():
     """Create the default map (called once, memoized)."""
-    return leafmap.Map(
+    m = leafmap.Map(
         center=[0, 20],
         zoom=2,
         height="750px",
         style="dark-matter",
     )
+    _map_ref["map"] = m
+    return m
 
 
-def _run_query(query: str, m):
-    """Run a GeoAgent query in a background thread."""
+def run_agent_query(query: str):
+    """Run a GeoAgent query (called by use_task for proper Solara context)."""
+    m = _map_ref.get("map")
+    if not query or not m:
+        return None
+
     processing.value = True
     status_text.value = "🔍 Parsing query…"
     messages.value = [*messages.value, {"role": "user", "content": query}]
@@ -103,6 +110,8 @@ def _run_query(query: str, m):
             code = result.analysis.code_generated
         last_code.value = code
 
+        return result
+
     except Exception as e:
         import traceback
 
@@ -111,6 +120,7 @@ def _run_query(query: str, m):
             *messages.value,
             {"role": "assistant", "content": f"❌ Error: {e}"},
         ]
+        return None
     finally:
         processing.value = False
         status_text.value = ""
@@ -128,6 +138,14 @@ def Page():
 
     query, set_query = solara.use_state("")
     show_code, set_show_code = solara.use_state(False)
+
+    # use_task runs in a thread with proper Solara context for widget updates
+    task = solara.lab.use_task(
+        run_agent_query,
+        args=[pending_query.value],
+        dependencies=[pending_query.value],
+        prefer_threaded=True,
+    )
 
     with solara.Sidebar():
         solara.Markdown("### 💬 GeoAgent Chat")
@@ -172,7 +190,7 @@ def Page():
             q = query.strip()
             if q and not processing.value:
                 set_query("")
-                threading.Thread(target=_run_query, args=(q, m), daemon=True).start()
+                pending_query.value = q
 
         solara.Button(
             "Send",
