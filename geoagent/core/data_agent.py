@@ -16,7 +16,7 @@ class STACSearchWrapper:
     """Wrapper around pystac_client for STAC searches."""
 
     def __init__(self, catalog_url: str = None):
-        self.catalog_url = catalog_url or "https://earth-search.aws.element84.com/v1"
+        self.catalog_url = catalog_url or "https://planetarycomputer.microsoft.com/api/stac/v1"
         self._client = None
 
     @property
@@ -24,7 +24,22 @@ class STACSearchWrapper:
         if self._client is None:
             from pystac_client import Client
 
-            self._client = Client.open(self.catalog_url)
+            # Use planetary_computer modifier for signed URLs if available
+            modifier = None
+            if "planetarycomputer" in self.catalog_url:
+                try:
+                    import planetary_computer
+
+                    modifier = planetary_computer.sign_inplace
+                except ImportError:
+                    logger.warning(
+                        "planetary_computer not installed. "
+                        "Run: pip install planetary-computer"
+                    )
+
+            self._client = Client.open(
+                self.catalog_url, modifier=modifier
+            )
         return self._client
 
     def search(
