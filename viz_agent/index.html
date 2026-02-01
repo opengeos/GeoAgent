@@ -1151,6 +1151,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1904,6 +1932,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
         <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">analysis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AnalysisResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create appropriate visualization based on available data and analysis.</span>
 
@@ -1911,10 +1940,15 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">            plan: Original query plan for context</span>
 <span class="sd">            data: Data retrieved by Data Agent</span>
 <span class="sd">            analysis: Analysis results from Analysis Agent</span>
+<span class="sd">            target_map: Optional existing map to render on instead of creating</span>
+<span class="sd">                a new one. When provided, layers are added to this map.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            MapLibre Map object ready for display</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_map</span> <span class="o">=</span> <span class="n">target_map</span>
+        <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_target_map</span><span class="p">(</span><span class="n">target_map</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating visualization&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -1937,6 +1971,19 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Visualization creation failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_error_visualization</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_target_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure an existing map widget can receive dynamic updates.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">target_map</span><span class="p">,</span> <span class="s2">&quot;use_message_queue&quot;</span><span class="p">):</span>
+                <span class="n">target_map</span><span class="o">.</span><span class="n">use_message_queue</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">target_map</span><span class="p">,</span> <span class="s2">&quot;create_container&quot;</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">target_map</span><span class="p">,</span> <span class="s2">&quot;container&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="n">target_map</span><span class="o">.</span><span class="n">create_container</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not prepare target map: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_determine_viz_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -2000,7 +2047,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            MapLibre Map with raster layers</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
         <span class="c1"># Set map center based on data location</span>
         <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="ow">and</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
@@ -2009,7 +2056,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
             <span class="n">center_lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
             <span class="n">m</span><span class="o">.</span><span class="n">set_center</span><span class="p">(</span><span class="n">center_lon</span><span class="p">,</span> <span class="n">center_lat</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
-        <span class="c1"># Add raster layers using Planetary Computer TiTiler</span>
+        <span class="c1"># Add raster layers using STAC</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[:</span><span class="mi">1</span><span class="p">]):</span>
             <span class="n">item_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Layer </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">collection</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -2023,22 +2070,71 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                 <span class="k">continue</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="c1"># Use add_stac_layer with PC TiTiler for best performance</span>
+                <span class="c1"># Use add_stac_layer for best performance</span>
                 <span class="k">if</span> <span class="n">MAPLIBRE_AVAILABLE</span> <span class="ow">and</span> <span class="n">collection</span><span class="p">:</span>
-                    <span class="n">viz_assets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_viz_assets</span><span class="p">(</span><span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
-                    <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span>
-                        <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-                        <span class="n">item</span><span class="o">=</span><span class="n">item_id</span><span class="p">,</span>
-                        <span class="n">assets</span><span class="o">=</span><span class="n">viz_assets</span><span class="p">,</span>
-                        <span class="n">titiler_endpoint</span><span class="o">=</span><span class="s2">&quot;planetary-computer&quot;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="n">item_id</span><span class="p">,</span>
-                        <span class="n">fit_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">viz_assets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_viz_assets</span><span class="p">(</span>
+                        <span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">,</span> <span class="n">collection</span>
                     <span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">viz_assets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="n">viz_assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">viz_assets</span> <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">viz_assets</span> <span class="o">==</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                        <span class="n">viz_assets</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">viz_assets</span><span class="p">:</span>
+                        <span class="n">best_asset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_best_asset</span><span class="p">(</span><span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">best_asset</span> <span class="ow">and</span> <span class="n">best_asset</span> <span class="o">!=</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                            <span class="n">viz_assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">best_asset</span><span class="p">]</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Adding STAC layer: collection=</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;item=</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">, assets=</span><span class="si">{</span><span class="n">viz_assets</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Build kwargs for add_stac_layer</span>
+                    <span class="n">layer_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+                        <span class="s2">&quot;item&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="n">viz_assets</span><span class="p">,</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">collection</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">item_id</span><span class="p">[:</span><span class="mi">15</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;fit_bounds&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+                    <span class="c1"># Add before_id if available (keeps layers below labels)</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;first_symbol_layer_id&quot;</span><span class="p">):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;before_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">first_symbol_layer_id</span>
+
+                    <span class="c1"># Add colormap for specific collections</span>
+                    <span class="k">if</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cop-dem-glo-30&quot;</span><span class="p">,</span> <span class="s2">&quot;3dep-lidar-hag&quot;</span><span class="p">):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;terrain&quot;</span>
+                    <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;io-lulc-9-class&quot;</span><span class="p">,):</span>
+                        <span class="c1"># LULC has its own colormap</span>
+                        <span class="k">pass</span>
+
+                    <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_kwargs</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added STAC layer: </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Explicitly fit bounds to the item bbox if available</span>
+                    <span class="n">item_bbox</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">item_bbox</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_bbox</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">m</span><span class="o">.</span><span class="n">fit_bounds</span><span class="p">(</span>
+                                <span class="p">[</span>
+                                    <span class="p">[</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                    <span class="p">[</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                                <span class="p">]</span>
+                            <span class="p">)</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fitted bounds to: </span><span class="si">{</span><span class="n">item_bbox</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not fit bounds: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="c1"># Fallback to set_center</span>
+                            <span class="n">center_lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">center_lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">m</span><span class="o">.</span><span class="n">set_center</span><span class="p">(</span><span class="n">center_lon</span><span class="p">,</span> <span class="n">center_lat</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Fallback to COG layer with signed URL</span>
                     <span class="n">asset_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_best_asset</span><span class="p">(</span><span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">asset_key</span> <span class="ow">and</span> <span class="n">asset_key</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
                         <span class="n">asset_url</span> <span class="o">=</span> <span class="n">assets</span><span class="p">[</span><span class="n">asset_key</span><span class="p">][</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding COG layer: </span><span class="si">{</span><span class="n">asset_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">m</span><span class="o">.</span><span class="n">add_cog_layer</span><span class="p">(</span>
                             <span class="n">asset_url</span><span class="p">,</span>
                             <span class="n">name</span><span class="o">=</span><span class="n">item_id</span><span class="p">,</span>
@@ -2046,7 +2142,10 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                             <span class="n">fit_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not add raster layer </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not add raster layer </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
 
         <span class="c1"># Add title</span>
         <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Raster Visualization: </span><span class="si">{</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -2070,7 +2169,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            MapLibre Map with vector layers</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
         <span class="c1"># Set map center</span>
         <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="ow">and</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
@@ -2118,7 +2217,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            MapLibre Map showing analysis results</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
         <span class="c1"># Set map center</span>
         <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="ow">and</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
@@ -2166,7 +2265,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            MapLibre Map with time series visualization</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
         <span class="c1"># Set map center</span>
         <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
@@ -2248,7 +2347,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                         <span class="n">right_url</span> <span class="o">=</span> <span class="n">last_item</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">asset_key</span><span class="p">][</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
 
                         <span class="c1"># Create split map</span>
-                        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+                        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
                         <span class="c1"># Set center</span>
                         <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="ow">and</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
@@ -2289,7 +2388,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            Basic leafmap Map</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
         <span class="c1"># Set center based on location if available</span>
         <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
@@ -2309,23 +2408,81 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                     <span class="k">pass</span>
 
-        <span class="c1"># Add basemap</span>
-        <span class="n">m</span><span class="o">.</span><span class="n">add_basemap</span><span class="p">(</span><span class="s2">&quot;OpenTopoMap&quot;</span><span class="p">)</span>
-
         <span class="c1"># Add simple data visualization if available</span>
         <span class="k">if</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;raster&quot;</span><span class="p">:</span>
-                    <span class="c1"># Try to add first raster item</span>
+                    <span class="c1"># Try to add first raster item using STAC layer</span>
                     <span class="n">item</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="s2">&quot;assets&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
-                        <span class="n">asset_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_best_asset</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">],</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">asset_key</span> <span class="ow">and</span> <span class="n">asset_key</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]:</span>
-                            <span class="n">asset_url</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">asset_key</span><span class="p">][</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
-                            <span class="k">if</span> <span class="ow">not</span> <span class="n">asset_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;mock://&quot;</span><span class="p">):</span>
-                                <span class="n">m</span><span class="o">.</span><span class="n">add_cog_layer</span><span class="p">(</span>
-                                    <span class="n">asset_url</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Data Layer&quot;</span><span class="p">,</span> <span class="n">fit_bounds</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="n">item_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">collection</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">assets</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+                    <span class="c1"># Skip mock items</span>
+                    <span class="k">if</span> <span class="n">assets</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+                        <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;mock://&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">assets</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                    <span class="p">):</span>
+                        <span class="k">if</span> <span class="n">MAPLIBRE_AVAILABLE</span> <span class="ow">and</span> <span class="n">collection</span><span class="p">:</span>
+                            <span class="n">viz_assets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_viz_assets</span><span class="p">(</span>
+                                <span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">,</span> <span class="n">collection</span>
+                            <span class="p">)</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">viz_assets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                                <span class="n">viz_assets</span> <span class="o">=</span> <span class="p">[</span>
+                                    <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">viz_assets</span> <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="s2">&quot;rendered_preview&quot;</span>
+                                <span class="p">]</span>
+                            <span class="k">elif</span> <span class="n">viz_assets</span> <span class="o">==</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                                <span class="n">viz_assets</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">viz_assets</span><span class="p">:</span>
+                                <span class="n">best_asset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_best_asset</span><span class="p">(</span>
+                                    <span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span>
                                 <span class="p">)</span>
+                                <span class="k">if</span> <span class="n">best_asset</span> <span class="ow">and</span> <span class="n">best_asset</span> <span class="o">!=</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                                    <span class="n">viz_assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">best_asset</span><span class="p">]</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Default viz: adding STAC layer </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+
+                            <span class="n">layer_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                                <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+                                <span class="s2">&quot;item&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                                <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="n">viz_assets</span><span class="p">,</span>
+                                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">collection</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">item_id</span><span class="p">[:</span><span class="mi">15</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                                <span class="s2">&quot;fit_bounds&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                            <span class="p">}</span>
+
+                            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;first_symbol_layer_id&quot;</span><span class="p">):</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;before_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">first_symbol_layer_id</span>
+
+                            <span class="c1"># Add colormap for specific collections</span>
+                            <span class="k">if</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cop-dem-glo-30&quot;</span><span class="p">,</span> <span class="s2">&quot;3dep-lidar-hag&quot;</span><span class="p">):</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;terrain&quot;</span>
+
+                            <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_kwargs</span><span class="p">)</span>
+
+                            <span class="c1"># Fit bounds to item</span>
+                            <span class="n">item_bbox</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">item_bbox</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_bbox</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="n">m</span><span class="o">.</span><span class="n">fit_bounds</span><span class="p">(</span>
+                                        <span class="p">[</span>
+                                            <span class="p">[</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                            <span class="p">[</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                                        <span class="p">]</span>
+                                    <span class="p">)</span>
+                                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                                    <span class="n">center_lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                                    <span class="n">center_lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                                    <span class="n">m</span><span class="o">.</span><span class="n">set_center</span><span class="p">(</span><span class="n">center_lon</span><span class="p">,</span> <span class="n">center_lat</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># Fallback to COG</span>
+                            <span class="n">asset_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_best_asset</span><span class="p">(</span><span class="n">assets</span><span class="p">,</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">asset_key</span> <span class="ow">and</span> <span class="n">asset_key</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                                <span class="n">asset_url</span> <span class="o">=</span> <span class="n">assets</span><span class="p">[</span><span class="n">asset_key</span><span class="p">][</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
+                                <span class="k">if</span> <span class="ow">not</span> <span class="n">asset_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;mock://&quot;</span><span class="p">):</span>
+                                    <span class="n">m</span><span class="o">.</span><span class="n">add_cog_layer</span><span class="p">(</span>
+                                        <span class="n">asset_url</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Data Layer&quot;</span><span class="p">,</span> <span class="n">fit_bounds</span><span class="o">=</span><span class="kc">True</span>
+                                    <span class="p">)</span>
 
                 <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">data_type</span> <span class="o">==</span> <span class="s2">&quot;vector&quot;</span><span class="p">:</span>
                     <span class="c1"># Try to add vector data</span>
@@ -2334,7 +2491,10 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                             <span class="n">m</span><span class="o">.</span><span class="n">add_geojson</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Vector Data&quot;</span><span class="p">)</span>
 
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not add data to default visualization: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not add data to default visualization: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
 
         <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;GeoAgent Map: </span><span class="si">{</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_title_to_map</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
@@ -2350,7 +2510,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            Basic leafmap Map with error information</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">()</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="n">m</span><span class="o">.</span><span class="n">add_basemap</span><span class="p">(</span><span class="s2">&quot;OpenStreetMap&quot;</span><span class="p">)</span>
 
         <span class="c1"># Add error message</span>
@@ -2358,7 +2518,9 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 
         <span class="k">return</span> <span class="n">m</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_select_viz_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_select_viz_assets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">assets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">collection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Select asset names for STAC layer visualization.</span>
 
 <span class="sd">        Returns a list of asset keys suitable for add_stac_layer.</span>
@@ -2366,11 +2528,51 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        Args:</span>
 <span class="sd">            assets: Available STAC assets</span>
 <span class="sd">            intent: Analysis intent</span>
+<span class="sd">            collection: STAC collection name (helps determine appropriate assets)</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            List of asset key strings (e.g., [&quot;visual&quot;] or [&quot;B04&quot;, &quot;B03&quot;, &quot;B02&quot;])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">intent_lower</span> <span class="o">=</span> <span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">collection_lower</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">collection</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Collection-specific asset selection (like geoai pattern)</span>
+        <span class="k">if</span> <span class="s2">&quot;sentinel-2&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># Sentinel-2 true color RGB</span>
+            <span class="k">if</span> <span class="s2">&quot;B04&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;B03&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;B02&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;B04&quot;</span><span class="p">,</span> <span class="s2">&quot;B03&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;visual&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;visual&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;landsat&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># Landsat RGB (L2 has blue, L1 may not)</span>
+            <span class="k">if</span> <span class="s2">&quot;red&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;green&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;blue&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">]</span>
+            <span class="c1"># Or use available bands</span>
+            <span class="k">if</span> <span class="s2">&quot;red&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;green&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;nir08&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;nir08&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">]</span>  <span class="c1"># False color</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">]</span>  <span class="c1"># Fallback</span>
+
+        <span class="k">if</span> <span class="s2">&quot;naip&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># NAIP imagery</span>
+            <span class="k">if</span> <span class="s2">&quot;image&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;sentinel-1&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># Sentinel-1 SAR</span>
+            <span class="k">if</span> <span class="s2">&quot;vv&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;vv&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;cop-dem&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span> <span class="ow">or</span> <span class="s2">&quot;3dep&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># DEM data</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;aster&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># ASTER imagery</span>
+            <span class="k">if</span> <span class="s2">&quot;VNIR&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;VNIR&quot;</span><span class="p">]</span>
 
         <span class="c1"># DEM and land cover collections use &quot;data&quot; or &quot;map&quot; asset</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
@@ -2408,9 +2610,16 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
         <span class="k">if</span> <span class="s2">&quot;B04&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;B03&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;B02&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;B04&quot;</span><span class="p">,</span> <span class="s2">&quot;B03&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">]</span>
 
-        <span class="c1"># Fallback to first available data asset</span>
-        <span class="n">best</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_best_asset</span><span class="p">(</span><span class="n">assets</span><span class="p">,</span> <span class="n">intent</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">best</span><span class="p">]</span> <span class="k">if</span> <span class="n">best</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="c1"># Fallback: look for common asset names</span>
+        <span class="k">for</span> <span class="n">possible</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;visual&quot;</span><span class="p">,</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">possible</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">possible</span><span class="p">]</span>
+
+        <span class="c1"># Last resort: first available asset</span>
+        <span class="k">if</span> <span class="n">assets</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">assets</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="p">[]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_select_best_asset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Select the best asset for visualization based on intent.</span>
@@ -2452,11 +2661,15 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
         <span class="p">]</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">preference_order</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">key</span>
 
         <span class="c1"># Return first available asset</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">assets</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">assets</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">assets</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">assets</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">key</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_add_analysis_fallback</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span><span class="p">,</span> <span class="n">analysis</span><span class="p">:</span> <span class="n">AnalysisResult</span>
@@ -2480,15 +2693,42 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
             <span class="k">if</span> <span class="n">MAPLIBRE_AVAILABLE</span> <span class="ow">and</span> <span class="n">collection</span><span class="p">:</span>
                 <span class="n">asset_key</span> <span class="o">=</span> <span class="n">viz_hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;asset_key&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span>
-                        <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">,</span>
-                        <span class="n">item</span><span class="o">=</span><span class="n">item_id</span><span class="p">,</span>
-                        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="n">asset_key</span><span class="p">],</span>
-                        <span class="n">titiler_endpoint</span><span class="o">=</span><span class="s2">&quot;planetary-computer&quot;</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="n">viz_hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="n">item_id</span><span class="p">),</span>
-                        <span class="n">fit_bounds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="p">)</span>
+                    <span class="n">layer_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+                        <span class="s2">&quot;item&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">asset_key</span><span class="p">],</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">viz_hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                            <span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">collection</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">item_id</span><span class="p">[:</span><span class="mi">15</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">),</span>
+                        <span class="s2">&quot;fit_bounds&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+                    <span class="c1"># Add before_id if available</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;first_symbol_layer_id&quot;</span><span class="p">):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;before_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">first_symbol_layer_id</span>
+
+                    <span class="c1"># Add colormap for specific viz types</span>
+                    <span class="k">if</span> <span class="n">viz_type</span> <span class="o">==</span> <span class="s2">&quot;elevation&quot;</span><span class="p">:</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;terrain&quot;</span>
+
+                    <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_kwargs</span><span class="p">)</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added </span><span class="si">{</span><span class="n">viz_type</span><span class="si">}</span><span class="s2"> STAC layer: </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Fit bounds to item</span>
+                    <span class="n">item_bbox</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">item_bbox</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_bbox</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">m</span><span class="o">.</span><span class="n">fit_bounds</span><span class="p">(</span>
+                                <span class="p">[</span>
+                                    <span class="p">[</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                                    <span class="p">[</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                                <span class="p">]</span>
+                            <span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                            <span class="n">center_lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">center_lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">item_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">item_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="n">m</span><span class="o">.</span><span class="n">set_center</span><span class="p">(</span><span class="n">center_lon</span><span class="p">,</span> <span class="n">center_lat</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
                     <span class="k">return</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not add </span><span class="si">{</span><span class="n">viz_type</span><span class="si">}</span><span class="s2"> STAC layer: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2652,7 +2892,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 
 
 <h5 id="geoagent.core.viz_agent.VizAgent.create_visualization" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">create_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">create_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">analysis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.viz_agent.VizAgent.create_visualization" class="headerlink" title="Permanent link">&para;</a></h5>
@@ -2690,6 +2930,13 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
         <td><p>Analysis results from Analysis Agent</p></td>
         <td><code>None</code></td>
       </tr>
+      <tr>
+        <td><code>target_map</code></td>
+        <td><code>Optional[Any]</code></td>
+        <td><p>Optional existing map to render on instead of creating
+a new one. When provided, layers are added to this map.</p></td>
+        <td><code>None</code></td>
+      </tr>
   </tbody>
 </table>
 <p><strong>Returns:</strong></p>
@@ -2714,6 +2961,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
     <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">analysis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AnalysisResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create appropriate visualization based on available data and analysis.</span>
 
@@ -2721,10 +2969,15 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 <span class="sd">        plan: Original query plan for context</span>
 <span class="sd">        data: Data retrieved by Data Agent</span>
 <span class="sd">        analysis: Analysis results from Analysis Agent</span>
+<span class="sd">        target_map: Optional existing map to render on instead of creating</span>
+<span class="sd">            a new one. When provided, layers are added to this map.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        MapLibre Map object ready for display</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_target_map</span> <span class="o">=</span> <span class="n">target_map</span>
+    <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_target_map</span><span class="p">(</span><span class="n">target_map</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating visualization&quot;</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -2771,7 +3024,7 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 
 
 <h4 id="geoagent.core.viz_agent.create_map" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">create_map</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.viz_agent.create_map" class="headerlink" title="Permanent link">&para;</a></h4>
@@ -2780,11 +3033,66 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
 
       <p>Create a MapLibre map object (real if available, otherwise mock).</p>
 
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>target_map</code></td>
+        <td></td>
+        <td><p>If provided, return this map instead of creating a new one.
+Allows rendering on an existing map widget (e.g., the Solara UI map).</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td></td>
+        <td><p>Passed to MapLibreMap or MockMapLibreMap constructors.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td></td>
+      <td><p>Map object for visualization.</p></td>
+    </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/viz_agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_map</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a MapLibre map object (real if available, otherwise mock).&quot;&quot;&quot;</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_map</span><span class="p">(</span><span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a MapLibre map object (real if available, otherwise mock).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target_map: If provided, return this map instead of creating a new one.</span>
+<span class="sd">            Allows rendering on an existing map widget (e.g., the Solara UI map).</span>
+<span class="sd">        **kwargs: Passed to MapLibreMap or MockMapLibreMap constructors.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Map object for visualization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">target_map</span>
     <span class="k">if</span> <span class="n">MAPLIBRE_AVAILABLE</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;add_sidebar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sidebar_visible&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;add_floating_sidebar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">MapLibreMap</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">MockMapLibreMap</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

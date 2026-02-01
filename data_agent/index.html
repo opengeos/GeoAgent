@@ -1052,6 +1052,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1905,6 +1933,8 @@ STACSearchWrapper        </code>
             <span class="p">}</span>
 
             <span class="k">for</span> <span class="n">asset_key</span><span class="p">,</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">assets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">asset_key</span> <span class="o">==</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                    <span class="k">continue</span>
                 <span class="n">item_data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">asset_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;href&quot;</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">href</span><span class="p">,</span>
                     <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">media_type</span><span class="p">,</span>
@@ -1985,6 +2015,8 @@ STACSearchWrapper        </code>
         <span class="p">}</span>
 
         <span class="k">for</span> <span class="n">asset_key</span><span class="p">,</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">assets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">asset_key</span> <span class="o">==</span> <span class="s2">&quot;rendered_preview&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
             <span class="n">item_data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">asset_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;href&quot;</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">href</span><span class="p">,</span>
                 <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">media_type</span><span class="p">,</span>

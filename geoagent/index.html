@@ -1068,6 +1068,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1365,16 +1393,20 @@ geospatial data analysis from natural language queries.</p>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GeoAgent initialized successfully&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Main method to process a natural language query.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            query: Natural language geospatial analysis query</span>
+<span class="sd">            target_map: Optional existing map widget to render results on.</span>
+<span class="sd">                When provided, layers are added directly to this map</span>
+<span class="sd">                instead of creating a new one.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            GeoAgentResponse with complete pipeline results</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing query: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_map</span> <span class="o">=</span> <span class="n">target_map</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -1777,7 +1809,10 @@ geospatial data analysis from natural language queries.</p>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]:</span>
                 <span class="n">viz_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">viz_agent</span><span class="o">.</span><span class="n">create_visualization</span><span class="p">(</span>
-                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">]</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">],</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">],</span>
+                    <span class="n">target_map</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_target_map&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="p">)</span>
                 <span class="n">state</span><span class="p">[</span><span class="s2">&quot;map&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">viz_map</span>
 
@@ -1942,12 +1977,25 @@ geospatial data analysis from natural language queries.</p>
         <span class="n">time_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_time_range</span><span class="p">(</span><span class="n">query_lower</span><span class="p">)</span>
 
         <span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;sentinel&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span> <span class="ow">or</span> <span class="s2">&quot;sentinel-2&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;sentinel-2&quot;</span>
+        <span class="n">analysis_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s2">&quot;sentinel-1&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;sentinel-1-grd&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;sentinel&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span> <span class="ow">or</span> <span class="s2">&quot;sentinel-2&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;sentinel-2-l2a&quot;</span>
         <span class="k">elif</span> <span class="s2">&quot;landsat&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;landsat&quot;</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;landsat-c2-l2&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;naip&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;naip&quot;</span>
         <span class="k">elif</span> <span class="s2">&quot;modis&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
-            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;modis&quot;</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;modis-09A1-061&quot;</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">kw</span> <span class="ow">in</span> <span class="n">query_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;land cover&quot;</span><span class="p">,</span> <span class="s2">&quot;landcover&quot;</span><span class="p">,</span> <span class="s2">&quot;lulc&quot;</span><span class="p">,</span> <span class="s2">&quot;land use&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;io-lulc-9-class&quot;</span>
+            <span class="n">analysis_type</span> <span class="o">=</span> <span class="s2">&quot;land_cover&quot;</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span> <span class="ow">in</span> <span class="n">query_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;dem&quot;</span><span class="p">,</span> <span class="s2">&quot;elevation&quot;</span><span class="p">,</span> <span class="s2">&quot;terrain&quot;</span><span class="p">]):</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;cop-dem-glo-30&quot;</span>
+            <span class="n">analysis_type</span> <span class="o">=</span> <span class="s2">&quot;elevation&quot;</span>
 
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="s2">&quot;cloud-free&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span> <span class="ow">or</span> <span class="s2">&quot;cloud free&quot;</span> <span class="ow">in</span> <span class="n">query_lower</span><span class="p">:</span>
@@ -1962,6 +2010,7 @@ geospatial data analysis from natural language queries.</p>
             <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
             <span class="n">time_range</span><span class="o">=</span><span class="n">time_range</span><span class="p">,</span>
             <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="n">analysis_type</span><span class="o">=</span><span class="n">analysis_type</span><span class="p">,</span>
             <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
             <span class="n">confidence</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
         <span class="p">)</span>
@@ -2367,7 +2416,7 @@ geospatial data analysis from natural language queries.</p>
 
 
 <h5 id="geoagent.core.agent.GeoAgent.chat" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.agent.GeoAgent.chat" class="headerlink" title="Permanent link">&para;</a></h5>
@@ -2393,6 +2442,14 @@ geospatial data analysis from natural language queries.</p>
         <td><p>Natural language geospatial analysis query</p></td>
         <td><em>required</em></td>
       </tr>
+      <tr>
+        <td><code>target_map</code></td>
+        <td><code>Any</code></td>
+        <td><p>Optional existing map widget to render results on.
+When provided, layers are added directly to this map
+instead of creating a new one.</p></td>
+        <td><code>None</code></td>
+      </tr>
   </tbody>
 </table>
 <p><strong>Returns:</strong></p>
@@ -2412,16 +2469,20 @@ geospatial data analysis from natural language queries.</p>
 </table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Main method to process a natural language query.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        query: Natural language geospatial analysis query</span>
+<span class="sd">        target_map: Optional existing map widget to render results on.</span>
+<span class="sd">            When provided, layers are added directly to this map</span>
+<span class="sd">            instead of creating a new one.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        GeoAgentResponse with complete pipeline results</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing query: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_target_map</span> <span class="o">=</span> <span class="n">target_map</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
