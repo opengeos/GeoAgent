@@ -498,7 +498,11 @@ class GeoAgent:
 
         # --- Extract additional parameters ---
         parameters = {}
-        if "cloud cover" in query_lower or "cloudy" in query_lower:
+        if "cloud-free" in query_lower or "cloud free" in query_lower:
+            parameters["max_cloud_cover"] = 10
+        elif "low cloud" in query_lower or "low-cloud" in query_lower:
+            parameters["max_cloud_cover"] = 20
+        elif "cloud cover" in query_lower or "cloudy" in query_lower:
             parameters["max_cloud_cover"] = 20
 
         plan = PlannerOutput(
@@ -537,12 +541,14 @@ class GeoAgent:
             # Remove analysis terms to isolate location
             cleaned = re.sub(
                 r"\b(show|display|compute|calculate|analyze|find|get|plot|map|"
-                r"ndvi|evi|savi|imagery|image|satellite|sentinel-?\d*|landsat|"
+                r"ndvi|evi|savi|imagery|image|images|satellite|sentinel-?\d*|landsat|"
                 r"modis|for|in|of|the|from|during|between|and|with|using|"
+                r"cloud[- ]?free|low[- ]?cloud|cloud\s*cover|cloudy|"
+                r"recent|latest|best|high[- ]?resolution|"
                 r"january|february|march|april|may|june|july|august|"
                 r"september|october|november|december|"
                 r"jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec|"
-                r"\d{4}|cloud\s*cover)\b",
+                r"\d{4})\b",
                 "",
                 query,
                 flags=re.IGNORECASE,
