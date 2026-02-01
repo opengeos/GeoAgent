@@ -14,22 +14,22 @@ logger = logging.getLogger(__name__)
 # Provider configurations with default models
 PROVIDERS: Dict[str, Dict[str, str]] = {
     "openai": {
-        "default_model": "gpt-4o",
+        "default_model": "gpt-4.1",
         "env_var": "OPENAI_API_KEY",
         "package": "langchain-openai",
     },
     "anthropic": {
-        "default_model": "claude-sonnet-4-20250514",
+        "default_model": "claude-sonnet-4-5-20250929",
         "env_var": "ANTHROPIC_API_KEY",
         "package": "langchain-anthropic",
     },
     "google": {
-        "default_model": "gemini-2.0-flash",
+        "default_model": "gemini-2.5-flash",
         "env_var": "GOOGLE_API_KEY",
         "package": "langchain-google-genai",
     },
     "ollama": {
-        "default_model": "llama3.1",
+        "default_model": "llama3.3",
         "env_var": None,
         "package": "langchain-ollama",
     },
