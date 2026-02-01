@@ -34,8 +34,11 @@ class _PlannerLLMSchema(BaseModel):
         default=None,
         description="Type of analysis requested (e.g. 'ndvi', 'change_detection', 'time_series')",
     )
-    parameters: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional parameters specific to the query"
+    max_cloud_cover: Optional[int] = Field(
+        default=None, description="Maximum cloud cover percentage (0-100)"
+    )
+    max_items: Optional[int] = Field(
+        default=None, description="Maximum number of items to return"
     )
 
 
@@ -206,13 +209,20 @@ class Planner:
                 "end_date": result.time_range[1],
             }
 
+        # Build parameters dict from explicit fields
+        parameters: Dict[str, Any] = {}
+        if result.max_cloud_cover is not None:
+            parameters["max_cloud_cover"] = result.max_cloud_cover
+        if result.max_items is not None:
+            parameters["max_items"] = result.max_items
+
         return PlannerOutput(
             intent=result.intent.value,
             location=location,
             time_range=time_range,
             dataset=result.dataset,
             analysis_type=result.analysis_type,
-            parameters=result.parameters,
+            parameters=parameters,
             confidence=1.0,
         )
 
