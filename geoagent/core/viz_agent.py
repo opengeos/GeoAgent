@@ -59,9 +59,10 @@ logger = logging.getLogger(__name__)
 
 class VizAgent:
     """Agent responsible for creating geospatial visualizations.
-
+    
     The Visualization Agent takes data and analysis results and creates
-    appropriate leafmap visualizations for display in Jupyter notebooks.
+    appropriate MapLibre GL visualizations using leafmap's maplibregl backend
+    for high-performance 3D mapping and vector tile support.
     """
 
     def __init__(self, llm: Any, tools: Optional[Dict[str, Any]] = None):
