@@ -77,6 +77,13 @@ nav:
     - Getting Started:
         - Installation: installation.md
         - Usage: usage.md
+    - Changelog: https://github.com/opengeos/GeoAgent/releases
+    - Report Issues: https://github.com/opengeos/GeoAgent/issues
+    - Contributing: contributing.md
+    - Examples:
+        - examples/intro.ipynb
+        - examples/stac_search.ipynb
+        - examples/maplibre_viz.ipynb
     - API Reference:
         - GeoAgent: geoagent.md
         - Models: models.md
@@ -87,11 +94,4 @@ nav:
         - LLM: llm.md
         - Catalogs: catalogs.md
         - Tools: tools.md
-    - Examples:
-        - examples/intro.ipynb
-        - examples/stac_search.ipynb
-        - examples/maplibre_viz.ipynb
-    - Contributing: contributing.md
-    - FAQ: faq.md
-    - Changelog: changelog.md
-    - Report Issues: https://github.com/opengeos/GeoAgent/issues
+
