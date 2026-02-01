@@ -1,6 +1,7 @@
 """Planner agent for parsing natural language queries into structured parameters."""
 
 from typing import Optional, Dict, Any, List
+import logging
 
 from pydantic import BaseModel, Field
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -8,6 +9,8 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from .llm import get_default_llm
 from .models import PlannerOutput, Intent
+
+logger = logging.getLogger(__name__)
 
 
 class _PlannerLLMSchema(BaseModel):

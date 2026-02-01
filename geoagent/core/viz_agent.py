@@ -196,6 +196,8 @@ class VizAgent:
             MapLibre Map object ready for display
         """
         self._target_map = target_map
+        if target_map is not None:
+            self._prepare_target_map(target_map)
         logger.info("Creating visualization")
 
         try:
@@ -218,6 +220,18 @@ class VizAgent:
         except Exception as e:
             logger.error(f"Visualization creation failed: {e}")
             return self._create_error_visualization(str(e))
+
+    def _prepare_target_map(self, target_map: Any) -> None:
+        """Ensure an existing map widget can receive dynamic updates."""
+        try:
+            if hasattr(target_map, "use_message_queue"):
+                target_map.use_message_queue(True)
+            if hasattr(target_map, "create_container") and getattr(
+                target_map, "container", None
+            ) is None:
+                target_map.create_container()
+        except Exception as e:
+            logger.debug(f"Could not prepare target map: {e}")
 
     def _determine_viz_type(
         self,
@@ -290,7 +304,7 @@ class VizAgent:
             center_lon = (bbox[0] + bbox[2]) / 2
             m.set_center(center_lon, center_lat, zoom=10)
 
-        # Add raster layers using Planetary Computer TiTiler
+        # Add raster layers using STAC
         for i, item in enumerate(data.items[:1]):
             item_id = item.get("id", f"Layer {i+1}")
             collection = item.get("collection", "")
@@ -304,22 +318,64 @@ class VizAgent:
                 continue
 
             try:
-                # Use add_stac_layer with PC TiTiler for best performance
+                # Use add_stac_layer for best performance
                 if MAPLIBRE_AVAILABLE and collection:
-                    viz_assets = self._select_viz_assets(assets, plan.intent)
-                    m.add_stac_layer(
-                        collection=collection,
-                        item=item_id,
-                        assets=viz_assets,
-                        titiler_endpoint="planetary-computer",
-                        name=item_id,
-                        fit_bounds=True,
+                    viz_assets = self._select_viz_assets(assets, plan.intent, collection)
+                    if isinstance(viz_assets, list):
+                        viz_assets = [a for a in viz_assets if a != "rendered_preview"]
+                    elif viz_assets == "rendered_preview":
+                        viz_assets = []
+                    if not viz_assets:
+                        best_asset = self._select_best_asset(assets, plan.intent)
+                        if best_asset and best_asset != "rendered_preview":
+                            viz_assets = [best_asset]
+                    logger.info(
+                        f"Adding STAC layer: collection={collection}, "
+                        f"item={item_id}, assets={viz_assets}"
                     )
+
+                    # Build kwargs for add_stac_layer
+                    layer_kwargs = {
+                        "collection": collection,
+                        "item": item_id,
+                        "assets": viz_assets,
+                        "name": f"{collection[:20]}_{item_id[:15]}",
+                        "fit_bounds": True,
+                        "overwrite": True,
+                    }
+
+                    # Add before_id if available (keeps layers below labels)
+                    if hasattr(m, "first_symbol_layer_id"):
+                        layer_kwargs["before_id"] = m.first_symbol_layer_id
+
+                    # Add colormap for specific collections
+                    if collection in ("cop-dem-glo-30", "3dep-lidar-hag"):
+                        layer_kwargs["colormap_name"] = "terrain"
+                    elif collection in ("io-lulc-9-class",):
+                        # LULC has its own colormap
+                        pass
+
+                    m.add_stac_layer(**layer_kwargs)
+                    logger.info(f"Successfully added STAC layer: {item_id}")
+
+                    # Explicitly fit bounds to the item bbox if available
+                    item_bbox = item.get("bbox")
+                    if item_bbox and len(item_bbox) >= 4:
+                        try:
+                            m.fit_bounds([[item_bbox[0], item_bbox[1]], [item_bbox[2], item_bbox[3]]])
+                            logger.info(f"Fitted bounds to: {item_bbox}")
+                        except Exception as e:
+                            logger.debug(f"Could not fit bounds: {e}")
+                            # Fallback to set_center
+                            center_lon = (item_bbox[0] + item_bbox[2]) / 2
+                            center_lat = (item_bbox[1] + item_bbox[3]) / 2
+                            m.set_center(center_lon, center_lat, zoom=10)
                 else:
                     # Fallback to COG layer with signed URL
                     asset_key = self._select_best_asset(assets, plan.intent)
                     if asset_key and asset_key in assets:
                         asset_url = assets[asset_key]["href"]
+                        logger.info(f"Adding COG layer: {asset_url}")
                         m.add_cog_layer(
                             asset_url,
                             name=item_id,
@@ -327,7 +383,10 @@ class VizAgent:
                             fit_bounds=True,
                         )
             except Exception as e:
-                logger.warning(f"Could not add raster layer {item_id}: {e}")
+                logger.error(f"Could not add raster layer {item_id}: {e}")
+                import traceback
+
+                traceback.print_exc()
 
         # Add title
         title = f"Raster Visualization: {plan.intent}"
@@ -590,23 +649,68 @@ class VizAgent:
                 except Exception:
                     pass
 
-        # Add basemap
-        m.add_basemap("OpenTopoMap")
-
         # Add simple data visualization if available
         if data and data.items:
             try:
                 if data.data_type == "raster":
-                    # Try to add first raster item
+                    # Try to add first raster item using STAC layer
                     item = data.items[0]
-                    if "assets" in item:
-                        asset_key = self._select_best_asset(item["assets"], plan.intent)
-                        if asset_key and asset_key in item["assets"]:
-                            asset_url = item["assets"][asset_key]["href"]
-                            if not asset_url.startswith("mock://"):
-                                m.add_cog_layer(
-                                    asset_url, name="Data Layer", fit_bounds=True
-                                )
+                    item_id = item.get("id", "")
+                    collection = item.get("collection", "")
+                    assets = item.get("assets", {})
+
+                    # Skip mock items
+                    if assets and not any(
+                        v.get("href", "").startswith("mock://") for v in assets.values()
+                    ):
+                        if MAPLIBRE_AVAILABLE and collection:
+                            viz_assets = self._select_viz_assets(assets, plan.intent, collection)
+                            if isinstance(viz_assets, list):
+                                viz_assets = [a for a in viz_assets if a != "rendered_preview"]
+                            elif viz_assets == "rendered_preview":
+                                viz_assets = []
+                            if not viz_assets:
+                                best_asset = self._select_best_asset(assets, plan.intent)
+                                if best_asset and best_asset != "rendered_preview":
+                                    viz_assets = [best_asset]
+                            logger.info(f"Default viz: adding STAC layer {collection}/{item_id}")
+
+                            layer_kwargs = {
+                                "collection": collection,
+                                "item": item_id,
+                                "assets": viz_assets,
+                                "name": f"{collection[:20]}_{item_id[:15]}",
+                                "fit_bounds": True,
+                                "overwrite": True,
+                            }
+
+                            if hasattr(m, "first_symbol_layer_id"):
+                                layer_kwargs["before_id"] = m.first_symbol_layer_id
+
+                            # Add colormap for specific collections
+                            if collection in ("cop-dem-glo-30", "3dep-lidar-hag"):
+                                layer_kwargs["colormap_name"] = "terrain"
+
+                            m.add_stac_layer(**layer_kwargs)
+
+                            # Fit bounds to item
+                            item_bbox = item.get("bbox")
+                            if item_bbox and len(item_bbox) >= 4:
+                                try:
+                                    m.fit_bounds([[item_bbox[0], item_bbox[1]], [item_bbox[2], item_bbox[3]]])
+                                except Exception:
+                                    center_lon = (item_bbox[0] + item_bbox[2]) / 2
+                                    center_lat = (item_bbox[1] + item_bbox[3]) / 2
+                                    m.set_center(center_lon, center_lat, zoom=10)
+                        else:
+                            # Fallback to COG
+                            asset_key = self._select_best_asset(assets, plan.intent)
+                            if asset_key and asset_key in assets:
+                                asset_url = assets[asset_key]["href"]
+                                if not asset_url.startswith("mock://"):
+                                    m.add_cog_layer(
+                                        asset_url, name="Data Layer", fit_bounds=True
+                                    )
 
                 elif data.data_type == "vector":
                     # Try to add vector data
@@ -615,7 +719,9 @@ class VizAgent:
                             m.add_geojson(item, name="Vector Data")
 
             except Exception as e:
-                logger.warning(f"Could not add data to default visualization: {e}")
+                logger.error(f"Could not add data to default visualization: {e}")
+                import traceback
+                traceback.print_exc()
 
         title = f"GeoAgent Map: {plan.intent}"
         self._add_title_to_map(m, title)
@@ -639,7 +745,7 @@ class VizAgent:
 
         return m
 
-    def _select_viz_assets(self, assets: Dict[str, Any], intent: str) -> list:
+    def _select_viz_assets(self, assets: Dict[str, Any], intent: str, collection: str = "") -> list:
         """Select asset names for STAC layer visualization.
 
         Returns a list of asset keys suitable for add_stac_layer.
@@ -647,11 +753,51 @@ class VizAgent:
         Args:
             assets: Available STAC assets
             intent: Analysis intent
+            collection: STAC collection name (helps determine appropriate assets)
 
         Returns:
             List of asset key strings (e.g., ["visual"] or ["B04", "B03", "B02"])
         """
         intent_lower = intent.lower()
+        collection_lower = collection.lower() if collection else ""
+
+        # Collection-specific asset selection (like geoai pattern)
+        if "sentinel-2" in collection_lower:
+            # Sentinel-2 true color RGB
+            if "B04" in assets and "B03" in assets and "B02" in assets:
+                return ["B04", "B03", "B02"]
+            if "visual" in assets:
+                return ["visual"]
+
+        if "landsat" in collection_lower:
+            # Landsat RGB (L2 has blue, L1 may not)
+            if "red" in assets and "green" in assets and "blue" in assets:
+                return ["red", "green", "blue"]
+            # Or use available bands
+            if "red" in assets and "green" in assets:
+                if "nir08" in assets:
+                    return ["nir08", "red", "green"]  # False color
+                return ["red", "green", "red"]  # Fallback
+
+        if "naip" in collection_lower:
+            # NAIP imagery
+            if "image" in assets:
+                return ["image"]
+
+        if "sentinel-1" in collection_lower:
+            # Sentinel-1 SAR
+            if "vv" in assets:
+                return ["vv"]
+
+        if "cop-dem" in collection_lower or "3dep" in collection_lower:
+            # DEM data
+            if "data" in assets:
+                return ["data"]
+
+        if "aster" in collection_lower:
+            # ASTER imagery
+            if "VNIR" in assets:
+                return ["VNIR"]
 
         # DEM and land cover collections use "data" or "map" asset
         if any(
@@ -689,9 +835,16 @@ class VizAgent:
         if "B04" in assets and "B03" in assets and "B02" in assets:
             return ["B04", "B03", "B02"]
 
-        # Fallback to first available data asset
-        best = self._select_best_asset(assets, intent)
-        return [best] if best else []
+        # Fallback: look for common asset names
+        for possible in ["visual", "image", "data"]:
+            if possible in assets:
+                return [possible]
+
+        # Last resort: first available asset
+        if assets:
+            return [list(assets.keys())[0]]
+
+        return []
 
     def _select_best_asset(self, assets: Dict[str, Any], intent: str) -> Optional[str]:
         """Select the best asset for visualization based on intent.
@@ -733,11 +886,15 @@ class VizAgent:
         ]
 
         for key in preference_order:
-            if key in assets:
+            if key in assets and key != "rendered_preview":
                 return key
 
         # Return first available asset
-        return list(assets.keys())[0] if assets else None
+        if assets:
+            for key in assets.keys():
+                if key != "rendered_preview":
+                    return key
+        return None
 
     def _add_analysis_fallback(
         self, m: Any, data: DataResult, analysis: AnalysisResult
@@ -761,15 +918,35 @@ class VizAgent:
             if MAPLIBRE_AVAILABLE and collection:
                 asset_key = viz_hints.get("asset_key", "data")
                 try:
-                    m.add_stac_layer(
-                        collection=collection,
-                        item=item_id,
-                        assets=[asset_key],
-                        titiler_endpoint="planetary-computer",
-                        name=viz_hints.get("title", item_id),
-                        fit_bounds=True,
-                    )
+                    layer_kwargs = {
+                        "collection": collection,
+                        "item": item_id,
+                        "assets": [asset_key],
+                        "name": viz_hints.get("title", f"{collection[:20]}_{item_id[:15]}"),
+                        "fit_bounds": True,
+                        "overwrite": True,
+                    }
+
+                    # Add before_id if available
+                    if hasattr(m, "first_symbol_layer_id"):
+                        layer_kwargs["before_id"] = m.first_symbol_layer_id
+
+                    # Add colormap for specific viz types
+                    if viz_type == "elevation":
+                        layer_kwargs["colormap_name"] = "terrain"
+
+                    m.add_stac_layer(**layer_kwargs)
                     logger.info(f"Added {viz_type} STAC layer: {collection}/{item_id}")
+
+                    # Fit bounds to item
+                    item_bbox = item.get("bbox")
+                    if item_bbox and len(item_bbox) >= 4:
+                        try:
+                            m.fit_bounds([[item_bbox[0], item_bbox[1]], [item_bbox[2], item_bbox[3]]])
+                        except Exception:
+                            center_lon = (item_bbox[0] + item_bbox[2]) / 2
+                            center_lat = (item_bbox[1] + item_bbox[3]) / 2
+                            m.set_center(center_lon, center_lat, zoom=10)
                     return
                 except Exception as e:
                     logger.warning(f"Could not add {viz_type} STAC layer: {e}")
