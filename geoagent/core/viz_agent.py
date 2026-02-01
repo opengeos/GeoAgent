@@ -283,8 +283,7 @@ class VizAgent:
             # Skip mock items
             assets = item.get("assets", {})
             if not assets or any(
-                v.get("href", "").startswith("mock://")
-                for v in assets.values()
+                v.get("href", "").startswith("mock://") for v in assets.values()
             ):
                 logger.debug(f"Skipping mock item {item_id}")
                 continue
