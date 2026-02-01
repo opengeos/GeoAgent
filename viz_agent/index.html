@@ -3091,7 +3091,7 @@ Allows rendering on an existing map widget (e.g., the Solara UI map).</p></td>
         <span class="k">return</span> <span class="n">target_map</span>
     <span class="k">if</span> <span class="n">MAPLIBRE_AVAILABLE</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;add_sidebar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sidebar_visible&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;sidebar_visible&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;add_floating_sidebar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">MapLibreMap</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
