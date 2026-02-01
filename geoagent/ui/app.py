@@ -161,48 +161,37 @@ def ChatMessage(msg: Dict[str, str]):
 def ChatPanel():
     query, set_query = solara.use_state("")
 
-    with solara.Column(style={"height": "100%"}):
-        solara.Markdown("### 💬 Chat")
+    solara.Markdown("### 💬 Chat")
 
-        # Messages
-        with solara.Column(
-            style={
-                "flex": "1",
-                "overflow-y": "auto",
-                "max-height": "calc(100vh - 250px)",
-                "padding": "8px",
-            }
-        ):
-            for msg in messages.value:
-                ChatMessage(msg)
+    # Messages
+    for msg in messages.value:
+        ChatMessage(msg)
 
-            # Status indicator
-            if status_text.value:
-                with solara.Row(style={"margin": "8px 0"}):
-                    solara.v.ProgressCircular(indeterminate=True, size=20, width=2)
-                    solara.Text(status_text.value, style={"margin-left": "8px"})
+    # Status indicator
+    if status_text.value:
+        with solara.Row():
+            solara.v.ProgressCircular(indeterminate=True, size=20, width=2)
+            solara.Text(status_text.value)
 
-        # Input
-        def on_send():
-            q = query.strip()
-            if q and not processing.value:
-                set_query("")
-                threading.Thread(target=_run_query, args=(q,), daemon=True).start()
+    # Input
+    def on_send():
+        q = query.strip()
+        if q and not processing.value:
+            set_query("")
+            threading.Thread(target=_run_query, args=(q,), daemon=True).start()
 
-        solara.InputText(
-            label="Ask about geospatial data…",
-            value=query,
-            on_value=set_query,
-            disabled=processing.value,
-            style={"width": "100%"},
-        )
-        solara.Button(
-            "Send",
-            on_click=on_send,
-            disabled=processing.value or not query.strip(),
-            color="primary",
-            style={"margin-top": "4px"},
-        )
+    solara.InputText(
+        label="Ask about geospatial data…",
+        value=query,
+        on_value=set_query,
+        disabled=processing.value,
+    )
+    solara.Button(
+        "Send",
+        on_click=on_send,
+        disabled=processing.value or not query.strip(),
+        color="primary",
+    )
 
 
 @solara.component
@@ -212,24 +201,23 @@ def MapPanel():
     # Read map_version to trigger re-render when map changes
     _ = map_version.value
 
-    with solara.Column(style={"height": "100%"}):
-        solara.Markdown("### 🗺️ Map")
+    # Get current map (result map or default)
+    m = _map_store.get("map")
+    if m is None:
+        m = _create_default_map()
 
-        # Get current map (result map or default)
-        m = _map_store.get("map")
-        if m is None:
-            m = _create_default_map()
-        m.to_solara()
+    solara.Markdown("### 🗺️ Map")
+    m.to_solara(map_only=True)
 
-        if last_code.value:
-            solara.Button(
-                "Show Code" if not show_code else "Hide Code",
-                on_click=lambda: set_show_code(not show_code),
-                text=True,
-                icon_name="mdi-code-tags",
-            )
-            if show_code:
-                solara.Preformatted(last_code.value)
+    if last_code.value:
+        solara.Button(
+            "Show Code" if not show_code else "Hide Code",
+            on_click=lambda: set_show_code(not show_code),
+            text=True,
+            icon_name="mdi-code-tags",
+        )
+        if show_code:
+            solara.Preformatted(last_code.value)
 
 
 @solara.component
