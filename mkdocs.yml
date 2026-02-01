@@ -85,6 +85,8 @@ nav:
         - Catalogs & LLM: catalogs.md
     - Examples:
         - examples/intro.ipynb
+        - examples/stac_search.ipynb
+        - examples/maplibre_viz.ipynb
     - Contributing: contributing.md
     - FAQ: faq.md
     - Changelog: changelog.md
