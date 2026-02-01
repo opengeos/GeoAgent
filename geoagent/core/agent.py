@@ -489,7 +489,11 @@ class GeoAgent:
             )
 
             # Geocode location name to bbox if needed
-            if plan.location and "name" in plan.location and "bbox" not in plan.location:
+            if (
+                plan.location
+                and "name" in plan.location
+                and "bbox" not in plan.location
+            ):
                 geocoded = self._geocode_location(plan.location["name"])
                 if geocoded:
                     plan.location = geocoded
