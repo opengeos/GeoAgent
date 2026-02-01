@@ -95,16 +95,20 @@ class GeoAgent:
 
         logger.info("GeoAgent initialized successfully")
 
-    def chat(self, query: str) -> GeoAgentResponse:
+    def chat(self, query: str, target_map: Any = None) -> GeoAgentResponse:
         """Main method to process a natural language query.
 
         Args:
             query: Natural language geospatial analysis query
+            target_map: Optional existing map widget to render results on.
+                When provided, layers are added directly to this map
+                instead of creating a new one.
 
         Returns:
             GeoAgentResponse with complete pipeline results
         """
         logger.info(f"Processing query: {query}")
+        self._target_map = target_map
         start_time = time.time()
 
         try:
@@ -507,7 +511,10 @@ for item in items:
         try:
             if state["plan"]:
                 viz_map = self.viz_agent.create_visualization(
-                    state["plan"], state["data"], state["analysis"]
+                    state["plan"],
+                    state["data"],
+                    state["analysis"],
+                    target_map=getattr(self, "_target_map", None),
                 )
                 state["map"] = viz_map
 

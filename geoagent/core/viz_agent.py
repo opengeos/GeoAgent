@@ -118,8 +118,19 @@ class MockMapLibreMap:
         return f"MockMapLibreMap(center={self.center}, zoom={self.zoom}, layers={len(self.layers)})"
 
 
-def create_map(**kwargs):
-    """Create a MapLibre map object (real if available, otherwise mock)."""
+def create_map(target_map=None, **kwargs):
+    """Create a MapLibre map object (real if available, otherwise mock).
+
+    Args:
+        target_map: If provided, return this map instead of creating a new one.
+            Allows rendering on an existing map widget (e.g., the Solara UI map).
+        **kwargs: Passed to MapLibreMap or MockMapLibreMap constructors.
+
+    Returns:
+        Map object for visualization.
+    """
+    if target_map is not None:
+        return target_map
     if MAPLIBRE_AVAILABLE:
         return MapLibreMap(**kwargs)
     else:
@@ -170,6 +181,7 @@ class VizAgent:
         plan: PlannerOutput,
         data: Optional[DataResult] = None,
         analysis: Optional[AnalysisResult] = None,
+        target_map: Optional[Any] = None,
     ) -> Any:
         """Create appropriate visualization based on available data and analysis.
 
@@ -177,10 +189,13 @@ class VizAgent:
             plan: Original query plan for context
             data: Data retrieved by Data Agent
             analysis: Analysis results from Analysis Agent
+            target_map: Optional existing map to render on instead of creating
+                a new one. When provided, layers are added to this map.
 
         Returns:
             MapLibre Map object ready for display
         """
+        self._target_map = target_map
         logger.info("Creating visualization")
 
         try:
@@ -266,7 +281,7 @@ class VizAgent:
         Returns:
             MapLibre Map with raster layers
         """
-        m = create_map()
+        m = create_map(target_map=getattr(self, "_target_map", None))
 
         # Set map center based on data location
         if plan.location and "bbox" in plan.location:
@@ -336,7 +351,7 @@ class VizAgent:
         Returns:
             MapLibre Map with vector layers
         """
-        m = create_map()
+        m = create_map(target_map=getattr(self, "_target_map", None))
 
         # Set map center
         if plan.location and "bbox" in plan.location:
@@ -384,7 +399,7 @@ class VizAgent:
         Returns:
             MapLibre Map showing analysis results
         """
-        m = create_map()
+        m = create_map(target_map=getattr(self, "_target_map", None))
 
         # Set map center
         if plan.location and "bbox" in plan.location:
@@ -432,7 +447,7 @@ class VizAgent:
         Returns:
             MapLibre Map with time series visualization
         """
-        m = create_map()
+        m = create_map(target_map=getattr(self, "_target_map", None))
 
         # Set map center
         if plan.location:
@@ -514,7 +529,7 @@ class VizAgent:
                         right_url = last_item["assets"][asset_key]["href"]
 
                         # Create split map
-                        m = create_map()
+                        m = create_map(target_map=getattr(self, "_target_map", None))
 
                         # Set center
                         if plan.location and "bbox" in plan.location:
@@ -555,7 +570,7 @@ class VizAgent:
         Returns:
             Basic leafmap Map
         """
-        m = create_map()
+        m = create_map(target_map=getattr(self, "_target_map", None))
 
         # Set center based on location if available
         if plan.location:
@@ -616,7 +631,7 @@ class VizAgent:
         Returns:
             Basic leafmap Map with error information
         """
-        m = create_map()
+        m = create_map(target_map=getattr(self, "_target_map", None))
         m.add_basemap("OpenStreetMap")
 
         # Add error message

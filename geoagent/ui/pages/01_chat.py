@@ -60,7 +60,7 @@ def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Labe
         agent = _get_or_create_agent(prov, mdl)
 
         status_label.value = "📡 Searching data & analyzing…"
-        result = agent.chat(query)
+        result = agent.chat(query, target_map=m)
 
         if result.success:
             items = result.data.total_items if result.data else 0
@@ -83,24 +83,6 @@ def _run_query(query: str, m, output: widgets.Output, status_label: widgets.Labe
             text = f"❌ {result.error_message or 'An error occurred.'}"
 
         messages.value = [*messages.value, {"role": "assistant", "content": text}]
-
-        # Transfer layers from result map to displayed map
-        if result.map is not None:
-            status_label.value = "🗺️ Updating map…"
-            src = result.map
-            if hasattr(src, "calls"):
-                for call in src.calls:
-                    method_name = call[0]
-                    args = call[1] if len(call) > 1 else ()
-                    method = getattr(m, method_name, None)
-                    if method and callable(method):
-                        try:
-                            if isinstance(args, tuple):
-                                method(*args)
-                            else:
-                                method(args)
-                        except Exception:
-                            pass
 
         # Store code
         code = result.code or ""
