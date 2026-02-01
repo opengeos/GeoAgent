@@ -1,6 +1,6 @@
 # Web UI
 
-GeoAgent includes a Streamlit-based chat interface for interactive geospatial analysis.
+GeoAgent includes a Solara-based chat interface for interactive geospatial analysis with a persistent, interactive map.
 
 ## Quick Start
 
@@ -15,16 +15,16 @@ geoagent ui
 Or run directly:
 
 ```bash
-streamlit run geoagent/ui/app.py
+solara run geoagent/ui/app.py
 ```
 
 ## Features
 
-- **Chat interface** — type natural language queries and get maps + code
+- **Persistent map** — layers accumulate across queries on the same interactive MapLibre map
+- **Native widget rendering** — full bidirectional map interaction (zoom, pan, click)
+- **Chat interface** — type natural language queries with real-time status updates
 - **Provider selection** — switch between OpenAI, Anthropic, Google Gemini, or Ollama
-- **Interactive maps** — MapLibre visualizations embedded directly in the browser
-- **Generated code** — expandable sections showing the Python code behind each result
-- **Chat history** — previous queries and results persist during the session
+- **Generated code** — toggle code display for transparency
 
 ## Python API
 

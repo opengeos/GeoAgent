@@ -1,249 +1,284 @@
-"""Streamlit chat UI for GeoAgent.
+"""Solara chat UI for GeoAgent.
 
 Features:
-- Chat interface with progress status indicators
-- Sidebar with provider/model selection (model updates with provider)
-- Single map panel for the latest result (not per-message)
-- Expandable generated code section
+- Persistent map widget with layers accumulating across queries
+- Native ipywidget rendering (no HTML export, full interactivity)
+- Chat interface with status updates
+- Sidebar with provider/model selection
 """
 
 from __future__ import annotations
 
-import logging
+import threading
 from typing import Any, Dict, List, Optional
 
-import streamlit as st
-from streamlit.components.v1 import html as st_html
+import solara
+from leafmap.maplibregl import Map as MapLibreMap
 
 from geoagent.core.agent import GeoAgent
 from geoagent.core.llm import get_llm, PROVIDERS
 from geoagent.core.models import GeoAgentResponse
 
 
-PAGE_TITLE = "GeoAgent"
-PAGE_ICON = "🌍"
-MAP_HEIGHT_PX = 600
+# ---------------------------------------------------------------------------
+# Reactive state
+# ---------------------------------------------------------------------------
+
+messages: solara.Reactive[List[Dict[str, str]]] = solara.reactive([])
+provider: solara.Reactive[str] = solara.reactive("openai")
+model: solara.Reactive[str] = solara.reactive("")
+processing: solara.Reactive[bool] = solara.reactive(False)
+status_text: solara.Reactive[str] = solara.reactive("")
+last_code: solara.Reactive[str] = solara.reactive("")
+
+# Agent and map — stored outside reactive to persist across renders
+_agent_store: Dict[str, Any] = {"agent": None, "key": None}
+_map_store: Dict[str, Any] = {"map": None}
+
+PROVIDER_LIST = list(PROVIDERS.keys())
 
 
 # ---------------------------------------------------------------------------
-# Session state helpers
+# Helpers
 # ---------------------------------------------------------------------------
 
 
-def _ensure_state():
-    defaults = {
-        "messages": [],
-        "agent": None,
-        "_agent_key": None,
-        "_prev_provider": None,
-        "last_map_html": None,
-        "last_code": None,
-        "last_summary": None,
-    }
-    for k, v in defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
+def _get_default_model(prov: str) -> str:
+    return PROVIDERS.get(prov, {}).get("default_model", "gpt-4.1")
 
 
-def _make_agent(provider: str, model: str) -> GeoAgent:
-    llm = get_llm(provider=provider, model=model)
-    return GeoAgent(llm=llm, provider=provider, model=model)
+def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
+    key = f"{prov}:{mdl}"
+    if _agent_store["key"] != key or _agent_store["agent"] is None:
+        llm = get_llm(provider=prov, model=mdl)
+        _agent_store["agent"] = GeoAgent(llm=llm, provider=prov, model=mdl)
+        _agent_store["key"] = key
+    return _agent_store["agent"]
+
+
+def _get_or_create_map() -> MapLibreMap:
+    if _map_store["map"] is None:
+        _map_store["map"] = MapLibreMap(
+            center=[0, 20],
+            zoom=2,
+            height="100%",
+            style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+        )
+    return _map_store["map"]
+
+
+def _add_result_to_map(m: MapLibreMap, result: GeoAgentResponse):
+    """Transfer layers from result map to persistent map."""
+    if result.map is None:
+        return
+    src_map = result.map
+    if not hasattr(src_map, "calls"):
+        return
+
+    for call in src_map.calls:
+        method_name = call[0]
+        args = call[1] if len(call) > 1 else ()
+        # Replay source/layer/paint/layout/bounds calls on persistent map
+        if method_name in (
+            "addSource",
+            "addLayer",
+            "setPaintProperty",
+            "setLayoutProperty",
+            "fitBounds",
+        ):
+            try:
+                method = getattr(m, method_name, None)
+                if method and callable(method):
+                    if isinstance(args, tuple):
+                        method(*args)
+                    else:
+                        method(args)
+            except Exception:
+                pass
+
+
+def _run_query(query: str):
+    """Run a GeoAgent query in a background thread."""
+    processing.value = True
+    status_text.value = "🔍 Parsing query…"
+    messages.value = [*messages.value, {"role": "user", "content": query}]
+
+    try:
+        prov = provider.value
+        mdl = model.value or _get_default_model(prov)
+        status_text.value = "⚙️ Initializing agent…"
+        agent = _get_or_create_agent(prov, mdl)
+
+        status_text.value = "📡 Searching data & analyzing…"
+        result = agent.chat(query)
+
+        # Build summary
+        if result.success:
+            items = result.data.total_items if result.data else 0
+            parts = []
+            if result.plan:
+                intent = getattr(result.plan, "intent", "")
+                dataset = getattr(result.plan, "dataset", "")
+                loc = getattr(result.plan, "location", None)
+                if intent:
+                    parts.append(intent)
+                if dataset:
+                    parts.append(dataset)
+                if isinstance(loc, dict) and loc.get("name"):
+                    parts.append(loc["name"])
+            t = f"{result.execution_time:.1f}s" if result.execution_time else ""
+            meta = f"{items} items" + (f" • {t}" if t else "")
+            summary = " • ".join(parts) if parts else "Done"
+            text = f"✅ {summary} ({meta})"
+        else:
+            text = f"❌ {result.error_message or 'An error occurred.'}"
+
+        messages.value = [*messages.value, {"role": "assistant", "content": text}]
+
+        # Add layers to persistent map
+        status_text.value = "🗺️ Updating map…"
+        m = _get_or_create_map()
+        _add_result_to_map(m, result)
+
+        # Store code
+        code = result.code or ""
+        if not code and result.analysis and getattr(result.analysis, "code_generated", None):
+            code = result.analysis.code_generated
+        last_code.value = code
+
+        status_text.value = ""
+
+    except Exception as e:
+        messages.value = [
+            *messages.value,
+            {"role": "assistant", "content": f"❌ Error: {e}"},
+        ]
+        status_text.value = ""
+    finally:
+        processing.value = False
 
 
 # ---------------------------------------------------------------------------
-# Sidebar
+# Components
 # ---------------------------------------------------------------------------
 
 
-def _sidebar():
-    st.sidebar.markdown("### Settings")
+@solara.component
+def ChatMessage(msg: Dict[str, str]):
+    role = msg["role"]
+    icon = "mdi-account" if role == "user" else "mdi-earth"
+    color = "primary" if role == "user" else "success"
+    with solara.Row(style={"margin": "4px 0"}):
+        solara.v.Icon(children=[icon], color=color, style_="margin-right: 8px; margin-top: 4px;")
+        solara.Markdown(msg["content"])
 
-    provider_list = list(PROVIDERS.keys())
-    provider = st.sidebar.selectbox("Provider", options=provider_list, key="provider")
 
-    # Reset model when provider changes
-    if st.session_state._prev_provider != provider:
-        st.session_state._prev_provider = provider
-        st.session_state["_model_input"] = PROVIDERS[provider]["default_model"]
-    elif "_model_input" not in st.session_state:
-        st.session_state["_model_input"] = PROVIDERS.get(provider, {}).get(
-            "default_model", ""
+@solara.component
+def ChatPanel():
+    query, set_query = solara.use_state("")
+
+    with solara.Column(style={"height": "100%"}):
+        solara.Markdown("### 💬 Chat")
+
+        # Messages
+        with solara.Column(
+            style={
+                "flex": "1",
+                "overflow-y": "auto",
+                "max-height": "calc(100vh - 250px)",
+                "padding": "8px",
+            }
+        ):
+            for msg in messages.value:
+                ChatMessage(msg)
+
+            # Status indicator
+            if status_text.value:
+                with solara.Row(style={"margin": "8px 0"}):
+                    solara.v.ProgressCircular(indeterminate=True, size=20, width=2)
+                    solara.Text(status_text.value, style={"margin-left": "8px"})
+
+        # Input
+        def on_send():
+            q = query.strip()
+            if q and not processing.value:
+                set_query("")
+                threading.Thread(target=_run_query, args=(q,), daemon=True).start()
+
+        solara.InputText(
+            label="Ask about geospatial data…",
+            value=query,
+            on_value=set_query,
+            disabled=processing.value,
+            style={"width": "100%"},
+        )
+        solara.Button(
+            "Send",
+            on_click=on_send,
+            disabled=processing.value or not query.strip(),
+            color="primary",
+            style={"margin-top": "4px"},
         )
 
-    model = st.sidebar.text_input("Model", key="_model_input")
 
-    if st.sidebar.button("New Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.last_map_html = None
-        st.session_state.last_code = None
-        st.session_state.last_summary = None
-        st.rerun()
+@solara.component
+def MapPanel():
+    m = _get_or_create_map()
+    with solara.Column(style={"height": "100%"}):
+        solara.Markdown("### 🗺️ Map")
+        solara.display(m)
 
-    # Recreate agent when provider/model change
-    agent_key = f"{provider}:{model}"
-    if st.session_state._agent_key != agent_key or st.session_state.agent is None:
-        try:
-            with st.sidebar:
-                with st.spinner("Initializing agent…"):
-                    st.session_state.agent = _make_agent(provider, model)
-                    st.session_state._agent_key = agent_key
-        except Exception as e:
-            st.sidebar.error(f"Failed to initialize agent: {e}")
-
-    return provider, model
+        if last_code.value:
+            show_code, set_show_code = solara.use_state(False)
+            solara.Button(
+                "Show Code" if not show_code else "Hide Code",
+                on_click=lambda: set_show_code(not show_code),
+                text=True,
+                icon_name="mdi-code-tags",
+            )
+            if show_code:
+                solara.Preformatted(last_code.value)
 
 
-# ---------------------------------------------------------------------------
-# Rendering helpers
-# ---------------------------------------------------------------------------
+@solara.component
+def Sidebar():
+    def on_provider_change(value):
+        provider.value = value
+        model.value = _get_default_model(value)
+
+    solara.Markdown("### Settings")
+    solara.Select(
+        label="Provider",
+        value=provider.value,
+        values=PROVIDER_LIST,
+        on_value=on_provider_change,
+    )
+    solara.InputText(
+        label="Model",
+        value=model.value or _get_default_model(provider.value),
+        on_value=model.set,
+    )
+
+    def on_new_chat():
+        messages.value = []
+        last_code.value = ""
+        status_text.value = ""
+
+    solara.Button(
+        "New Chat",
+        on_click=on_new_chat,
+        outlined=True,
+        style={"margin-top": "12px"},
+    )
 
 
-def _render_chat_history():
-    """Render chat messages — text only, no maps in history."""
-    for msg in st.session_state.messages:
-        role = msg["role"]
-        with st.chat_message(role):
-            if role == "user":
-                st.write(msg["content"])
-            else:
-                text = msg.get("content", "")
-                if text:
-                    st.write(text)
+@solara.component
+def Page():
+    solara.Title("GeoAgent")
 
+    with solara.Sidebar():
+        Sidebar()
 
-def _build_summary(result: GeoAgentResponse) -> str:
-    """Build a one-line text summary of a result."""
-    if not result.success:
-        return f"❌ {result.error_message or 'An error occurred.'}"
-
-    parts = []
-    if result.plan:
-        intent = getattr(result.plan, "intent", "")
-        if intent:
-            parts.append(intent)
-        dataset = getattr(result.plan, "dataset", "")
-        if dataset:
-            parts.append(dataset)
-        loc = getattr(result.plan, "location", None)
-        if isinstance(loc, dict) and loc.get("name"):
-            parts.append(loc["name"])
-
-    items = result.data.total_items if result.data else 0
-    t = f"{result.execution_time:.1f}s" if result.execution_time else ""
-    meta = f"{items} items" + (f" • {t}" if t else "")
-
-    summary = " • ".join(parts) if parts else "Done"
-    return f"✅ {summary} ({meta})"
-
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-
-def main():
-    st.set_page_config(layout="wide", page_title=PAGE_TITLE, page_icon=PAGE_ICON)
-    _ensure_state()
-    provider, model = _sidebar()
-
-    # --- Layout: chat (left) | map (right) ---
-    chat_col, map_col = st.columns([1, 1])
-
-    with chat_col:
-        st.markdown(f"### 💬 Chat")
-        _render_chat_history()
-
-        prompt = st.chat_input("Ask about geospatial data…")
-        if prompt:
-            # Append and display user message
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.write(prompt)
-
-            # Process with progress
-            with st.chat_message("assistant"):
-                agent: GeoAgent = st.session_state.agent
-                if agent is None:
-                    st.error("Agent is not initialized. Check provider settings.")
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": "❌ Agent not initialized."}
-                    )
-                else:
-                    with st.status("Processing query…", expanded=True) as status:
-                        st.write("🔍 Parsing query and planning…")
-                        try:
-                            result = agent.chat(prompt)
-                        except Exception as e:
-                            result = None
-                            error_text = f"❌ Error: {e}"
-                            st.error(error_text)
-                            st.session_state.messages.append(
-                                {"role": "assistant", "content": error_text}
-                            )
-                            status.update(label="Failed", state="error")
-
-                        if result is not None:
-                            # Update progress
-                            if result.success:
-                                st.write("📊 Data retrieved. Rendering map…")
-                                status.update(
-                                    label=f"Done in {result.execution_time:.1f}s",
-                                    state="complete",
-                                    expanded=False,
-                                )
-                            else:
-                                status.update(
-                                    label="Completed with errors", state="error"
-                                )
-
-                            summary = _build_summary(result)
-                            st.write(summary)
-                            st.session_state.messages.append(
-                                {"role": "assistant", "content": summary}
-                            )
-
-                            # Cache latest map/code for right panel
-                            try:
-                                if result.map is not None and hasattr(
-                                    result.map, "to_html"
-                                ):
-                                    # Sync leafmap calls → maplibre _message_queue
-                                    # so to_html() includes all added layers
-                                    if hasattr(result.map, "calls") and hasattr(
-                                        result.map, "_message_queue"
-                                    ):
-                                        result.map._message_queue = list(
-                                            result.map.calls
-                                        )
-                                    st.session_state.last_map_html = (
-                                        result.map.to_html()
-                                    )
-                                else:
-                                    st.session_state.last_map_html = None
-                            except Exception:
-                                st.session_state.last_map_html = None
-
-                            code = result.code or (
-                                result.analysis.code_generated
-                                if result.analysis
-                                and getattr(result.analysis, "code_generated", None)
-                                else ""
-                            )
-                            st.session_state.last_code = code or None
-                            st.session_state.last_summary = summary
-
-    # --- Right panel: latest map + code ---
-    with map_col:
-        st.markdown("### 🗺️ Map")
-        if st.session_state.last_map_html:
-            st_html(st.session_state.last_map_html, height=MAP_HEIGHT_PX)
-        else:
-            st.info("Run a query to see results here.")
-
-        if st.session_state.last_code:
-            with st.expander("Generated Code", expanded=False):
-                st.code(st.session_state.last_code, language="python")
-
-
-if __name__ == "__main__":
-    main()
+    with solara.Columns([1, 1]):
+        ChatPanel()
+        MapPanel()

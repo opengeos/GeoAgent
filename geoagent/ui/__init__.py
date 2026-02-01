@@ -1,4 +1,4 @@
-"""UI helpers and exports for the Streamlit app."""
+"""UI helpers and exports for the Solara app."""
 
 from __future__ import annotations
 
@@ -8,27 +8,27 @@ import sys
 from typing import List, Optional
 
 
-# Path to the Streamlit app file
+# Path to the Solara app file
 APP_PATH = str(Path(__file__).with_name("app.py"))
 
 
 def launch_ui(extra_args: Optional[List[str]] = None) -> int:
-    """Launch the Streamlit UI for GeoAgent.
+    """Launch the Solara UI for GeoAgent.
 
     Args:
-        extra_args: Additional args passed to `streamlit run`.
+        extra_args: Additional args passed to `solara run`.
 
     Returns:
         Process return code.
     """
-    cmd = [sys.executable, "-m", "streamlit", "run", APP_PATH]
+    cmd = [sys.executable, "-m", "solara", "run", APP_PATH]
     if extra_args:
         cmd.extend(extra_args)
     try:
         return subprocess.call(cmd)
     except FileNotFoundError:
         raise RuntimeError(
-            "Streamlit is not installed. Install with `pip install streamlit`."
+            "Solara is not installed. Install with `pip install solara`."
         )
 
 

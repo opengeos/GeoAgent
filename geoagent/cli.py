@@ -19,11 +19,11 @@ def _run_streamlit_app() -> int:
         print(f"Failed to locate UI app: {e}")
         return 1
 
-    cmd = [sys.executable, "-m", "streamlit", "run", APP_PATH]
+    cmd = [sys.executable, "-m", "solara", "run", APP_PATH]
     try:
         return subprocess.call(cmd)
     except FileNotFoundError:
-        print("Streamlit is not installed. Install with `pip install streamlit`.\n")
+        print("Solara is not installed. Install with `pip install solara`.\n")
         return 1
 
 
