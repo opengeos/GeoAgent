@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+import threading
+from typing import Any, Dict, List, Optional
 
 import solara
-import solara.lab
 import leafmap.maplibregl as leafmap
 
 from geoagent.core.agent import GeoAgent
@@ -22,10 +22,11 @@ model: solara.Reactive[str] = solara.reactive("")
 processing: solara.Reactive[bool] = solara.reactive(False)
 status_text: solara.Reactive[str] = solara.reactive("")
 last_code: solara.Reactive[str] = solara.reactive("")
-pending_query: solara.Reactive[str] = solara.reactive("")
+
+# Store new map calls from query results to replay on the displayed map
+new_map_calls: solara.Reactive[Optional[list]] = solara.reactive(None)
 
 _agent_store: Dict[str, Any] = {"agent": None, "key": None}
-_map_ref: Dict[str, Any] = {"map": None}
 PROVIDER_LIST = list(PROVIDERS.keys())
 
 
@@ -49,22 +50,20 @@ def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
 
 def _make_map():
     """Create the default map (called once, memoized)."""
-    m = leafmap.Map(
+    return leafmap.Map(
         center=[0, 20],
         zoom=2,
         height="750px",
         style="dark-matter",
     )
-    _map_ref["map"] = m
-    return m
 
 
-def run_agent_query(query: str):
-    """Run a GeoAgent query (called by use_task for proper Solara context)."""
-    m = _map_ref.get("map")
-    if not query or not m:
-        return None
+def _run_query(query: str):
+    """Run a GeoAgent query in a background thread.
 
+    Does NOT use target_map. Instead, stores the result map's calls
+    in a reactive so they can be replayed on the UI map in the render context.
+    """
     processing.value = True
     status_text.value = "🔍 Parsing query…"
     messages.value = [*messages.value, {"role": "user", "content": query}]
@@ -76,7 +75,7 @@ def run_agent_query(query: str):
         agent = _get_or_create_agent(prov, mdl)
 
         status_text.value = "📡 Searching data & analyzing…"
-        result = agent.chat(query, target_map=m)
+        result = agent.chat(query)
 
         if result.success:
             items = result.data.total_items if result.data else 0
@@ -95,6 +94,10 @@ def run_agent_query(query: str):
             meta = f"{items} items" + (f" • {t}" if t else "")
             summary = " • ".join(parts) if parts else "Done"
             text = f"✅ {summary} ({meta})"
+
+            # Store new calls from the result map (skip initial 4 control calls)
+            if result.map and hasattr(result.map, "calls"):
+                new_map_calls.value = list(result.map.calls[4:])
         else:
             text = f"❌ {result.error_message or 'An error occurred.'}"
 
@@ -110,8 +113,6 @@ def run_agent_query(query: str):
             code = result.analysis.code_generated
         last_code.value = code
 
-        return result
-
     except Exception as e:
         import traceback
 
@@ -120,7 +121,6 @@ def run_agent_query(query: str):
             *messages.value,
             {"role": "assistant", "content": f"❌ Error: {e}"},
         ]
-        return None
     finally:
         processing.value = False
         status_text.value = ""
@@ -139,18 +139,14 @@ def Page():
     query, set_query = solara.use_state("")
     show_code, set_show_code = solara.use_state(False)
 
-    # use_task runs in a thread with proper Solara context for widget updates
-    current_query = pending_query.value
-
-    def _do_query():
-        if current_query:
-            return run_agent_query(current_query)
-
-    task = solara.lab.use_task(
-        _do_query,
-        dependencies=[current_query],
-        prefer_threaded=True,
-    )
+    # Replay new map calls onto the displayed map (runs in render context)
+    calls = new_map_calls.value
+    if calls is not None:
+        for call in calls:
+            method_name = call[0]
+            args = call[1] if len(call) > 1 else ()
+            m.calls = m.calls + [call]
+        new_map_calls.value = None
 
     with solara.Sidebar():
         solara.Markdown("### 💬 GeoAgent Chat")
@@ -195,7 +191,7 @@ def Page():
             q = query.strip()
             if q and not processing.value:
                 set_query("")
-                pending_query.value = q
+                threading.Thread(target=_run_query, args=(q,), daemon=True).start()
 
         solara.Button(
             "Send",
