@@ -190,7 +190,9 @@ def ChatInput(
         if on_enter:
             on_enter(val)
 
-    use_change(text_field, handle_enter, enabled=not disabled, update_events=["keyup.enter"])
+    use_change(
+        text_field, handle_enter, enabled=not disabled, update_events=["keyup.enter"]
+    )
     return text_field
 
 
@@ -386,6 +388,8 @@ def Page():
         }
     ):
         solara.display(m.container if getattr(m, "container", None) is not None else m)
+
+
 def _chat_with_status(agent: GeoAgent, query: str, target_map, status_callback=None):
     if status_callback is None:
         return agent.chat(query, target_map=target_map)
@@ -393,8 +397,7 @@ def _chat_with_status(agent: GeoAgent, query: str, target_map, status_callback=N
         sig = inspect.signature(agent.chat)
         params = sig.parameters
         accepts_kwargs = any(
-            param.kind == inspect.Parameter.VAR_KEYWORD
-            for param in params.values()
+            param.kind == inspect.Parameter.VAR_KEYWORD for param in params.values()
         )
         if "status_callback" in params or accepts_kwargs:
             return agent.chat(
