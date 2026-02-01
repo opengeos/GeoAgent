@@ -32,7 +32,7 @@ Make sure [Ollama](https://ollama.ai) is installed and running locally.
 
 ### Web UI
 
-For Streamlit or Solara web interfaces:
+For the Solara-based web interface:
 
 ```bash
 pip install "geoagent[ui]"

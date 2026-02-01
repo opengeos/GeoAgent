@@ -147,6 +147,37 @@ print(check_api_keys())           # {'openai': True, 'anthropic': False, ...}
 llm = get_llm(provider="openai", model="gpt-4o", temperature=0.0)
 ```
 
+## Web UI
+
+GeoAgent includes a Solara-based chat interface for interactive geospatial analysis with a persistent map. Install the UI extra and launch:
+
+```bash
+pip install "geoagent[ui]"
+geoagent ui
+```
+
+Or run the Solara app directly:
+
+```bash
+solara run geoagent/ui/app.py
+```
+
+You can also launch it programmatically:
+
+```python
+from geoagent.ui import launch_ui
+
+launch_ui()
+```
+
+The web UI provides:
+- A chat panel for natural language queries with real-time status updates
+- A persistent MapLibre map where layers accumulate across queries
+- A sidebar to switch LLM providers and models on the fly
+- Toggle-able generated code sections for transparency
+
+See [Web UI](ui.md) for full details.
+
 ## Code Transparency
 
 One of GeoAgent's key features is showing the Python code it generates:

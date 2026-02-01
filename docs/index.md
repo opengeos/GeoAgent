@@ -121,6 +121,17 @@ result.map   # displays interactive map in Jupyter
 print(result.code)  # shows the generated Python code
 ```
 
+## Web UI
+
+GeoAgent includes a Solara-based chat interface with a persistent, interactive map.
+
+```bash
+pip install "geoagent[ui]"
+geoagent ui
+```
+
+See [Web UI](ui.md) for full details.
+
 ## Architecture
 
 GeoAgent uses a 4-agent pipeline orchestrated by LangGraph:
