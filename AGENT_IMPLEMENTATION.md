@@ -1,6 +1,6 @@
 # GeoAgent Core Implementation
 
-This document describes the implemented core agent architecture for GeoAgent.
+This document describes the implemented core agent architecture for GeoAgent with MapLibre GL visualization backend.
 
 ## Implementation Status ✅
 
@@ -25,9 +25,11 @@ This document describes the implemented core agent architecture for GeoAgent.
    - Returns visualization hints for downstream rendering
 
 4. **Visualization Agent** (`geoagent/core/viz_agent.py`)
-   - Creates leafmap visualizations from data and analysis results
+   - Creates MapLibre GL visualizations using leafmap's maplibregl backend
+   - High-performance COG layer support with `add_cog_layer()`
+   - Vector tiles, PMTiles, GeoJSON, and 3D terrain support
    - Supports single layer, multi-layer, split maps, time series
-   - Graceful fallback with MockMap when leafmap not available
+   - Graceful fallback with MockMapLibreMap when leafmap.maplibregl not available
    - Automatic visualization type selection based on data and intent
 
 5. **Main GeoAgent Orchestrator** (`geoagent/core/agent.py`)
@@ -68,7 +70,7 @@ response = agent.chat("query")
 # response.plan - Parsed query parameters
 # response.data - Retrieved data items
 # response.analysis - Analysis results (optional)
-# response.map - Leafmap visualization (optional)
+# response.map - MapLibre GL visualization (optional)
 # response.code - All generated Python code
 # response.success - Pipeline success status
 # response.execution_time - Performance timing
@@ -155,6 +157,32 @@ Expected output shows:
 4. **Real Data Testing** - Test with actual STAC catalogs and geospatial data
 5. **Jupyter Integration** - Optimize for notebook display and interaction
 
+## MapLibre GL Visualization Backend
+
+GeoAgent uses **MapLibre GL** via leafmap's `maplibregl` backend for high-performance visualization:
+
+### MapLibre Features
+- **Cloud Optimized GeoTIFF (COG)** support with `add_cog_layer()`
+- **Vector tiles and PMTiles** for efficient large-scale data
+- **3D terrain and elevation** visualization
+- **WebGL-accelerated** rendering for smooth performance
+- **Custom styling** and multiple basemap options
+
+### API Integration
+```python
+from leafmap.maplibregl import Map
+
+# GeoAgent creates MapLibre maps automatically
+map = agent.visualize("Show NDVI for California")
+map.add_cog_layer(url, name="NDVI", fit_bounds=True)
+map.add_pmtiles(url, name="Vector Tiles")
+```
+
+### Graceful Fallbacks
+- Uses `MockMapLibreMap` when leafmap.maplibregl not available
+- Maintains same API for development and testing
+- All map methods work consistently
+
 ## Dependencies
 
 ### Core (Required)
@@ -162,8 +190,8 @@ Expected output shows:
 - `typing-extensions` - Type hints
 
 ### Optional (Graceful fallbacks)
-- `leafmap` - Map visualizations
-- `langgraph` - Workflow orchestration
+- `leafmap[maplibregl]` - MapLibre GL visualizations
+- `langgraph` - Workflow orchestration  
 - `langchain-*` - LLM integrations
 - `rasterio`, `geopandas` - Geospatial processing (used by tools)
 
