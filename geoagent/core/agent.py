@@ -510,7 +510,9 @@ class GeoAgent:
             confidence=0.8 if location else 0.5,
         )
 
-        logger.debug(f"Plan: location={location}, time_range={time_range}, dataset={dataset}")
+        logger.debug(
+            f"Plan: location={location}, time_range={time_range}, dataset={dataset}"
+        )
         return plan
 
     def _extract_location(self, query: str) -> Optional[Dict[str, Any]]:
@@ -584,9 +586,15 @@ class GeoAgent:
             Location dict or None
         """
         cities = {
-            "san francisco": {"bbox": [-122.5, 37.7, -122.3, 37.8], "name": "San Francisco"},
+            "san francisco": {
+                "bbox": [-122.5, 37.7, -122.3, 37.8],
+                "name": "San Francisco",
+            },
             "new york": {"bbox": [-74.1, 40.6, -73.9, 40.8], "name": "New York"},
-            "los angeles": {"bbox": [-118.4, 33.9, -118.1, 34.1], "name": "Los Angeles"},
+            "los angeles": {
+                "bbox": [-118.4, 33.9, -118.1, 34.1],
+                "name": "Los Angeles",
+            },
             "chicago": {"bbox": [-87.8, 41.7, -87.5, 42.0], "name": "Chicago"},
             "seattle": {"bbox": [-122.4, 47.5, -122.2, 47.7], "name": "Seattle"},
             "denver": {"bbox": [-105.1, 39.6, -104.8, 39.8], "name": "Denver"},
@@ -613,18 +621,29 @@ class GeoAgent:
         import re
 
         months = {
-            "january": ("01", "31"), "jan": ("01", "31"),
-            "february": ("02", "28"), "feb": ("02", "28"),
-            "march": ("03", "31"), "mar": ("03", "31"),
-            "april": ("04", "30"), "apr": ("04", "30"),
+            "january": ("01", "31"),
+            "jan": ("01", "31"),
+            "february": ("02", "28"),
+            "feb": ("02", "28"),
+            "march": ("03", "31"),
+            "mar": ("03", "31"),
+            "april": ("04", "30"),
+            "apr": ("04", "30"),
             "may": ("05", "31"),
-            "june": ("06", "30"), "jun": ("06", "30"),
-            "july": ("07", "31"), "jul": ("07", "31"),
-            "august": ("08", "31"), "aug": ("08", "31"),
-            "september": ("09", "30"), "sep": ("09", "30"),
-            "october": ("10", "31"), "oct": ("10", "31"),
-            "november": ("11", "30"), "nov": ("11", "30"),
-            "december": ("12", "31"), "dec": ("12", "31"),
+            "june": ("06", "30"),
+            "jun": ("06", "30"),
+            "july": ("07", "31"),
+            "jul": ("07", "31"),
+            "august": ("08", "31"),
+            "aug": ("08", "31"),
+            "september": ("09", "30"),
+            "sep": ("09", "30"),
+            "october": ("10", "31"),
+            "oct": ("10", "31"),
+            "november": ("11", "30"),
+            "nov": ("11", "30"),
+            "december": ("12", "31"),
+            "dec": ("12", "31"),
         }
 
         # Match "Month YYYY" or "YYYY" patterns
