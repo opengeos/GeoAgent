@@ -178,21 +178,21 @@ def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
 
 class MockLLM:
     """Mock LLM for testing and development when no real LLM is available."""
-    
+
     def __init__(self, name: str = "MockLLM"):
         self.name = name
-    
+
     def invoke(self, prompt: str) -> str:
         """Mock LLM invocation.
-        
+
         Args:
             prompt: Input prompt
-            
+
         Returns:
             Mock response
         """
         return f"Mock response to: {prompt[:100]}..."
-    
+
     def __str__(self) -> str:
         return self.name
 

@@ -20,7 +20,7 @@ m = MapLibreMap()
 ### 2. Layer Addition Methods
 **Raster/COG Layers:**
 ```python
-# Old (folium): 
+# Old (folium):
 m.add_raster(url, layer_name="Layer", fit_bounds=True)
 
 # New (MapLibre):
@@ -39,7 +39,7 @@ m.add_geojson(data, name="Vector", style=style)
 ### 3. MockMapLibreMap Class
 Created comprehensive mock implementation with MapLibre-compatible methods:
 - `add_cog_layer()` - Cloud Optimized GeoTIFF support
-- `add_pmtiles()` - PMTiles vector tile support  
+- `add_pmtiles()` - PMTiles vector tile support
 - `add_geojson()` - GeoJSON with proper naming
 - `add_title()` - Map title support
 - `to_html()` - HTML export functionality
@@ -94,7 +94,7 @@ Created comprehensive mock implementation with MapLibre-compatible methods:
 - **Custom styling** and basemap options
 - **Better mobile performance**
 
-### Developer Experience  
+### Developer Experience
 - **Same API** as folium backend (mostly compatible)
 - **Better error handling** and performance monitoring
 - **Modern web standards** (WebGL, vector tiles)
@@ -158,7 +158,7 @@ Both examples work correctly:
 # Basic functionality
 python examples/basic_usage.py
 
-# MapLibre-specific features  
+# MapLibre-specific features
 python examples/maplibre_usage.py
 ```
 

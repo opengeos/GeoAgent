@@ -191,7 +191,7 @@ map.add_pmtiles(url, name="Vector Tiles")
 
 ### Optional (Graceful fallbacks)
 - `leafmap[maplibregl]` - MapLibre GL visualizations
-- `langgraph` - Workflow orchestration  
+- `langgraph` - Workflow orchestration
 - `langchain-*` - LLM integrations
 - `rasterio`, `geopandas` - Geospatial processing (used by tools)
 
