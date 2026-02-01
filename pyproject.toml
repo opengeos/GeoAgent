@@ -1,6 +1,6 @@
 [project]
 name = "GeoAgent"
-version = "0.0.1"
+version = "0.1.0"
 description = "An AI agent for geospatial data analysis and visualization"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -87,7 +87,7 @@ exclude = ["docs*", "tests*", "notebooks*"]
 universal = true
 
 [tool.bumpversion]
-current_version = "0.0.1"
+current_version = "0.1.0"
 commit = true
 tag = true
 
