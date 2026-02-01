@@ -18,7 +18,7 @@ from geoagent.core.models import GeoAgentResponse
 # ---------------------------------------------------------------------------
 
 messages: solara.Reactive[List[Dict[str, str]]] = solara.reactive([])
-provider: solara.Reactive[str] = solara.reactive("openai")
+provider: solara.Reactive[str] = solara.reactive("ollama")
 model: solara.Reactive[str] = solara.reactive("")
 processing: solara.Reactive[bool] = solara.reactive(False)
 status_text: solara.Reactive[str] = solara.reactive("")
