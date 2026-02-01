@@ -185,8 +185,21 @@ class Planner:
             [("system", system_prompt), ("human", "{query}")]
         )
 
-        # Create the structured output chain using internal LLM schema
-        self.chain = self.prompt | self.llm.with_structured_output(_PlannerLLMSchema)
+        # Build structured output chains — try strict first, json_mode as fallback
+        self._chain_strict = None
+        self._chain_json = None
+        try:
+            self._chain_strict = self.prompt | self.llm.with_structured_output(
+                _PlannerLLMSchema
+            )
+        except Exception:
+            pass
+        try:
+            self._chain_json = self.prompt | self.llm.with_structured_output(
+                _PlannerLLMSchema, method="json_mode"
+            )
+        except Exception:
+            pass
 
     @staticmethod
     def _convert_to_planner_output(result: _PlannerLLMSchema) -> PlannerOutput:
@@ -239,18 +252,22 @@ class Planner:
         Raises:
             Exception: If LLM fails to parse the query
         """
-        try:
-            result = self.chain.invoke({"query": query})
+        last_err = None
+        for chain in (self._chain_strict, self._chain_json):
+            if chain is None:
+                continue
+            try:
+                result = chain.invoke({"query": query})
+                if isinstance(result, _PlannerLLMSchema):
+                    return self._convert_to_planner_output(result)
+            except Exception as e:
+                last_err = e
+                logger.debug(f"Structured output attempt failed: {e}")
+                continue
 
-            # Post-process and validate the result
-            if isinstance(result, _PlannerLLMSchema):
-                return self._convert_to_planner_output(result)
-            else:
-                # Fallback if structured output fails
-                raise ValueError("Failed to get structured output from LLM")
-
-        except Exception as e:
-            raise Exception(f"Failed to parse query: {str(e)}")
+        raise Exception(
+            f"Failed to parse query: {last_err or 'no structured output chain available'}"
+        )
 
     def parse_batch(self, queries: List[str]) -> List[PlannerOutput]:
         """
