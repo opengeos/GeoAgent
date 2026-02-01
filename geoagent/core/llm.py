@@ -1,171 +1,216 @@
-"""LLM provider abstraction with unified interface for multiple providers."""
+"""LLM provider abstraction for GeoAgent.
 
+Provides a unified interface for multiple LLM providers including
+OpenAI, Anthropic, Google Gemini, and Ollama (local).
+"""
+
+from typing import Any, Optional, Dict, List
+import logging
 import os
-from enum import Enum
-from typing import Optional, Dict, Any
 
-from langchain_core.language_models.chat_models import BaseChatModel
+logger = logging.getLogger(__name__)
 
 
-class LLMProvider(str, Enum):
-    """Supported LLM providers."""
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic" 
-    GOOGLE = "google"
-    OLLAMA = "ollama"
-
-
-# Default models per provider
-DEFAULT_MODELS = {
-    LLMProvider.OPENAI: "gpt-4o",
-    LLMProvider.ANTHROPIC: "claude-sonnet-4-20250514",
-    LLMProvider.GOOGLE: "gemini-2.0-flash", 
-    LLMProvider.OLLAMA: "llama3.1"
-}
-
-# Environment variables for API key detection
-ENV_VARS = {
-    LLMProvider.OPENAI: "OPENAI_API_KEY",
-    LLMProvider.ANTHROPIC: "ANTHROPIC_API_KEY",
-    LLMProvider.GOOGLE: "GOOGLE_API_KEY",
-    LLMProvider.OLLAMA: None  # Ollama typically runs locally without API key
+# Provider configurations with default models
+PROVIDERS: Dict[str, Dict[str, str]] = {
+    "openai": {
+        "default_model": "gpt-4o",
+        "env_var": "OPENAI_API_KEY",
+        "package": "langchain-openai",
+    },
+    "anthropic": {
+        "default_model": "claude-sonnet-4-20250514",
+        "env_var": "ANTHROPIC_API_KEY",
+        "package": "langchain-anthropic",
+    },
+    "google": {
+        "default_model": "gemini-2.0-flash",
+        "env_var": "GOOGLE_API_KEY",
+        "package": "langchain-google-genai",
+    },
+    "ollama": {
+        "default_model": "llama3.1",
+        "env_var": None,
+        "package": "langchain-ollama",
+    },
 }
 
 
 def get_llm(
-    provider: str, 
+    provider: str = "openai",
     model: Optional[str] = None,
-    **kwargs: Any
-) -> BaseChatModel:
-    """
-    Factory function to create LLM instances from different providers.
-    
+    temperature: float = 0.1,
+    max_tokens: int = 4096,
+    **kwargs,
+) -> Any:
+    """Create an LLM instance for the specified provider.
+
     Args:
-        provider: The LLM provider ("openai", "anthropic", "google", "ollama")
-        model: Model name. Uses default if not specified.
-        **kwargs: Additional parameters like temperature, max_tokens
-        
+        provider: LLM provider name ("openai", "anthropic", "google", "ollama").
+        model: Model name. Uses provider default if None.
+        temperature: Sampling temperature (0.0 to 1.0).
+        max_tokens: Maximum tokens in the response.
+        **kwargs: Additional provider-specific keyword arguments.
+
     Returns:
-        LangChain BaseChatModel instance
-        
+        A LangChain BaseChatModel instance.
+
     Raises:
-        ValueError: If provider is not supported
-        ImportError: If required package is not installed
-        RuntimeError: If API key is missing for providers that require it
+        ValueError: If the provider is not supported.
+        ImportError: If the required package is not installed.
+        RuntimeError: If the API key is missing.
     """
-    try:
-        provider_enum = LLMProvider(provider.lower())
-    except ValueError:
-        supported = ", ".join([p.value for p in LLMProvider])
+    provider = provider.lower()
+    if provider not in PROVIDERS:
+        supported = ", ".join(PROVIDERS.keys())
         raise ValueError(f"Unsupported provider '{provider}'. Supported: {supported}")
-    
-    if model is None:
-        model = DEFAULT_MODELS[provider_enum]
-    
-    # Check for required API key
-    env_var = ENV_VARS[provider_enum]
-    if env_var and not os.getenv(env_var):
-        raise RuntimeError(f"Missing required environment variable: {env_var}")
-    
-    if provider_enum == LLMProvider.OPENAI:
+
+    config = PROVIDERS[provider]
+    resolved_model = model or config["default_model"]
+
+    # Check API key (not needed for Ollama)
+    if config["env_var"] and not os.getenv(config["env_var"]):
+        raise RuntimeError(
+            f"API key not found. Set the {config['env_var']} environment variable."
+        )
+
+    if provider == "openai":
         try:
             from langchain_openai import ChatOpenAI
         except ImportError:
             raise ImportError(
-                "OpenAI provider requires 'langchain-openai'. "
-                "Install with: pip install langchain-openai"
+                f"langchain-openai is not installed. Run: pip install langchain-openai"
             )
-        
         return ChatOpenAI(
-            model=model,
-            temperature=kwargs.get("temperature", 0.0),
-            max_tokens=kwargs.get("max_tokens"),
-            **{k: v for k, v in kwargs.items() if k not in ["temperature", "max_tokens"]}
+            model=resolved_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
         )
-    
-    elif provider_enum == LLMProvider.ANTHROPIC:
+
+    elif provider == "anthropic":
         try:
             from langchain_anthropic import ChatAnthropic
         except ImportError:
             raise ImportError(
-                "Anthropic provider requires 'langchain-anthropic'. "
-                "Install with: pip install langchain-anthropic"
+                f"langchain-anthropic is not installed. Run: pip install langchain-anthropic"
             )
-        
         return ChatAnthropic(
-            model=model,
-            temperature=kwargs.get("temperature", 0.0),
-            max_tokens=kwargs.get("max_tokens"),
-            **{k: v for k, v in kwargs.items() if k not in ["temperature", "max_tokens"]}
+            model=resolved_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
         )
-    
-    elif provider_enum == LLMProvider.GOOGLE:
+
+    elif provider == "google":
         try:
             from langchain_google_genai import ChatGoogleGenerativeAI
         except ImportError:
             raise ImportError(
-                "Google provider requires 'langchain-google-genai'. "
-                "Install with: pip install langchain-google-genai"
+                f"langchain-google-genai is not installed. Run: pip install langchain-google-genai"
             )
-        
         return ChatGoogleGenerativeAI(
-            model=model,
-            temperature=kwargs.get("temperature", 0.0),
-            max_output_tokens=kwargs.get("max_tokens"),
-            **{k: v for k, v in kwargs.items() if k not in ["temperature", "max_tokens"]}
+            model=resolved_model,
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+            **kwargs,
         )
-    
-    elif provider_enum == LLMProvider.OLLAMA:
+
+    elif provider == "ollama":
         try:
             from langchain_ollama import ChatOllama
         except ImportError:
             raise ImportError(
-                "Ollama provider requires 'langchain-ollama'. "
-                "Install with: pip install langchain-ollama"
+                f"langchain-ollama is not installed. Run: pip install langchain-ollama"
             )
-        
         return ChatOllama(
-            model=model,
-            temperature=kwargs.get("temperature", 0.0),
-            num_predict=kwargs.get("max_tokens"),
-            **{k: v for k, v in kwargs.items() if k not in ["temperature", "max_tokens"]}
+            model=resolved_model,
+            temperature=temperature,
+            **kwargs,
         )
 
 
-def get_default_llm(**kwargs: Any) -> BaseChatModel:
-    """
-    Get the first available LLM provider based on environment variables.
-    
-    Checks for API keys in order: OpenAI, Anthropic, Google, then falls back to Ollama.
-    
+def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
+    """Get a default LLM by checking available API keys.
+
+    Checks environment variables in order: OpenAI, Anthropic, Google, Ollama.
+    Returns the first available provider.
+
     Args:
-        **kwargs: Additional parameters passed to get_llm()
-        
+        temperature: Sampling temperature.
+        **kwargs: Additional keyword arguments passed to the LLM constructor.
+
     Returns:
-        LangChain BaseChatModel instance
-        
+        A LangChain BaseChatModel instance.
+
     Raises:
-        RuntimeError: If no providers are available
+        RuntimeError: If no LLM provider is available.
     """
-    # Check providers in order of preference
-    for provider in [LLMProvider.OPENAI, LLMProvider.ANTHROPIC, LLMProvider.GOOGLE]:
-        env_var = ENV_VARS[provider]
-        if env_var and os.getenv(env_var):
+    # Try providers in priority order
+    for provider_name, config in PROVIDERS.items():
+        env_var = config["env_var"]
+
+        # Ollama has no API key requirement
+        if env_var is None:
             try:
-                return get_llm(provider.value, **kwargs)
+                return get_llm(provider=provider_name, temperature=temperature, **kwargs)
             except ImportError:
-                continue  # Try next provider if package not installed
-    
-    # Fall back to Ollama (no API key required)
-    try:
-        return get_llm(LLMProvider.OLLAMA.value, **kwargs)
-    except ImportError:
-        pass
-    
+                continue
+
+        # Check if API key is set
+        if os.getenv(env_var):
+            try:
+                return get_llm(provider=provider_name, temperature=temperature, **kwargs)
+            except ImportError:
+                logger.warning(
+                    f"{config['package']} not installed, skipping {provider_name}"
+                )
+                continue
+
     raise RuntimeError(
-        "No LLM providers available. Please install required packages and set API keys:\n"
-        "- OpenAI: pip install langchain-openai, set OPENAI_API_KEY\n"
-        "- Anthropic: pip install langchain-anthropic, set ANTHROPIC_API_KEY\n" 
-        "- Google: pip install langchain-google-genai, set GOOGLE_API_KEY\n"
-        "- Ollama: pip install langchain-ollama (no API key required)"
+        "No LLM provider available. Set one of these environment variables: "
+        + ", ".join(c["env_var"] for c in PROVIDERS.values() if c["env_var"])
+        + " or install langchain-ollama for local models."
     )
+
+
+def get_available_providers() -> List[str]:
+    """Get list of available LLM providers based on installed packages and API keys.
+
+    Returns:
+        List of available provider names.
+    """
+    available = []
+    for name, config in PROVIDERS.items():
+        env_var = config["env_var"]
+        has_key = env_var is None or bool(os.getenv(env_var))
+
+        if not has_key:
+            continue
+
+        try:
+            if name == "openai":
+                import langchain_openai  # noqa: F401
+            elif name == "anthropic":
+                import langchain_anthropic  # noqa: F401
+            elif name == "google":
+                import langchain_google_genai  # noqa: F401
+            elif name == "ollama":
+                import langchain_ollama  # noqa: F401
+            available.append(name)
+        except ImportError:
+            pass
+
+    return available
+
+
+def check_api_keys() -> Dict[str, bool]:
+    """Check which LLM API keys are available in the environment.
+
+    Returns:
+        Dictionary mapping provider names to whether their API key is set.
+    """
+    return {
+        name: config["env_var"] is None or bool(os.getenv(config["env_var"]))
+        for name, config in PROVIDERS.items()
+    }

@@ -35,13 +35,17 @@ class DataAgent:
         try:
             # Import tools from the tools module
             # Note: These imports will be available once tools are implemented
-            from ..tools.stac import STACSearchTool
-            from ..tools.duckdb_tool import DuckDBTool
+            # For now, we'll use placeholders
+            # from ..tools.stac import STACSearchTool
+            # from ..tools.duckdb_tool import DuckDBTool
             
-            if 'stac' not in self.tools:
-                self.tools['stac'] = STACSearchTool()
-            if 'duckdb' not in self.tools:
-                self.tools['duckdb'] = DuckDBTool()
+            # TODO: Enable when actual tools are implemented
+            # if 'stac' not in self.tools:
+            #     self.tools['stac'] = STACSearchTool()
+            # if 'duckdb' not in self.tools:
+            #     self.tools['duckdb'] = DuckDBTool()
+            
+            logger.info("Data tools setup (using placeholders)")
                 
         except ImportError as e:
             logger.warning(f"Some data tools not available: {e}")

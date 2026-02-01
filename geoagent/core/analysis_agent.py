@@ -35,13 +35,16 @@ class AnalysisAgent:
         """Setup and initialize analysis tools."""
         try:
             # Import analysis tools from the tools module
-            from ..tools.raster import RasterAnalysisTool
-            from ..tools.vector import VectorAnalysisTool
+            # TODO: Enable when actual tools are implemented
+            # from ..tools.raster import RasterAnalysisTool
+            # from ..tools.vector import VectorAnalysisTool
             
-            if 'raster' not in self.tools:
-                self.tools['raster'] = RasterAnalysisTool()
-            if 'vector' not in self.tools:
-                self.tools['vector'] = VectorAnalysisTool()
+            # if 'raster' not in self.tools:
+            #     self.tools['raster'] = RasterAnalysisTool()
+            # if 'vector' not in self.tools:
+            #     self.tools['vector'] = VectorAnalysisTool()
+            
+            logger.info("Analysis tools setup (using placeholders)")
                 
         except ImportError as e:
             logger.warning(f"Some analysis tools not available: {e}")

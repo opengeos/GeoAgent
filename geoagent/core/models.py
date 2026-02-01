@@ -7,7 +7,6 @@ to avoid circular dependencies between modules.
 from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
 from pydantic import BaseModel, Field
-import leafmap
 
 
 class PlannerOutput(BaseModel):
