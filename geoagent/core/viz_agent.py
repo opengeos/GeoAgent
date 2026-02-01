@@ -668,18 +668,42 @@ class VizAgent:
             data: Source data
             analysis: Analysis results
         """
-        # Simple fallback based on result data
-        if "ndvi" in str(analysis.result_data).lower():
-            # For NDVI results, try to add the first raster with appropriate styling
-            if data.items and "assets" in data.items[0]:
-                asset_key = self._select_best_asset(data.items[0]["assets"], "ndvi")
-                if asset_key:
-                    asset_url = data.items[0]["assets"][asset_key]["href"]
-                    # Skip mock/placeholder URLs
-                    if not asset_url.startswith("mock://"):
+        viz_hints = analysis.visualization_hints
+
+        # Check if we have a computed NDVI raster to display
+        ndvi_path = None
+        if viz_hints and "ndvi_path" in viz_hints:
+            ndvi_path = viz_hints["ndvi_path"]
+        elif isinstance(analysis.result_data, dict):
+            ndvi_path = analysis.result_data.get("ndvi_path")
+
+        if ndvi_path and os.path.exists(ndvi_path):
+            try:
+                m.add_raster(
+                    ndvi_path,
+                    layer_name="NDVI",
+                    colormap="RdYlGn",
+                    vmin=-0.2,
+                    vmax=0.8,
+                    fit_bounds=True,
+                )
+                logger.info(f"Added NDVI raster layer from {ndvi_path}")
+                return
+            except Exception as e:
+                logger.warning(f"Could not add NDVI raster: {e}")
+
+        # Fallback: try to add raw band from data
+        if data.items and "assets" in data.items[0]:
+            asset_key = self._select_best_asset(data.items[0]["assets"], "ndvi")
+            if asset_key:
+                asset_url = data.items[0]["assets"][asset_key]["href"]
+                if not asset_url.startswith("mock://"):
+                    try:
                         m.add_cog_layer(
                             asset_url, name="NDVI Analysis", fit_bounds=True
                         )
+                    except Exception as e:
+                        logger.warning(f"Could not add COG layer: {e}")
 
     def _add_title_to_map(self, m: Any, title: str):
         """Add title to the map.

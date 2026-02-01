@@ -7,10 +7,16 @@ analyses while generating transparent Python code for reproducibility.
 from typing import Any, Dict, List, Optional
 import logging
 import json
+import os
+import tempfile
 
 from .models import DataResult, AnalysisResult, PlannerOutput
 
 logger = logging.getLogger(__name__)
+
+# Ensure anonymous S3 access for public COGs
+if "AWS_NO_SIGN_REQUEST" not in os.environ:
+    os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
 
 
 class AnalysisAgent:
@@ -153,28 +159,182 @@ class AnalysisAgent:
         else:
             index_type = "ndvi"  # Default
 
-        if "raster" in self.tools:
+        # Try real computation first
+        if index_type == "ndvi" and data.items:
             try:
-                raster_tool = self.tools["raster"]
-                result = raster_tool.compute_index(data.items, index_type)
-
-                # Generate code for transparency
-                code = self._generate_index_code(data.items, index_type)
-
-                # Create visualization hints
-                viz_hints = self._get_index_viz_hints(index_type, result)
-
-                return AnalysisResult(
-                    result_data=result,
-                    code_generated=code,
-                    visualization_hints=viz_hints,
-                )
-
+                return self._compute_ndvi_real(plan, data)
             except Exception as e:
-                logger.error(f"Raster analysis failed: {e}")
-                return self._create_mock_analysis(index_type, data)
-        else:
-            return self._create_mock_analysis(index_type, data)
+                logger.warning(f"Real NDVI computation failed: {e}")
+
+        # Fall back to mock if real computation fails
+        return self._create_mock_analysis(index_type, data)
+
+    def _compute_ndvi_real(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Actually compute NDVI from STAC item COG bands.
+
+        Uses rasterio to read red/NIR bands and compute NDVI,
+        then saves result as a temporary GeoTIFF for visualization.
+        """
+        import numpy as np
+        import rasterio
+        from rasterio.windows import from_bounds
+
+        # Find first item with red and nir bands
+        item = None
+        for candidate in data.items:
+            assets = candidate.get("assets", {})
+            if "red" in assets and "nir" in assets:
+                red_href = assets["red"].get("href", "")
+                nir_href = assets["nir"].get("href", "")
+                if red_href.startswith("http") and nir_href.startswith("http"):
+                    item = candidate
+                    break
+
+        if item is None:
+            raise ValueError("No STAC item found with red and nir COG bands")
+
+        red_url = item["assets"]["red"]["href"]
+        nir_url = item["assets"]["nir"]["href"]
+        item_id = item.get("id", "unknown")
+
+        logger.info(f"Computing NDVI for item {item_id}")
+
+        # Read within bbox if available (windowed read for performance)
+        bbox_wgs84 = None
+        if plan.location and "bbox" in plan.location:
+            bbox_wgs84 = plan.location["bbox"]
+
+        with rasterio.open(red_url) as red_src:
+            if bbox_wgs84:
+                # Transform bbox from WGS84 to raster CRS if needed
+                from pyproj import Transformer
+
+                raster_crs = red_src.crs
+                if raster_crs and str(raster_crs) != "EPSG:4326":
+                    transformer = Transformer.from_crs(
+                        "EPSG:4326", raster_crs, always_xy=True
+                    )
+                    x_min, y_min = transformer.transform(
+                        bbox_wgs84[0], bbox_wgs84[1]
+                    )
+                    x_max, y_max = transformer.transform(
+                        bbox_wgs84[2], bbox_wgs84[3]
+                    )
+                    bbox_native = [x_min, y_min, x_max, y_max]
+                else:
+                    bbox_native = bbox_wgs84
+
+                window = from_bounds(*bbox_native, red_src.transform)
+                # Ensure window has positive dimensions
+                window = window.round_offsets().round_lengths()
+                if window.width < 1 or window.height < 1:
+                    raise ValueError("Bbox too small for raster resolution")
+                red = red_src.read(1, window=window).astype("float32")
+                win_transform = red_src.window_transform(window)
+            else:
+                red = red_src.read(1).astype("float32")
+                win_transform = red_src.transform
+                window = None
+            red_profile = red_src.profile.copy()
+
+        with rasterio.open(nir_url) as nir_src:
+            if window is not None:
+                nir = nir_src.read(1, window=window).astype("float32")
+            else:
+                nir = nir_src.read(1).astype("float32")
+
+        # Compute NDVI
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ndvi = (nir - red) / (nir + red)
+            ndvi = np.where(np.isfinite(ndvi), ndvi, np.nan)
+
+        # Compute statistics
+        valid = ndvi[np.isfinite(ndvi)]
+        stats = {
+            "mean": float(np.nanmean(valid)) if len(valid) > 0 else None,
+            "min": float(np.nanmin(valid)) if len(valid) > 0 else None,
+            "max": float(np.nanmax(valid)) if len(valid) > 0 else None,
+            "std": float(np.nanstd(valid)) if len(valid) > 0 else None,
+            "pixels": int(len(valid)),
+        }
+
+        # Save NDVI as temporary GeoTIFF
+        ndvi_path = os.path.join(tempfile.gettempdir(), f"ndvi_{item_id}.tif")
+        out_profile = red_profile.copy()
+        out_profile.update(
+            dtype="float32",
+            count=1,
+            driver="GTiff",
+            compress="deflate",
+            height=ndvi.shape[0],
+            width=ndvi.shape[1],
+            transform=win_transform,
+            nodata=np.nan,
+        )
+        with rasterio.open(ndvi_path, "w", **out_profile) as dst:
+            dst.write(ndvi, 1)
+
+        logger.info(f"NDVI saved to {ndvi_path}, mean={stats['mean']:.3f}")
+
+        # Generate reproducible code
+        code = f'''import os
+import rasterio
+import numpy as np
+from rasterio.windows import from_bounds
+from pyproj import Transformer
+
+os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
+
+red_url = "{red_url}"
+nir_url = "{nir_url}"
+bbox_wgs84 = {bbox_wgs84}  # [west, south, east, north] in EPSG:4326
+
+# Read red and NIR bands (windowed read within bbox)
+with rasterio.open(red_url) as red_src:
+    # Transform bbox to raster CRS
+    transformer = Transformer.from_crs("EPSG:4326", red_src.crs, always_xy=True)
+    x_min, y_min = transformer.transform(bbox_wgs84[0], bbox_wgs84[1])
+    x_max, y_max = transformer.transform(bbox_wgs84[2], bbox_wgs84[3])
+    window = from_bounds(x_min, y_min, x_max, y_max, red_src.transform)
+    red = red_src.read(1, window=window).astype("float32")
+    profile = red_src.profile.copy()
+    transform = red_src.window_transform(window)
+
+with rasterio.open(nir_url) as nir_src:
+    nir = nir_src.read(1, window=window).astype("float32")
+
+# Compute NDVI = (NIR - Red) / (NIR + Red)
+ndvi = (nir - red) / (nir + red)
+ndvi = np.where(np.isfinite(ndvi), ndvi, np.nan)
+
+print(f"NDVI shape: {{ndvi.shape}}")
+print(f"NDVI range: {{np.nanmin(ndvi):.3f}} to {{np.nanmax(ndvi):.3f}}")
+print(f"NDVI mean: {{np.nanmean(ndvi):.3f}}")
+'''
+
+        result_data = {
+            "analysis_type": "ndvi",
+            "item_id": item_id,
+            "ndvi_stats": stats,
+            "ndvi_path": ndvi_path,
+        }
+
+        viz_hints = {
+            "type": "ndvi",
+            "ndvi_path": ndvi_path,
+            "colormap": "RdYlGn",
+            "vmin": -0.2,
+            "vmax": 0.8,
+            "title": f"NDVI - {item_id}",
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
 
     def _compute_zonal_statistics(
         self, plan: PlannerOutput, data: DataResult
