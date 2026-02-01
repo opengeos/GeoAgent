@@ -1,7 +1,7 @@
 site_name: GeoAgent
 site_description: An AI agent for geospatial data analysis and visualization
 site_author: Qiusheng Wu
-site_url: https://opengeos.github.io/GeoAgent
+site_url: https://geoagent.gishub.org
 repo_url: https://github.com/opengeos/GeoAgent
 
 copyright: "Copyright &copy; 2026 Qiusheng Wu"

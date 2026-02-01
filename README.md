@@ -5,7 +5,7 @@
 
 An AI agent for geospatial data analysis and visualization.
 
-- **Documentation**: <https://opengeos.github.io/GeoAgent>
+- **Documentation**: <https://geoagent.gishub.org>
 - **Source code**: <https://github.com/opengeos/GeoAgent>
 - **PyPI**: <https://pypi.python.org/pypi/geoagent>
 

@@ -8,7 +8,7 @@
 GeoAgent is a platform-agnostic AI agent that lets you explore, analyze, and visualize Earth observation data using natural language. It combines LLM-powered query understanding with a full geospatial Python stack.
 
 - Free software: MIT License
-- Documentation: <https://opengeos.github.io/GeoAgent>
+- Documentation: <https://geoagent.gishub.org>
 - Source code: <https://github.com/opengeos/GeoAgent>
 
 ## Key Features
@@ -45,11 +45,11 @@ GeoAgent uses a simplified 4-agent pipeline orchestrated by LangGraph:
 
 ## Why GeoAgent?
 
-| Feature | Cloud-locked tools | GeoAgent |
-|---------|-------------------|----------|
-| LLM provider | Single vendor | Any (OpenAI, Anthropic, Gemini, Ollama) |
-| Map rendering | Proprietary | leafmap (open source, MapLibre) |
-| Data catalogs | Single catalog | Any STAC catalog |
-| Deployment | Cloud services required | `pip install geoagent` |
-| Environment | Web app only | Jupyter-native + optional web UI |
-| Code visibility | Black box | Shows generated Python code |
+| Feature         | Cloud-locked tools      | GeoAgent                                |
+| --------------- | ----------------------- | --------------------------------------- |
+| LLM provider    | Single vendor           | Any (OpenAI, Anthropic, Gemini, Ollama) |
+| Map rendering   | Proprietary             | leafmap (open source, MapLibre)         |
+| Data catalogs   | Single catalog          | Any STAC catalog                        |
+| Deployment      | Cloud services required | `pip install geoagent`                  |
+| Environment     | Web app only            | Jupyter-native + optional web UI        |
+| Code visibility | Black box               | Shows generated Python code             |
