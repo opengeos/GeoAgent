@@ -411,9 +411,9 @@ class DataAgent:
             for c in current_collections
         )
         if is_imagery:
-            max_cloud = plan.parameters.get(
-                "max_cloud_cover"
-            ) or plan.parameters.get("cloud_cover")
+            max_cloud = plan.parameters.get("max_cloud_cover") or plan.parameters.get(
+                "cloud_cover"
+            )
             if max_cloud is not None:
                 params["query"] = {"eo:cloud_cover": {"lt": max_cloud}}
 

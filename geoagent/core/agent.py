@@ -79,7 +79,9 @@ class GeoAgent:
         try:
             self.collection_index = get_collection_index()
         except Exception as e:
-            logger.warning(f"Failed to fetch collection index: {e}. Proceeding without it.")
+            logger.warning(
+                f"Failed to fetch collection index: {e}. Proceeding without it."
+            )
             self.collection_index = []
 
         # Initialize specialized agents
@@ -341,9 +343,7 @@ class GeoAgent:
                 "trend",
                 "zonal",
             ]
-            needs_analysis = any(
-                kw in intent_lower for kw in analysis_keywords
-            )
+            needs_analysis = any(kw in intent_lower for kw in analysis_keywords)
             # Land cover and elevation need analysis routing for proper viz hints
             analysis_type_hint = (plan.analysis_type or "").lower()
             if analysis_type_hint in (
@@ -430,7 +430,10 @@ class GeoAgent:
         # Cloud cover filter only for imagery collections
         cloud_filter = ""
         imagery_collections = {
-            "sentinel-2-l2a", "landsat-c2-l2", "naip", "sentinel-1-grd",
+            "sentinel-2-l2a",
+            "landsat-c2-l2",
+            "naip",
+            "sentinel-1-grd",
         }
         max_cc = plan.parameters.get("max_cloud_cover")
         if max_cc is not None and collection in imagery_collections:

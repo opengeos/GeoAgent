@@ -23,7 +23,8 @@ class _PlannerLLMSchema(BaseModel):
         description="Location name (e.g. 'California') or bounding box as 'west,south,east,north'",
     )
     time_range: Optional[List[str]] = Field(
-        default=None, description="Start and end dates as a two-element list [YYYY-MM-DD, YYYY-MM-DD]"
+        default=None,
+        description="Start and end dates as a two-element list [YYYY-MM-DD, YYYY-MM-DD]",
     )
     dataset: Optional[str] = Field(
         default=None,
@@ -149,7 +150,11 @@ Extract information accurately and conservatively. If something is unclear, leav
 class Planner:
     """Agent for parsing natural language queries into structured parameters."""
 
-    def __init__(self, llm: Optional[BaseChatModel] = None, collections: Optional[List[Dict[str, str]]] = None):
+    def __init__(
+        self,
+        llm: Optional[BaseChatModel] = None,
+        collections: Optional[List[Dict[str, str]]] = None,
+    ):
         """
         Initialize the planner agent.
 
@@ -263,7 +268,10 @@ class Planner:
         return results
 
 
-def create_planner(llm: Optional[BaseChatModel] = None, collections: Optional[List[Dict[str, str]]] = None) -> Planner:
+def create_planner(
+    llm: Optional[BaseChatModel] = None,
+    collections: Optional[List[Dict[str, str]]] = None,
+) -> Planner:
     """
     Create a planner instance.
 
@@ -276,7 +284,11 @@ def create_planner(llm: Optional[BaseChatModel] = None, collections: Optional[Li
     return Planner(llm=llm, collections=collections)
 
 
-def parse_query(query: str, llm: Optional[BaseChatModel] = None, collections: Optional[List[Dict[str, str]]] = None) -> PlannerOutput:
+def parse_query(
+    query: str,
+    llm: Optional[BaseChatModel] = None,
+    collections: Optional[List[Dict[str, str]]] = None,
+) -> PlannerOutput:
     """
     Convenience function to parse a single query.
 

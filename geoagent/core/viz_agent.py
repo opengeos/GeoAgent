@@ -754,14 +754,10 @@ class VizAgent:
                         name=viz_hints.get("title", item_id),
                         fit_bounds=True,
                     )
-                    logger.info(
-                        f"Added {viz_type} STAC layer: {collection}/{item_id}"
-                    )
+                    logger.info(f"Added {viz_type} STAC layer: {collection}/{item_id}")
                     return
                 except Exception as e:
-                    logger.warning(
-                        f"Could not add {viz_type} STAC layer: {e}"
-                    )
+                    logger.warning(f"Could not add {viz_type} STAC layer: {e}")
 
         # Check if we have a computed NDVI raster to display
         ndvi_path = None

@@ -404,9 +404,7 @@ print(f"NDVI mean: {{np.nanmean(ndvi):.3f}}")
             "analysis_type": "land_cover",
             "data_type": "categorical",
             "items_found": data.total_items,
-            "collection": (
-                data.items[0].get("collection", "") if data.items else ""
-            ),
+            "collection": (data.items[0].get("collection", "") if data.items else ""),
         }
 
         bbox = plan.location.get("bbox") if plan.location else None
@@ -476,9 +474,7 @@ m
             "analysis_type": "elevation",
             "data_type": "continuous",
             "items_found": data.total_items,
-            "collection": (
-                data.items[0].get("collection", "") if data.items else ""
-            ),
+            "collection": (data.items[0].get("collection", "") if data.items else ""),
         }
 
         bbox = plan.location.get("bbox") if plan.location else None

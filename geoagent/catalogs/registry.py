@@ -63,7 +63,9 @@ class CatalogRegistry:
         self._catalogs: Dict[str, CatalogInfo] = BUILTIN_CATALOGS.copy()
         # Cache for catalog collections: {catalog_name: [{"id": str, "title": str}, ...]}
         # Cached per session to avoid repeated network calls
-        self.__class__._collection_cache = getattr(self.__class__, "_collection_cache", {})
+        self.__class__._collection_cache = getattr(
+            self.__class__, "_collection_cache", {}
+        )
 
     def list_catalogs(self) -> List[CatalogInfo]:
         """
@@ -187,7 +189,9 @@ class CatalogRegistry:
         except Exception as e:
             raise RuntimeError(f"Failed to connect to catalog '{name}': {str(e)}")
 
-    def get_collection_index(self, catalog_name: str = "planetary_computer") -> List[Dict[str, str]]:
+    def get_collection_index(
+        self, catalog_name: str = "planetary_computer"
+    ) -> List[Dict[str, str]]:
         """Fetch and cache a simple index of collections for a catalog.
 
         The index contains dicts with collection id and title, e.g.:
@@ -211,7 +215,9 @@ class CatalogRegistry:
         try:
             for col in client.get_collections():
                 col_id = getattr(col, "id", None) or col.to_dict().get("id")
-                title = getattr(col, "title", None) or col.to_dict().get("title") or col_id
+                title = (
+                    getattr(col, "title", None) or col.to_dict().get("title") or col_id
+                )
                 if col_id:
                     collections.append({"id": col_id, "title": title})
         except Exception as e:
