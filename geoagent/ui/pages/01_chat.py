@@ -51,16 +51,19 @@ def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
     return _agent_store["agent"]
 
 
-def _make_map_element():
-    """Create the default map element (called once, memoized)."""
-    return leafmap.Map.element(
+def _make_map():
+    """Create the default map (called once, memoized)."""
+    m = leafmap.Map(
         center=[0, 20],
         zoom=2,
         height="750px",
         style="dark-matter",
         use_message_queue=True,
         add_floating_sidebar=False,
+        add_sidebar=True,
+        sidebar_visible=True,
     )
+    return m
 
 
 def _run_query(query: str, target_map) -> str:
@@ -130,30 +133,24 @@ def _run_query(query: str, target_map) -> str:
 
 @solara.component
 def Page():
-    # Persist map element across re-renders
-    map_el = solara.use_memo(_make_map_element, dependencies=[])
-    map_widget_ref = solara.use_ref(None)
+    # Persist map across re-renders
+    m = solara.use_memo(_make_map, dependencies=[])
 
     query, set_query = solara.use_state("")
     show_code, set_show_code = solara.use_state(False)
 
     def _on_mount():
         try:
-            widget = solara.get_widget(map_el)
-            map_widget_ref.current = widget
-            if hasattr(widget, "use_message_queue"):
-                widget.use_message_queue(True)
-            if (
-                hasattr(widget, "create_container")
-                and getattr(widget, "container", None) is None
-            ):
-                widget.create_container()
-            if hasattr(widget, "add_call"):
-                widget.add_call("resize")
+            if hasattr(m, "use_message_queue"):
+                m.use_message_queue(True)
+            if hasattr(m, "create_container") and getattr(m, "container", None) is None:
+                m.create_container()
+            if hasattr(m, "add_call"):
+                m.add_call("resize")
         except Exception as e:
             logger.debug(f"Map resize skipped: {e}")
 
-    solara.use_effect(lambda: (_on_mount(), None), dependencies=[map_el])
+    solara.use_effect(lambda: (_on_mount(), None), dependencies=[])
 
     def on_send():
         q = query.strip()
@@ -166,21 +163,8 @@ def Page():
             processing.value = True
             status_text.value = "🔍 Searching..."
 
-            target_map = map_widget_ref.current
-            if target_map is None:
-                messages.value = [
-                    *messages.value,
-                    {
-                        "role": "assistant",
-                        "content": "⚠️ Map is still loading. Please try again in a moment.",
-                    },
-                ]
-                processing.value = False
-                status_text.value = ""
-                return
-
             # Run query synchronously (important for map updates)
-            response = _run_query(q, target_map)
+            response = _run_query(q, m)
 
             # Add response
             messages.value = [
@@ -262,12 +246,12 @@ def Page():
                 solara.Preformatted(last_code.value)
 
     # Map as sole main content
-    solara.Column(
-        children=[map_el],
+    with solara.Column(
         style={
             "width": "100%",
-            "height": "100%",
+            "height": "750px",
             "min_height": "750px",
             "isolation": "isolate",
-        },
-    )
+        }
+    ):
+        solara.display(m.container if getattr(m, "container", None) is not None else m)

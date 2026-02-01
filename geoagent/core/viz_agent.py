@@ -132,6 +132,9 @@ def create_map(target_map=None, **kwargs):
     if target_map is not None:
         return target_map
     if MAPLIBRE_AVAILABLE:
+        kwargs["add_sidebar"] = True
+        kwargs["sidebar_visible"] = True
+        kwargs["add_floating_sidebar"] = False
         return MapLibreMap(**kwargs)
     else:
         return MockMapLibreMap(**kwargs)
