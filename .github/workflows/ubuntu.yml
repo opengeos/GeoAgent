@@ -21,6 +21,7 @@ jobs:
                     - { os: ubuntu-latest, py: "3.10" }
                     - { os: ubuntu-latest, py: "3.11" }
                     - { os: ubuntu-latest, py: "3.12" }
+                    - { os: ubuntu-latest, py: "3.13" }
         steps:
             - name: Checkout Code
               uses: actions/checkout@v6
