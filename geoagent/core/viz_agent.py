@@ -8,8 +8,10 @@ from typing import Any, Dict, Optional
 import logging
 import os
 
-# Enable anonymous access for public S3 COG data (e.g., Earth Search)
-# This avoids slow/failing AWS credential lookups for public buckets
+# Planetary Computer TiTiler endpoint for fast tile serving
+PC_TITILER_ENDPOINT = "https://planetarycomputer.microsoft.com/api/data/v1"
+
+# Enable anonymous access for public S3 COG data (fallback)
 if "AWS_NO_SIGN_REQUEST" not in os.environ:
     os.environ["AWS_NO_SIGN_REQUEST"] = "YES"
 
@@ -273,34 +275,45 @@ class VizAgent:
             center_lon = (bbox[0] + bbox[2]) / 2
             m.set_center(center_lon, center_lat, zoom=10)
 
-        # Add raster layers (limit to first item for performance)
+        # Add raster layers using Planetary Computer TiTiler
         for i, item in enumerate(data.items[:1]):
-            if "assets" in item:
-                # Determine best asset to visualize
-                asset_key = self._select_best_asset(item["assets"], plan.intent)
-                if asset_key and asset_key in item["assets"]:
-                    asset_url = item["assets"][asset_key]["href"]
+            item_id = item.get("id", f"Layer {i+1}")
+            collection = item.get("collection", "")
 
-                    # Add layer with appropriate styling
-                    layer_name = f"{item.get('id', f'Layer {i+1}')}"
+            # Skip mock items
+            assets = item.get("assets", {})
+            if not assets or any(
+                v.get("href", "").startswith("mock://")
+                for v in assets.values()
+            ):
+                logger.debug(f"Skipping mock item {item_id}")
+                continue
 
-                    # Skip mock/placeholder URLs
-                    if asset_url.startswith("mock://"):
-                        logger.debug(f"Skipping mock URL for {layer_name}")
-                        continue
-
-                    try:
-                        if "viz" in self.tools:
-                            viz_tool = self.tools["viz"]
-                            viz_tool.add_raster_layer(
-                                m, asset_url, layer_name, plan.intent
-                            )
-                        else:
-                            # Fallback: use MapLibre COG layer for better performance
-                            m.add_cog_layer(asset_url, name=layer_name, fit_bounds=True)
-
-                    except Exception as e:
-                        logger.warning(f"Could not add raster layer {layer_name}: {e}")
+            try:
+                # Use add_stac_layer with PC TiTiler for best performance
+                if MAPLIBRE_AVAILABLE and collection:
+                    viz_assets = self._select_viz_assets(assets, plan.intent)
+                    m.add_stac_layer(
+                        collection=collection,
+                        item=item_id,
+                        assets=viz_assets,
+                        titiler_endpoint="planetary-computer",
+                        name=item_id,
+                        fit_bounds=True,
+                    )
+                else:
+                    # Fallback to COG layer with signed URL
+                    asset_key = self._select_best_asset(assets, plan.intent)
+                    if asset_key and asset_key in assets:
+                        asset_url = assets[asset_key]["href"]
+                        m.add_cog_layer(
+                            asset_url,
+                            name=item_id,
+                            titiler_endpoint=PC_TITILER_ENDPOINT,
+                            fit_bounds=True,
+                        )
+            except Exception as e:
+                logger.warning(f"Could not add raster layer {item_id}: {e}")
 
         # Add title
         title = f"Raster Visualization: {plan.intent}"
@@ -611,6 +624,41 @@ class VizAgent:
         self._add_title_to_map(m, f"Visualization Error: {error_message}")
 
         return m
+
+    def _select_viz_assets(self, assets: Dict[str, Any], intent: str) -> list:
+        """Select asset names for STAC layer visualization.
+
+        Returns a list of asset keys suitable for add_stac_layer.
+
+        Args:
+            assets: Available STAC assets
+            intent: Analysis intent
+
+        Returns:
+            List of asset key strings (e.g., ["visual"] or ["B04", "B03", "B02"])
+        """
+        intent_lower = intent.lower()
+
+        # For imagery/visual requests, prefer true color composite
+        if "visual" in assets:
+            return ["visual"]
+
+        # For NDVI, show NIR-Red false color or just visual
+        if any(term in intent_lower for term in ["ndvi", "vegetation"]):
+            if "nir" in assets and "red" in assets and "green" in assets:
+                return ["nir", "red", "green"]
+            if "B08" in assets and "B04" in assets and "B03" in assets:
+                return ["B08", "B04", "B03"]
+
+        # RGB composite
+        if "red" in assets and "green" in assets and "blue" in assets:
+            return ["red", "green", "blue"]
+        if "B04" in assets and "B03" in assets and "B02" in assets:
+            return ["B04", "B03", "B02"]
+
+        # Fallback to first available data asset
+        best = self._select_best_asset(assets, intent)
+        return [best] if best else []
 
     def _select_best_asset(self, assets: Dict[str, Any], intent: str) -> Optional[str]:
         """Select the best asset for visualization based on intent.
