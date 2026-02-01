@@ -216,12 +216,8 @@ class AnalysisAgent:
                     transformer = Transformer.from_crs(
                         "EPSG:4326", raster_crs, always_xy=True
                     )
-                    x_min, y_min = transformer.transform(
-                        bbox_wgs84[0], bbox_wgs84[1]
-                    )
-                    x_max, y_max = transformer.transform(
-                        bbox_wgs84[2], bbox_wgs84[3]
-                    )
+                    x_min, y_min = transformer.transform(bbox_wgs84[0], bbox_wgs84[1])
+                    x_max, y_max = transformer.transform(bbox_wgs84[2], bbox_wgs84[3])
                     bbox_native = [x_min, y_min, x_max, y_max]
                 else:
                     bbox_native = bbox_wgs84
@@ -279,7 +275,7 @@ class AnalysisAgent:
         logger.info(f"NDVI saved to {ndvi_path}, mean={stats['mean']:.3f}")
 
         # Generate reproducible code
-        code = f'''import os
+        code = f"""import os
 import rasterio
 import numpy as np
 from rasterio.windows import from_bounds
@@ -312,7 +308,7 @@ ndvi = np.where(np.isfinite(ndvi), ndvi, np.nan)
 print(f"NDVI shape: {{ndvi.shape}}")
 print(f"NDVI range: {{np.nanmin(ndvi):.3f}} to {{np.nanmax(ndvi):.3f}}")
 print(f"NDVI mean: {{np.nanmean(ndvi):.3f}}")
-'''
+"""
 
         result_data = {
             "analysis_type": "ndvi",
