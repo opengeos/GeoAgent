@@ -369,6 +369,9 @@ class GeoAgent:
                 data = self.data_agent.search_data(state["plan"])
                 state["data"] = data
 
+                # Generate reproducible search code
+                state["code"] += self._generate_search_code(state["plan"], data)
+
                 logger.debug(
                     f"Data fetched: {data.total_items} items of type {data.data_type}"
                 )
@@ -380,6 +383,62 @@ class GeoAgent:
             logger.error(state["error"])
 
         return state
+
+    def _generate_search_code(self, plan: PlannerOutput, data: Any) -> str:
+        """Generate reproducible Python code for the STAC search.
+
+        Args:
+            plan: Query plan used for the search
+            data: Search results
+
+        Returns:
+            Python code string
+        """
+        bbox = plan.location.get("bbox") if plan.location else None
+        location_name = plan.location.get("name", "") if plan.location else ""
+        time_range = plan.time_range
+        datetime_str = ""
+        if time_range:
+            datetime_str = f"{time_range.get('start_date', '')}/{time_range.get('end_date', '')}"
+
+        # Build collection
+        dataset = plan.dataset
+        dataset_mapping = {
+            "sentinel-2": "sentinel-2-l2a",
+            "sentinel2": "sentinel-2-l2a",
+            "landsat": "landsat-c2-l2",
+        }
+        collection = dataset_mapping.get(dataset, dataset) if dataset else "sentinel-2-l2a"
+
+        # Cloud cover
+        cloud_filter = ""
+        max_cc = plan.parameters.get("max_cloud_cover")
+        if max_cc is not None:
+            cloud_filter = f'\n    query={{"eo:cloud_cover": {{"lt": {max_cc}}}}},'
+
+        code = f'''import planetary_computer
+from pystac_client import Client
+
+# Search Planetary Computer STAC catalog{f" - {location_name}" if location_name else ""}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["{collection}"],
+    bbox={bbox},{f"""
+    datetime="{datetime_str}",""" if datetime_str else ""}{cloud_filter}
+    max_items=10,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} items")
+for item in items:
+    cc = item.properties.get("eo:cloud_cover", "N/A")
+    print(f"  {{item.id}} - cloud cover: {{cc}}%")
+'''
+        return code
 
     def _analyze_node(self, state: AgentState) -> AgentState:
         """Analysis node - perform geospatial analysis on data.
@@ -429,6 +488,9 @@ class GeoAgent:
                 )
                 state["map"] = viz_map
 
+                # Add visualization code
+                state["code"] += self._generate_viz_code(state["plan"], state["data"])
+
                 logger.debug("Map visualization created")
             else:
                 state["error"] = "Missing plan for visualization"
@@ -438,6 +500,54 @@ class GeoAgent:
             logger.error(state["error"])
 
         return state
+
+    def _generate_viz_code(self, plan: PlannerOutput, data: Any) -> str:
+        """Generate reproducible visualization code.
+
+        Args:
+            plan: Query plan
+            data: Data result
+
+        Returns:
+            Python code string for visualization
+        """
+        if not data or not data.items:
+            return ""
+
+        item = data.items[0]
+        item_id = item.get("id", "")
+        collection = item.get("collection", "")
+
+        if not collection:
+            return ""
+
+        # Determine assets
+        assets = item.get("assets", {})
+        if "visual" in assets:
+            assets_str = '"visual"'
+        elif "B04" in assets and "B03" in assets and "B02" in assets:
+            assets_str = '["B04", "B03", "B02"]'
+        elif "red" in assets and "green" in assets and "blue" in assets:
+            assets_str = '["red", "green", "blue"]'
+        else:
+            assets_str = '"visual"'
+
+        code = f'''
+# Visualize on an interactive map
+import leafmap.maplibregl as leafmap
+
+m = leafmap.Map()
+m.add_stac_layer(
+    collection="{collection}",
+    item="{item_id}",
+    assets={assets_str},
+    titiler_endpoint="planetary-computer",
+    name="{item_id}",
+    fit_bounds=True,
+)
+m
+'''
+        return code
 
     def _should_analyze(self, state: AgentState) -> bool:
         """Conditional edge function to determine if analysis is needed.
