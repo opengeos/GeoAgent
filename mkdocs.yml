@@ -94,4 +94,5 @@ nav:
         - LLM: llm.md
         - Catalogs: catalogs.md
         - Tools: tools.md
+        - Web UI: ui.md
 
