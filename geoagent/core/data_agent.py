@@ -16,7 +16,9 @@ class STACSearchWrapper:
     """Wrapper around pystac_client for STAC searches."""
 
     def __init__(self, catalog_url: str = None):
-        self.catalog_url = catalog_url or "https://planetarycomputer.microsoft.com/api/stac/v1"
+        self.catalog_url = (
+            catalog_url or "https://planetarycomputer.microsoft.com/api/stac/v1"
+        )
         self._client = None
 
     @property
@@ -37,9 +39,7 @@ class STACSearchWrapper:
                         "Run: pip install planetary-computer"
                     )
 
-            self._client = Client.open(
-                self.catalog_url, modifier=modifier
-            )
+            self._client = Client.open(self.catalog_url, modifier=modifier)
         return self._client
 
     def search(
