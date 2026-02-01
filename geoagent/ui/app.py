@@ -1,14 +1,13 @@
 """Solara chat UI for GeoAgent.
 
 Features:
-- Persistent map rendered via HTML iframe (works in all Solara environments)
+- Persistent map widget rendered via leafmap's to_solara()
 - Chat interface with status updates
 - Sidebar with provider/model selection
 """
 
 from __future__ import annotations
 
-import base64
 import threading
 from typing import Any, Dict, List, Optional
 
@@ -30,12 +29,31 @@ model: solara.Reactive[str] = solara.reactive("")
 processing: solara.Reactive[bool] = solara.reactive(False)
 status_text: solara.Reactive[str] = solara.reactive("")
 last_code: solara.Reactive[str] = solara.reactive("")
-map_html: solara.Reactive[str] = solara.reactive("")
 
 # Agent — stored outside reactive to persist across renders
 _agent_store: Dict[str, Any] = {"agent": None, "key": None}
 
 PROVIDER_LIST = list(PROVIDERS.keys())
+
+
+# ---------------------------------------------------------------------------
+# Map state
+# ---------------------------------------------------------------------------
+
+# The current map instance; replaced after each successful query
+_map_store: Dict[str, Any] = {"map": None}
+# Bump this counter to force MapPanel re-render after a new map is set
+map_version: solara.Reactive[int] = solara.reactive(0)
+
+
+def _create_default_map() -> MapLibreMap:
+    """Create the default basemap."""
+    return MapLibreMap(
+        center=[0, 20],
+        zoom=2,
+        height="100%",
+        style="dark-matter",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -54,27 +72,6 @@ def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:
         _agent_store["agent"] = GeoAgent(llm=llm, provider=prov, model=mdl)
         _agent_store["key"] = key
     return _agent_store["agent"]
-
-
-def _create_default_map_html() -> str:
-    """Create the default empty map HTML."""
-    m = MapLibreMap(
-        center=[0, 20],
-        zoom=2,
-        height="100%",
-        style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-    )
-    return m.to_html(title="GeoAgent Map", width="100%", height="100%")
-
-
-def _map_to_html(m: Optional[MapLibreMap]) -> str:
-    """Convert a leafmap Map to HTML string."""
-    if m is None:
-        return ""
-    try:
-        return m.to_html(title="GeoAgent Map", width="100%", height="100%")
-    except Exception:
-        return ""
 
 
 def _run_query(query: str):
@@ -115,12 +112,11 @@ def _run_query(query: str):
 
         messages.value = [*messages.value, {"role": "assistant", "content": text}]
 
-        # Update map HTML from result
+        # Update map from result
         if result.map is not None:
             status_text.value = "🗺️ Rendering map…"
-            html = _map_to_html(result.map)
-            if html:
-                map_html.value = html
+            _map_store["map"] = result.map
+            map_version.value += 1
 
         # Store code
         code = result.code or ""
@@ -213,22 +209,17 @@ def ChatPanel():
 def MapPanel():
     show_code, set_show_code = solara.use_state(False)
 
-    # Initialize default map on first render
-    if not map_html.value:
-        map_html.value = _create_default_map_html()
+    # Read map_version to trigger re-render when map changes
+    _ = map_version.value
 
     with solara.Column(style={"height": "100%"}):
         solara.Markdown("### 🗺️ Map")
 
-        # Render map as HTML iframe using base64 data URI
-        if map_html.value:
-            b64 = base64.b64encode(map_html.value.encode("utf-8")).decode("ascii")
-            iframe = (
-                f'<iframe src="data:text/html;base64,{b64}" '
-                f'style="width:100%;height:600px;border:none;border-radius:8px;">'
-                f"</iframe>"
-            )
-            solara.HTML(tag="div", unsafe_innerHTML=iframe)
+        # Get current map (result map or default)
+        m = _map_store.get("map")
+        if m is None:
+            m = _create_default_map()
+        m.to_solara()
 
         if last_code.value:
             solara.Button(
@@ -264,7 +255,8 @@ def Sidebar():
         messages.value = []
         last_code.value = ""
         status_text.value = ""
-        map_html.value = _create_default_map_html()
+        _map_store["map"] = None
+        map_version.value += 1
 
     solara.Button(
         "New Chat",
