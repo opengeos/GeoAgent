@@ -1,15 +1,15 @@
 """Streamlit chat UI for GeoAgent.
 
 Features:
-- Clean chat interface using st.chat_input / st.chat_message
-- Sidebar with provider selector, model input, and New Chat button
-- Assistant responses show summary text, interactive map, generated code
-- Data summary line with items found and execution time
-- Uses st.session_state to persist chat history and agent instance
+- Chat interface with progress status indicators
+- Sidebar with provider/model selection (model updates with provider)
+- Single map panel for the latest result (not per-message)
+- Expandable generated code section
 """
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
@@ -22,179 +22,209 @@ from geoagent.core.models import GeoAgentResponse
 
 PAGE_TITLE = "GeoAgent"
 PAGE_ICON = "🌍"
-MAP_HEIGHT_PX = 500
+MAP_HEIGHT_PX = 600
 
 
-def _default_model(provider: str) -> str:
-    provider = (provider or "openai").lower()
-    if provider in PROVIDERS:
-        return PROVIDERS[provider]["default_model"]
-    return "gpt-4.1"
-
+# ---------------------------------------------------------------------------
+# Session state helpers
+# ---------------------------------------------------------------------------
 
 def _ensure_state():
-    if "messages" not in st.session_state:
-        st.session_state.messages: List[Dict[str, Any]] = []
-    if "provider" not in st.session_state:
-        st.session_state.provider = "openai"
-    if "model" not in st.session_state:
-        st.session_state.model = _default_model(st.session_state.provider)
-    if "agent" not in st.session_state:
-        st.session_state.agent = None
-    if "_agent_key" not in st.session_state:
-        st.session_state._agent_key = None
+    defaults = {
+        "messages": [],
+        "agent": None,
+        "_agent_key": None,
+        "_prev_provider": None,
+        "last_map_html": None,
+        "last_code": None,
+        "last_summary": None,
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
 
 
 def _make_agent(provider: str, model: str) -> GeoAgent:
-    # Create specific LLM for explicit provider/model, then wrap in GeoAgent
     llm = get_llm(provider=provider, model=model)
     return GeoAgent(llm=llm, provider=provider, model=model)
 
 
-def _maybe_recreate_agent(provider: str, model: str):
-    key = f"{provider}:{model}"
-    if st.session_state._agent_key != key or st.session_state.agent is None:
-        st.session_state.agent = _make_agent(provider, model)
-        st.session_state._agent_key = key
-
+# ---------------------------------------------------------------------------
+# Sidebar
+# ---------------------------------------------------------------------------
 
 def _sidebar():
     st.sidebar.markdown("### Settings")
 
-    provider = st.sidebar.selectbox(
-        "Provider",
-        options=list(PROVIDERS.keys()),
-        index=(
-            list(PROVIDERS.keys()).index(st.session_state.provider)
-            if st.session_state.provider in PROVIDERS
-            else 0
-        ),
-        key="provider",
-    )
+    provider_list = list(PROVIDERS.keys())
+    provider = st.sidebar.selectbox("Provider", options=provider_list, key="provider")
 
-    # Suggest default model when provider changes, but allow custom text
-    suggested = _default_model(provider)
+    # Reset model when provider changes
+    if st.session_state._prev_provider != provider:
+        st.session_state._prev_provider = provider
+        st.session_state["_model_input"] = PROVIDERS[provider]["default_model"]
+
+    default_model = PROVIDERS.get(provider, {}).get("default_model", "")
     model = st.sidebar.text_input(
         "Model",
-        value=st.session_state.model or suggested,
-        placeholder=suggested,
-        key="model",
+        value=st.session_state.get("_model_input", default_model),
+        key="_model_input",
     )
 
-    col1, col2 = st.sidebar.columns([1, 1])
-    with col1:
-        if st.button("New Chat", use_container_width=True):
-            st.session_state.messages = []
-
-    with col2:
-        st.write("")
+    if st.sidebar.button("New Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.last_map_html = None
+        st.session_state.last_code = None
+        st.session_state.last_summary = None
+        st.rerun()
 
     # Recreate agent when provider/model change
-    try:
-        _maybe_recreate_agent(provider, model)
-    except Exception as e:
-        st.sidebar.error(f"Failed to initialize agent: {e}")
+    agent_key = f"{provider}:{model}"
+    if st.session_state._agent_key != agent_key or st.session_state.agent is None:
+        try:
+            with st.sidebar:
+                with st.spinner("Initializing agent…"):
+                    st.session_state.agent = _make_agent(provider, model)
+                    st.session_state._agent_key = agent_key
+        except Exception as e:
+            st.sidebar.error(f"Failed to initialize agent: {e}")
+
+    return provider, model
 
 
-def _render_assistant_block(result: GeoAgentResponse):
-    # Summary text
-    if result.success:
-        items = (result.data.total_items if result.data else 0) or 0
-        intent = getattr(result.plan, "intent", "").strip() if result.plan else ""
-        dataset = getattr(result.plan, "dataset", "") if result.plan else ""
-        loc = ""
-        if result.plan and getattr(result.plan, "location", None):
-            loc_field = result.plan.location
-            name = loc_field.get("name") if isinstance(loc_field, dict) else None
-            loc = f" • {name}" if name else ""
-        st.write(f"Intent: {intent or 'analysis'} • Dataset: {dataset or 'auto'}{loc}")
-    else:
-        st.error(result.error_message or "An error occurred.")
+# ---------------------------------------------------------------------------
+# Rendering helpers
+# ---------------------------------------------------------------------------
 
-    # Map (if available)
-    try:
-        if result.map is not None and hasattr(result.map, "to_html"):
-            map_html = result.map.to_html()
-            st_html(map_html, height=MAP_HEIGHT_PX)
-    except Exception as e:
-        st.warning(f"Map rendering failed: {e}")
-
-    # Data summary line
-    try:
-        items = (result.data.total_items if result.data else 0) or 0
-    except Exception:
-        items = 0
-    exec_time = result.execution_time or 0.0
-    st.caption(f"Items: {items} • Time: {exec_time:.2f}s")
-
-    # Generated code
-    code_text = result.code or (
-        result.analysis.code_generated
-        if result.analysis and getattr(result.analysis, "code_generated", None)
-        else ""
-    )
-    if code_text:
-        with st.expander("Generated Code", expanded=False):
-            st.code(code_text, language="python")
-
-
-def _render_history():
+def _render_chat_history():
+    """Render chat messages — text only, no maps in history."""
     for msg in st.session_state.messages:
-        role = msg.get("role", "assistant")
+        role = msg["role"]
         with st.chat_message(role):
             if role == "user":
-                st.write(msg.get("content", ""))
+                st.write(msg["content"])
             else:
-                # Assistant message contains result and maybe text
-                text = msg.get("content")
+                text = msg.get("content", "")
                 if text:
                     st.write(text)
-                result: Optional[GeoAgentResponse] = msg.get("result")
-                if isinstance(result, GeoAgentResponse):
-                    _render_assistant_block(result)
 
+
+def _build_summary(result: GeoAgentResponse) -> str:
+    """Build a one-line text summary of a result."""
+    if not result.success:
+        return f"❌ {result.error_message or 'An error occurred.'}"
+
+    parts = []
+    if result.plan:
+        intent = getattr(result.plan, "intent", "")
+        if intent:
+            parts.append(intent)
+        dataset = getattr(result.plan, "dataset", "")
+        if dataset:
+            parts.append(dataset)
+        loc = getattr(result.plan, "location", None)
+        if isinstance(loc, dict) and loc.get("name"):
+            parts.append(loc["name"])
+
+    items = result.data.total_items if result.data else 0
+    t = f"{result.execution_time:.1f}s" if result.execution_time else ""
+    meta = f"{items} items" + (f" • {t}" if t else "")
+
+    summary = " • ".join(parts) if parts else "Done"
+    return f"✅ {summary} ({meta})"
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 def main():
     st.set_page_config(layout="wide", page_title=PAGE_TITLE, page_icon=PAGE_ICON)
-    st.title(PAGE_TITLE)
-
     _ensure_state()
-    _sidebar()
+    provider, model = _sidebar()
 
-    # Render prior messages
-    _render_history()
+    # --- Layout: chat (left) | map (right) ---
+    chat_col, map_col = st.columns([1, 1])
 
-    # Chat input
-    prompt = st.chat_input("Ask GeoAgent about geospatial data…")
-    if prompt:
-        # Show user message immediately
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.write(prompt)
+    with chat_col:
+        st.markdown(f"### 💬 Chat")
+        _render_chat_history()
 
-        # Assistant response
-        with st.chat_message("assistant"):
-            try:
+        prompt = st.chat_input("Ask about geospatial data…")
+        if prompt:
+            # Append and display user message
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
+
+            # Process with progress
+            with st.chat_message("assistant"):
                 agent: GeoAgent = st.session_state.agent
                 if agent is None:
-                    raise RuntimeError("Agent is not initialized.")
+                    st.error("Agent is not initialized. Check provider settings.")
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": "❌ Agent not initialized."}
+                    )
+                else:
+                    with st.status("Processing query…", expanded=True) as status:
+                        st.write("🔍 Parsing query and planning…")
+                        try:
+                            result = agent.chat(prompt)
+                        except Exception as e:
+                            result = None
+                            error_text = f"❌ Error: {e}"
+                            st.error(error_text)
+                            st.session_state.messages.append(
+                                {"role": "assistant", "content": error_text}
+                            )
+                            status.update(label="Failed", state="error")
 
-                result = agent.chat(prompt)
+                        if result is not None:
+                            # Update progress
+                            if result.success:
+                                st.write("📊 Data retrieved. Rendering map…")
+                                status.update(
+                                    label=f"Done in {result.execution_time:.1f}s",
+                                    state="complete",
+                                    expanded=False,
+                                )
+                            else:
+                                status.update(label="Completed with errors", state="error")
 
-                # Append assistant message to history with the result
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": "", "result": result}
-                )
+                            summary = _build_summary(result)
+                            st.write(summary)
+                            st.session_state.messages.append(
+                                {"role": "assistant", "content": summary}
+                            )
 
-                # Render now
-                _render_assistant_block(result)
+                            # Cache latest map/code for right panel
+                            try:
+                                if result.map is not None and hasattr(result.map, "to_html"):
+                                    st.session_state.last_map_html = result.map.to_html()
+                                else:
+                                    st.session_state.last_map_html = None
+                            except Exception:
+                                st.session_state.last_map_html = None
 
-            except Exception as e:
-                error_text = f"Error: {e}"
-                st.error(error_text)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": error_text}
-                )
+                            code = result.code or (
+                                result.analysis.code_generated
+                                if result.analysis and getattr(result.analysis, "code_generated", None)
+                                else ""
+                            )
+                            st.session_state.last_code = code or None
+                            st.session_state.last_summary = summary
+
+    # --- Right panel: latest map + code ---
+    with map_col:
+        st.markdown("### 🗺️ Map")
+        if st.session_state.last_map_html:
+            st_html(st.session_state.last_map_html, height=MAP_HEIGHT_PX)
+        else:
+            st.info("Run a query to see results here.")
+
+        if st.session_state.last_code:
+            with st.expander("Generated Code", expanded=False):
+                st.code(st.session_state.last_code, language="python")
 
 
 if __name__ == "__main__":
