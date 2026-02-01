@@ -1,4 +1,5 @@
-
 # geoagent module
 
-::: geoagent.geoagent
+::: geoagent.core.agent
+
+::: geoagent.core.models

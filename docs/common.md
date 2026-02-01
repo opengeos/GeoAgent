@@ -1,3 +1,0 @@
-# common module
-
-::: geoagent.common
