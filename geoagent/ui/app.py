@@ -142,7 +142,11 @@ def _run_query(query: str):
 
         # Store code
         code = result.code or ""
-        if not code and result.analysis and getattr(result.analysis, "code_generated", None):
+        if (
+            not code
+            and result.analysis
+            and getattr(result.analysis, "code_generated", None)
+        ):
             code = result.analysis.code_generated
         last_code.value = code
 
@@ -169,7 +173,9 @@ def ChatMessage(msg: Dict[str, str]):
     icon = "mdi-account" if role == "user" else "mdi-earth"
     color = "primary" if role == "user" else "success"
     with solara.Row(style={"margin": "4px 0"}):
-        solara.v.Icon(children=[icon], color=color, style_="margin-right: 8px; margin-top: 4px;")
+        solara.v.Icon(
+            children=[icon], color=color, style_="margin-right: 8px; margin-top: 4px;"
+        )
         solara.Markdown(msg["content"])
 
 
