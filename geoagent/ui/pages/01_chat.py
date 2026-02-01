@@ -140,10 +140,15 @@ def Page():
     show_code, set_show_code = solara.use_state(False)
 
     # use_task runs in a thread with proper Solara context for widget updates
+    current_query = pending_query.value
+
+    def _do_query():
+        if current_query:
+            return run_agent_query(current_query)
+
     task = solara.lab.use_task(
-        run_agent_query,
-        args=[pending_query.value],
-        dependencies=[pending_query.value],
+        _do_query,
+        dependencies=[current_query],
         prefer_threaded=True,
     )
 
