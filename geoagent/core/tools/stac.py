@@ -99,6 +99,7 @@ def search_stac(
         if not client:
             # Fallback to creating client directly with URL if registry not available
             from geoagent.catalogs.registry import get_registry
+
             try:
                 registry = get_registry()
                 client = registry.get_client(catalog)
@@ -221,6 +222,7 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
         if not client:
             # Fallback to creating client via registry
             from geoagent.catalogs.registry import get_registry
+
             try:
                 registry = get_registry()
                 client = registry.get_client(catalog)

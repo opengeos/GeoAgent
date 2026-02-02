@@ -858,7 +858,7 @@ m
         location = self._extract_location(query)
         time_range = self._extract_time_range(query_lower)
 
-        # NOTE: Hardcoded dataset mappings removed. Let the data agent search 
+        # NOTE: Hardcoded dataset mappings removed. Let the data agent search
         # across available catalogs when no specific dataset is identified.
         dataset = None
         analysis_type = None

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # Comprehensive mapping from query keywords/topics to Planetary Computer
 # collection IDs.  Used by the Planner as a fallback when the LLM does not
 # set a dataset explicitly.
-# NOTE: COLLECTION_MAPPING has been removed. Collections are now dynamically 
+# NOTE: COLLECTION_MAPPING has been removed. Collections are now dynamically
 # fetched from STAC catalogs via CatalogRegistry.get_collection_index().
 
 
