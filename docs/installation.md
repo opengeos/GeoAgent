@@ -8,6 +8,12 @@ To install GeoAgent, run this command in your terminal:
 pip install geoagent
 ```
 
+Or install from conda-forge:
+
+```bash
+conda install -c conda-forge geoagent
+```
+
 This installs the core package with OpenAI support.
 
 ## Optional Dependencies
