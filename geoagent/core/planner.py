@@ -98,6 +98,84 @@ COLLECTION_MAPPING: Dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# GEE routing – keywords and dataset IDs that trigger the GEE data source
+# ---------------------------------------------------------------------------
+GEE_KEYWORDS = {
+    "earth engine",
+    "gee",
+    "google earth engine",
+    "geemap",
+    "dynamic world",
+    "srtm",
+    "worldcover",
+    "esa worldcover",
+    "nlcd",
+    "chirps",
+    "era5",
+    "gridmet",
+    "sentinel-5p",
+    "sentinel 5p",
+    "s5p",
+    "no2",
+    "air quality",
+    "air pollution",
+    "worldpop",
+    "population density",
+    "google buildings",
+    "open buildings",
+}
+
+GEE_ONLY_DATASETS = {
+    "dynamic-world",
+    "srtm",
+    "esa-worldcover",
+    "nlcd",
+    "chirps-rainfall",
+    "era5",
+    "era5-land",
+    "era5-temperature",
+    "sentinel-5p-no2",
+    "sentinel-5p-co",
+    "worldpop",
+    "ghsl-population",
+    "google-buildings",
+    "gridmet",
+    "modis-burned",
+    "modis-landcover",
+    "dmsp-nightlights",
+}
+
+
+def _detect_data_source(query: str, dataset: Optional[str] = None) -> Optional[str]:
+    """Detect the appropriate data source from the query text.
+
+    Returns ``"gee"`` when the query contains GEE-specific keywords or
+    references a GEE-only dataset, ``"stac"`` when STAC is explicitly
+    mentioned, or ``None`` to let the caller decide.
+    """
+    query_lower = query.lower()
+
+    # Explicit STAC mentions
+    if "planetary computer" in query_lower or "stac" in query_lower:
+        return "stac"
+
+    # Check GEE keywords in query
+    for kw in GEE_KEYWORDS:
+        if kw in query_lower:
+            return "gee"
+
+    # Check if dataset is GEE-only
+    if dataset and dataset.lower() in GEE_ONLY_DATASETS:
+        return "gee"
+
+    # GEE collection IDs contain slashes (e.g. "COPERNICUS/S2_SR_HARMONIZED")
+    if dataset and "/" in dataset:
+        return "gee"
+
+    return None
+
+
 class _PlannerLLMSchema(BaseModel):
     """Internal schema for LLM structured output parsing.
 
@@ -127,6 +205,17 @@ class _PlannerLLMSchema(BaseModel):
     )
     max_items: Optional[int] = Field(
         default=None, description="Maximum number of items to return"
+    )
+    data_source: Optional[str] = Field(
+        default=None,
+        description=(
+            "Data source: 'gee' for Google Earth Engine, 'stac' for "
+            "STAC/Planetary Computer. Use 'gee' when the user mentions "
+            "Earth Engine, GEE, geemap, Dynamic World, SRTM, CHIRPS, ERA5, "
+            "Sentinel-5P, air quality, or datasets only available in GEE. "
+            "Default to 'stac' for standard satellite imagery unless GEE is "
+            "explicitly requested or the dataset is GEE-specific."
+        ),
     )
 
 
@@ -397,6 +486,15 @@ Output: {{
     "intent": "explain"
 }}
 
+Data source selection (data_source field):
+- Use "gee" when the user mentions Google Earth Engine, GEE, geemap, or
+  requests datasets that are only available in GEE (Dynamic World, SRTM,
+  CHIRPS, ERA5, Sentinel-5P, NLCD, WorldPop, ESA WorldCover, GRIDMET,
+  Google Buildings, air quality / NO2).
+- Use "stac" when the user explicitly mentions Planetary Computer, STAC,
+  or standard satellite imagery from the catalog above.
+- Leave as None to let automatic detection decide.
+
 Extract information accurately and conservatively. If something is unclear, leave it as None rather than guessing."""
 
 
@@ -513,6 +611,11 @@ class Planner:
                 result.analysis_type,
             )
 
+        # Determine data source: LLM hint → keyword detection → None
+        data_source = result.data_source
+        if not data_source:
+            data_source = _detect_data_source(result.intent.value, dataset)
+
         return PlannerOutput(
             intent=result.intent.value,
             location=location,
@@ -520,6 +623,7 @@ class Planner:
             dataset=dataset,
             analysis_type=result.analysis_type,
             parameters=parameters,
+            data_source=data_source,
             confidence=1.0,
         )
 
@@ -543,7 +647,11 @@ class Planner:
             try:
                 result = chain.invoke({"query": query})
                 if isinstance(result, _PlannerLLMSchema):
-                    return self._convert_to_planner_output(result)
+                    output = self._convert_to_planner_output(result)
+                    # Final keyword-level data_source detection on raw query
+                    if not output.data_source:
+                        output.data_source = _detect_data_source(query, output.dataset)
+                    return output
             except Exception as e:
                 last_err = e
                 logger.debug(f"Structured output attempt failed: {e}")

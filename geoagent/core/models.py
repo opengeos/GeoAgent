@@ -46,6 +46,13 @@ class PlannerOutput(BaseModel):
     parameters: Dict[str, Any] = Field(
         default_factory=dict, description="Additional analysis parameters"
     )
+    data_source: Optional[str] = Field(
+        default=None,
+        description=(
+            "Data source to use: 'stac' for STAC/Planetary Computer, "
+            "'gee' for Google Earth Engine. Auto-detected if None."
+        ),
+    )
     confidence: float = Field(
         default=1.0, description="Confidence score of the parsing (0-1)"
     )

@@ -31,6 +31,7 @@ from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402
 from .planner import Planner  # noqa: E402
 from .context_agent import ContextAgent  # noqa: E402
+from .gee_agent import GEEAgent  # noqa: E402
 from .llm import get_default_llm  # noqa: E402
 from geoagent.catalogs.registry import get_collection_index  # noqa: E402
 
@@ -91,6 +92,7 @@ class GeoAgent:
         self.analysis_agent = AnalysisAgent(self.llm)
         self.viz_agent = VizAgent(self.llm)
         self.context_agent = ContextAgent(self.llm)
+        self.gee_agent = GEEAgent()
 
         # Initialize workflow graph
         self.workflow = self._create_workflow()
@@ -532,11 +534,17 @@ class GeoAgent:
 
         try:
             if state["plan"]:
-                data = self.data_agent.search_data(state["plan"])
-                state["data"] = data
+                plan = state["plan"]
+                use_gee = plan.data_source == "gee" and self.gee_agent.available
 
-                # Generate reproducible search code
-                state["code"] += self._generate_search_code(state["plan"], data)
+                if use_gee:
+                    data = self.gee_agent.search_data(plan)
+                    state["data"] = data
+                    state["code"] += self.gee_agent.generate_code(plan, data)
+                else:
+                    data = self.data_agent.search_data(plan)
+                    state["data"] = data
+                    state["code"] += self._generate_search_code(plan, data)
 
                 logger.debug(
                     f"Data fetched: {data.total_items} items of type {data.data_type}"
@@ -669,16 +677,28 @@ for item in items:
 
         try:
             if state["plan"]:
-                viz_map = self.viz_agent.create_visualization(
-                    state["plan"],
-                    state["data"],
-                    state["analysis"],
-                    target_map=getattr(self, "_target_map", None),
-                )
-                state["map"] = viz_map
+                data = state["data"]
+                is_gee = data is not None and data.data_type == "gee"
 
-                # Add visualization code
-                state["code"] += self._generate_viz_code(state["plan"], state["data"])
+                if is_gee:
+                    viz_map = self.gee_agent.create_visualization(
+                        state["plan"],
+                        data,
+                        target_map=getattr(self, "_target_map", None),
+                    )
+                    state["map"] = viz_map
+                    # GEE code was already added in _fetch_data_node
+                else:
+                    viz_map = self.viz_agent.create_visualization(
+                        state["plan"],
+                        state["data"],
+                        state["analysis"],
+                        target_map=getattr(self, "_target_map", None),
+                    )
+                    state["map"] = viz_map
+                    state["code"] += self._generate_viz_code(
+                        state["plan"], state["data"]
+                    )
 
                 logger.debug("Map visualization created")
             else:
