@@ -1,6 +1,12 @@
 # GeoAgent
 
+[![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/opengeos/leafmap/blob/master)
+[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/opengeos/GeoAgent/HEAD)
 [![image](https://img.shields.io/pypi/v/geoagent.svg)](https://pypi.python.org/pypi/geoagent)
+[![image](https://static.pepy.tech/badge/geoagent)](https://pepy.tech/project/geoagent)
+[![Conda Recipe](https://img.shields.io/badge/recipe-geoagent-green.svg)](https://github.com/conda-forge/geoagent-feedstock)
+[![image](https://img.shields.io/conda/vn/conda-forge/geoagent.svg)](https://anaconda.org/conda-forge/geoagent)
+[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/geoagent.svg)](https://anaconda.org/conda-forge/geoagent)
 [![image](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An AI agent for geospatial data analysis and visualization.
@@ -39,12 +45,12 @@ GeoAgent supports multiple LLM providers. You need at least one configured to us
 
 ### Supported Providers
 
-| Provider | Default Model | API Key Env Variable | Install Extra |
-|----------|--------------|---------------------|---------------|
-| OpenAI | `gpt-4.1` | `OPENAI_API_KEY` | *(included)* |
-| Anthropic | `claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY` | `pip install "geoagent[llm]"` |
-| Google Gemini | `gemini-2.5-flash` | `GOOGLE_API_KEY` | `pip install "geoagent[llm]"` |
-| Ollama (local) | `llama3.1` | *(none needed)* | `pip install "geoagent[ollama]"` |
+| Provider       | Default Model                | API Key Env Variable | Install Extra                    |
+| -------------- | ---------------------------- | -------------------- | -------------------------------- |
+| OpenAI         | `gpt-4.1`                    | `OPENAI_API_KEY`     | *(included)*                     |
+| Anthropic      | `claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY`  | `pip install "geoagent[llm]"`    |
+| Google Gemini  | `gemini-2.5-flash`           | `GOOGLE_API_KEY`     | `pip install "geoagent[llm]"`    |
+| Ollama (local) | `llama3.1`                   | *(none needed)*      | `pip install "geoagent[ollama]"` |
 
 ### Setting API Keys
 
