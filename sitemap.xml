@@ -2,70 +2,70 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://geoagent.gishub.org/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/analysis_agent/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/catalogs/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/contributing/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/data_agent/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/geoagent/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/installation/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/llm/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/models/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/planner/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/tools/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/ui/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/usage/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/viz_agent/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/examples/intro/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/examples/maplibre_viz/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
     <url>
          <loc>https://geoagent.gishub.org/examples/stac_search/</loc>
-         <lastmod>2026-02-01</lastmod>
+         <lastmod>2026-02-02</lastmod>
     </url>
 </urlset>
