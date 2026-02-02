@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 import pystac_client
 
-
 logger = logging.getLogger(__name__)
 
 
