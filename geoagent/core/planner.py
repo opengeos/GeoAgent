@@ -139,8 +139,15 @@ Intent mapping:
 - ANALYZE: Computing indices, statistics, or performing analysis on data
 - VISUALIZE: Creating maps, plots, or visual representations
 - COMPARE: Comparing different time periods, locations, or datasets
-- EXPLAIN: Answering contextual earth science questions, explaining phenomena, disaster impacts
+- EXPLAIN: Answering ANY question that asks for information or explanation rather than data retrieval/visualization. This includes earth science questions, general knowledge, greetings, coding questions, definitions, how-things-work, opinions, etc.
 - MONITOR: Tracking ongoing events like wildfires, floods, deforestation over time
+
+IMPORTANT — choosing between EXPLAIN and data intents:
+- If the user is asking a QUESTION (what, why, how, explain, describe, tell me about, etc.) → EXPLAIN
+- If the user wants to SEE, SHOW, MAP, FIND, COMPUTE, DISPLAY, or DOWNLOAD actual data → SEARCH/ANALYZE/VISUALIZE/COMPARE
+- Conversational messages (greetings, jokes, general chat) → EXPLAIN
+- "What is NDVI?" → EXPLAIN (asking for information)
+- "Show NDVI for California" → ANALYZE (requesting data computation)
 
 Location can be:
 - Named places: "California", "Amazon rainforest", "Lagos Nigeria"
@@ -346,6 +353,48 @@ Query: "Explain how NDVI is used to monitor drought"
 Output: {{
     "intent": "explain",
     "analysis_type": "ndvi"
+}}
+
+Query: "What is NDVI?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "How do satellites capture images of Earth?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "What is climate change?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "Tell me a joke"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "What is Python?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "Hello, what can you do?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "How was NYC impacted by Hurricane Sandy?"
+Output: {{
+    "intent": "explain",
+    "location": "New York City",
+    "analysis_type": "event_impact"
+}}
+
+Query: "What datasets are available for monitoring deforestation?"
+Output: {{
+    "intent": "explain"
 }}
 
 Extract information accurately and conservatively. If something is unclear, leave it as None rather than guessing."""

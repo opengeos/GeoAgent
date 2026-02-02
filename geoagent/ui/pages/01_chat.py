@@ -102,22 +102,29 @@ def _run_query(query: str, target_map, status_callback=None) -> str:
         )
 
         if result.success:
-            items = result.data.total_items if result.data else 0
-            parts = []
-            if result.plan:
-                intent = getattr(result.plan, "intent", "")
-                dataset = getattr(result.plan, "dataset", "")
-                loc = getattr(result.plan, "location", None)
-                if intent:
-                    parts.append(intent)
-                if dataset:
-                    parts.append(dataset)
-                if isinstance(loc, dict) and loc.get("name"):
-                    parts.append(loc["name"])
-            t = f"{result.execution_time:.1f}s" if result.execution_time else ""
-            meta = f"{items} items" + (f" • {t}" if t else "")
-            summary = " • ".join(parts) if parts else "Done"
-            text = f"✅ {summary} ({meta})"
+            # If the response contains a plain-text answer (EXPLAIN /
+            # conversational query), show that directly instead of the
+            # data-pipeline summary.
+            answer = getattr(result, "answer_text", None)
+            if answer:
+                text = answer
+            else:
+                items = result.data.total_items if result.data else 0
+                parts = []
+                if result.plan:
+                    intent = getattr(result.plan, "intent", "")
+                    dataset = getattr(result.plan, "dataset", "")
+                    loc = getattr(result.plan, "location", None)
+                    if intent:
+                        parts.append(intent)
+                    if dataset:
+                        parts.append(dataset)
+                    if isinstance(loc, dict) and loc.get("name"):
+                        parts.append(loc["name"])
+                t = f"{result.execution_time:.1f}s" if result.execution_time else ""
+                meta = f"{items} items" + (f" • {t}" if t else "")
+                summary = " • ".join(parts) if parts else "Done"
+                text = f"✅ {summary} ({meta})"
 
             # Store code
             code = result.code or ""

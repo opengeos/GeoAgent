@@ -1,6 +1,13 @@
-"""Context Agent for answering earth science questions using LLM knowledge."""
+"""Context Agent for answering general and earth-science questions via LLM.
 
-from typing import Any, Optional
+The ContextAgent is the conversational backbone of GeoAgent.  Any query that
+asks for *information or explanation* rather than *data retrieval or
+visualization* is routed here.  It can answer questions about anything —
+earth science, programming, history, etc. — while naturally weaving in
+geospatial context when relevant.
+"""
+
+from typing import Any, Dict, Optional
 import logging
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,26 +16,25 @@ from .models import PlannerOutput, DataResult, AnalysisResult
 
 logger = logging.getLogger(__name__)
 
-CONTEXT_SYSTEM_PROMPT = """You are an expert earth scientist and geospatial analyst.
-Answer questions about earth science, natural disasters, climate, and environmental
-phenomena.
+CONTEXT_SYSTEM_PROMPT = """You are GeoAgent, an AI-powered geospatial assistant. \
+You can answer any question, but you specialize in earth science, geospatial \
+analysis, and environmental topics.
 
-When answering:
-1. Provide accurate, scientific information
-2. Reference specific datasets, satellites, or data sources when relevant
-3. Mention time periods and locations specifically
-4. Suggest data that could be visualized to support the answer
-5. Be concise but thorough
+For earth science and geospatial questions:
+- Provide accurate, scientific information
+- Reference specific datasets, satellites, or data sources when relevant
+- Mention time periods and locations
+- Suggest data visualizations when appropriate
 
-Format your response with:
-- A brief summary (2-3 sentences)
-- Key findings or facts (bullet points)
-- Relevant data sources for visualization
-- Recommendations for further analysis"""
+For general questions:
+- Answer helpfully and accurately
+- If the question could benefit from geospatial data, mention that capability
+
+Keep responses concise, clear, and informative."""
 
 
 class ContextAgent:
-    """Agent for answering contextual earth science questions."""
+    """Agent for answering general and contextual questions via LLM."""
 
     def __init__(self, llm: Any):
         """Initialize the Context Agent.
@@ -46,43 +52,52 @@ class ContextAgent:
         self,
         plan: PlannerOutput,
         data: Optional[DataResult] = None,
+        *,
+        query: Optional[str] = None,
     ) -> AnalysisResult:
-        """Answer a contextual earth-science question.
+        """Answer a question using LLM knowledge.
 
         Args:
-            plan: The planner output containing the user's intent and context.
+            plan: The planner output containing parsed intent and context.
             data: Optional data result that may provide supporting information.
+            query: The original user query.  When supplied this is sent to the
+                LLM verbatim (with optional location / time enrichment).
+                Falls back to ``plan.intent`` for backward compatibility.
 
         Returns:
-            An :class:`AnalysisResult` with the generated answer text and
-            optional visualization hints.
+            An :class:`AnalysisResult` whose ``result_data["answer"]``
+            contains the generated answer text.
         """
         try:
-            query = plan.intent
+            # Prefer the original query so the LLM sees the full question
+            # rather than the single-word intent label ("explain").
+            prompt_query = query or plan.intent
+
+            # Enrich with location / time when available
             if plan.location:
                 loc_name = plan.location.get("name", "")
                 if loc_name:
-                    query += f" (Location: {loc_name})"
+                    prompt_query += f" (Location: {loc_name})"
             if plan.time_range:
                 start = plan.time_range.get("start_date", "")
                 end = plan.time_range.get("end_date", "")
                 if start and end:
-                    query += f" (Time period: {start} to {end})"
+                    prompt_query += f" (Time period: {start} to {end})"
 
-            response = self.chain.invoke({"query": query})
+            response = self.chain.invoke({"query": prompt_query})
             answer_text = (
                 response.content if hasattr(response, "content") else str(response)
             )
 
-            viz_hints: dict[str, Any] = {}
+            viz_hints: Dict[str, Any] = {}
             if data and data.total_items > 0:
                 viz_hints = {
                     "type": "contextual",
                     "show_data": True,
-                    "title": f"Context: {plan.intent[:50]}...",
+                    "title": f"Context: {prompt_query[:50]}...",
                 }
 
-            result_data = {
+            result_data: Dict[str, Any] = {
                 "analysis_type": "contextual",
                 "answer": answer_text,
                 "has_supporting_data": data is not None and data.total_items > 0,
@@ -90,10 +105,12 @@ class ContextAgent:
                 "time_range": plan.time_range,
             }
 
+            # Escape triple-quotes inside the answer for safe embedding
+            safe_answer = answer_text.replace('"""', r"\"\"\"")
             code = (
-                f"# Contextual Earth Science Analysis\n"
-                f"# Query: {plan.intent}\n"
-                f'answer = """{answer_text}"""\n'
+                f"# GeoAgent contextual answer\n"
+                f"# Query: {prompt_query}\n"
+                f'answer = """{safe_answer}"""\n'
                 f"print(answer)\n"
             )
 
