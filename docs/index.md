@@ -1,6 +1,6 @@
 # GeoAgent
 
-[![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/opengeos/leafmap/blob/master)
+[![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/opengeos/GeoAgent/blob/main)
 [![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/opengeos/GeoAgent/HEAD)
 [![image](https://img.shields.io/pypi/v/geoagent.svg)](https://pypi.python.org/pypi/geoagent)
 [![image](https://static.pepy.tech/badge/geoagent)](https://pepy.tech/project/geoagent)
