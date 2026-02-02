@@ -18,6 +18,8 @@ class Intent(str, Enum):
     ANALYZE = "analyze"
     VISUALIZE = "visualize"
     COMPARE = "compare"
+    EXPLAIN = "explain"
+    MONITOR = "monitor"
 
 
 class PlannerOutput(BaseModel):

@@ -380,6 +380,16 @@ class DataAgent:
                 "hillshade",
             ):
                 params["collections"] = ["cop-dem-glo-30"]
+            elif analysis_type in ("water_mapping",):
+                params["collections"] = ["jrc-gsw"]
+            elif analysis_type in ("fire_detection",):
+                params["collections"] = ["modis-14A1-061"]
+            elif analysis_type in ("snow_cover",):
+                params["collections"] = ["modis-10A1-061"]
+            elif analysis_type in ("surface_temperature",):
+                params["collections"] = ["modis-11A1-061"]
+            elif analysis_type in ("event_impact",):
+                params["collections"] = ["sentinel-1-grd"]
             # Then check intent keywords
             elif any(
                 kw in intent_lower

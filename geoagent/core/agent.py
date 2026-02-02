@@ -30,6 +30,7 @@ from .data_agent import DataAgent  # noqa: E402
 from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402
 from .planner import Planner  # noqa: E402
+from .context_agent import ContextAgent  # noqa: E402
 from .llm import get_default_llm  # noqa: E402
 from geoagent.catalogs.registry import get_collection_index  # noqa: E402
 
@@ -89,6 +90,7 @@ class GeoAgent:
         self.data_agent = DataAgent(self.llm)
         self.analysis_agent = AnalysisAgent(self.llm)
         self.viz_agent = VizAgent(self.llm)
+        self.context_agent = ContextAgent(self.llm)
 
         # Initialize workflow graph
         self.workflow = self._create_workflow()
@@ -327,6 +329,29 @@ class GeoAgent:
             logger.warning(f"Could not create LangGraph workflow: {e}")
             return None
 
+    def _context_node(self, state: AgentState) -> AgentState:
+        """Context node - answer contextual earth science questions.
+
+        Args:
+            state: Current agent state
+
+        Returns:
+            Updated state with contextual analysis
+        """
+        logger.debug("Executing context node")
+        self._emit_status_detail("context", "Generating earth science analysis")
+        try:
+            if state["plan"]:
+                analysis = self.context_agent.answer(state["plan"], state["data"])
+                state["analysis"] = analysis
+                state["code"] += analysis.code_generated + "\n"
+                if not analysis.success:
+                    state["error"] = analysis.error_message
+        except Exception as e:
+            state["error"] = f"Context analysis failed: {e}"
+            logger.error(state["error"])
+        return state
+
     def _sequential_execution(self, state: AgentState) -> AgentState:
         """Fallback sequential execution when LangGraph is not available.
 
@@ -352,6 +377,14 @@ class GeoAgent:
                 and state["data"].total_items > 0
             ):
                 state = self._analyze_node(state)
+
+            # Step 3b: Context agent fallback for explain/monitor intents
+            if (
+                state["plan"]
+                and state["plan"].intent.lower() in ("explain", "monitor")
+                and state["analysis"] is None
+            ):
+                state = self._context_node(state)
 
             # Step 4: Visualize (if needed)
             if state["should_visualize"]:
@@ -383,34 +416,43 @@ class GeoAgent:
             # Determine if we need analysis and visualization
             intent_lower = plan.intent.lower()
 
-            # Analysis is needed for computational tasks
-            analysis_keywords = [
-                "calculate",
-                "compute",
-                "analyze",
-                "ndvi",
-                "evi",
-                "index",
-                "statistics",
-                "mean",
-                "median",
-                "change",
-                "trend",
-                "zonal",
-            ]
-            needs_analysis = any(kw in intent_lower for kw in analysis_keywords)
-            # Land cover and elevation need analysis routing for proper viz hints
-            analysis_type_hint = (plan.analysis_type or "").lower()
-            if analysis_type_hint in (
-                "land_cover",
-                "classification",
-                "lulc",
-                "elevation",
-                "dem",
-                "terrain",
-            ):
-                needs_analysis = True
-            state["should_analyze"] = needs_analysis
+            # Explain / monitor intents always need analysis (via context agent)
+            if intent_lower in ("explain", "monitor"):
+                state["should_analyze"] = True
+            else:
+                # Analysis is needed for computational tasks
+                analysis_keywords = [
+                    "calculate",
+                    "compute",
+                    "analyze",
+                    "ndvi",
+                    "evi",
+                    "index",
+                    "statistics",
+                    "mean",
+                    "median",
+                    "change",
+                    "trend",
+                    "zonal",
+                ]
+                needs_analysis = any(kw in intent_lower for kw in analysis_keywords)
+                # Land cover and elevation need analysis routing for proper viz hints
+                analysis_type_hint = (plan.analysis_type or "").lower()
+                if analysis_type_hint in (
+                    "land_cover",
+                    "classification",
+                    "lulc",
+                    "elevation",
+                    "dem",
+                    "terrain",
+                    "water_mapping",
+                    "fire_detection",
+                    "snow_cover",
+                    "surface_temperature",
+                    "event_impact",
+                ):
+                    needs_analysis = True
+                state["should_analyze"] = needs_analysis
 
             # Visualization is usually desired unless explicitly asking for just data
             viz_skip_keywords = ["download", "list", "count", "metadata"]
@@ -546,6 +588,10 @@ for item in items:
 
         try:
             if state["plan"] and state["data"]:
+                # Route explain/monitor intents through the context agent
+                if state["plan"].intent.lower() in ("explain", "monitor"):
+                    return self._context_node(state)
+
                 analysis = self.analysis_agent.analyze(state["plan"], state["data"])
                 state["analysis"] = analysis
                 state["code"] += analysis.code_generated + "\n"
