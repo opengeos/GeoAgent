@@ -84,6 +84,9 @@ nav:
         - examples/intro.ipynb
         - examples/stac_search.ipynb
         - examples/maplibre_viz.ipynb
+        - examples/earth_science_queries.ipynb
+        - examples/contextual_qa.ipynb
+        - examples/event_monitoring.ipynb
     - API Reference:
         - GeoAgent: geoagent.md
         - Models: models.md
