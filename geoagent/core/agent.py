@@ -572,9 +572,13 @@ class GeoAgent:
                 f"{time_range.get('start_date', '')}/{time_range.get('end_date', '')}"
             )
 
-        # Build collection: use planner output directly; fallback to Sentinel-2 if absent
+        # Build collection: use planner output directly
         dataset = plan.dataset
-        collection = dataset if dataset else "sentinel-2-l2a"
+        if not dataset:
+            # No specific dataset identified - let user specify or handle downstream
+            collection = "collection-id-here"
+        else:
+            collection = dataset
 
         # Cloud cover filter only for imagery collections
         cloud_filter = ""
@@ -854,25 +858,15 @@ m
         location = self._extract_location(query)
         time_range = self._extract_time_range(query_lower)
 
+        # NOTE: Hardcoded dataset mappings removed. Let the data agent search
+        # across available catalogs when no specific dataset is identified.
         dataset = None
         analysis_type = None
-        if "sentinel-1" in query_lower:
-            dataset = "sentinel-1-grd"
-        elif "sentinel" in query_lower or "sentinel-2" in query_lower:
-            dataset = "sentinel-2-l2a"
-        elif "landsat" in query_lower:
-            dataset = "landsat-c2-l2"
-        elif "naip" in query_lower:
-            dataset = "naip"
-        elif "modis" in query_lower:
-            dataset = "modis-09A1-061"
-        elif any(
+        if any(
             kw in query_lower for kw in ["land cover", "landcover", "lulc", "land use"]
         ):
-            dataset = "io-lulc-9-class"
             analysis_type = "land_cover"
         elif any(kw in query_lower for kw in ["dem", "elevation", "terrain"]):
-            dataset = "cop-dem-glo-30"
             analysis_type = "elevation"
 
         parameters = {}

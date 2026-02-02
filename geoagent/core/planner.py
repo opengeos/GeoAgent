@@ -15,87 +15,8 @@ logger = logging.getLogger(__name__)
 # Comprehensive mapping from query keywords/topics to Planetary Computer
 # collection IDs.  Used by the Planner as a fallback when the LLM does not
 # set a dataset explicitly.
-COLLECTION_MAPPING: Dict[str, str] = {
-    # Optical Imagery
-    "sentinel-2": "sentinel-2-l2a",
-    "sentinel 2": "sentinel-2-l2a",
-    "landsat": "landsat-c2-l2",
-    "hls": "hls-l30",
-    "naip": "naip",
-    "aster": "aster-l1t",
-    # SAR / Radar
-    "sentinel-1": "sentinel-1-grd",
-    "sentinel 1": "sentinel-1-grd",
-    "radar": "sentinel-1-grd",
-    "sar": "sentinel-1-grd",
-    "sentinel-1 rtc": "sentinel-1-rtc",
-    "alos palsar": "alos-dem",
-    # Elevation / DEM / Terrain
-    "elevation": "cop-dem-glo-30",
-    "dem": "cop-dem-glo-30",
-    "terrain": "cop-dem-glo-30",
-    "copernicus dem": "cop-dem-glo-30",
-    "nasadem": "nasadem",
-    "alos dem": "alos-dem",
-    "alos world": "alos-dem",
-    "lidar": "3dep-lidar-dsm",
-    "lidar height": "3dep-lidar-hag",
-    "3dep": "3dep-lidar-dsm",
-    # Land Cover
-    "land cover": "io-lulc-9-class",
-    "land use": "io-lulc-9-class",
-    "lulc": "io-lulc-9-class",
-    "cropland": "usda-cdl",
-    "crop": "usda-cdl",
-    # Vegetation
-    "ndvi": "sentinel-2-l2a",
-    "vegetation index": "modis-13Q1-061",
-    "vegetation indices": "modis-13Q1-061",
-    "modis vegetation": "modis-13Q1-061",
-    "evi": "modis-13Q1-061",
-    "leaf area": "modis-15A2H-061",
-    "lai": "modis-15A2H-061",
-    "net production": "modis-17A2H-061",
-    "npp": "modis-17A2H-061",
-    "gross primary": "modis-17A2H-061",
-    "gpp": "modis-17A2H-061",
-    # Water
-    "surface water": "jrc-gsw",
-    "water": "jrc-gsw",
-    "flood": "sentinel-1-grd",
-    "ndwi": "sentinel-2-l2a",
-    "mndwi": "sentinel-2-l2a",
-    # Fire / Thermal
-    "fire": "modis-14A1-061",
-    "wildfire": "modis-14A1-061",
-    "thermal anomaly": "modis-14A1-061",
-    "thermal anomalies": "modis-14A1-061",
-    "burn": "modis-14A1-061",
-    "burned area": "modis-14A1-061",
-    "burn severity": "modis-14A1-061",
-    # Temperature
-    "temperature": "modis-11A1-061",
-    "surface temperature": "modis-11A1-061",
-    "land surface temperature": "modis-11A1-061",
-    "lst": "modis-11A1-061",
-    "sea surface temperature": "modis-11A1-061",
-    "sst": "modis-11A1-061",
-    # Snow / Ice
-    "snow": "modis-10A1-061",
-    "snow cover": "modis-10A1-061",
-    "ice": "modis-10A1-061",
-    # Atmosphere
-    "albedo": "modis-43A3-061",
-    "brdf": "modis-43A4-061",
-    "nadir brdf": "modis-43A4-061",
-    "reflectance": "modis-09A1-061",
-    "surface reflectance": "modis-09A1-061",
-    # Other
-    "nightlight": "viirs-nighttime-lights",
-    "night light": "viirs-nighttime-lights",
-    "population": "gridded-pop",
-    "buildings": "ms-buildings",
-}
+# NOTE: COLLECTION_MAPPING has been removed. Collections are now dynamically
+# fetched from STAC catalogs via CatalogRegistry.get_collection_index().
 
 
 class _PlannerLLMSchema(BaseModel):
@@ -164,22 +85,9 @@ If no collection fits, leave dataset as None.
 
 {collections}
 
-Collection mapping guidance (use these when the query mentions a topic but
-not a specific collection):
-- Surface water / flood mapping → "jrc-gsw" or "sentinel-1-grd"
-- Fire / wildfire / burn / thermal anomaly → "modis-14A1-061"
-- Snow / ice cover → "modis-10A1-061"
-- Surface temperature / LST / SST → "modis-11A1-061"
-- Vegetation indices (MODIS) → "modis-13Q1-061"
-- Leaf area index → "modis-15A2H-061"
-- Net primary production / GPP → "modis-17A2H-061"
-- Nighttime lights → "viirs-nighttime-lights"
-- Cropland / crop type → "usda-cdl"
-- Population density → "gridded-pop"
-- Building footprints → "ms-buildings"
-- LIDAR / 3DEP → "3dep-lidar-dsm"
-- NAIP aerial imagery → "naip"
-- HLS (Harmonized Landsat Sentinel) → "hls-l30"
+Choose the most appropriate collection from the available catalog list above.
+The LLM should analyze the query and select the best-matching collection ID
+from the dynamically-provided collection list.
 
 CRITICAL RULES:
 - Only use "sentinel-2-l2a" when the user explicitly asks for satellite imagery, spectral indices (NDVI, EVI), or Sentinel-2
@@ -451,31 +359,8 @@ class Planner:
         except Exception:
             pass
 
-    @staticmethod
-    def _resolve_collection(
-        intent: str,
-        analysis_type: Optional[str] = None,
-    ) -> Optional[str]:
-        """Resolve a Planetary Computer collection ID from query context.
-
-        Uses :data:`COLLECTION_MAPPING` to find the best-matching collection
-        when the LLM did not set one explicitly.
-
-        Args:
-            intent: The raw intent / query string.
-            analysis_type: Optional analysis type hint (e.g. ``"fire_detection"``).
-
-        Returns:
-            A collection ID string, or ``None`` if no match was found.
-        """
-        text = f"{intent} {analysis_type or ''}".lower()
-
-        # Try longest keys first for more specific matches (e.g. "land cover"
-        # before "land").
-        for key in sorted(COLLECTION_MAPPING, key=len, reverse=True):
-            if key in text:
-                return COLLECTION_MAPPING[key]
-        return None
+    # NOTE: _resolve_collection() method removed - collections are now resolved
+    # dynamically from STAC catalogs via the LLM using the provided collection list.
 
     @staticmethod
     def _convert_to_planner_output(result: _PlannerLLMSchema) -> PlannerOutput:
@@ -505,13 +390,8 @@ class Planner:
         if result.max_items is not None:
             parameters["max_items"] = result.max_items
 
-        # Resolve collection via COLLECTION_MAPPING when LLM left dataset empty
+        # Use dataset directly from LLM output (no fallback collection mapping)
         dataset = result.dataset
-        if not dataset:
-            dataset = Planner._resolve_collection(
-                result.intent.value,
-                result.analysis_type,
-            )
 
         return PlannerOutput(
             intent=result.intent.value,
