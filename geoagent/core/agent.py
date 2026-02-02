@@ -30,6 +30,7 @@ from .data_agent import DataAgent  # noqa: E402
 from .analysis_agent import AnalysisAgent  # noqa: E402
 from .viz_agent import VizAgent  # noqa: E402
 from .planner import Planner  # noqa: E402
+from .context_agent import ContextAgent  # noqa: E402
 from .llm import get_default_llm  # noqa: E402
 from geoagent.catalogs.registry import get_collection_index  # noqa: E402
 
@@ -89,6 +90,7 @@ class GeoAgent:
         self.data_agent = DataAgent(self.llm)
         self.analysis_agent = AnalysisAgent(self.llm)
         self.viz_agent = VizAgent(self.llm)
+        self.context_agent = ContextAgent(self.llm)
 
         # Initialize workflow graph
         self.workflow = self._create_workflow()
@@ -141,12 +143,19 @@ class GeoAgent:
             # Create response
             execution_time = time.time() - start_time
 
+            # Extract plain-text answer for EXPLAIN / contextual queries
+            answer_text = None
+            analysis = final_state.get("analysis")
+            if analysis and isinstance(analysis.result_data, dict):
+                answer_text = analysis.result_data.get("answer")
+
             response = GeoAgentResponse(
                 plan=final_state["plan"],
                 data=final_state["data"],
                 analysis=final_state["analysis"],
                 map=final_state["map"],
                 code=final_state["code"],
+                answer_text=answer_text,
                 success=final_state["error"] is None,
                 error_message=final_state["error"],
                 execution_time=execution_time,
@@ -304,13 +313,22 @@ class GeoAgent:
 
             # Add nodes
             workflow.add_node("plan", self._plan_node)
+            workflow.add_node("context", self._context_node)
             workflow.add_node("fetch_data", self._fetch_data_node)
             workflow.add_node("analyze", self._analyze_node)
             workflow.add_node("visualize", self._visualize_node)
 
             # Define edges
             workflow.set_entry_point("plan")
-            workflow.add_edge("plan", "fetch_data")
+
+            # After planning, EXPLAIN goes straight to context; everything
+            # else enters the data pipeline.
+            workflow.add_conditional_edges(
+                "plan",
+                self._route_after_plan,
+                {"context": "context", "fetch_data": "fetch_data"},
+            )
+            workflow.add_edge("context", END)
             workflow.add_conditional_edges(
                 "fetch_data",
                 self._should_analyze,
@@ -327,6 +345,36 @@ class GeoAgent:
             logger.warning(f"Could not create LangGraph workflow: {e}")
             return None
 
+    def _context_node(self, state: AgentState) -> AgentState:
+        """Context node – answer questions via the ContextAgent (LLM).
+
+        Used for EXPLAIN / conversational queries that do not require the
+        STAC data pipeline.
+
+        Args:
+            state: Current agent state
+
+        Returns:
+            Updated state with contextual analysis
+        """
+        logger.debug("Executing context node")
+        self._emit_status_detail("context", "Generating answer")
+        try:
+            if state["plan"]:
+                analysis = self.context_agent.answer(
+                    state["plan"],
+                    state["data"],
+                    query=state["query"],
+                )
+                state["analysis"] = analysis
+                state["code"] += analysis.code_generated + "\n"
+                if not analysis.success:
+                    state["error"] = analysis.error_message
+        except Exception as e:
+            state["error"] = f"Context analysis failed: {e}"
+            logger.error(state["error"])
+        return state
+
     def _sequential_execution(self, state: AgentState) -> AgentState:
         """Fallback sequential execution when LangGraph is not available.
 
@@ -342,6 +390,16 @@ class GeoAgent:
             # Step 1: Plan
             state = self._plan_node(state)
 
+            # Short-circuit: EXPLAIN queries go directly to the ContextAgent
+            # — no data fetch or visualization required.
+            if (
+                state["plan"]
+                and state["plan"].intent.lower() == "explain"
+                and state["error"] is None
+            ):
+                state = self._context_node(state)
+                return state
+
             # Step 2: Fetch data
             state = self._fetch_data_node(state)
 
@@ -352,6 +410,15 @@ class GeoAgent:
                 and state["data"].total_items > 0
             ):
                 state = self._analyze_node(state)
+
+            # Step 3b: Context agent fallback for monitor intent when no
+            # analysis was produced (e.g. no data found).
+            if (
+                state["plan"]
+                and state["plan"].intent.lower() == "monitor"
+                and state["analysis"] is None
+            ):
+                state = self._context_node(state)
 
             # Step 4: Visualize (if needed)
             if state["should_visualize"]:
@@ -383,40 +450,56 @@ class GeoAgent:
             # Determine if we need analysis and visualization
             intent_lower = plan.intent.lower()
 
-            # Analysis is needed for computational tasks
-            analysis_keywords = [
-                "calculate",
-                "compute",
-                "analyze",
-                "ndvi",
-                "evi",
-                "index",
-                "statistics",
-                "mean",
-                "median",
-                "change",
-                "trend",
-                "zonal",
-            ]
-            needs_analysis = any(kw in intent_lower for kw in analysis_keywords)
-            # Land cover and elevation need analysis routing for proper viz hints
-            analysis_type_hint = (plan.analysis_type or "").lower()
-            if analysis_type_hint in (
-                "land_cover",
-                "classification",
-                "lulc",
-                "elevation",
-                "dem",
-                "terrain",
-            ):
-                needs_analysis = True
-            state["should_analyze"] = needs_analysis
+            # EXPLAIN queries are answered directly by the ContextAgent —
+            # no data fetch or map visualization needed.
+            if intent_lower == "explain":
+                state["should_analyze"] = False
+                state["should_visualize"] = False
+            elif intent_lower == "monitor":
+                # MONITOR still needs the data pipeline
+                state["should_analyze"] = True
+                state["should_visualize"] = True
+            else:
+                # Analysis is needed for computational tasks
+                analysis_keywords = [
+                    "calculate",
+                    "compute",
+                    "analyze",
+                    "ndvi",
+                    "evi",
+                    "index",
+                    "statistics",
+                    "mean",
+                    "median",
+                    "change",
+                    "trend",
+                    "zonal",
+                ]
+                needs_analysis = any(kw in intent_lower for kw in analysis_keywords)
+                # Land cover and elevation need analysis routing for proper viz hints
+                analysis_type_hint = (plan.analysis_type or "").lower()
+                if analysis_type_hint in (
+                    "land_cover",
+                    "classification",
+                    "lulc",
+                    "elevation",
+                    "dem",
+                    "terrain",
+                    "water_mapping",
+                    "fire_detection",
+                    "snow_cover",
+                    "surface_temperature",
+                    "event_impact",
+                ):
+                    needs_analysis = True
+                state["should_analyze"] = needs_analysis
 
-            # Visualization is usually desired unless explicitly asking for just data
-            viz_skip_keywords = ["download", "list", "count", "metadata"]
-            state["should_visualize"] = not any(
-                kw in intent_lower for kw in viz_skip_keywords
-            )
+                # Visualization is usually desired unless explicitly asking
+                # for just data
+                viz_skip_keywords = ["download", "list", "count", "metadata"]
+                state["should_visualize"] = not any(
+                    kw in intent_lower for kw in viz_skip_keywords
+                )
 
             logger.debug(
                 f"Plan created: analyze={state['should_analyze']}, visualize={state['should_visualize']}"
@@ -546,6 +629,12 @@ for item in items:
 
         try:
             if state["plan"] and state["data"]:
+                # MONITOR intent falls back to context agent when the normal
+                # analysis cannot produce a result (EXPLAIN is already
+                # handled by _route_after_plan / _sequential_execution).
+                if state["plan"].intent.lower() == "monitor":
+                    return self._context_node(state)
+
                 analysis = self.analysis_agent.analyze(state["plan"], state["data"])
                 state["analysis"] = analysis
                 state["code"] += analysis.code_generated + "\n"
@@ -648,6 +737,23 @@ m.add_stac_layer(
 m
 """
         return code
+
+    def _route_after_plan(self, state: AgentState) -> str:
+        """Conditional edge: route EXPLAIN to the context node, else data pipeline.
+
+        Args:
+            state: Current agent state
+
+        Returns:
+            ``"context"`` for EXPLAIN queries, ``"fetch_data"`` otherwise.
+        """
+        if (
+            state.get("plan")
+            and state["plan"].intent.lower() == "explain"
+            and state.get("error") is None
+        ):
+            return "context"
+        return "fetch_data"
 
     def _should_analyze(self, state: AgentState) -> bool:
         """Conditional edge function to determine if analysis is needed.

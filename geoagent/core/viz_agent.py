@@ -360,6 +360,16 @@ class VizAgent:
                     elif collection in ("io-lulc-9-class",):
                         # LULC has its own colormap
                         pass
+                    elif collection.startswith("jrc-gsw"):
+                        layer_kwargs["colormap_name"] = "Blues"
+                    elif collection in ("modis-14A1-061",):
+                        layer_kwargs["colormap_name"] = "hot"
+                    elif collection in ("modis-10A1-061",):
+                        layer_kwargs["colormap_name"] = "Blues_r"
+                    elif collection in ("modis-11A1-061",):
+                        layer_kwargs["colormap_name"] = "RdYlBu_r"
+                    elif "viirs" in collection:
+                        layer_kwargs["colormap_name"] = "inferno"
 
                     m.add_stac_layer(**layer_kwargs)
                     logger.info(f"Successfully added STAC layer: {item_id}")
@@ -709,6 +719,16 @@ class VizAgent:
                             # Add colormap for specific collections
                             if collection in ("cop-dem-glo-30", "3dep-lidar-hag"):
                                 layer_kwargs["colormap_name"] = "terrain"
+                            elif collection.startswith("jrc-gsw"):
+                                layer_kwargs["colormap_name"] = "Blues"
+                            elif collection in ("modis-14A1-061",):
+                                layer_kwargs["colormap_name"] = "hot"
+                            elif collection in ("modis-10A1-061",):
+                                layer_kwargs["colormap_name"] = "Blues_r"
+                            elif collection in ("modis-11A1-061",):
+                                layer_kwargs["colormap_name"] = "RdYlBu_r"
+                            elif "viirs" in collection:
+                                layer_kwargs["colormap_name"] = "inferno"
 
                             m.add_stac_layer(**layer_kwargs)
 
@@ -826,6 +846,44 @@ class VizAgent:
             if "VNIR" in assets:
                 return ["VNIR"]
 
+        # MODIS collections typically use "data" or a specific band
+        if "modis" in collection_lower:
+            if "data" in assets:
+                return ["data"]
+            # Some MODIS products have numbered bands
+            for candidate in ("500m", "250m", "NDVI", "EVI", "LST_Day_1km"):
+                if candidate in assets:
+                    return [candidate]
+
+        # JRC Global Surface Water
+        if "jrc-gsw" in collection_lower:
+            for candidate in ("occurrence", "change", "seasonality", "data"):
+                if candidate in assets:
+                    return [candidate]
+
+        # USDA Cropland Data Layer
+        if "usda-cdl" in collection_lower:
+            if "data" in assets:
+                return ["data"]
+
+        # 3DEP LIDAR products
+        if "3dep-lidar" in collection_lower:
+            if "data" in assets:
+                return ["data"]
+
+        # HLS (Harmonized Landsat Sentinel)
+        if "hls" in collection_lower:
+            # Similar band layout to Sentinel-2
+            if "B04" in assets and "B03" in assets and "B02" in assets:
+                return ["B04", "B03", "B02"]
+            if "visual" in assets:
+                return ["visual"]
+
+        # VIIRS nighttime lights
+        if "viirs" in collection_lower:
+            if "data" in assets:
+                return ["data"]
+
         # DEM and land cover collections use "data" or "map" asset
         if any(
             term in intent_lower
@@ -936,8 +994,17 @@ class VizAgent:
         viz_hints = analysis.visualization_hints
         viz_type = viz_hints.get("type", "") if viz_hints else ""
 
-        # Handle land cover and elevation data via STAC layer
-        if viz_type in ("land_cover", "elevation") and data and data.items:
+        # Handle typed data via STAC layer (land cover, elevation, water, fire, etc.)
+        _stac_viz_types = (
+            "land_cover",
+            "elevation",
+            "water_mapping",
+            "fire_detection",
+            "snow_cover",
+            "surface_temperature",
+            "event_impact",
+        )
+        if viz_type in _stac_viz_types and data and data.items:
             item = data.items[0]
             item_id = item.get("id", "")
             collection = item.get("collection", "")
@@ -961,8 +1028,16 @@ class VizAgent:
                         layer_kwargs["before_id"] = m.first_symbol_layer_id
 
                     # Add colormap for specific viz types
-                    if viz_type == "elevation":
-                        layer_kwargs["colormap_name"] = "terrain"
+                    _viz_colormap_map = {
+                        "elevation": "terrain",
+                        "water_mapping": "Blues",
+                        "fire_detection": "hot",
+                        "snow_cover": "Blues_r",
+                        "surface_temperature": "RdYlBu_r",
+                    }
+                    cmap = _viz_colormap_map.get(viz_type)
+                    if cmap:
+                        layer_kwargs["colormap_name"] = cmap
 
                     m.add_stac_layer(**layer_kwargs)
                     logger.info(f"Added {viz_type} STAC layer: {collection}/{item_id}")

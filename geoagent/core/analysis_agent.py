@@ -69,6 +69,16 @@ class AnalysisAgent:
                 return self._handle_land_cover(plan, data)
             elif analysis_type == "elevation":
                 return self._handle_elevation(plan, data)
+            elif analysis_type == "water_mapping":
+                return self._handle_water_mapping(plan, data)
+            elif analysis_type == "fire_detection":
+                return self._handle_fire_detection(plan, data)
+            elif analysis_type == "snow_cover":
+                return self._handle_snow_cover(plan, data)
+            elif analysis_type == "surface_temperature":
+                return self._handle_surface_temperature(plan, data)
+            elif analysis_type == "event_impact":
+                return self._handle_event_impact(plan, data)
             elif analysis_type == "spectral_index":
                 return self._compute_spectral_index(plan, data)
             elif analysis_type == "zonal_statistics":
@@ -109,7 +119,33 @@ class AnalysisAgent:
             return "land_cover"
         if analysis_type_hint in ("elevation", "dem", "terrain", "slope", "hillshade"):
             return "elevation"
-        if analysis_type_hint in ("ndvi", "evi", "savi", "ndbi", "ndwi", "mndwi"):
+        if analysis_type_hint in ("water_mapping", "ndwi", "mndwi", "flood"):
+            return "water_mapping"
+        if analysis_type_hint in (
+            "fire_detection",
+            "fire",
+            "wildfire",
+            "thermal",
+            "burn",
+        ):
+            return "fire_detection"
+        if analysis_type_hint in ("snow_cover", "snow"):
+            return "snow_cover"
+        if analysis_type_hint in (
+            "surface_temperature",
+            "lst",
+            "sst",
+            "temperature",
+        ):
+            return "surface_temperature"
+        if analysis_type_hint in (
+            "event_impact",
+            "hurricane",
+            "earthquake",
+            "disaster",
+        ):
+            return "event_impact"
+        if analysis_type_hint in ("ndvi", "evi", "savi", "ndbi"):
             return "spectral_index"
 
         # Land cover analysis (from intent keywords)
@@ -139,6 +175,66 @@ class AnalysisAgent:
             ]
         ):
             return "elevation"
+
+        # Water mapping (from intent keywords)
+        if any(
+            term in intent
+            for term in [
+                "water_mapping",
+                "surface water",
+                "water change",
+                "ndwi",
+                "mndwi",
+                "flood",
+            ]
+        ):
+            return "water_mapping"
+
+        # Fire / thermal detection (from intent keywords)
+        if any(
+            term in intent
+            for term in [
+                "fire",
+                "wildfire",
+                "thermal",
+                "burn",
+                "burned",
+                "fire_detection",
+            ]
+        ):
+            return "fire_detection"
+
+        # Snow / ice cover (from intent keywords)
+        if any(term in intent for term in ["snow", "ice", "snow_cover"]):
+            return "snow_cover"
+
+        # Surface temperature (from intent keywords)
+        if any(
+            term in intent
+            for term in [
+                "surface temperature",
+                "land surface temperature",
+                "lst",
+                "sst",
+                "temperature",
+            ]
+        ):
+            return "surface_temperature"
+
+        # Event / disaster impact (from intent keywords)
+        if any(
+            term in intent
+            for term in [
+                "hurricane",
+                "earthquake",
+                "disaster",
+                "event_impact",
+                "impact",
+                "typhoon",
+                "cyclone",
+            ]
+        ):
+            return "event_impact"
 
         # Spectral index analysis
         if any(
@@ -520,6 +616,405 @@ m
                 f"Elevation (DEM) - {location_name}"
                 if location_name
                 else "Elevation (DEM)"
+            ),
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_water_mapping(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle surface water / NDWI / MNDWI data with appropriate viz hints.
+
+        Args:
+            plan: Query plan
+            data: Water data from STAC (e.g. JRC Global Surface Water)
+
+        Returns:
+            AnalysisResult with water mapping viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        collection = data.items[0].get("collection", "") if data.items else "jrc-gsw"
+
+        # Determine the best asset key for the collection
+        asset_key = "data"
+        if data.items:
+            assets = data.items[0].get("assets", {})
+            for candidate in ("occurrence", "change", "seasonality", "data"):
+                if candidate in assets:
+                    asset_key = candidate
+                    break
+
+        result_data = {
+            "analysis_type": "water_mapping",
+            "data_type": "continuous",
+            "items_found": data.total_items,
+            "collection": collection,
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for surface water data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["{collection}"],
+    bbox={bbox},
+    max_items=1,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} water mapping items")
+
+# Visualize
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="{collection}",
+        item=item.id,
+        assets=["{asset_key}"],
+        titiler_endpoint="planetary-computer",
+        name="Surface Water",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "water_mapping",
+            "colormap": "Blues",
+            "asset_key": asset_key,
+            "title": (
+                f"Surface Water - {location_name}" if location_name else "Surface Water"
+            ),
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_fire_detection(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle fire / thermal anomaly data with appropriate viz hints.
+
+        Args:
+            plan: Query plan
+            data: Fire data from STAC (e.g. MODIS thermal anomalies)
+
+        Returns:
+            AnalysisResult with fire detection viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        collection = (
+            data.items[0].get("collection", "") if data.items else "modis-14A1-061"
+        )
+
+        result_data = {
+            "analysis_type": "fire_detection",
+            "data_type": "continuous",
+            "items_found": data.total_items,
+            "collection": collection,
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for fire / thermal anomaly data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["{collection}"],
+    bbox={bbox},
+    max_items=1,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} fire detection items")
+
+# Visualize
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="{collection}",
+        item=item.id,
+        assets=["data"],
+        titiler_endpoint="planetary-computer",
+        name="Fire Detection",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "fire_detection",
+            "colormap": "hot",
+            "asset_key": "data",
+            "title": (
+                f"Fire Detection - {location_name}"
+                if location_name
+                else "Fire Detection"
+            ),
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_snow_cover(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle snow / ice cover data with appropriate viz hints.
+
+        Args:
+            plan: Query plan
+            data: Snow cover data from STAC (e.g. MODIS snow cover)
+
+        Returns:
+            AnalysisResult with snow cover viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        collection = (
+            data.items[0].get("collection", "") if data.items else "modis-10A1-061"
+        )
+
+        result_data = {
+            "analysis_type": "snow_cover",
+            "data_type": "continuous",
+            "items_found": data.total_items,
+            "collection": collection,
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for snow cover data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["{collection}"],
+    bbox={bbox},
+    max_items=1,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} snow cover items")
+
+# Visualize
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="{collection}",
+        item=item.id,
+        assets=["data"],
+        titiler_endpoint="planetary-computer",
+        name="Snow Cover",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "snow_cover",
+            "colormap": "Blues_r",
+            "asset_key": "data",
+            "title": (
+                f"Snow Cover - {location_name}" if location_name else "Snow Cover"
+            ),
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_surface_temperature(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle land surface temperature / SST data with appropriate viz hints.
+
+        Args:
+            plan: Query plan
+            data: Temperature data from STAC (e.g. MODIS LST)
+
+        Returns:
+            AnalysisResult with surface temperature viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        collection = (
+            data.items[0].get("collection", "") if data.items else "modis-11A1-061"
+        )
+
+        result_data = {
+            "analysis_type": "surface_temperature",
+            "data_type": "continuous",
+            "items_found": data.total_items,
+            "collection": collection,
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for surface temperature data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["{collection}"],
+    bbox={bbox},
+    max_items=1,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} temperature items")
+
+# Visualize
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="{collection}",
+        item=item.id,
+        assets=["data"],
+        titiler_endpoint="planetary-computer",
+        name="Surface Temperature",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "surface_temperature",
+            "colormap": "RdYlBu_r",
+            "asset_key": "data",
+            "title": (
+                f"Surface Temperature - {location_name}"
+                if location_name
+                else "Surface Temperature"
+            ),
+        }
+
+        return AnalysisResult(
+            result_data=result_data,
+            code_generated=code,
+            visualization_hints=viz_hints,
+        )
+
+    def _handle_event_impact(
+        self, plan: PlannerOutput, data: DataResult
+    ) -> AnalysisResult:
+        """Handle natural disaster / event impact assessment.
+
+        This is a passthrough handler that sets up multi-temporal visualization
+        hints suitable for before/after disaster analysis.
+
+        Args:
+            plan: Query plan
+            data: Event-related data from STAC (e.g. Sentinel-1 SAR)
+
+        Returns:
+            AnalysisResult with event impact viz configuration
+        """
+        location_name = ""
+        if plan.location:
+            location_name = plan.location.get("name", "")
+
+        collection = (
+            data.items[0].get("collection", "") if data.items else "sentinel-1-grd"
+        )
+
+        result_data = {
+            "analysis_type": "event_impact",
+            "data_type": "multi_temporal",
+            "items_found": data.total_items,
+            "collection": collection,
+        }
+
+        bbox = plan.location.get("bbox") if plan.location else None
+        code = f"""import planetary_computer
+import leafmap.maplibregl as leafmap
+from pystac_client import Client
+
+# Search for event impact data - {location_name}
+catalog = Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["{collection}"],
+    bbox={bbox},
+    max_items=5,
+)
+
+items = list(search.items())
+print(f"Found {{len(items)}} items for event impact analysis")
+
+# Visualize (before/after comparison if multiple items available)
+m = leafmap.Map()
+if items:
+    item = items[0]
+    m.add_stac_layer(
+        collection="{collection}",
+        item=item.id,
+        titiler_endpoint="planetary-computer",
+        name="Event Impact",
+        fit_bounds=True,
+    )
+m
+"""
+
+        viz_hints = {
+            "type": "event_impact",
+            "multi_temporal": True,
+            "title": (
+                f"Event Impact - {location_name}"
+                if location_name
+                else "Event Impact Assessment"
             ),
         }
 

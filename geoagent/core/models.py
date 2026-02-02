@@ -18,6 +18,8 @@ class Intent(str, Enum):
     ANALYZE = "analyze"
     VISUALIZE = "visualize"
     COMPARE = "compare"
+    EXPLAIN = "explain"
+    MONITOR = "monitor"
 
 
 class PlannerOutput(BaseModel):
@@ -103,6 +105,13 @@ class GeoAgentResponse(BaseModel):
     )
     code: str = Field(
         default="", description="All generated Python code from the pipeline"
+    )
+    answer_text: Optional[str] = Field(
+        default=None,
+        description=(
+            "Plain-text answer from the ContextAgent for EXPLAIN / conversational "
+            "queries.  None when the response is a data-pipeline result."
+        ),
     )
     success: bool = Field(
         default=True, description="Whether the overall pipeline succeeded"

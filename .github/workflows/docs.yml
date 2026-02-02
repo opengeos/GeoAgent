@@ -23,7 +23,7 @@ jobs:
                   pip install .
             - name: Discover typos with codespell
               run: |
-                  codespell --skip="*.csv,*.geojson,*.json,*.js,*.html,*cff,./.git" --ignore-words-list="aci,hist"
+                  codespell --skip="*.csv,*.geojson,*.json,*.js,*.html,*cff,./.git" --ignore-words-list="aci,alos,hist"
             - name: PKG-TEST
               run: |
                   python -m unittest discover tests/

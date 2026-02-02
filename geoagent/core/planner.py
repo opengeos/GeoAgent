@@ -12,6 +12,91 @@ from .models import PlannerOutput, Intent
 
 logger = logging.getLogger(__name__)
 
+# Comprehensive mapping from query keywords/topics to Planetary Computer
+# collection IDs.  Used by the Planner as a fallback when the LLM does not
+# set a dataset explicitly.
+COLLECTION_MAPPING: Dict[str, str] = {
+    # Optical Imagery
+    "sentinel-2": "sentinel-2-l2a",
+    "sentinel 2": "sentinel-2-l2a",
+    "landsat": "landsat-c2-l2",
+    "hls": "hls-l30",
+    "naip": "naip",
+    "aster": "aster-l1t",
+    # SAR / Radar
+    "sentinel-1": "sentinel-1-grd",
+    "sentinel 1": "sentinel-1-grd",
+    "radar": "sentinel-1-grd",
+    "sar": "sentinel-1-grd",
+    "sentinel-1 rtc": "sentinel-1-rtc",
+    "alos palsar": "alos-dem",
+    # Elevation / DEM / Terrain
+    "elevation": "cop-dem-glo-30",
+    "dem": "cop-dem-glo-30",
+    "terrain": "cop-dem-glo-30",
+    "copernicus dem": "cop-dem-glo-30",
+    "nasadem": "nasadem",
+    "alos dem": "alos-dem",
+    "alos world": "alos-dem",
+    "lidar": "3dep-lidar-dsm",
+    "lidar height": "3dep-lidar-hag",
+    "3dep": "3dep-lidar-dsm",
+    # Land Cover
+    "land cover": "io-lulc-9-class",
+    "land use": "io-lulc-9-class",
+    "lulc": "io-lulc-9-class",
+    "cropland": "usda-cdl",
+    "crop": "usda-cdl",
+    # Vegetation
+    "ndvi": "sentinel-2-l2a",
+    "vegetation index": "modis-13Q1-061",
+    "vegetation indices": "modis-13Q1-061",
+    "modis vegetation": "modis-13Q1-061",
+    "evi": "modis-13Q1-061",
+    "leaf area": "modis-15A2H-061",
+    "lai": "modis-15A2H-061",
+    "net production": "modis-17A2H-061",
+    "npp": "modis-17A2H-061",
+    "gross primary": "modis-17A2H-061",
+    "gpp": "modis-17A2H-061",
+    # Water
+    "surface water": "jrc-gsw",
+    "water": "jrc-gsw",
+    "flood": "sentinel-1-grd",
+    "ndwi": "sentinel-2-l2a",
+    "mndwi": "sentinel-2-l2a",
+    # Fire / Thermal
+    "fire": "modis-14A1-061",
+    "wildfire": "modis-14A1-061",
+    "thermal anomaly": "modis-14A1-061",
+    "thermal anomalies": "modis-14A1-061",
+    "burn": "modis-14A1-061",
+    "burned area": "modis-14A1-061",
+    "burn severity": "modis-14A1-061",
+    # Temperature
+    "temperature": "modis-11A1-061",
+    "surface temperature": "modis-11A1-061",
+    "land surface temperature": "modis-11A1-061",
+    "lst": "modis-11A1-061",
+    "sea surface temperature": "modis-11A1-061",
+    "sst": "modis-11A1-061",
+    # Snow / Ice
+    "snow": "modis-10A1-061",
+    "snow cover": "modis-10A1-061",
+    "ice": "modis-10A1-061",
+    # Atmosphere
+    "albedo": "modis-43A3-061",
+    "brdf": "modis-43A4-061",
+    "nadir brdf": "modis-43A4-061",
+    "reflectance": "modis-09A1-061",
+    "surface reflectance": "modis-09A1-061",
+    # Other
+    "nightlight": "viirs-nighttime-lights",
+    "night light": "viirs-nighttime-lights",
+    "population": "gridded-pop",
+    "buildings": "ms-buildings",
+}
+
 
 class _PlannerLLMSchema(BaseModel):
     """Internal schema for LLM structured output parsing.
@@ -54,6 +139,15 @@ Intent mapping:
 - ANALYZE: Computing indices, statistics, or performing analysis on data
 - VISUALIZE: Creating maps, plots, or visual representations
 - COMPARE: Comparing different time periods, locations, or datasets
+- EXPLAIN: Answering ANY question that asks for information or explanation rather than data retrieval/visualization. This includes earth science questions, general knowledge, greetings, coding questions, definitions, how-things-work, opinions, etc.
+- MONITOR: Tracking ongoing events like wildfires, floods, deforestation over time
+
+IMPORTANT — choosing between EXPLAIN and data intents:
+- If the user is asking a QUESTION (what, why, how, explain, describe, tell me about, etc.) → EXPLAIN
+- If the user wants to SEE, SHOW, MAP, FIND, COMPUTE, DISPLAY, or DOWNLOAD actual data → SEARCH/ANALYZE/VISUALIZE/COMPARE
+- Conversational messages (greetings, jokes, general chat) → EXPLAIN
+- "What is NDVI?" → EXPLAIN (asking for information)
+- "Show NDVI for California" → ANALYZE (requesting data computation)
 
 Location can be:
 - Named places: "California", "Amazon rainforest", "Lagos Nigeria"
@@ -70,11 +164,35 @@ If no collection fits, leave dataset as None.
 
 {collections}
 
+Collection mapping guidance (use these when the query mentions a topic but
+not a specific collection):
+- Surface water / flood mapping → "jrc-gsw" or "sentinel-1-grd"
+- Fire / wildfire / burn / thermal anomaly → "modis-14A1-061"
+- Snow / ice cover → "modis-10A1-061"
+- Surface temperature / LST / SST → "modis-11A1-061"
+- Vegetation indices (MODIS) → "modis-13Q1-061"
+- Leaf area index → "modis-15A2H-061"
+- Net primary production / GPP → "modis-17A2H-061"
+- Nighttime lights → "viirs-nighttime-lights"
+- Cropland / crop type → "usda-cdl"
+- Population density → "gridded-pop"
+- Building footprints → "ms-buildings"
+- LIDAR / 3DEP → "3dep-lidar-dsm"
+- NAIP aerial imagery → "naip"
+- HLS (Harmonized Landsat Sentinel) → "hls-l30"
+
 CRITICAL RULES:
 - Only use "sentinel-2-l2a" when the user explicitly asks for satellite imagery, spectral indices (NDVI, EVI), or Sentinel-2
 - Do NOT set analysis_type to "ndvi" unless the user specifically asks for NDVI or vegetation index
 - For land cover queries, set analysis_type to "land_cover"
 - For DEM/elevation queries, set analysis_type to "elevation"
+- For water mapping, set analysis_type to "water_mapping"
+- For fire/burn detection, set analysis_type to "fire_detection"
+- For snow/ice queries, set analysis_type to "snow_cover"
+- For temperature queries, set analysis_type to "surface_temperature"
+- For disaster impact assessment, set analysis_type to "event_impact"
+- For contextual questions ("why", "explain", "what causes"), use EXPLAIN intent
+- For monitoring queries ("track", "monitor", "ongoing"), use MONITOR intent
 
 Analysis types include:
 - Vegetation indices: "ndvi", "evi", "savi"
@@ -83,6 +201,11 @@ Analysis types include:
 - Change detection: "change_detection"
 - Time series: "time_series"
 - Water indices: "ndwi", "mndwi"
+- Water mapping: "water_mapping"
+- Fire detection: "fire_detection"
+- Snow cover: "snow_cover"
+- Surface temperature: "surface_temperature"
+- Event impact: "event_impact"
 
 Additional parameters can include:
 - Cloud cover thresholds
@@ -150,6 +273,130 @@ Output: {{
     "analysis_type": "land_cover"
 }}
 
+Query: "Show surface water changes in Lake Chad"
+Output: {{
+    "intent": "analyze",
+    "location": "Lake Chad",
+    "dataset": "jrc-gsw",
+    "analysis_type": "water_mapping"
+}}
+
+Query: "Detect active fires in Australia in January 2020"
+Output: {{
+    "intent": "analyze",
+    "location": "Australia",
+    "time_range": ["2020-01-01", "2020-01-31"],
+    "dataset": "modis-14A1-061",
+    "analysis_type": "fire_detection"
+}}
+
+Query: "Show snow cover in the Alps in winter 2023"
+Output: {{
+    "intent": "visualize",
+    "location": "Alps",
+    "time_range": ["2023-12-01", "2024-02-28"],
+    "dataset": "modis-10A1-061",
+    "analysis_type": "snow_cover"
+}}
+
+Query: "Map land surface temperature in Phoenix during summer 2024"
+Output: {{
+    "intent": "analyze",
+    "location": "Phoenix",
+    "time_range": ["2024-06-01", "2024-08-31"],
+    "dataset": "modis-11A1-061",
+    "analysis_type": "surface_temperature"
+}}
+
+Query: "Show nighttime lights of India"
+Output: {{
+    "intent": "visualize",
+    "location": "India",
+    "dataset": "viirs-nighttime-lights"
+}}
+
+Query: "What caused the 2023 Turkey earthquake and how did it affect the region?"
+Output: {{
+    "intent": "explain",
+    "location": "Turkey",
+    "time_range": ["2023-02-01", "2023-03-31"],
+    "analysis_type": "event_impact"
+}}
+
+Query: "Monitor deforestation in the Amazon over the past 5 years"
+Output: {{
+    "intent": "monitor",
+    "location": "Amazon rainforest",
+    "time_range": ["2019-01-01", "2024-12-31"],
+    "dataset": "sentinel-2-l2a",
+    "analysis_type": "change_detection"
+}}
+
+Query: "Assess the impact of Hurricane Ian on Florida"
+Output: {{
+    "intent": "analyze",
+    "location": "Florida",
+    "time_range": ["2022-09-20", "2022-10-15"],
+    "dataset": "sentinel-1-grd",
+    "analysis_type": "event_impact"
+}}
+
+Query: "Show cropland map of Iowa"
+Output: {{
+    "intent": "visualize",
+    "location": "Iowa",
+    "dataset": "usda-cdl",
+    "analysis_type": "land_cover"
+}}
+
+Query: "Explain how NDVI is used to monitor drought"
+Output: {{
+    "intent": "explain",
+    "analysis_type": "ndvi"
+}}
+
+Query: "What is NDVI?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "How do satellites capture images of Earth?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "What is climate change?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "Tell me a joke"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "What is Python?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "Hello, what can you do?"
+Output: {{
+    "intent": "explain"
+}}
+
+Query: "How was NYC impacted by Hurricane Sandy?"
+Output: {{
+    "intent": "explain",
+    "location": "New York City",
+    "analysis_type": "event_impact"
+}}
+
+Query: "What datasets are available for monitoring deforestation?"
+Output: {{
+    "intent": "explain"
+}}
+
 Extract information accurately and conservatively. If something is unclear, leave it as None rather than guessing."""
 
 
@@ -205,6 +452,32 @@ class Planner:
             pass
 
     @staticmethod
+    def _resolve_collection(
+        intent: str,
+        analysis_type: Optional[str] = None,
+    ) -> Optional[str]:
+        """Resolve a Planetary Computer collection ID from query context.
+
+        Uses :data:`COLLECTION_MAPPING` to find the best-matching collection
+        when the LLM did not set one explicitly.
+
+        Args:
+            intent: The raw intent / query string.
+            analysis_type: Optional analysis type hint (e.g. ``"fire_detection"``).
+
+        Returns:
+            A collection ID string, or ``None`` if no match was found.
+        """
+        text = f"{intent} {analysis_type or ''}".lower()
+
+        # Try longest keys first for more specific matches (e.g. "land cover"
+        # before "land").
+        for key in sorted(COLLECTION_MAPPING, key=len, reverse=True):
+            if key in text:
+                return COLLECTION_MAPPING[key]
+        return None
+
+    @staticmethod
     def _convert_to_planner_output(result: _PlannerLLMSchema) -> PlannerOutput:
         """Convert LLM schema output to the canonical PlannerOutput model."""
         location = None
@@ -232,11 +505,19 @@ class Planner:
         if result.max_items is not None:
             parameters["max_items"] = result.max_items
 
+        # Resolve collection via COLLECTION_MAPPING when LLM left dataset empty
+        dataset = result.dataset
+        if not dataset:
+            dataset = Planner._resolve_collection(
+                result.intent.value,
+                result.analysis_type,
+            )
+
         return PlannerOutput(
             intent=result.intent.value,
             location=location,
             time_range=time_range,
-            dataset=result.dataset,
+            dataset=dataset,
             analysis_type=result.analysis_type,
             parameters=parameters,
             confidence=1.0,

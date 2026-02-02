@@ -49,6 +49,12 @@ BUILTIN_CATALOGS = {
         requires_auth=True,
         auth_env_var="NASA_EARTHDATA_TOKEN",
     ),
+    "nasa_veda": CatalogInfo(
+        name="nasa_veda",
+        url="https://openveda.cloud/api/stac",
+        description="NASA VEDA - Visualization, Exploration, and Data Analysis",
+        requires_auth=False,
+    ),
 }
 
 # Default catalog to use when none specified
