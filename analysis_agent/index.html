@@ -613,6 +613,90 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earth_science_queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earth science queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/contextual_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contextual qa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1266,6 +1350,16 @@ and generates Python code showing exactly what was computed.</p>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_land_cover</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;elevation&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_elevation</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;water_mapping&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_water_mapping</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;fire_detection&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_fire_detection</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;snow_cover&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_snow_cover</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;surface_temperature&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_surface_temperature</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;event_impact&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_event_impact</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;spectral_index&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_spectral_index</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;zonal_statistics&quot;</span><span class="p">:</span>
@@ -1306,7 +1400,33 @@ and generates Python code showing exactly what was computed.</p>
             <span class="k">return</span> <span class="s2">&quot;land_cover&quot;</span>
         <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;elevation&quot;</span><span class="p">,</span> <span class="s2">&quot;dem&quot;</span><span class="p">,</span> <span class="s2">&quot;terrain&quot;</span><span class="p">,</span> <span class="s2">&quot;slope&quot;</span><span class="p">,</span> <span class="s2">&quot;hillshade&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="s2">&quot;elevation&quot;</span>
-        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ndvi&quot;</span><span class="p">,</span> <span class="s2">&quot;evi&quot;</span><span class="p">,</span> <span class="s2">&quot;savi&quot;</span><span class="p">,</span> <span class="s2">&quot;ndbi&quot;</span><span class="p">,</span> <span class="s2">&quot;ndwi&quot;</span><span class="p">,</span> <span class="s2">&quot;mndwi&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;water_mapping&quot;</span><span class="p">,</span> <span class="s2">&quot;ndwi&quot;</span><span class="p">,</span> <span class="s2">&quot;mndwi&quot;</span><span class="p">,</span> <span class="s2">&quot;flood&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;water_mapping&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;fire_detection&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fire&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;wildfire&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;thermal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;burn&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;fire_detection&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;snow_cover&quot;</span><span class="p">,</span> <span class="s2">&quot;snow&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;snow_cover&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;surface_temperature&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;lst&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sst&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;temperature&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;surface_temperature&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;event_impact&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;hurricane&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;earthquake&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;disaster&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;event_impact&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ndvi&quot;</span><span class="p">,</span> <span class="s2">&quot;evi&quot;</span><span class="p">,</span> <span class="s2">&quot;savi&quot;</span><span class="p">,</span> <span class="s2">&quot;ndbi&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="s2">&quot;spectral_index&quot;</span>
 
         <span class="c1"># Land cover analysis (from intent keywords)</span>
@@ -1336,6 +1456,66 @@ and generates Python code showing exactly what was computed.</p>
             <span class="p">]</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="s2">&quot;elevation&quot;</span>
+
+        <span class="c1"># Water mapping (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;water_mapping&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;surface water&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;water change&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ndwi&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mndwi&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;flood&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;water_mapping&quot;</span>
+
+        <span class="c1"># Fire / thermal detection (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;fire&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;wildfire&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;thermal&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;burn&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;burned&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;fire_detection&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;fire_detection&quot;</span>
+
+        <span class="c1"># Snow / ice cover (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;snow&quot;</span><span class="p">,</span> <span class="s2">&quot;ice&quot;</span><span class="p">,</span> <span class="s2">&quot;snow_cover&quot;</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="s2">&quot;snow_cover&quot;</span>
+
+        <span class="c1"># Surface temperature (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;surface temperature&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;land surface temperature&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;lst&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sst&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;temperature&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;surface_temperature&quot;</span>
+
+        <span class="c1"># Event / disaster impact (from intent keywords)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">term</span> <span class="ow">in</span> <span class="n">intent</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;hurricane&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;earthquake&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;disaster&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;event_impact&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;impact&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;typhoon&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;cyclone&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;event_impact&quot;</span>
 
         <span class="c1"># Spectral index analysis</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
@@ -1717,6 +1897,405 @@ and generates Python code showing exactly what was computed.</p>
                 <span class="sa">f</span><span class="s2">&quot;Elevation (DEM) - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="k">if</span> <span class="n">location_name</span>
                 <span class="k">else</span> <span class="s2">&quot;Elevation (DEM)&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_water_mapping</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle surface water / NDWI / MNDWI data with appropriate viz hints.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Water data from STAC (e.g. JRC Global Surface Water)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with water mapping viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">collection</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;jrc-gsw&quot;</span>
+
+        <span class="c1"># Determine the best asset key for the collection</span>
+        <span class="n">asset_key</span> <span class="o">=</span> <span class="s2">&quot;data&quot;</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+            <span class="n">assets</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;occurrence&quot;</span><span class="p">,</span> <span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="s2">&quot;seasonality&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                    <span class="n">asset_key</span> <span class="o">=</span> <span class="n">candidate</span>
+                    <span class="k">break</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;water_mapping&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for surface water data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=1,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> water mapping items&quot;)</span>
+
+<span class="s2"># Visualize</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        assets=[&quot;</span><span class="si">{</span><span class="n">asset_key</span><span class="si">}</span><span class="s2">&quot;],</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Surface Water&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;water_mapping&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;Blues&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;asset_key&quot;</span><span class="p">:</span> <span class="n">asset_key</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Surface Water - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">location_name</span> <span class="k">else</span> <span class="s2">&quot;Surface Water&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_fire_detection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle fire / thermal anomaly data with appropriate viz hints.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Fire data from STAC (e.g. MODIS thermal anomalies)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with fire detection viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">collection</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;modis-14A1-061&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;fire_detection&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for fire / thermal anomaly data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=1,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> fire detection items&quot;)</span>
+
+<span class="s2"># Visualize</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        assets=[&quot;data&quot;],</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Fire Detection&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;fire_detection&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;hot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;asset_key&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Fire Detection - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">location_name</span>
+                <span class="k">else</span> <span class="s2">&quot;Fire Detection&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_snow_cover</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle snow / ice cover data with appropriate viz hints.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Snow cover data from STAC (e.g. MODIS snow cover)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with snow cover viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">collection</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;modis-10A1-061&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;snow_cover&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for snow cover data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=1,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> snow cover items&quot;)</span>
+
+<span class="s2"># Visualize</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        assets=[&quot;data&quot;],</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Snow Cover&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;snow_cover&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;Blues_r&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;asset_key&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Snow Cover - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">location_name</span> <span class="k">else</span> <span class="s2">&quot;Snow Cover&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_surface_temperature</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle land surface temperature / SST data with appropriate viz hints.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Temperature data from STAC (e.g. MODIS LST)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with surface temperature viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">collection</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;modis-11A1-061&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;surface_temperature&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for surface temperature data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=1,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> temperature items&quot;)</span>
+
+<span class="s2"># Visualize</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        assets=[&quot;data&quot;],</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Surface Temperature&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;surface_temperature&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="s2">&quot;RdYlBu_r&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;asset_key&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Surface Temperature - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">location_name</span>
+                <span class="k">else</span> <span class="s2">&quot;Surface Temperature&quot;</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">AnalysisResult</span><span class="p">(</span>
+            <span class="n">result_data</span><span class="o">=</span><span class="n">result_data</span><span class="p">,</span>
+            <span class="n">code_generated</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">visualization_hints</span><span class="o">=</span><span class="n">viz_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_event_impact</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">:</span> <span class="n">PlannerOutput</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataResult</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle natural disaster / event impact assessment.</span>
+
+<span class="sd">        This is a passthrough handler that sets up multi-temporal visualization</span>
+<span class="sd">        hints suitable for before/after disaster analysis.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plan: Query plan</span>
+<span class="sd">            data: Event-related data from STAC (e.g. Sentinel-1 SAR)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AnalysisResult with event impact viz configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">location_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+            <span class="n">location_name</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">collection</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span> <span class="k">else</span> <span class="s2">&quot;sentinel-1-grd&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analysis_type&quot;</span><span class="p">:</span> <span class="s2">&quot;event_impact&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;multi_temporal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items_found&quot;</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="p">,</span>
+            <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">collection</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">plan</span><span class="o">.</span><span class="n">location</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;import planetary_computer</span>
+<span class="s2">import leafmap.maplibregl as leafmap</span>
+<span class="s2">from pystac_client import Client</span>
+
+<span class="s2"># Search for event impact data - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span>
+<span class="s2">catalog = Client.open(</span>
+<span class="s2">    &quot;https://planetarycomputer.microsoft.com/api/stac/v1&quot;,</span>
+<span class="s2">    modifier=planetary_computer.sign_inplace,</span>
+<span class="s2">)</span>
+
+<span class="s2">search = catalog.search(</span>
+<span class="s2">    collections=[&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;],</span>
+<span class="s2">    bbox=</span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">    max_items=5,</span>
+<span class="s2">)</span>
+
+<span class="s2">items = list(search.items())</span>
+<span class="s2">print(f&quot;Found </span><span class="se">{{</span><span class="s2">len(items)</span><span class="se">}}</span><span class="s2"> items for event impact analysis&quot;)</span>
+
+<span class="s2"># Visualize (before/after comparison if multiple items available)</span>
+<span class="s2">m = leafmap.Map()</span>
+<span class="s2">if items:</span>
+<span class="s2">    item = items[0]</span>
+<span class="s2">    m.add_stac_layer(</span>
+<span class="s2">        collection=&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;,</span>
+<span class="s2">        item=item.id,</span>
+<span class="s2">        titiler_endpoint=&quot;planetary-computer&quot;,</span>
+<span class="s2">        name=&quot;Event Impact&quot;,</span>
+<span class="s2">        fit_bounds=True,</span>
+<span class="s2">    )</span>
+<span class="s2">m</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+        <span class="n">viz_hints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;event_impact&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;multi_temporal&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Event Impact - </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">location_name</span>
+                <span class="k">else</span> <span class="s2">&quot;Event Impact Assessment&quot;</span>
             <span class="p">),</span>
         <span class="p">}</span>
 
@@ -2394,6 +2973,16 @@ and generates Python code showing exactly what was computed.</p>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_land_cover</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;elevation&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_elevation</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;water_mapping&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_water_mapping</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;fire_detection&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_fire_detection</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;snow_cover&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_snow_cover</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;surface_temperature&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_surface_temperature</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;event_impact&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_event_impact</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;spectral_index&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_spectral_index</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">analysis_type</span> <span class="o">==</span> <span class="s2">&quot;zonal_statistics&quot;</span><span class="p">:</span>

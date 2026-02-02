@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://geoagent.gishub.org/geoagent/">
       
       
-        <link rel="prev" href="../examples/maplibre_viz/">
+        <link rel="prev" href="../examples/event_monitoring/">
       
       
         <link rel="next" href="../models/">
@@ -600,6 +600,90 @@
     
   
     Maplibre viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earth_science_queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earth science queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/contextual_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contextual qa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
   
 
     
@@ -1387,6 +1471,7 @@ geospatial data analysis from natural language queries.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_agent</span> <span class="o">=</span> <span class="n">DataAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">analysis_agent</span> <span class="o">=</span> <span class="n">AnalysisAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viz_agent</span> <span class="o">=</span> <span class="n">VizAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context_agent</span> <span class="o">=</span> <span class="n">ContextAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
 
         <span class="c1"># Initialize workflow graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_workflow</span><span class="p">()</span>
@@ -1439,12 +1524,19 @@ geospatial data analysis from natural language queries.</p>
             <span class="c1"># Create response</span>
             <span class="n">execution_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
 
+            <span class="c1"># Extract plain-text answer for EXPLAIN / contextual queries</span>
+            <span class="n">answer_text</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">analysis</span> <span class="o">=</span> <span class="n">final_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;analysis&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">analysis</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">result_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">answer_text</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">result_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;answer&quot;</span><span class="p">)</span>
+
             <span class="n">response</span> <span class="o">=</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
                 <span class="n">plan</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">],</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
                 <span class="n">analysis</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">],</span>
                 <span class="nb">map</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;map&quot;</span><span class="p">],</span>
                 <span class="n">code</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">],</span>
+                <span class="n">answer_text</span><span class="o">=</span><span class="n">answer_text</span><span class="p">,</span>
                 <span class="n">success</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">error_message</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">],</span>
                 <span class="n">execution_time</span><span class="o">=</span><span class="n">execution_time</span><span class="p">,</span>
@@ -1602,13 +1694,22 @@ geospatial data analysis from natural language queries.</p>
 
             <span class="c1"># Add nodes</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plan_node</span><span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;context&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="p">)</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;fetch_data&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_data_node</span><span class="p">)</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;analyze&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyze_node</span><span class="p">)</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;visualize&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visualize_node</span><span class="p">)</span>
 
             <span class="c1"># Define edges</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">set_entry_point</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
-            <span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">,</span> <span class="s2">&quot;fetch_data&quot;</span><span class="p">)</span>
+
+            <span class="c1"># After planning, EXPLAIN goes straight to context; everything</span>
+            <span class="c1"># else enters the data pipeline.</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">add_conditional_edges</span><span class="p">(</span>
+                <span class="s2">&quot;plan&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_route_after_plan</span><span class="p">,</span>
+                <span class="p">{</span><span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="s2">&quot;context&quot;</span><span class="p">,</span> <span class="s2">&quot;fetch_data&quot;</span><span class="p">:</span> <span class="s2">&quot;fetch_data&quot;</span><span class="p">},</span>
+            <span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;context&quot;</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">add_conditional_edges</span><span class="p">(</span>
                 <span class="s2">&quot;fetch_data&quot;</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_should_analyze</span><span class="p">,</span>
@@ -1625,6 +1726,36 @@ geospatial data analysis from natural language queries.</p>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not create LangGraph workflow: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_context_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentState</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Context node – answer questions via the ContextAgent (LLM).</span>
+
+<span class="sd">        Used for EXPLAIN / conversational queries that do not require the</span>
+<span class="sd">        STAC data pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: Current agent state</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Updated state with contextual analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing context node&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emit_status_detail</span><span class="p">(</span><span class="s2">&quot;context&quot;</span><span class="p">,</span> <span class="s2">&quot;Generating answer&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]:</span>
+                <span class="n">analysis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context_agent</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">],</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
+                    <span class="n">query</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;query&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysis</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">code_generated</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">analysis</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">error_message</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Context analysis failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">state</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_sequential_execution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fallback sequential execution when LangGraph is not available.</span>
 
@@ -1640,6 +1771,16 @@ geospatial data analysis from natural language queries.</p>
             <span class="c1"># Step 1: Plan</span>
             <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plan_node</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
+            <span class="c1"># Short-circuit: EXPLAIN queries go directly to the ContextAgent</span>
+            <span class="c1"># — no data fetch or visualization required.</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;explain&quot;</span>
+                <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">state</span>
+
             <span class="c1"># Step 2: Fetch data</span>
             <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_data_node</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
@@ -1650,6 +1791,15 @@ geospatial data analysis from natural language queries.</p>
                 <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">total_items</span> <span class="o">&gt;</span> <span class="mi">0</span>
             <span class="p">):</span>
                 <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyze_node</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+            <span class="c1"># Step 3b: Context agent fallback for monitor intent when no</span>
+            <span class="c1"># analysis was produced (e.g. no data found).</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;monitor&quot;</span>
+                <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
             <span class="c1"># Step 4: Visualize (if needed)</span>
             <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_visualize&quot;</span><span class="p">]:</span>
@@ -1681,40 +1831,56 @@ geospatial data analysis from natural language queries.</p>
             <span class="c1"># Determine if we need analysis and visualization</span>
             <span class="n">intent_lower</span> <span class="o">=</span> <span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-            <span class="c1"># Analysis is needed for computational tasks</span>
-            <span class="n">analysis_keywords</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="s2">&quot;calculate&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;compute&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;analyze&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;ndvi&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;evi&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;index&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;statistics&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;median&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;change&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;trend&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;zonal&quot;</span><span class="p">,</span>
-            <span class="p">]</span>
-            <span class="n">needs_analysis</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span> <span class="ow">in</span> <span class="n">intent_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">analysis_keywords</span><span class="p">)</span>
-            <span class="c1"># Land cover and elevation need analysis routing for proper viz hints</span>
-            <span class="n">analysis_type_hint</span> <span class="o">=</span> <span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">analysis_type</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span>
-                <span class="s2">&quot;land_cover&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;classification&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;lulc&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;dem&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;terrain&quot;</span><span class="p">,</span>
-            <span class="p">):</span>
-                <span class="n">needs_analysis</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_analyze&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">needs_analysis</span>
+            <span class="c1"># EXPLAIN queries are answered directly by the ContextAgent —</span>
+            <span class="c1"># no data fetch or map visualization needed.</span>
+            <span class="k">if</span> <span class="n">intent_lower</span> <span class="o">==</span> <span class="s2">&quot;explain&quot;</span><span class="p">:</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_analyze&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_visualize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">intent_lower</span> <span class="o">==</span> <span class="s2">&quot;monitor&quot;</span><span class="p">:</span>
+                <span class="c1"># MONITOR still needs the data pipeline</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_analyze&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_visualize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Analysis is needed for computational tasks</span>
+                <span class="n">analysis_keywords</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s2">&quot;calculate&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;compute&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;analyze&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;ndvi&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;evi&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;index&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;statistics&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;median&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;change&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;trend&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;zonal&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+                <span class="n">needs_analysis</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span> <span class="ow">in</span> <span class="n">intent_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">analysis_keywords</span><span class="p">)</span>
+                <span class="c1"># Land cover and elevation need analysis routing for proper viz hints</span>
+                <span class="n">analysis_type_hint</span> <span class="o">=</span> <span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">analysis_type</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">analysis_type_hint</span> <span class="ow">in</span> <span class="p">(</span>
+                    <span class="s2">&quot;land_cover&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;classification&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;lulc&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;dem&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;terrain&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;water_mapping&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;fire_detection&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;snow_cover&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;surface_temperature&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;event_impact&quot;</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">needs_analysis</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_analyze&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">needs_analysis</span>
 
-            <span class="c1"># Visualization is usually desired unless explicitly asking for just data</span>
-            <span class="n">viz_skip_keywords</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;download&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
-            <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_visualize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
-                <span class="n">kw</span> <span class="ow">in</span> <span class="n">intent_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">viz_skip_keywords</span>
-            <span class="p">)</span>
+                <span class="c1"># Visualization is usually desired unless explicitly asking</span>
+                <span class="c1"># for just data</span>
+                <span class="n">viz_skip_keywords</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;download&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
+                <span class="n">state</span><span class="p">[</span><span class="s2">&quot;should_visualize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="n">kw</span> <span class="ow">in</span> <span class="n">intent_lower</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">viz_skip_keywords</span>
+                <span class="p">)</span>
 
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Plan created: analyze=</span><span class="si">{</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;should_analyze&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, visualize=</span><span class="si">{</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;should_visualize&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -1844,6 +2010,12 @@ geospatial data analysis from natural language queries.</p>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]:</span>
+                <span class="c1"># MONITOR intent falls back to context agent when the normal</span>
+                <span class="c1"># analysis cannot produce a result (EXPLAIN is already</span>
+                <span class="c1"># handled by _route_after_plan / _sequential_execution).</span>
+                <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;monitor&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
                 <span class="n">analysis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_agent</span><span class="o">.</span><span class="n">analyze</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">])</span>
                 <span class="n">state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysis</span>
                 <span class="n">state</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">code_generated</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -1946,6 +2118,23 @@ geospatial data analysis from natural language queries.</p>
 <span class="s2">m</span>
 <span class="s2">&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">code</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_route_after_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Conditional edge: route EXPLAIN to the context node, else data pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: Current agent state</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``&quot;context&quot;`` for EXPLAIN queries, ``&quot;fetch_data&quot;`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plan&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;explain&quot;</span>
+            <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;context&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;fetch_data&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_should_analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Conditional edge function to determine if analysis is needed.</span>
@@ -2370,6 +2559,7 @@ geospatial data analysis from natural language queries.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">data_agent</span> <span class="o">=</span> <span class="n">DataAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">analysis_agent</span> <span class="o">=</span> <span class="n">AnalysisAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">viz_agent</span> <span class="o">=</span> <span class="n">VizAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">context_agent</span> <span class="o">=</span> <span class="n">ContextAgent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="p">)</span>
 
     <span class="c1"># Initialize workflow graph</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_workflow</span><span class="p">()</span>
@@ -2585,12 +2775,19 @@ instead of creating a new one.</p></td>
         <span class="c1"># Create response</span>
         <span class="n">execution_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
 
+        <span class="c1"># Extract plain-text answer for EXPLAIN / contextual queries</span>
+        <span class="n">answer_text</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">final_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;analysis&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">analysis</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">analysis</span><span class="o">.</span><span class="n">result_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">answer_text</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">result_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;answer&quot;</span><span class="p">)</span>
+
         <span class="n">response</span> <span class="o">=</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
             <span class="n">plan</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;plan&quot;</span><span class="p">],</span>
             <span class="n">data</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
             <span class="n">analysis</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">],</span>
             <span class="nb">map</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;map&quot;</span><span class="p">],</span>
             <span class="n">code</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;code&quot;</span><span class="p">],</span>
+            <span class="n">answer_text</span><span class="o">=</span><span class="n">answer_text</span><span class="p">,</span>
             <span class="n">success</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">error_message</span><span class="o">=</span><span class="n">final_state</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">],</span>
             <span class="n">execution_time</span><span class="o">=</span><span class="n">execution_time</span><span class="p">,</span>

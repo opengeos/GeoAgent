@@ -613,6 +613,90 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earth_science_queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earth science queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/contextual_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contextual qa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2108,6 +2192,16 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                     <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;io-lulc-9-class&quot;</span><span class="p">,):</span>
                         <span class="c1"># LULC has its own colormap</span>
                         <span class="k">pass</span>
+                    <span class="k">elif</span> <span class="n">collection</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;jrc-gsw&quot;</span><span class="p">):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Blues&quot;</span>
+                    <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;modis-14A1-061&quot;</span><span class="p">,):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;hot&quot;</span>
+                    <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;modis-10A1-061&quot;</span><span class="p">,):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Blues_r&quot;</span>
+                    <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;modis-11A1-061&quot;</span><span class="p">,):</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;RdYlBu_r&quot;</span>
+                    <span class="k">elif</span> <span class="s2">&quot;viirs&quot;</span> <span class="ow">in</span> <span class="n">collection</span><span class="p">:</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;inferno&quot;</span>
 
                     <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_kwargs</span><span class="p">)</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added STAC layer: </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2457,6 +2551,16 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                             <span class="c1"># Add colormap for specific collections</span>
                             <span class="k">if</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cop-dem-glo-30&quot;</span><span class="p">,</span> <span class="s2">&quot;3dep-lidar-hag&quot;</span><span class="p">):</span>
                                 <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;terrain&quot;</span>
+                            <span class="k">elif</span> <span class="n">collection</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;jrc-gsw&quot;</span><span class="p">):</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Blues&quot;</span>
+                            <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;modis-14A1-061&quot;</span><span class="p">,):</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;hot&quot;</span>
+                            <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;modis-10A1-061&quot;</span><span class="p">,):</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Blues_r&quot;</span>
+                            <span class="k">elif</span> <span class="n">collection</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;modis-11A1-061&quot;</span><span class="p">,):</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;RdYlBu_r&quot;</span>
+                            <span class="k">elif</span> <span class="s2">&quot;viirs&quot;</span> <span class="ow">in</span> <span class="n">collection</span><span class="p">:</span>
+                                <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;inferno&quot;</span>
 
                             <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_kwargs</span><span class="p">)</span>
 
@@ -2574,6 +2678,44 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
             <span class="k">if</span> <span class="s2">&quot;VNIR&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;VNIR&quot;</span><span class="p">]</span>
 
+        <span class="c1"># MODIS collections typically use &quot;data&quot; or a specific band</span>
+        <span class="k">if</span> <span class="s2">&quot;modis&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+            <span class="c1"># Some MODIS products have numbered bands</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;500m&quot;</span><span class="p">,</span> <span class="s2">&quot;250m&quot;</span><span class="p">,</span> <span class="s2">&quot;NDVI&quot;</span><span class="p">,</span> <span class="s2">&quot;EVI&quot;</span><span class="p">,</span> <span class="s2">&quot;LST_Day_1km&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">candidate</span><span class="p">]</span>
+
+        <span class="c1"># JRC Global Surface Water</span>
+        <span class="k">if</span> <span class="s2">&quot;jrc-gsw&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;occurrence&quot;</span><span class="p">,</span> <span class="s2">&quot;change&quot;</span><span class="p">,</span> <span class="s2">&quot;seasonality&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">candidate</span><span class="p">]</span>
+
+        <span class="c1"># USDA Cropland Data Layer</span>
+        <span class="k">if</span> <span class="s2">&quot;usda-cdl&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+
+        <span class="c1"># 3DEP LIDAR products</span>
+        <span class="k">if</span> <span class="s2">&quot;3dep-lidar&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+
+        <span class="c1"># HLS (Harmonized Landsat Sentinel)</span>
+        <span class="k">if</span> <span class="s2">&quot;hls&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="c1"># Similar band layout to Sentinel-2</span>
+            <span class="k">if</span> <span class="s2">&quot;B04&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;B03&quot;</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">and</span> <span class="s2">&quot;B02&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;B04&quot;</span><span class="p">,</span> <span class="s2">&quot;B03&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;visual&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;visual&quot;</span><span class="p">]</span>
+
+        <span class="c1"># VIIRS nighttime lights</span>
+        <span class="k">if</span> <span class="s2">&quot;viirs&quot;</span> <span class="ow">in</span> <span class="n">collection_lower</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+
         <span class="c1"># DEM and land cover collections use &quot;data&quot; or &quot;map&quot; asset</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
             <span class="n">term</span> <span class="ow">in</span> <span class="n">intent_lower</span>
@@ -2684,8 +2826,17 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
         <span class="n">viz_hints</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">visualization_hints</span>
         <span class="n">viz_type</span> <span class="o">=</span> <span class="n">viz_hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">viz_hints</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
-        <span class="c1"># Handle land cover and elevation data via STAC layer</span>
-        <span class="k">if</span> <span class="n">viz_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;land_cover&quot;</span><span class="p">,</span> <span class="s2">&quot;elevation&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+        <span class="c1"># Handle typed data via STAC layer (land cover, elevation, water, fire, etc.)</span>
+        <span class="n">_stac_viz_types</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;land_cover&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;water_mapping&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fire_detection&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;snow_cover&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;surface_temperature&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;event_impact&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">viz_type</span> <span class="ow">in</span> <span class="n">_stac_viz_types</span> <span class="ow">and</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
             <span class="n">item</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">item_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="n">collection</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;collection&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -2709,8 +2860,16 @@ appropriate leafmap visualizations for display in Jupyter notebooks.</p>
                         <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;before_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">first_symbol_layer_id</span>
 
                     <span class="c1"># Add colormap for specific viz types</span>
-                    <span class="k">if</span> <span class="n">viz_type</span> <span class="o">==</span> <span class="s2">&quot;elevation&quot;</span><span class="p">:</span>
-                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;terrain&quot;</span>
+                    <span class="n">_viz_colormap_map</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="s2">&quot;terrain&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;water_mapping&quot;</span><span class="p">:</span> <span class="s2">&quot;Blues&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;fire_detection&quot;</span><span class="p">:</span> <span class="s2">&quot;hot&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;snow_cover&quot;</span><span class="p">:</span> <span class="s2">&quot;Blues_r&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;surface_temperature&quot;</span><span class="p">:</span> <span class="s2">&quot;RdYlBu_r&quot;</span><span class="p">,</span>
+                    <span class="p">}</span>
+                    <span class="n">cmap</span> <span class="o">=</span> <span class="n">_viz_colormap_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">viz_type</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">cmap</span><span class="p">:</span>
+                        <span class="n">layer_kwargs</span><span class="p">[</span><span class="s2">&quot;colormap_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmap</span>
 
                     <span class="n">m</span><span class="o">.</span><span class="n">add_stac_layer</span><span class="p">(</span><span class="o">**</span><span class="n">layer_kwargs</span><span class="p">)</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added </span><span class="si">{</span><span class="n">viz_type</span><span class="si">}</span><span class="s2"> STAC layer: </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>

@@ -613,6 +613,90 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earth_science_queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earth science queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/contextual_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contextual qa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1261,6 +1345,7 @@
 
 
 
+
   <div class="doc doc-object doc-class">
 
 
@@ -1331,6 +1416,32 @@ Planner        </code>
             <span class="k">pass</span>
 
     <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_collection</span><span class="p">(</span>
+        <span class="n">intent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">analysis_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Resolve a Planetary Computer collection ID from query context.</span>
+
+<span class="sd">        Uses :data:`COLLECTION_MAPPING` to find the best-matching collection</span>
+<span class="sd">        when the LLM did not set one explicitly.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            intent: The raw intent / query string.</span>
+<span class="sd">            analysis_type: Optional analysis type hint (e.g. ``&quot;fire_detection&quot;``).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A collection ID string, or ``None`` if no match was found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">analysis_type</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="c1"># Try longest keys first for more specific matches (e.g. &quot;land cover&quot;</span>
+        <span class="c1"># before &quot;land&quot;).</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">COLLECTION_MAPPING</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">COLLECTION_MAPPING</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_planner_output</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">_PlannerLLMSchema</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlannerOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert LLM schema output to the canonical PlannerOutput model.&quot;&quot;&quot;</span>
         <span class="n">location</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1358,11 +1469,19 @@ Planner        </code>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">max_items</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;max_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">max_items</span>
 
+        <span class="c1"># Resolve collection via COLLECTION_MAPPING when LLM left dataset empty</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dataset</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">Planner</span><span class="o">.</span><span class="n">_resolve_collection</span><span class="p">(</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">analysis_type</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="k">return</span> <span class="n">PlannerOutput</span><span class="p">(</span>
             <span class="n">intent</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">intent</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
             <span class="n">time_range</span><span class="o">=</span><span class="n">time_range</span><span class="p">,</span>
-            <span class="n">dataset</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
             <span class="n">analysis_type</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">analysis_type</span><span class="p">,</span>
             <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
             <span class="n">confidence</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>

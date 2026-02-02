@@ -613,6 +613,90 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earth_science_queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earth science queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/contextual_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contextual qa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3189,6 +3273,13 @@ GeoAgentResponse            (<span title="pydantic.main.BaseModel">BaseModel</sp
     <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;All generated Python code from the pipeline&quot;</span>
     <span class="p">)</span>
+    <span class="n">answer_text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Plain-text answer from the ContextAgent for EXPLAIN / conversational &quot;</span>
+            <span class="s2">&quot;queries.  None when the response is a data-pipeline result.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Whether the overall pipeline succeeded&quot;</span>
     <span class="p">)</span>
@@ -3538,12 +3629,16 @@ Intent            (<span title="str">str</span>, <span title="enum.Enum">Enum</s
     <span class="n">ANALYZE</span> <span class="o">=</span> <span class="s2">&quot;analyze&quot;</span>
     <span class="n">VISUALIZE</span> <span class="o">=</span> <span class="s2">&quot;visualize&quot;</span>
     <span class="n">COMPARE</span> <span class="o">=</span> <span class="s2">&quot;compare&quot;</span>
+    <span class="n">EXPLAIN</span> <span class="o">=</span> <span class="s2">&quot;explain&quot;</span>
+    <span class="n">MONITOR</span> <span class="o">=</span> <span class="s2">&quot;monitor&quot;</span>
 </code></pre></div>
         </details>
 
 
 
   <div class="doc doc-children">
+
+
 
 
 
