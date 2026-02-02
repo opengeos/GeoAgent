@@ -97,21 +97,13 @@ def search_stac(
             client = None
 
         if not client:
-            # Default catalog URLs
-            catalog_urls = {
-                "microsoft-pc": "https://planetarycomputer.microsoft.com/api/stac/v1",
-                "earth-search": "https://earth-search.aws.element84.com/v1",
-                "usgs-landsat": "https://landsatlook.usgs.gov/stac-server",
-                "cop-dem": "https://copernicus-dem-30m.s3.amazonaws.com/stac/catalog.json",
-            }
-
-            catalog_url = catalog_urls.get(catalog, catalog)
-            if not catalog_url.startswith("http"):
-                raise ValueError(
-                    f"Unknown catalog '{catalog}'. Available: {list(catalog_urls.keys())}"
-                )
-
-            client = Client.open(catalog_url)
+            # Fallback to creating client directly with URL if registry not available
+            from geoagent.catalogs.registry import get_registry
+            try:
+                registry = get_registry()
+                client = registry.get_client(catalog)
+            except Exception as e:
+                raise ValueError(f"Failed to get catalog client '{catalog}': {e}")
 
         # Build search parameters
         search_params = {}
@@ -227,15 +219,13 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
             client = None
 
         if not client:
-            # Default catalog URLs
-            catalog_urls = {
-                "microsoft-pc": "https://planetarycomputer.microsoft.com/api/stac/v1",
-                "earth-search": "https://earth-search.aws.element84.com/v1",
-                "usgs-landsat": "https://landsatlook.usgs.gov/stac-server",
-            }
-
-            catalog_url = catalog_urls.get(catalog, catalog)
-            client = Client.open(catalog_url)
+            # Fallback to creating client via registry
+            from geoagent.catalogs.registry import get_registry
+            try:
+                registry = get_registry()
+                client = registry.get_client(catalog)
+            except Exception as e:
+                raise RuntimeError(f"Failed to get catalog client '{catalog}': {e}")
 
         collections = []
         for collection in client.get_collections():

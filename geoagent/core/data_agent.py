@@ -364,56 +364,6 @@ class DataAgent:
             # Use the planner-provided dataset directly as the collection ID
             params["collections"] = [plan.dataset]
 
-        # Resolve collection from analysis_type or intent if not already set
-        if "collections" not in params:
-            analysis_type = (plan.analysis_type or "").lower()
-            intent_lower = plan.intent.lower()
-
-            # Check analysis_type first (most reliable signal from planner)
-            if analysis_type in ("land_cover", "classification", "lulc"):
-                params["collections"] = ["io-lulc-9-class"]
-            elif analysis_type in (
-                "elevation",
-                "dem",
-                "terrain",
-                "slope",
-                "hillshade",
-            ):
-                params["collections"] = ["cop-dem-glo-30"]
-            elif analysis_type in ("water_mapping",):
-                params["collections"] = ["jrc-gsw"]
-            elif analysis_type in ("fire_detection",):
-                params["collections"] = ["modis-14A1-061"]
-            elif analysis_type in ("snow_cover",):
-                params["collections"] = ["modis-10A1-061"]
-            elif analysis_type in ("surface_temperature",):
-                params["collections"] = ["modis-11A1-061"]
-            elif analysis_type in ("event_impact",):
-                params["collections"] = ["sentinel-1-grd"]
-            # Then check intent keywords
-            elif any(
-                kw in intent_lower
-                for kw in ["land cover", "landcover", "lulc", "land use"]
-            ):
-                params["collections"] = ["io-lulc-9-class"]
-            elif any(
-                kw in intent_lower
-                for kw in ["dem", "elevation", "terrain", "height", "topograph"]
-            ):
-                params["collections"] = ["cop-dem-glo-30"]
-            elif any(
-                kw in intent_lower
-                for kw in [
-                    "ndvi",
-                    "evi",
-                    "vegetation",
-                    "spectral",
-                    "band",
-                    "imagery",
-                ]
-            ):
-                params["collections"] = ["sentinel-2-l2a"]
-
         # Add cloud cover filter only for imagery collections (not DEM/land cover)
         # Heuristic: imagery collections often contain these keywords
         current_collections = set(params.get("collections", []))
