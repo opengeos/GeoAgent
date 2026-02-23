@@ -7,7 +7,6 @@ import subprocess
 import sys
 from typing import List, Optional
 
-
 # Path to the Solara pages directory
 PAGES_DIR = str(Path(__file__).parent / "pages")
 
