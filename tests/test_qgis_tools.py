@@ -133,6 +133,31 @@ def test_zoom_to_layer_resolves_layer() -> None:
     assert iface.activeLayer() is layer
 
 
+def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
+    """Layers with ``extent()`` must drive ``setExtent`` + ``refresh``.
+
+    ``iface.zoomToActiveLayer()`` updates the canvas extent but does
+    not always trigger XYZ tile providers (Google Satellite, OSM, etc.)
+    to refetch tiles at the new zoom-pyramid level — basemaps stay
+    pixelated on upscaled lower-resolution tiles. Routing through
+    ``canvas.setExtent()`` + ``canvas.refresh()`` mirrors the path
+    QGIS uses for user-driven zoom and resolves the tile pyramid
+    correctly.
+    """
+    project = MockQGISProject()
+    iface = MockQGISIface(project=project)
+    canvas = iface.mapCanvas()
+    layer = MockQGISLayer(
+        "Buildings", "/tmp/b.shp", extent=(-115.3, 36.1, -115.0, 36.3)
+    )
+    project.addMapLayer(layer)
+    tools = {t.name: t for t in qgis_tools(iface, project)}
+    before_refresh = canvas.refresh_count
+    tools["zoom_to_layer"].invoke({"layer_name": "Buildings"})
+    assert canvas.extent() == (-115.3, 36.1, -115.0, 36.3)
+    assert canvas.refresh_count == before_refresh + 1
+
+
 def test_zoom_to_layer_raises_when_missing() -> None:
     project = MockQGISProject()
     iface = MockQGISIface(project=project)

@@ -214,6 +214,7 @@ class MockQGISLayer:
         source: str = "",
         layer_type: str = "vector",
         fields: list[dict[str, Any]] | None = None,
+        extent: tuple[float, float, float, float] | None = None,
     ) -> None:
         self.layer_name = name
         self.source_uri = source
@@ -221,6 +222,7 @@ class MockQGISLayer:
         self._fields = list(fields) if fields else []
         self._selected: list[dict[str, Any]] = []
         self._visible = True
+        self._extent = tuple(extent) if extent else None
 
     def name(self) -> str:
         return self.layer_name
@@ -230,6 +232,17 @@ class MockQGISLayer:
 
     def type(self) -> str:
         return self.layer_type
+
+    def extent(self) -> Optional[tuple[float, float, float, float]]:
+        """Return the layer's extent ``(west, south, east, north)``.
+
+        ``QgsMapLayer.extent()`` returns a ``QgsRectangle``; the mock
+        returns a 4-tuple matching the test stubs. Tests that need to
+        exercise the ``setExtent`` + ``refresh`` zoom path can pass an
+        explicit extent into the mock's constructor; the default
+        (``None``) lets tools fall back to the iface-driven zoom path.
+        """
+        return self._extent
 
     def isValid(self) -> bool:
         return True

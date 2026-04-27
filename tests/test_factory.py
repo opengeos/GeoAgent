@@ -118,3 +118,73 @@ def test_factory_passes_context_schema(monkeypatch) -> None:
         llm=_fake_llm(),
     )
     assert captured["context_schema"] is GeoAgentContext
+
+
+def test_for_leafmap_omits_checkpointer_by_default(monkeypatch) -> None:
+    """``for_leafmap`` returns a graph that accepts a bare ``.invoke()``.
+
+    deepagents' default checkpointer (``MemorySaver``) requires every
+    ``.invoke()`` call to pass ``config={"configurable": {"thread_id": ...}}``.
+    Direct-invoke users (``graph.invoke({"messages": [...]})``) shouldn't
+    have to know that, so the convenience factories opt out by default.
+    Pinning this captures the contract: no checkpointer reaches
+    ``create_deep_agent`` unless the caller asks for one.
+    """
+    captured: dict[str, object] = {}
+
+    def fake_create_deep_agent(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: fake_create_deep_agent
+    )
+
+    for_leafmap(MockLeafmap(), llm=_fake_llm(), include_stac=False)
+    assert captured.get("checkpointer") is None
+
+
+def test_for_qgis_omits_checkpointer_by_default(monkeypatch) -> None:
+    """``for_qgis`` mirrors ``for_leafmap``'s no-checkpointer default."""
+    captured: dict[str, object] = {}
+
+    def fake_create_deep_agent(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: fake_create_deep_agent
+    )
+
+    for_qgis(MockQGISIface(), llm=_fake_llm(), include_stac=False)
+    assert captured.get("checkpointer") is None
+
+
+def test_for_leafmap_honors_explicit_checkpointer(monkeypatch) -> None:
+    """A caller-supplied checkpointer is not stomped by the default."""
+    from langgraph.checkpoint.memory import MemorySaver
+
+    captured: dict[str, object] = {}
+
+    def fake_create_deep_agent(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: fake_create_deep_agent
+    )
+
+    saver = MemorySaver()
+    for_leafmap(
+        MockLeafmap(),
+        llm=_fake_llm(),
+        include_stac=False,
+        checkpointer=saver,
+    )
+    assert captured.get("checkpointer") is saver
