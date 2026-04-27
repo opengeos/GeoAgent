@@ -43,6 +43,29 @@ def _resolve_layer(project: Any, layer_name: str) -> Any:
     return layers[0]
 
 
+def _refresh_canvas_with_tiles(canvas: Any) -> None:
+    """Force the QGIS map canvas to redraw including XYZ tile layers.
+
+    ``QgsMapCanvas.refresh()`` schedules a redraw using the existing
+    layer caches, which is fine for vector / file-raster layers but
+    leaves XYZ tile providers (Google Satellite, OSM, ESRI, etc.)
+    showing the *previous* extent's cached tiles — the new view appears
+    blank until the user pans by hand. ``refreshAllLayers()``
+    invalidates each layer's data-provider cache before redrawing,
+    which is what QGIS's "Refresh All Layers" menu action runs and is
+    the reliable fix for XYZ basemap re-tiling.
+
+    Calls ``refreshAllLayers()`` when available, falls back to
+    ``refresh()`` otherwise (the test mock and very old QGIS releases
+    expose only the latter).
+    """
+    if hasattr(canvas, "refreshAllLayers"):
+        canvas.refreshAllLayers()
+        return
+    if hasattr(canvas, "refresh"):
+        canvas.refresh()
+
+
 def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
     """Build the QGIS tool set bound to a live ``QgisInterface``.
 
@@ -129,11 +152,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         """
         canvas = iface.mapCanvas()
         canvas.zoomIn()
-        # ``QgsMapCanvas`` defers redraws after a programmatic extent
-        # change — XYZ tile layers (Google Satellite, OSM, etc.) won't
-        # request fresh tiles until ``refresh()`` is called explicitly.
-        if hasattr(canvas, "refresh"):
-            canvas.refresh()
+        _refresh_canvas_with_tiles(canvas)
         return "Zoomed in."
 
     @geo_tool(
@@ -149,8 +168,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         """
         canvas = iface.mapCanvas()
         canvas.zoomOut()
-        if hasattr(canvas, "refresh"):
-            canvas.refresh()
+        _refresh_canvas_with_tiles(canvas)
         return "Zoomed out."
 
     @geo_tool(
@@ -176,12 +194,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
             extent = layer.extent() if hasattr(layer, "extent") else None
             if extent is not None:
                 canvas.setExtent(extent)
-        # ``zoomToActiveLayer`` updates the canvas extent but does not
-        # always trigger a redraw of XYZ tile layers (Google Satellite,
-        # OSM, etc.) — without an explicit ``refresh()`` the basemap can
-        # appear blank at the new extent until the user pans manually.
-        if hasattr(canvas, "refresh"):
-            canvas.refresh()
+        _refresh_canvas_with_tiles(canvas)
         return f"Zoomed to layer {layer_name!r}."
 
     @geo_tool(
@@ -207,8 +220,9 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
             rect = QgsRectangle(west, south, east, north)
         except Exception:
             rect = (west, south, east, north)
-        iface.mapCanvas().setExtent(rect)
-        iface.mapCanvas().refresh()
+        canvas = iface.mapCanvas()
+        canvas.setExtent(rect)
+        _refresh_canvas_with_tiles(canvas)
         return f"Zoomed to extent [{west}, {south}, {east}, {north}]."
 
     @geo_tool(
@@ -427,12 +441,12 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         context_keys=("qgis_iface",),
     )
     def refresh_canvas() -> str:
-        """Refresh the QGIS map canvas.
+        """Refresh the QGIS map canvas, re-tiling XYZ basemaps.
 
         Returns:
             A status string.
         """
-        iface.mapCanvas().refresh()
+        _refresh_canvas_with_tiles(iface.mapCanvas())
         return "Canvas refreshed."
 
     return [
