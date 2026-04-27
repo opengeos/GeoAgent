@@ -10,11 +10,11 @@ from langchain_core.tools import tool
 from pystac_client import Client
 
 try:
-    from geoagent.catalogs.registry import CatalogRegistry
+    from geoagent.catalogs.registry import get_catalog_client
 except ImportError:
-    CatalogRegistry = None
+    get_catalog_client = None
     logging.getLogger(__name__).debug(
-        "CatalogRegistry not available; using built-in catalog URLs as fallback."
+        "Catalog registry not available; using built-in catalog URLs as fallback."
     )
 
 logger = logging.getLogger(__name__)
@@ -86,15 +86,18 @@ def search_stac(
             ]
 
     try:
-        # Get catalog client
-        if CatalogRegistry:
+        # Get catalog client. Only fall back to the built-in URL dict when the
+        # registry doesn't recognize the catalog (ValueError); configuration
+        # errors like missing auth tokens or connection failures (RuntimeError)
+        # propagate so callers see the real cause.
+        client = None
+        if get_catalog_client is not None:
             try:
-                client = CatalogRegistry.get_client(catalog)
-            except Exception as e:
-                logger.warning(f"Failed to get catalog from registry: {e}")
-                client = None
-        else:
-            client = None
+                client = get_catalog_client(catalog)
+            except ValueError:
+                logger.debug(
+                    f"Catalog '{catalog}' not registered; trying built-in URLs."
+                )
 
         if not client:
             # Default catalog URLs
@@ -217,14 +220,17 @@ def get_stac_collections(catalog: str = "microsoft-pc") -> List[Dict[str, Any]]:
         >>> collections = get_stac_collections("microsoft-pc")
     """
     try:
-        # Get catalog client
-        if CatalogRegistry:
+        # Get catalog client. Only fall back to the built-in URL dict when the
+        # registry doesn't recognize the catalog (ValueError); other errors
+        # (missing auth, connection failures) propagate to the outer except.
+        client = None
+        if get_catalog_client is not None:
             try:
-                client = CatalogRegistry.get_client(catalog)
-            except Exception:
-                client = None
-        else:
-            client = None
+                client = get_catalog_client(catalog)
+            except ValueError:
+                logger.debug(
+                    f"Catalog '{catalog}' not registered; trying built-in URLs."
+                )
 
         if not client:
             # Default catalog URLs

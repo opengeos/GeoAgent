@@ -208,6 +208,48 @@ class TestImports(unittest.TestCase):
         self.assertIs(result, sentinel)
         mock_init.assert_called_once_with("anthropic:claude-sonnet-4-5")
 
+    def test_catalog_registry_aliases(self) -> None:
+        """Prompt-facing names must resolve to canonical CatalogInfo entries."""
+        from geoagent.catalogs.registry import CatalogRegistry
+
+        reg = CatalogRegistry()
+        cases = {
+            "microsoft-pc": "planetary_computer",
+            "planetary-computer": "planetary_computer",
+            "earth-search": "earth_search",
+            "usgs-landsat": "usgs",
+            "nasa-cmr": "nasa_cmr",
+        }
+        for alias, canonical in cases.items():
+            with self.subTest(alias=alias):
+                resolved = reg.get_catalog(alias)
+                self.assertIsNotNone(
+                    resolved, f"alias {alias!r} should resolve to a catalog"
+                )
+                self.assertEqual(resolved.name, canonical)
+
+    def test_search_stac_uses_registry_without_warning(self) -> None:
+        """The registry path must not emit a warning for prompt-facing names."""
+        from unittest.mock import MagicMock
+
+        from geoagent.core.tools import stac as stac_tool
+
+        fake_client = MagicMock()
+        fake_search = MagicMock()
+        fake_search.items.return_value = iter(())
+        fake_client.search.return_value = fake_search
+
+        with patch(
+            "geoagent.catalogs.registry.pystac_client.Client.open",
+            return_value=fake_client,
+        ):
+            with self.assertNoLogs(stac_tool.logger.name, level="WARNING"):
+                result = stac_tool.search_stac.invoke(
+                    {"query": "any", "catalog": "microsoft-pc", "max_items": 1}
+                )
+
+        self.assertEqual(result, [])
+
 
 if __name__ == "__main__":
     unittest.main()
