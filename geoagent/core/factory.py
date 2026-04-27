@@ -76,12 +76,23 @@ def create_geo_agent(
             ``"ollama"``). Resolved via :func:`geoagent.core.llm.resolve_model`.
         llm: A pre-built LangChain ``BaseChatModel`` (alias of ``model`` for
             users coming from the v0.x API).
-        subagents: List of deepagents subagent specs. Phase 1 ships with no
-            built-in subagents; pass an explicit list when ready.
-        checkpointer: A LangGraph ``Checkpointer`` for thread persistence.
-        confirm: Reserved for use by the :class:`GeoAgent` facade in Phase 2.
-            Currently unused at the factory layer; included so callers can
-            construct full configurations now without re-plumbing later.
+        subagents: List of deepagents subagent specs. When ``None`` the
+            factory calls :func:`geoagent.agents.coordinator.default_subagents`
+            with the active context to assemble the standard set
+            (planner, data, analysis, context — plus mapping / qgis /
+            geoai / earthdata when their runtime state or optional
+            packages are available). Pass an explicit list (including
+            ``[]``) to override.
+        checkpointer: A LangGraph ``Checkpointer`` for thread
+            persistence. Required for the human-in-the-loop interrupt /
+            resume flow used by :class:`GeoAgent.chat`. When ``None``
+            (the default), an in-memory
+            :class:`langgraph.checkpoint.memory.MemorySaver` is created
+            so HITL works out of the box. Pass ``False`` to opt out.
+        confirm: Reserved for use by the :class:`GeoAgent` facade.
+            Currently unused at the factory layer; included so callers
+            can construct full configurations now without re-plumbing
+            later.
         debug: Forwarded to deepagents.
 
     Returns:
@@ -89,7 +100,7 @@ def create_geo_agent(
         Invoke via ``.invoke({"messages": [...]})`` or ``.stream(...)``.
     """
     create_deep_agent = _require_deepagents()
-    del confirm  # placeholder for the Phase 2 facade
+    del confirm  # placeholder for the GeoAgent facade
 
     from .llm import resolve_model
 
@@ -99,6 +110,19 @@ def create_geo_agent(
     interrupt_on = build_interrupt_on(tool_list) or None
 
     context = context or GeoAgentContext()
+
+    if subagents is None:
+        from geoagent.agents.coordinator import default_subagents
+
+        subagents = default_subagents(context)
+
+    if checkpointer is None:
+        from langgraph.checkpoint.memory import MemorySaver
+
+        checkpointer = MemorySaver()
+    elif checkpointer is False:
+        # Explicit opt-out: pass None through to deepagents (HITL won't work).
+        checkpointer = None
 
     return create_deep_agent(
         model=resolved_model,
