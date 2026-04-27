@@ -11,8 +11,8 @@ from geoagent import GeoAgent
 agent = GeoAgent()
 
 # Or specify a provider and model
-agent = GeoAgent(provider="openai", model="gpt-4o")
-agent = GeoAgent(provider="anthropic", model="claude-sonnet-4-20250514")
+agent = GeoAgent(provider="openai", model="gpt-5.4")
+agent = GeoAgent(provider="anthropic", model="claude-sonnet-4-6")
 agent = GeoAgent(provider="ollama", model="llama3.1")
 ```
 
@@ -144,7 +144,7 @@ print(get_available_providers())  # ['openai', 'ollama']
 print(check_api_keys())           # {'openai': True, 'anthropic': False, ...}
 
 # Create a specific LLM
-llm = get_llm(provider="openai", model="gpt-4o", temperature=0.0)
+llm = get_llm(provider="openai", model="gpt-5.4", temperature=0.0)
 ```
 
 ## Web UI

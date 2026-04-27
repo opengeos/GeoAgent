@@ -70,7 +70,7 @@ def create_geo_agent(
         system_prompt: Coordinator system prompt. Defaults to
             :data:`COORDINATOR_PROMPT`.
         model: A pre-built LangChain ``BaseChatModel``, or a deepagents-style
-            string like ``"openai:gpt-4o"``. Mutually exclusive with
+            string like ``"openai:gpt-5.4"``. Mutually exclusive with
             ``provider`` / ``llm``.
         provider: A provider name (``"openai"``, ``"anthropic"``, ``"google"``,
             ``"ollama"``). Resolved via :func:`geoagent.core.llm.resolve_model`.
