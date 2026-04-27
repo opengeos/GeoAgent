@@ -1,1075 +1,321 @@
-"""Main GeoAgent orchestrator using LangGraph for agent coordination.
+"""High-level :class:`GeoAgent` facade over the deepagents runtime.
 
-This module contains the main GeoAgent class that orchestrates the entire
-geospatial analysis pipeline using multiple specialized agents.
+The legacy v0.x ``GeoAgent`` orchestrated a 4-agent LangGraph pipeline.
+Phase 2 replaces it with a thin wrapper around
+:func:`geoagent.core.factory.create_geo_agent`. The public API is
+preserved (``__init__`` accepts ``llm`` / ``provider`` / ``model`` /
+``catalogs``; ``chat()`` returns a :class:`GeoAgentResponse` with the
+same field names) but the internals are entirely rebuilt on
+deepagents subagents.
+
+The facade also bridges deepagents' interrupt / resume mechanism to a
+user-supplied :class:`~geoagent.core.safety.ConfirmCallback`. When a
+confirmation-required tool fires, deepagents pauses the graph and
+returns a result with an ``__interrupt__`` key; :meth:`GeoAgent.chat`
+loops over that, calls the user's callback per pending tool, and
+resumes with ``Command(resume={"decisions": [...]})`` until the graph
+completes.
 """
 
-from typing import Any, Callable, Dict, List, Optional, TypedDict
+from __future__ import annotations
+
 import logging
 import time
+import uuid
+from typing import Any, Callable, Optional
+
+from langgraph.types import Command
+
+from .context import GeoAgentContext
+from .factory import create_geo_agent
+from .result import GeoAgentResponse
+from .safety import ConfirmCallback, ConfirmRequest, auto_approve_safe_only
 
 logger = logging.getLogger(__name__)
 
-try:
-    from langgraph.graph import StateGraph, END
-
-    LANGGRAPH_AVAILABLE = True
-except ImportError:
-    LANGGRAPH_AVAILABLE = False
-    logger.warning(
-        "LangGraph not available. GeoAgent will use simple sequential execution."
-    )
-
-from .models import (  # noqa: E402
-    PlannerOutput,
-    DataResult,
-    AnalysisResult,
-    GeoAgentResponse,
-)
-from .data_agent import DataAgent  # noqa: E402
-from .analysis_agent import AnalysisAgent  # noqa: E402
-from .viz_agent import VizAgent  # noqa: E402
-from .planner import Planner  # noqa: E402
-from .context_agent import ContextAgent  # noqa: E402
-from .llm import get_default_llm  # noqa: E402
-from geoagent.catalogs.registry import get_collection_index  # noqa: E402
-
-
-class AgentState(TypedDict):
-    """State passed between agents in the LangGraph workflow."""
-
-    query: str
-    plan: Optional[PlannerOutput]
-    data: Optional[DataResult]
-    analysis: Optional[AnalysisResult]
-    map: Optional[Any]
-    code: str
-    error: Optional[str]
-    should_analyze: bool
-    should_visualize: bool
-
 
 class GeoAgent:
-    """Main GeoAgent orchestrator for geospatial analysis workflows.
+    """High-level facade over a deepagents-compiled GeoAgent runtime.
 
-    GeoAgent coordinates multiple specialized agents to perform end-to-end
-    geospatial data analysis from natural language queries.
+    ``GeoAgent`` is the public, stable entry point for building a
+    geospatial agent. It owns a single deepagents graph plus a unique
+    LangGraph thread, wires confirmation-required tool calls through a
+    user-supplied callback, and reconstructs the v0.x-style
+    :class:`GeoAgentResponse` shape from the final graph state.
+
+    Args:
+        llm: A pre-built LangChain ``BaseChatModel``. Mutually exclusive
+            with ``provider`` / ``model``.
+        provider: A provider name (``"openai"``, ``"anthropic"``,
+            ``"google"``, ``"ollama"``).
+        model: A model name string. May be a deepagents-style
+            ``"provider:model"`` shorthand when ``provider`` is omitted.
+        catalogs: Optional list of STAC catalog URLs to expose to the
+            data subagent. Currently informational; the catalog registry
+            in :mod:`geoagent.catalogs.registry` continues to drive
+            STAC discovery.
+        context: Pre-built :class:`GeoAgentContext`. When omitted, an
+            empty context is created.
+        tools: Additional :class:`langchain_core.tools.BaseTool` objects
+            to expose alongside the default subagent tools.
+        confirm: Callback invoked before any confirmation-required tool
+            executes. Defaults to
+            :func:`geoagent.core.safety.auto_approve_safe_only` which
+            rejects everything (so destructive tools never run silently).
+        checkpointer: A LangGraph ``Checkpointer``. ``None`` (the
+            default) creates an in-memory ``MemorySaver``. Pass
+            ``False`` to opt out of checkpointing (HITL will be
+            disabled).
+        thread_id: Override the auto-generated LangGraph thread id.
+
+    Example:
+        >>> from geoagent import GeoAgent
+        >>> agent = GeoAgent(provider="openai")
+        >>> resp = agent.chat("Search Sentinel-2 for Knoxville in July 2024")
+        >>> resp.success
+        True
     """
 
     def __init__(
         self,
-        llm: Optional[Any] = None,
+        llm: Any = None,
         provider: Optional[str] = None,
         model: Optional[str] = None,
-        catalogs: Optional[List[str]] = None,
-    ):
-        """Initialize GeoAgent with LLM and configuration.
+        catalogs: Optional[list] = None,
+        *,
+        context: Optional[GeoAgentContext] = None,
+        tools: Optional[list] = None,
+        confirm: Optional[ConfirmCallback] = None,
+        checkpointer: Any = None,
+        thread_id: Optional[str] = None,
+        _tools: Optional[list] = None,
+    ) -> None:
+        self._context = context or GeoAgentContext()
+        self._confirm: ConfirmCallback = confirm or auto_approve_safe_only
+        self._catalogs = catalogs or []
+        self._thread_id = thread_id or f"geoagent-{uuid.uuid4().hex[:12]}"
+        self._tools_by_name: dict[str, Any] = {}
+        for t in list(_tools or []) + list(tools or []):
+            name = getattr(t, "name", None)
+            if name:
+                self._tools_by_name[name] = t
+        self._graph = create_geo_agent(
+            llm=llm,
+            provider=provider,
+            model=model,
+            tools=_tools,
+            extra_tools=tools or [],
+            context=self._context,
+            checkpointer=checkpointer,
+        )
 
-        Args:
-            llm: Language model instance. If None, uses get_default_llm()
-            provider: LLM provider name (e.g., 'openai', 'anthropic')
-            model: Specific model name
-            catalogs: List of STAC catalog URLs to search
-        """
-        self.llm = llm or get_default_llm()
-        self.provider = provider
-        self.model = model
-        self.catalogs = catalogs or []
-
-        # Fetch available collections from the Planetary Computer STAC (with fallback)
-        try:
-            self.collection_index = get_collection_index()
-        except Exception as e:
-            logger.warning(
-                f"Failed to fetch collection index: {e}. Proceeding without it."
-            )
-            self.collection_index = []
-
-        # Initialize specialized agents
-        self.planner = Planner(self.llm, collections=self.collection_index)
-        self.data_agent = DataAgent(self.llm)
-        self.analysis_agent = AnalysisAgent(self.llm)
-        self.viz_agent = VizAgent(self.llm)
-        self.context_agent = ContextAgent(self.llm)
-
-        # Initialize workflow graph
-        self.workflow = self._create_workflow()
-
-        logger.info("GeoAgent initialized successfully")
-
+    # ------------------------------------------------------------------
+    # Public chat interface
+    # ------------------------------------------------------------------
     def chat(
         self,
         query: str,
         target_map: Any = None,
         status_callback: Optional[Callable[[str], None]] = None,
     ) -> GeoAgentResponse:
-        """Main method to process a natural language query.
+        """Send a natural-language query to the agent.
 
         Args:
-            query: Natural language geospatial analysis query
-            target_map: Optional existing map widget to render results on.
-                When provided, layers are added directly to this map
-                instead of creating a new one.
+            query: The user's request.
+            target_map: Optional live map widget to fold into the
+                runtime context for this call. Mutates the agent's
+                context so subsequent calls also see the map.
+            status_callback: Optional callable invoked with short status
+                strings as the agent progresses. Currently used only for
+                interrupt / resume notifications; tool-level streaming
+                will be added in Phase 3.
 
         Returns:
-            GeoAgentResponse with complete pipeline results
+            A :class:`GeoAgentResponse` populated from the deepagents
+            final state. Tool names that ran are listed in
+            :attr:`GeoAgentResponse.executed_tools`; tools the user
+            cancelled via the confirm callback are in
+            :attr:`GeoAgentResponse.cancelled_tools`.
         """
-        logger.info(f"Processing query: {query}")
-        self._target_map = target_map
-        self._status_callback = status_callback
-        start_time = time.time()
+        if target_map is not None:
+            self._context = self._context.with_overrides(map_obj=target_map)
+
+        config = {"configurable": {"thread_id": self._thread_id}}
+        executed: list[str] = []
+        cancelled: list[str] = []
+        start = time.time()
 
         try:
-            # Initialize state
-            initial_state = AgentState(
-                query=query,
-                plan=None,
-                data=None,
-                analysis=None,
-                map=None,
-                code="",
-                error=None,
-                should_analyze=True,
-                should_visualize=True,
+            result: Any = self._graph.invoke(
+                {"messages": [{"role": "user", "content": query}]},
+                config=config,
             )
-
-            # Execute workflow
-            if LANGGRAPH_AVAILABLE and self.workflow:
-                final_state = self.workflow.invoke(initial_state)
-            else:
-                # Fallback to sequential execution
-                final_state = self._sequential_execution(initial_state)
-
-            # Create response
-            execution_time = time.time() - start_time
-
-            # Extract plain-text answer for EXPLAIN / contextual queries
-            answer_text = None
-            analysis = final_state.get("analysis")
-            if analysis and isinstance(analysis.result_data, dict):
-                answer_text = analysis.result_data.get("answer")
-
-            response = GeoAgentResponse(
-                plan=final_state["plan"],
-                data=final_state["data"],
-                analysis=final_state["analysis"],
-                map=final_state["map"],
-                code=final_state["code"],
-                answer_text=answer_text,
-                success=final_state["error"] is None,
-                error_message=final_state["error"],
-                execution_time=execution_time,
-            )
-
-            logger.info(f"Query processed successfully in {execution_time:.2f}s")
-            return response
-
-        except Exception as e:
-            execution_time = time.time() - start_time
-            logger.error(f"Query processing failed: {e}")
-
+            # Resume loop: while deepagents is paused on an interrupt,
+            # walk the user through the pending tool calls and resume
+            # with approve / reject decisions.
+            while True:
+                interrupts = self._extract_interrupts(result)
+                if not interrupts:
+                    break
+                decisions = []
+                for req in interrupts:
+                    tool_name = req.get("name") or req.get("action_name") or ""
+                    args = req.get("args") or {}
+                    confirm_req = ConfirmRequest(
+                        tool_name=tool_name,
+                        args=dict(args),
+                        description=self._tool_description(tool_name, req),
+                        category=None,
+                        metadata={},
+                    )
+                    if status_callback is not None:
+                        try:
+                            status_callback(f"awaiting confirmation: {tool_name}")
+                        except Exception:  # pragma: no cover - user code
+                            logger.debug("status_callback raised", exc_info=True)
+                    approved = bool(self._confirm(confirm_req))
+                    if approved:
+                        decisions.append({"type": "approve"})
+                        executed.append(tool_name)
+                    else:
+                        decisions.append(
+                            {"type": "reject", "message": "User cancelled."}
+                        )
+                        cancelled.append(tool_name)
+                result = self._graph.invoke(
+                    Command(resume={"decisions": decisions}),
+                    config=config,
+                )
+            elapsed = time.time() - start
+            return _adapt_result(result, executed, cancelled, elapsed)
+        except Exception as exc:
+            elapsed = time.time() - start
+            logger.exception("GeoAgent.chat failed")
             return GeoAgentResponse(
-                plan=PlannerOutput(intent=query, confidence=0.0),
                 success=False,
-                error_message=str(e),
-                execution_time=execution_time,
+                error_message=str(exc),
+                execution_time=elapsed,
+                executed_tools=executed,
+                cancelled_tools=cancelled,
             )
-        finally:
-            self._status_callback = None
 
-    def _emit_status(self, stage: str) -> None:
-        self._emit_status_detail(stage, None)
-
-    def _emit_status_detail(self, stage: str, detail: Optional[str]) -> None:
-        callback = getattr(self, "_status_callback", None)
-        if callback is None:
-            return
-        payload = {"stage": stage}
-        if detail:
-            payload["detail"] = detail
-        try:
-            callback(payload)
-            return
-        except TypeError:
-            pass
-        try:
-            if detail:
-                callback(f"{stage} • {detail}")
-            else:
-                callback(stage)
-        except Exception as e:
-            logger.debug(f"Status callback failed: {e}")
-
-    @staticmethod
-    def _format_plan_detail(plan: PlannerOutput) -> str:
-        parts: List[str] = []
-        if plan.dataset:
-            parts.append(plan.dataset)
-        if plan.location:
-            name = plan.location.get("name")
-            if name:
-                parts.append(name)
-        if plan.time_range:
-            start = plan.time_range.get("start_date") or ""
-            end = plan.time_range.get("end_date") or ""
-            if start or end:
-                if start and end:
-                    parts.append(f"{start} → {end}")
-                else:
-                    parts.append(start or end)
-        return " • ".join([p for p in parts if p])
-
-    def search(self, query: str) -> DataResult:
-        """Shortcut method to just search for data without analysis.
-
-        Args:
-            query: Natural language data search query
-
-        Returns:
-            DataResult with found data
-        """
-        logger.info(f"Data search for: {query}")
-
-        try:
-            # Parse query into plan
-            plan = self._parse_query(query)
-
-            # Search for data
-            data_result = self.data_agent.search_data(plan)
-
-            logger.info(f"Found {data_result.total_items} data items")
-            return data_result
-
-        except Exception as e:
-            logger.error(f"Data search failed: {e}")
-            return DataResult(
-                items=[], metadata={"error": str(e)}, data_type="unknown", total_items=0
-            )
+    # ------------------------------------------------------------------
+    # Convenience entry points (back-compat with v0.x)
+    # ------------------------------------------------------------------
+    def search(self, query: str) -> GeoAgentResponse:
+        """Search-only run: instructs the coordinator not to analyse or visualise."""
+        return self.chat(
+            f"Only search and report data. Do not analyse or visualise. Request: {query}"
+        )
 
     def analyze(self, query: str) -> GeoAgentResponse:
-        """Shortcut method for search + analysis without visualization.
-
-        Args:
-            query: Natural language analysis query
-
-        Returns:
-            GeoAgentResponse with data and analysis results
-        """
-        logger.info(f"Analysis for: {query}")
-
-        try:
-            # Parse query
-            plan = self._parse_query(query)
-
-            # Search data
-            data = self.data_agent.search_data(plan)
-
-            # Perform analysis
-            analysis = self.analysis_agent.analyze(plan, data)
-
-            response = GeoAgentResponse(
-                plan=plan,
-                data=data,
-                analysis=analysis,
-                code=analysis.code_generated,
-                success=analysis.success,
-                error_message=analysis.error_message,
-            )
-
-            logger.info("Analysis completed")
-            return response
-
-        except Exception as e:
-            logger.error(f"Analysis failed: {e}")
-            return GeoAgentResponse(
-                plan=PlannerOutput(intent=query, confidence=0.0),
-                success=False,
-                error_message=str(e),
-            )
-
-    def visualize(self, query: str) -> GeoAgentResponse:
-        """Run full pipeline including MapLibre GL visualization.
-
-        Args:
-            query: Natural language query for complete analysis
-
-        Returns:
-            GeoAgentResponse with MapLibre map visualization
-        """
-        return self.chat(query)  # Full pipeline is the same as chat
-
-    def _create_workflow(self) -> Optional[Any]:
-        """Create LangGraph workflow for agent coordination.
-
-        Returns:
-            Compiled LangGraph workflow or None if LangGraph unavailable
-        """
-        if not LANGGRAPH_AVAILABLE:
-            return None
-
-        try:
-            # Create state graph
-            workflow = StateGraph(AgentState)
-
-            # Add nodes
-            workflow.add_node("plan", self._plan_node)
-            workflow.add_node("context", self._context_node)
-            workflow.add_node("fetch_data", self._fetch_data_node)
-            workflow.add_node("analyze", self._analyze_node)
-            workflow.add_node("visualize", self._visualize_node)
-
-            # Define edges
-            workflow.set_entry_point("plan")
-
-            # After planning, EXPLAIN goes straight to context; everything
-            # else enters the data pipeline.
-            workflow.add_conditional_edges(
-                "plan",
-                self._route_after_plan,
-                {"context": "context", "fetch_data": "fetch_data"},
-            )
-            workflow.add_edge("context", END)
-            workflow.add_conditional_edges(
-                "fetch_data",
-                self._should_analyze,
-                {True: "analyze", False: "visualize"},
-            )
-            workflow.add_conditional_edges(
-                "analyze", self._should_visualize, {True: "visualize", False: END}
-            )
-            workflow.add_edge("visualize", END)
-
-            return workflow.compile()
-
-        except Exception as e:
-            logger.warning(f"Could not create LangGraph workflow: {e}")
-            return None
-
-    def _context_node(self, state: AgentState) -> AgentState:
-        """Context node – answer questions via the ContextAgent (LLM).
-
-        Used for EXPLAIN / conversational queries that do not require the
-        STAC data pipeline.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            Updated state with contextual analysis
-        """
-        logger.debug("Executing context node")
-        self._emit_status_detail("context", "Generating answer")
-        try:
-            if state["plan"]:
-                analysis = self.context_agent.answer(
-                    state["plan"],
-                    state["data"],
-                    query=state["query"],
-                )
-                state["analysis"] = analysis
-                state["code"] += analysis.code_generated + "\n"
-                if not analysis.success:
-                    state["error"] = analysis.error_message
-        except Exception as e:
-            state["error"] = f"Context analysis failed: {e}"
-            logger.error(state["error"])
-        return state
-
-    def _sequential_execution(self, state: AgentState) -> AgentState:
-        """Fallback sequential execution when LangGraph is not available.
-
-        Args:
-            state: Initial agent state
-
-        Returns:
-            Final agent state
-        """
-        logger.info("Using sequential execution (LangGraph not available)")
-
-        try:
-            # Step 1: Plan
-            state = self._plan_node(state)
-
-            # Short-circuit: EXPLAIN queries go directly to the ContextAgent
-            # — no data fetch or visualization required.
-            if (
-                state["plan"]
-                and state["plan"].intent.lower() == "explain"
-                and state["error"] is None
-            ):
-                state = self._context_node(state)
-                return state
-
-            # Step 2: Fetch data
-            state = self._fetch_data_node(state)
-
-            # Step 3: Analyze (if needed)
-            if (
-                state["should_analyze"]
-                and state["data"]
-                and state["data"].total_items > 0
-            ):
-                state = self._analyze_node(state)
-
-            # Step 3b: Context agent fallback for monitor intent when no
-            # analysis was produced (e.g. no data found).
-            if (
-                state["plan"]
-                and state["plan"].intent.lower() == "monitor"
-                and state["analysis"] is None
-            ):
-                state = self._context_node(state)
-
-            # Step 4: Visualize (if needed)
-            if state["should_visualize"]:
-                state = self._visualize_node(state)
-
-            return state
-
-        except Exception as e:
-            state["error"] = str(e)
-            logger.error(f"Sequential execution failed: {e}")
-            return state
-
-    def _plan_node(self, state: AgentState) -> AgentState:
-        """Planning node - parse natural language query into structured parameters.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            Updated state with plan
-        """
-        logger.debug("Executing planning node")
-        self._emit_status_detail("planning", "Parsing intent, location, and time range")
-
-        try:
-            plan = self._parse_query(state["query"])
-            state["plan"] = plan
-
-            # Determine if we need analysis and visualization
-            intent_lower = plan.intent.lower()
-
-            # EXPLAIN queries are answered directly by the ContextAgent —
-            # no data fetch or map visualization needed.
-            if intent_lower == "explain":
-                state["should_analyze"] = False
-                state["should_visualize"] = False
-            elif intent_lower == "monitor":
-                # MONITOR still needs the data pipeline
-                state["should_analyze"] = True
-                state["should_visualize"] = True
-            else:
-                # Analysis is needed for computational tasks
-                analysis_keywords = [
-                    "calculate",
-                    "compute",
-                    "analyze",
-                    "ndvi",
-                    "evi",
-                    "index",
-                    "statistics",
-                    "mean",
-                    "median",
-                    "change",
-                    "trend",
-                    "zonal",
-                ]
-                needs_analysis = any(kw in intent_lower for kw in analysis_keywords)
-                # Land cover and elevation need analysis routing for proper viz hints
-                analysis_type_hint = (plan.analysis_type or "").lower()
-                if analysis_type_hint in (
-                    "land_cover",
-                    "classification",
-                    "lulc",
-                    "elevation",
-                    "dem",
-                    "terrain",
-                    "water_mapping",
-                    "fire_detection",
-                    "snow_cover",
-                    "surface_temperature",
-                    "event_impact",
-                ):
-                    needs_analysis = True
-                state["should_analyze"] = needs_analysis
-
-                # Visualization is usually desired unless explicitly asking
-                # for just data
-                viz_skip_keywords = ["download", "list", "count", "metadata"]
-                state["should_visualize"] = not any(
-                    kw in intent_lower for kw in viz_skip_keywords
-                )
-
-            logger.debug(
-                f"Plan created: analyze={state['should_analyze']}, visualize={state['should_visualize']}"
-            )
-            plan_detail = self._format_plan_detail(plan)
-            if plan_detail:
-                self._emit_status_detail("planning", f"Plan ready • {plan_detail}")
-
-        except Exception as e:
-            state["error"] = f"Planning failed: {e}"
-            logger.error(state["error"])
-
-        return state
-
-    def _fetch_data_node(self, state: AgentState) -> AgentState:
-        """Data fetching node - search and retrieve geospatial data.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            Updated state with data
-        """
-        logger.debug("Executing data fetching node")
-        if state["plan"]:
-            detail = self._format_plan_detail(state["plan"])
-        else:
-            detail = None
-        self._emit_status_detail("fetch_data", detail or "Searching catalogs")
-
-        try:
-            if state["plan"]:
-                data = self.data_agent.search_data(state["plan"])
-                state["data"] = data
-
-                # Generate reproducible search code
-                state["code"] += self._generate_search_code(state["plan"], data)
-
-                logger.debug(
-                    f"Data fetched: {data.total_items} items of type {data.data_type}"
-                )
-                self._emit_status_detail(
-                    "fetch_data", f"Found {data.total_items} items"
-                )
-            else:
-                state["error"] = "No plan available for data fetching"
-
-        except Exception as e:
-            state["error"] = f"Data fetching failed: {e}"
-            logger.error(state["error"])
-
-        return state
-
-    def _generate_search_code(self, plan: PlannerOutput, data: Any) -> str:
-        """Generate reproducible Python code for the STAC search.
-
-        Args:
-            plan: Query plan used for the search
-            data: Search results
-
-        Returns:
-            Python code string
-        """
-        bbox = plan.location.get("bbox") if plan.location else None
-        location_name = plan.location.get("name", "") if plan.location else ""
-        time_range = plan.time_range
-        datetime_str = ""
-        if time_range:
-            datetime_str = (
-                f"{time_range.get('start_date', '')}/{time_range.get('end_date', '')}"
-            )
-
-        # Build collection: use planner output directly; fallback to Sentinel-2 if absent
-        dataset = plan.dataset
-        collection = dataset if dataset else "sentinel-2-l2a"
-
-        # Cloud cover filter only for imagery collections
-        cloud_filter = ""
-        imagery_collections = {
-            "sentinel-2-l2a",
-            "landsat-c2-l2",
-            "naip",
-            "sentinel-1-grd",
-        }
-        max_cc = plan.parameters.get("max_cloud_cover")
-        if max_cc is not None and collection in imagery_collections:
-            cloud_filter = f'\n    query={{"eo:cloud_cover": {{"lt": {max_cc}}}}},'
-
-        code = f'''import planetary_computer
-from pystac_client import Client
-
-# Search Planetary Computer STAC catalog{f" - {location_name}" if location_name else ""}
-catalog = Client.open(
-    "https://planetarycomputer.microsoft.com/api/stac/v1",
-    modifier=planetary_computer.sign_inplace,
-)
-
-search = catalog.search(
-    collections=["{collection}"],
-    bbox={bbox},{f"""
-    datetime="{datetime_str}",""" if datetime_str else ""}{cloud_filter}
-    max_items=10,
-)
-
-items = list(search.items())
-print(f"Found {{len(items)}} items")
-for item in items:
-    cc = item.properties.get("eo:cloud_cover", "N/A")
-    print(f"  {{item.id}} - cloud cover: {{cc}}%")
-'''
-        return code
-
-    def _analyze_node(self, state: AgentState) -> AgentState:
-        """Analysis node - perform geospatial analysis on data.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            Updated state with analysis results
-        """
-        logger.debug("Executing analysis node")
-        detail = None
-        if state["plan"] and state["plan"].analysis_type:
-            detail = state["plan"].analysis_type.replace("_", " ")
-        self._emit_status_detail("analysis", detail or "Running analysis")
-
-        try:
-            if state["plan"] and state["data"]:
-                # MONITOR intent falls back to context agent when the normal
-                # analysis cannot produce a result (EXPLAIN is already
-                # handled by _route_after_plan / _sequential_execution).
-                if state["plan"].intent.lower() == "monitor":
-                    return self._context_node(state)
-
-                analysis = self.analysis_agent.analyze(state["plan"], state["data"])
-                state["analysis"] = analysis
-                state["code"] += analysis.code_generated + "\n"
-
-                if not analysis.success:
-                    state["error"] = analysis.error_message
-
-                logger.debug(f"Analysis completed: success={analysis.success}")
-            else:
-                state["error"] = "Missing plan or data for analysis"
-
-        except Exception as e:
-            state["error"] = f"Analysis failed: {e}"
-            logger.error(state["error"])
-
-        return state
-
-    def _visualize_node(self, state: AgentState) -> AgentState:
-        """Visualization node - create map visualization.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            Updated state with map
-        """
-        logger.debug("Executing visualization node")
-        detail = None
-        if state["plan"]:
-            detail = self._format_plan_detail(state["plan"])
-        self._emit_status_detail("visualize", detail or "Rendering map layers")
-
-        try:
-            if state["plan"]:
-                viz_map = self.viz_agent.create_visualization(
-                    state["plan"],
-                    state["data"],
-                    state["analysis"],
-                    target_map=getattr(self, "_target_map", None),
-                )
-                state["map"] = viz_map
-
-                # Add visualization code
-                state["code"] += self._generate_viz_code(state["plan"], state["data"])
-
-                logger.debug("Map visualization created")
-            else:
-                state["error"] = "Missing plan for visualization"
-
-        except Exception as e:
-            state["error"] = f"Visualization failed: {e}"
-            logger.error(state["error"])
-
-        return state
-
-    def _generate_viz_code(self, plan: PlannerOutput, data: Any) -> str:
-        """Generate reproducible visualization code.
-
-        Args:
-            plan: Query plan
-            data: Data result
-
-        Returns:
-            Python code string for visualization
-        """
-        if not data or not data.items:
-            return ""
-
-        item = data.items[0]
-        item_id = item.get("id", "")
-        collection = item.get("collection", "")
-
-        if not collection:
-            return ""
-
-        # Determine assets
-        assets = item.get("assets", {})
-        if "visual" in assets:
-            assets_str = '"visual"'
-        elif "B04" in assets and "B03" in assets and "B02" in assets:
-            assets_str = '["B04", "B03", "B02"]'
-        elif "red" in assets and "green" in assets and "blue" in assets:
-            assets_str = '["red", "green", "blue"]'
-        else:
-            assets_str = '"visual"'
-
-        code = f"""
-# Visualize on an interactive map
-import leafmap.maplibregl as leafmap
-
-m = leafmap.Map()
-m.add_stac_layer(
-    collection="{collection}",
-    item="{item_id}",
-    assets={assets_str},
-    titiler_endpoint="planetary-computer",
-    name="{item_id}",
-    fit_bounds=True,
-)
-m
-"""
-        return code
-
-    def _route_after_plan(self, state: AgentState) -> str:
-        """Conditional edge: route EXPLAIN to the context node, else data pipeline.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            ``"context"`` for EXPLAIN queries, ``"fetch_data"`` otherwise.
-        """
-        if (
-            state.get("plan")
-            and state["plan"].intent.lower() == "explain"
-            and state.get("error") is None
-        ):
-            return "context"
-        return "fetch_data"
-
-    def _should_analyze(self, state: AgentState) -> bool:
-        """Conditional edge function to determine if analysis is needed.
-
-        Args:
-            state: Current agent state
-
-        Returns:
-            True if analysis should be performed
-        """
-        return (
-            state["should_analyze"]
-            and state["data"] is not None
-            and state["data"].total_items > 0
-            and state["error"] is None
+        """Analysis run: instructs the coordinator to skip map rendering."""
+        return self.chat(
+            f"Search and analyse the data. Do not render any maps. Request: {query}"
         )
 
-    def _should_visualize(self, state: AgentState) -> bool:
-        """Conditional edge function to determine if visualization is needed.
+    def visualize(self, query: str, target_map: Any = None) -> GeoAgentResponse:
+        """Alias for :meth:`chat` — visualisation is the default behaviour."""
+        return self.chat(query, target_map=target_map)
+
+    # ------------------------------------------------------------------
+    # Internals
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _extract_interrupts(result: Any) -> list[dict[str, Any]]:
+        """Pull pending action_requests from a deepagents invoke result.
 
         Args:
-            state: Current agent state
+            result: The dict returned by ``graph.invoke(...)`` (or by a
+                resume call). The ``__interrupt__`` key is present when
+                the graph paused on an interrupt; absent otherwise.
 
         Returns:
-            True if visualization should be performed
+            A list of ``{"name": ..., "args": ...}`` dicts, one per
+            pending tool call. Empty when the graph completed.
         """
-        return state["should_visualize"] and state["error"] is None
+        if not isinstance(result, dict):
+            return []
+        interrupts = result.get("__interrupt__")
+        if not interrupts:
+            return []
+        first = interrupts[0]
+        value = getattr(first, "value", first)
+        if not isinstance(value, dict):
+            return []
+        return list(value.get("action_requests") or [])
 
-    def _parse_query(self, query: str) -> PlannerOutput:
-        """Parse natural language query into structured plan.
+    def _tool_description(self, tool_name: str, action_request: dict[str, Any]) -> str:
+        """Return a short human-readable description for a confirm prompt.
 
-        Uses LLM for intent/parameter extraction, then geocodes the location.
-        Falls back to regex-based parsing if LLM fails.
-
-        Args:
-            query: Natural language query
-
-        Returns:
-            PlannerOutput with parsed parameters
+        Prefers the cached tool's own ``description`` (set by
+        ``@geo_tool``); falls back to the deepagents-supplied
+        description in the action request payload.
         """
-        logger.debug(f"Parsing query: {query}")
+        tool = self._tools_by_name.get(tool_name)
+        if tool is not None:
+            desc = getattr(tool, "description", None)
+            if desc:
+                return desc
+        return action_request.get("description", "")
 
-        try:
-            # Use LLM-based planner for robust parsing
-            plan = self.planner.parse_query(query)
-            logger.info(
-                f"LLM parsed: location={plan.location}, time={plan.time_range}, "
-                f"dataset={plan.dataset}, params={plan.parameters}"
-            )
 
-            # Geocode location name to bbox if needed
-            if (
-                plan.location
-                and "name" in plan.location
-                and "bbox" not in plan.location
-            ):
-                geocoded = self._geocode_location(plan.location["name"])
-                if geocoded:
-                    plan.location = geocoded
-                else:
-                    logger.warning(f"Could not geocode: {plan.location['name']}")
+def _adapt_result(
+    result: Any,
+    executed: list[str],
+    cancelled: list[str],
+    elapsed: float,
+) -> GeoAgentResponse:
+    """Reconstruct a :class:`GeoAgentResponse` from deepagents' final state.
 
-            # Post-process: LLM sometimes puts time_range in parameters
-            if plan.time_range is None and "time_range" in plan.parameters:
-                tr = plan.parameters.pop("time_range")
-                if isinstance(tr, (list, tuple)) and len(tr) == 2:
-                    plan.time_range = {
-                        "start_date": tr[0],
-                        "end_date": tr[1],
-                    }
+    Args:
+        result: The dict returned by the final ``graph.invoke(...)``.
+        executed: Names of confirmation-required tools the user
+            approved.
+        cancelled: Names of confirmation-required tools the user
+            rejected.
+        elapsed: Wall-clock seconds spent in the agent run.
 
-            # Post-process: normalize cloud cover thresholds
-            cc = plan.parameters.get("cloud_cover")
-            if cc is not None:
-                # "cloud-free" (0) is unrealistic; use 10% threshold
-                if cc <= 0:
-                    plan.parameters["cloud_cover"] = 10
-                plan.parameters["max_cloud_cover"] = plan.parameters.pop("cloud_cover")
-
-            return plan
-
-        except Exception as e:
-            logger.warning(f"LLM planner failed ({e}), falling back to regex parser")
-            return self._parse_query_fallback(query)
-
-    def _parse_query_fallback(self, query: str) -> PlannerOutput:
-        """Fallback regex-based query parser when LLM is unavailable.
-
-        Args:
-            query: Natural language query
-
-        Returns:
-            PlannerOutput with parsed parameters
-        """
-        query_lower = query.lower()
-        intent = query.strip()
-
-        location = self._extract_location(query)
-        time_range = self._extract_time_range(query_lower)
-
-        dataset = None
-        analysis_type = None
-        if "sentinel-1" in query_lower:
-            dataset = "sentinel-1-grd"
-        elif "sentinel" in query_lower or "sentinel-2" in query_lower:
-            dataset = "sentinel-2-l2a"
-        elif "landsat" in query_lower:
-            dataset = "landsat-c2-l2"
-        elif "naip" in query_lower:
-            dataset = "naip"
-        elif "modis" in query_lower:
-            dataset = "modis-09A1-061"
-        elif any(
-            kw in query_lower for kw in ["land cover", "landcover", "lulc", "land use"]
-        ):
-            dataset = "io-lulc-9-class"
-            analysis_type = "land_cover"
-        elif any(kw in query_lower for kw in ["dem", "elevation", "terrain"]):
-            dataset = "cop-dem-glo-30"
-            analysis_type = "elevation"
-
-        parameters = {}
-        if "cloud-free" in query_lower or "cloud free" in query_lower:
-            parameters["max_cloud_cover"] = 10
-        elif "low cloud" in query_lower or "low-cloud" in query_lower:
-            parameters["max_cloud_cover"] = 20
-        elif "cloud cover" in query_lower or "cloudy" in query_lower:
-            parameters["max_cloud_cover"] = 20
-
-        return PlannerOutput(
-            intent=intent,
-            location=location,
-            time_range=time_range,
-            dataset=dataset,
-            analysis_type=analysis_type,
-            parameters=parameters,
-            confidence=0.5,
+    Returns:
+        A populated :class:`GeoAgentResponse`. Best-effort: pulls
+        ``plan`` / ``data`` / ``analysis`` / ``map`` / ``code`` from
+        the state if subagents wrote them; otherwise leaves them
+        ``None``. The ``answer_text`` field is the content of the last
+        ``AIMessage`` in the conversation.
+    """
+    if not isinstance(result, dict):
+        return GeoAgentResponse(
+            success=False,
+            error_message=f"Unexpected result type: {type(result).__name__}",
+            execution_time=elapsed,
+            executed_tools=executed,
+            cancelled_tools=cancelled,
         )
 
-    def _geocode_location(self, place_name: str) -> Optional[Dict[str, Any]]:
-        """Geocode a place name to a bbox.
+    messages = result.get("messages") or []
+    answer_text: Optional[str] = None
+    for msg in reversed(messages):
+        content = getattr(msg, "content", None)
+        if content is None and isinstance(msg, dict):
+            content = msg.get("content")
+        if isinstance(content, str) and content.strip():
+            answer_text = content
+            break
 
-        Args:
-            place_name: Place name string (e.g., "Knoxville", "San Francisco")
+    return GeoAgentResponse(
+        plan=result.get("plan"),
+        data=result.get("data"),
+        analysis=result.get("analysis"),
+        map=result.get("map"),
+        code=result.get("code", "") or "",
+        answer_text=answer_text,
+        success=True,
+        error_message=None,
+        execution_time=elapsed,
+        executed_tools=executed,
+        cancelled_tools=cancelled,
+        messages=messages,
+    )
 
-        Returns:
-            Location dict with bbox and name, or None
-        """
-        try:
-            from geopy.geocoders import Nominatim
 
-            geolocator = Nominatim(user_agent="geoagent")
-            result = geolocator.geocode(place_name, exactly_one=True, timeout=5)
-
-            if result:
-                lat, lon = result.latitude, result.longitude
-                bbox = [lon - 0.1, lat - 0.1, lon + 0.1, lat + 0.1]
-                name = result.address.split(",")[0]
-                logger.info(f"Geocoded '{place_name}' -> {name} ({lat:.4f}, {lon:.4f})")
-                return {"bbox": bbox, "name": name}
-        except ImportError:
-            logger.warning("geopy not installed")
-        except Exception as e:
-            logger.warning(f"Geocoding failed for '{place_name}': {e}")
-
-        # Try fallback city lookup
-        return self._extract_location_fallback(place_name.lower())
-
-    def _extract_location(self, query: str) -> Optional[Dict[str, Any]]:
-        """Extract location from query using geocoding (for regex fallback parser).
-
-        Tries to find a place name in the query and geocode it to a bbox.
-
-        Args:
-            query: Natural language query
-
-        Returns:
-            Location dict with bbox and name, or None
-        """
-        try:
-            from geopy.geocoders import Nominatim
-
-            geolocator = Nominatim(user_agent="geoagent")
-
-            # Try to extract place name - remove common non-location words
-            import re
-
-            # Remove analysis terms to isolate location
-            cleaned = re.sub(
-                r"\b(show|display|compute|calculate|analyze|find|get|plot|map|"
-                r"ndvi|evi|savi|imagery|image|images|satellite|sentinel-?\d*|landsat|"
-                r"modis|for|in|of|the|from|during|between|and|with|using|"
-                r"cloud[- ]?free|low[- ]?cloud|cloud\s*cover|cloudy|"
-                r"recent|latest|best|high[- ]?resolution|"
-                r"january|february|march|april|may|june|july|august|"
-                r"september|october|november|december|"
-                r"jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec|"
-                r"\d{4})\b",
-                "",
-                query,
-                flags=re.IGNORECASE,
-            ).strip()
-
-            # Clean up extra whitespace
-            cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,.-")
-
-            if not cleaned or len(cleaned) < 2:
-                logger.debug("No location found in query")
-                return None
-
-            logger.debug(f"Geocoding: '{cleaned}'")
-            result = geolocator.geocode(cleaned, exactly_one=True, timeout=5)
-
-            if result:
-                lat, lon = result.latitude, result.longitude
-                # Create bbox around the point (~0.1 degrees ≈ 10km)
-                bbox = [lon - 0.1, lat - 0.1, lon + 0.1, lat + 0.1]
-                name = result.address.split(",")[0]
-                logger.info(f"Geocoded '{cleaned}' -> {name} ({lat:.4f}, {lon:.4f})")
-                return {"bbox": bbox, "name": name}
-            else:
-                logger.warning(f"Could not geocode: '{cleaned}'")
-                return None
-
-        except ImportError:
-            logger.warning("geopy not installed, using fallback location parsing")
-            return self._extract_location_fallback(query.lower())
-        except Exception as e:
-            logger.warning(f"Geocoding failed: {e}")
-            return self._extract_location_fallback(query.lower())
-
-    def _extract_location_fallback(self, query_lower: str) -> Optional[Dict[str, Any]]:
-        """Fallback location extraction using hardcoded city lookups.
-
-        Args:
-            query_lower: Lowercased query string
-
-        Returns:
-            Location dict or None
-        """
-        cities = {
-            "san francisco": {
-                "bbox": [-122.5, 37.7, -122.3, 37.8],
-                "name": "San Francisco",
-            },
-            "new york": {"bbox": [-74.1, 40.6, -73.9, 40.8], "name": "New York"},
-            "los angeles": {
-                "bbox": [-118.4, 33.9, -118.1, 34.1],
-                "name": "Los Angeles",
-            },
-            "chicago": {"bbox": [-87.8, 41.7, -87.5, 42.0], "name": "Chicago"},
-            "seattle": {"bbox": [-122.4, 47.5, -122.2, 47.7], "name": "Seattle"},
-            "denver": {"bbox": [-105.1, 39.6, -104.8, 39.8], "name": "Denver"},
-            "houston": {"bbox": [-95.5, 29.6, -95.2, 29.9], "name": "Houston"},
-            "miami": {"bbox": [-80.3, 25.7, -80.1, 25.9], "name": "Miami"},
-            "california": {"bbox": [-124.4, 32.5, -114.1, 42.0], "name": "California"},
-        }
-        for city, loc in cities.items():
-            if city in query_lower:
-                return loc
-        return None
-
-    def _extract_time_range(self, query_lower: str) -> Optional[Dict[str, str]]:
-        """Extract time range from query text.
-
-        Handles patterns like 'July 2024', 'in 2025', 'June 2023', etc.
-
-        Args:
-            query_lower: Lowercased query string
-
-        Returns:
-            Dict with start_date and end_date, or None
-        """
-        import re
-
-        months = {
-            "january": ("01", "31"),
-            "jan": ("01", "31"),
-            "february": ("02", "28"),
-            "feb": ("02", "28"),
-            "march": ("03", "31"),
-            "mar": ("03", "31"),
-            "april": ("04", "30"),
-            "apr": ("04", "30"),
-            "may": ("05", "31"),
-            "june": ("06", "30"),
-            "jun": ("06", "30"),
-            "july": ("07", "31"),
-            "jul": ("07", "31"),
-            "august": ("08", "31"),
-            "aug": ("08", "31"),
-            "september": ("09", "30"),
-            "sep": ("09", "30"),
-            "october": ("10", "31"),
-            "oct": ("10", "31"),
-            "november": ("11", "30"),
-            "nov": ("11", "30"),
-            "december": ("12", "31"),
-            "dec": ("12", "31"),
-        }
-
-        # Match "Month YYYY" or "YYYY" patterns
-        for month_name, (month_num, last_day) in months.items():
-            pattern = rf"\b{month_name}\s+(\d{{4}})\b"
-            match = re.search(pattern, query_lower)
-            if match:
-                year = match.group(1)
-                return {
-                    "start_date": f"{year}-{month_num}-01",
-                    "end_date": f"{year}-{month_num}-{last_day}",
-                }
-
-        # Match bare year
-        year_match = re.search(r"\b(20\d{2})\b", query_lower)
-        if year_match:
-            year = year_match.group(1)
-            return {"start_date": f"{year}-01-01", "end_date": f"{year}-12-31"}
-
-        return None
+__all__ = ["GeoAgent"]
