@@ -1168,34 +1168,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.llm.MockLLM" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MockLLM
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MockLLM">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#geoagent.core.llm.MockLLM.invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        invoke()
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#geoagent.core.llm.check_api_keys" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1394,34 +1366,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.llm.MockLLM" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MockLLM
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MockLLM">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#geoagent.core.llm.MockLLM.invoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        invoke()
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#geoagent.core.llm.check_api_keys" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1534,138 +1478,6 @@ OpenAI, Anthropic, Google Gemini, and Ollama (local).</p>
 
 
 
-
-
-
-  <div class="doc doc-object doc-class">
-
-
-
-<h4 id="geoagent.core.llm.MockLLM" class="doc doc-heading">
-        <code>
-MockLLM        </code>
-
-
-
-<a href="#geoagent.core.llm.MockLLM" class="headerlink" title="Permanent link">&para;</a></h4>
-
-    <div class="doc doc-contents ">
-
-      <p>Mock LLM for testing and development when no real LLM is available.</p>
-
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/llm.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MockLLM</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mock LLM for testing and development when no real LLM is available.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;MockLLM&quot;</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mock LLM invocation.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            prompt: Input prompt</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Mock response</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Mock response to: </span><span class="si">{</span><span class="n">prompt</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-</code></pre></div>
-        </details>
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-  <div class="doc doc-object doc-method">
-
-
-
-<h5 id="geoagent.core.llm.MockLLM.invoke" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">)</span></code>
-
-
-<a href="#geoagent.core.llm.MockLLM.invoke" class="headerlink" title="Permanent link">&para;</a></h5>
-
-    <div class="doc doc-contents ">
-
-      <p>Mock LLM invocation.</p>
-
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><code>prompt</code></td>
-        <td><code>str</code></td>
-        <td><p>Input prompt</p></td>
-        <td><em>required</em></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>str</code></td>
-      <td><p>Mock response</p></td>
-    </tr>
-  </tbody>
-</table>
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/llm.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mock LLM invocation.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        prompt: Input prompt</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Mock response</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Mock response to: </span><span class="si">{</span><span class="n">prompt</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
-
-
-
-
-
-  </div>
-
-    </div>
-
-  </div>
 
 
 
@@ -1799,8 +1611,15 @@ MockLLM        </code>
     <div class="doc doc-contents ">
 
       <p>Get a default LLM by checking available API keys.</p>
-<p>Checks environment variables in order: OpenAI, Anthropic, Google, Ollama.
-Returns the first available provider.</p>
+<p>Tries cloud providers first in the order OpenAI, Anthropic, Google, and
+falls back to a local Ollama model when no cloud provider is usable
+(for example, because no cloud API key is set or because the matching
+LangChain integration package is not installed). The Ollama fallback
+emits a <code>logging.WARNING</code> so the caller can see why the agent might
+be misbehaving: the default Ollama model (<code>llama3.1</code> 8B Q4) is too
+small to drive the deepagents multi-subagent coordinator reliably, so
+silent fallback would leave the user with an agent that "runs" but
+never fires any tools.</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -1838,7 +1657,7 @@ Returns the first available provider.</p>
   <tbody>
     <tr>
       <td><code>Any</code></td>
-      <td><p>A LangChain BaseChatModel instance.</p></td>
+      <td><p>A LangChain <code>BaseChatModel</code> instance.</p></td>
     </tr>
   </tbody>
 </table>
@@ -1853,7 +1672,8 @@ Returns the first available provider.</p>
   <tbody>
       <tr>
         <td><code>RuntimeError</code></td>
-        <td><p>If no LLM provider is available.</p></td>
+        <td><p>If no provider is usable (no cloud key in the
+environment AND <code>langchain-ollama</code> is not importable).</p></td>
       </tr>
   </tbody>
 </table>
@@ -1862,47 +1682,89 @@ Returns the first available provider.</p>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_default_llm</span><span class="p">(</span><span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a default LLM by checking available API keys.</span>
 
-<span class="sd">    Checks environment variables in order: OpenAI, Anthropic, Google, Ollama.</span>
-<span class="sd">    Returns the first available provider.</span>
+<span class="sd">    Tries cloud providers first in the order OpenAI, Anthropic, Google, and</span>
+<span class="sd">    falls back to a local Ollama model when no cloud provider is usable</span>
+<span class="sd">    (for example, because no cloud API key is set or because the matching</span>
+<span class="sd">    LangChain integration package is not installed). The Ollama fallback</span>
+<span class="sd">    emits a ``logging.WARNING`` so the caller can see why the agent might</span>
+<span class="sd">    be misbehaving: the default Ollama model (``llama3.1`` 8B Q4) is too</span>
+<span class="sd">    small to drive the deepagents multi-subagent coordinator reliably, so</span>
+<span class="sd">    silent fallback would leave the user with an agent that &quot;runs&quot; but</span>
+<span class="sd">    never fires any tools.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        temperature: Sampling temperature.</span>
 <span class="sd">        **kwargs: Additional keyword arguments passed to the LLM constructor.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A LangChain BaseChatModel instance.</span>
+<span class="sd">        A LangChain ``BaseChatModel`` instance.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        RuntimeError: If no LLM provider is available.</span>
+<span class="sd">        RuntimeError: If no provider is usable (no cloud key in the</span>
+<span class="sd">            environment AND ``langchain-ollama`` is not importable).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Try providers in priority order</span>
-    <span class="k">for</span> <span class="n">provider_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">PROVIDERS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">env_var</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;env_var&quot;</span><span class="p">]</span>
+    <span class="n">cloud_providers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">PROVIDERS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;env_var&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">]</span>
+    <span class="n">skipped_no_key</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">skipped_missing_pkg</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">provider_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">cloud_providers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;env_var&quot;</span><span class="p">]):</span>
+            <span class="n">skipped_no_key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">provider_name</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">skipped_missing_pkg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;package&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;package&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not installed, skipping </span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
 
-        <span class="c1"># Ollama has no API key requirement</span>
-        <span class="k">if</span> <span class="n">env_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span>
-                    <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-                <span class="k">continue</span>
+    <span class="c1"># No cloud provider was usable. Fall back to local Ollama with a loud</span>
+    <span class="c1"># warning. The deepagents multi-subagent coordinator GeoAgent uses</span>
+    <span class="c1"># is demanding enough that small local models (e.g. 8B-class Ollama</span>
+    <span class="c1"># models) routinely emit empty or text-only responses with no</span>
+    <span class="c1"># tool_calls populated, leaving the agent looking like it works while</span>
+    <span class="c1"># never actually firing a tool. Surface that risk instead of hiding it.</span>
+    <span class="k">if</span> <span class="n">skipped_missing_pkg</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;no cloud LLM provider was usable: API keys were set but &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;required packages are missing for: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_missing_pkg</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;no cloud LLM API key found in environment &quot;</span>
+            <span class="s2">&quot;(OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY)&quot;</span>
+        <span class="p">)</span>
 
-        <span class="c1"># Check if API key is set</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">env_var</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span>
-                    <span class="n">provider</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;package&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> not installed, skipping </span><span class="si">{</span><span class="n">provider_name</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="k">continue</span>
+    <span class="n">ollama_config</span> <span class="o">=</span> <span class="n">PROVIDERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ollama&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ollama_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;ollama&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">. Falling back to Ollama &#39;</span><span class="si">%s</span><span class="s2">&#39;. GeoAgent needs strong &quot;</span>
+                <span class="s2">&quot;tool-calling; small local models often return empty &quot;</span>
+                <span class="s2">&quot;content with no tool_calls, so tools may never fire. Set &quot;</span>
+                <span class="s2">&quot;a cloud API key (and install the matching langchain &quot;</span>
+                <span class="s2">&quot;package) for reliable behavior, or pass an explicit &quot;</span>
+                <span class="s2">&quot;`provider`/`model` to GeoAgent that you have verified &quot;</span>
+                <span class="s2">&quot;can drive the coordinator.&quot;</span><span class="p">,</span>
+                <span class="n">reason</span><span class="p">,</span>
+                <span class="n">ollama_config</span><span class="p">[</span><span class="s2">&quot;default_model&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">llm</span>
 
-    <span class="c1"># Return MockLLM when no providers are available</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No LLM provider available, using MockLLM&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">MockLLM</span><span class="p">()</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;No LLM provider is available (</span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">). Install langchain-ollama &quot;</span>
+        <span class="s2">&quot;and run a local Ollama server, or set OPENAI_API_KEY, &quot;</span>
+        <span class="s2">&quot;ANTHROPIC_API_KEY, or GOOGLE_API_KEY with the matching package.&quot;</span>
+    <span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
@@ -2121,16 +1983,22 @@ Returns the first available provider.</p>
     <div class="doc doc-contents ">
 
       <p>Resolve the tri-form <code>llm</code> / <code>provider</code> / <code>model</code> arguments.</p>
-<p>GeoAgent's public API accepts any of three forms for picking the LLM:</p>
+<p>GeoAgent's public API accepts any of these forms for picking the LLM:</p>
 <ul>
 <li>an explicit <code>llm</code> object (a LangChain <code>BaseChatModel</code> instance),</li>
 <li>a <code>provider</code> name (e.g. <code>"openai"</code>) plus an optional <code>model</code>,</li>
+<li>a <code>model</code> string in deepagents' <code>"provider:model"</code> shorthand
+  (e.g. <code>"google_genai:gemini-2.5-flash"</code>,
+  <code>"anthropic:claude-sonnet-4-5"</code>), which is routed verbatim to
+  :func:<code>langchain.chat_models.init_chat_model</code> for full parity with
+  :func:<code>deepagents.create_deep_agent</code>,</li>
 <li>neither, in which case :func:<code>get_default_llm</code> picks the first
-  available provider from the environment.</li>
+  available cloud provider from the environment, or falls back to
+  Ollama with a warning.</li>
 </ul>
-<p>This function normalises all three into a single <code>BaseChatModel</code> ready
-to pass to :func:<code>deepagents.create_deep_agent</code> as its <code>model=</code>
-argument.</p>
+<p>This function normalises all forms into a single <code>BaseChatModel</code>
+ready to pass to :func:<code>deepagents.create_deep_agent</code> as its
+<code>model=</code> argument.</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2158,13 +2026,15 @@ argument.</p>
       <tr>
         <td><code>model</code></td>
         <td><code>Optional[str]</code></td>
-        <td><p>A model name override for <code>provider</code>.</p></td>
+        <td><p>A model name override for <code>provider</code>, or a
+<code>"provider:model"</code> shorthand when <code>provider</code> is omitted.</p></td>
         <td><code>None</code></td>
       </tr>
       <tr>
         <td><code>**kwargs</code></td>
         <td><code>Any</code></td>
-        <td><p>Forwarded to :func:<code>get_llm</code> when constructing a new model.</p></td>
+        <td><p>Forwarded to the underlying constructor (:func:<code>get_llm</code>
+or :func:<code>init_chat_model</code>).</p></td>
         <td><code>{}</code></td>
       </tr>
   </tbody>
@@ -2179,9 +2049,25 @@ argument.</p>
   </thead>
   <tbody>
     <tr>
-      <td><code>A LangChain ``BaseChatModel`` (or </code></td>
-      <td><p>is available and no <code>llm</code> was supplied).</p></td>
+      <td><code>Any</code></td>
+      <td><p>A LangChain <code>BaseChatModel</code>.</p></td>
     </tr>
+  </tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>RuntimeError</code></td>
+        <td><p>If no provider is usable and no <code>llm</code> was supplied.
+See :func:<code>get_default_llm</code>.</p></td>
+      </tr>
   </tbody>
 </table>
         <details class="quote">
@@ -2194,35 +2080,51 @@ argument.</p>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the tri-form ``llm`` / ``provider`` / ``model`` arguments.</span>
 
-<span class="sd">    GeoAgent&#39;s public API accepts any of three forms for picking the LLM:</span>
+<span class="sd">    GeoAgent&#39;s public API accepts any of these forms for picking the LLM:</span>
 
 <span class="sd">    * an explicit ``llm`` object (a LangChain ``BaseChatModel`` instance),</span>
 <span class="sd">    * a ``provider`` name (e.g. ``&quot;openai&quot;``) plus an optional ``model``,</span>
+<span class="sd">    * a ``model`` string in deepagents&#39; ``&quot;provider:model&quot;`` shorthand</span>
+<span class="sd">      (e.g. ``&quot;google_genai:gemini-2.5-flash&quot;``,</span>
+<span class="sd">      ``&quot;anthropic:claude-sonnet-4-5&quot;``), which is routed verbatim to</span>
+<span class="sd">      :func:`langchain.chat_models.init_chat_model` for full parity with</span>
+<span class="sd">      :func:`deepagents.create_deep_agent`,</span>
 <span class="sd">    * neither, in which case :func:`get_default_llm` picks the first</span>
-<span class="sd">      available provider from the environment.</span>
+<span class="sd">      available cloud provider from the environment, or falls back to</span>
+<span class="sd">      Ollama with a warning.</span>
 
-<span class="sd">    This function normalises all three into a single ``BaseChatModel`` ready</span>
-<span class="sd">    to pass to :func:`deepagents.create_deep_agent` as its ``model=``</span>
-<span class="sd">    argument.</span>
+<span class="sd">    This function normalises all forms into a single ``BaseChatModel``</span>
+<span class="sd">    ready to pass to :func:`deepagents.create_deep_agent` as its</span>
+<span class="sd">    ``model=`` argument.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        llm: A pre-built LangChain chat model. Returned unchanged if given.</span>
 <span class="sd">        provider: A provider name from :data:`PROVIDERS`.</span>
-<span class="sd">        model: A model name override for ``provider``.</span>
-<span class="sd">        **kwargs: Forwarded to :func:`get_llm` when constructing a new model.</span>
+<span class="sd">        model: A model name override for ``provider``, or a</span>
+<span class="sd">            ``&quot;provider:model&quot;`` shorthand when ``provider`` is omitted.</span>
+<span class="sd">        **kwargs: Forwarded to the underlying constructor (:func:`get_llm`</span>
+<span class="sd">            or :func:`init_chat_model`).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A LangChain ``BaseChatModel`` (or :class:`MockLLM` when no provider</span>
-<span class="sd">        is available and no ``llm`` was supplied).</span>
+<span class="sd">        A LangChain ``BaseChatModel``.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: If no provider is usable and no ``llm`` was supplied.</span>
+<span class="sd">            See :func:`get_default_llm`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">llm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">llm</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
-        <span class="c1"># deepagents-style &quot;provider:model&quot; string — split and dispatch.</span>
-        <span class="n">head</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">head</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">tail</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># deepagents-style &quot;provider:model&quot; string. Hand it to</span>
+        <span class="c1"># langchain.chat_models.init_chat_model verbatim so the full set</span>
+        <span class="c1"># of langchain provider namespaces is supported (google_genai,</span>
+        <span class="c1"># google_vertexai, groq, together, azure_openai, ...). Matches</span>
+        <span class="c1"># the behavior of deepagents.create_deep_agent for string models.</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">langchain.chat_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_chat_model</span>
+
+        <span class="k">return</span> <span class="n">init_chat_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">get_default_llm</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
         </details>
