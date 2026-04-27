@@ -290,14 +290,6 @@ class MockQGISCanvas:
     def refresh(self) -> None:
         self.refresh_count += 1
 
-    def refreshAllLayers(self) -> None:
-        # ``QgsMapCanvas.refreshAllLayers`` invalidates each layer's
-        # data-provider cache before redrawing — XYZ tile providers need
-        # this to refetch tiles for a new extent. The mock counts it
-        # against ``refresh_count`` so existing tests stay stable while
-        # callers can introspect that *something* refreshed.
-        self.refresh_count += 1
-
     def scale(self) -> float:
         return self.scale_value
 
