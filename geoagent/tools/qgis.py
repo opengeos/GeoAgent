@@ -24,64 +24,6 @@ from langchain_core.tools import BaseTool
 from geoagent.core.decorators import geo_tool
 
 
-def _transform_extent_to_canvas_crs(layer: Any, canvas: Any, extent: Any) -> Any:
-    """Re-project a layer's extent into the canvas / project CRS.
-
-    ``QgsMapLayer.extent()`` returns the extent in the layer's native
-    CRS. ``QgsMapCanvas.setExtent()`` expects coordinates in the
-    canvas's destination CRS. When a layer is loaded as EPSG:4326
-    (typical for GeoJSON) but the project canvas is EPSG:3857 (Web
-    Mercator), passing the layer's lat/lon extent directly to
-    ``setExtent`` zooms the canvas to a sliver near (0, 0) in
-    Mercator, which renders as a blank view. Transforming the bbox
-    through ``QgsCoordinateTransform`` first puts it in the right
-    CRS so the canvas zooms to the actual layer.
-
-    The helper degrades gracefully when called with mocks (no
-    ``crs()`` / ``mapSettings()`` methods) or outside QGIS (no
-    ``QgsCoordinateTransform`` import) — in those cases it returns
-    the original extent so existing tests keep passing.
-
-    Args:
-        layer: The source layer whose ``extent`` was just fetched.
-        canvas: The map canvas the extent will be applied to.
-        extent: The layer-CRS extent (a ``QgsRectangle`` in real QGIS;
-            anything else from a mock).
-
-    Returns:
-        The extent re-projected into the canvas's destination CRS,
-        or the original extent when the transform cannot be set up.
-    """
-    if not (hasattr(layer, "crs") and hasattr(canvas, "mapSettings")):
-        return extent
-    try:
-        from qgis.core import (  # type: ignore[import-not-found]
-            QgsCoordinateTransform,
-            QgsProject,
-        )
-    except ImportError:
-        return extent
-    try:
-        src_crs = layer.crs()
-        dst_crs = canvas.mapSettings().destinationCrs()
-    except Exception:
-        return extent
-    if src_crs is None or dst_crs is None:
-        return extent
-    # ``QgsCoordinateReferenceSystem`` defines ``__eq__`` so this works
-    # for both authority-id and proj-string-defined CRSes.
-    try:
-        if src_crs == dst_crs:
-            return extent
-    except Exception:
-        pass
-    try:
-        transform = QgsCoordinateTransform(src_crs, dst_crs, QgsProject.instance())
-        return transform.transformBoundingBox(extent)
-    except Exception:
-        return extent
-
-
 def _resolve_layer(project: Any, layer_name: str) -> Any:
     """Resolve a layer by name from a project.
 
@@ -232,12 +174,6 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         # path runs only when needed.
         extent = layer.extent() if hasattr(layer, "extent") else None
         if extent is not None and hasattr(canvas, "setExtent"):
-            # Re-project from the layer's CRS to the canvas / project
-            # CRS before applying the extent. A GeoJSON loaded as
-            # EPSG:4326 has a lat/lon extent that ``setExtent`` would
-            # otherwise interpret as Web-Mercator metres, zooming to
-            # ~(0, 0) and rendering as a blank canvas.
-            extent = _transform_extent_to_canvas_crs(layer, canvas, extent)
             canvas.setExtent(extent)
             if hasattr(canvas, "refresh"):
                 canvas.refresh()
