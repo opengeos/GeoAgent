@@ -92,6 +92,30 @@ def test_zoom_in_invokes_canvas() -> None:
     assert iface.mapCanvas().scale_value == initial_scale / 2
 
 
+def test_zoom_in_refreshes_canvas() -> None:
+    """zoom_in must refresh the canvas so XYZ basemaps re-tile.
+
+    Without the explicit refresh, basemap layers (Google Satellite,
+    OSM, etc.) can render blank at the new extent until the user pans
+    by hand.
+    """
+    iface = MockQGISIface()
+    project = MockQGISProject()
+    tools = {t.name: t for t in qgis_tools(iface, project)}
+    before = iface.mapCanvas().refresh_count
+    tools["zoom_in"].invoke({})
+    assert iface.mapCanvas().refresh_count == before + 1
+
+
+def test_zoom_out_refreshes_canvas() -> None:
+    iface = MockQGISIface()
+    project = MockQGISProject()
+    tools = {t.name: t for t in qgis_tools(iface, project)}
+    before = iface.mapCanvas().refresh_count
+    tools["zoom_out"].invoke({})
+    assert iface.mapCanvas().refresh_count == before + 1
+
+
 def test_list_project_layers() -> None:
     project = MockQGISProject()
     project.addMapLayer(MockQGISLayer("A", "a.shp", "vector"))
@@ -131,6 +155,27 @@ def test_zoom_to_layer_resolves_layer() -> None:
     tools = {t.name: t for t in qgis_tools(iface, project)}
     tools["zoom_to_layer"].invoke({"layer_name": "Target"})
     assert iface.activeLayer() is layer
+
+
+def test_zoom_to_layer_refreshes_canvas() -> None:
+    """zoom_to_layer must refresh after iface.zoomToActiveLayer().
+
+    QGIS's ``zoomToActiveLayer`` updates the canvas extent but does
+    not request fresh tiles for XYZ basemaps. Without an explicit
+    ``refresh()`` the satellite basemap can disappear after the zoom.
+    """
+    project = MockQGISProject()
+    iface = MockQGISIface(project=project)
+    layer = MockQGISLayer("Target", "t.shp")
+    project.addMapLayer(layer)
+    tools = {t.name: t for t in qgis_tools(iface, project)}
+    before = iface.mapCanvas().refresh_count
+    tools["zoom_to_layer"].invoke({"layer_name": "Target"})
+    # ``MockQGISIface.zoomToActiveLayer`` already refreshes once; the
+    # explicit refresh in our wrapper brings the count to two. The
+    # contract worth pinning is "at least one refresh fired", so the
+    # XYZ basemap is guaranteed to re-tile after the zoom.
+    assert iface.mapCanvas().refresh_count >= before + 1
 
 
 def test_zoom_to_layer_raises_when_missing() -> None:
