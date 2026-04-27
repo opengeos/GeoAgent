@@ -1,0 +1,3135 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="An AI agent for geospatial data analysis and visualization">
+      
+      
+        <meta name="author" content="Qiusheng Wu">
+      
+      
+        <link rel="canonical" href="https://geoagent.gishub.org/agents/">
+      
+      
+        <link rel="prev" href="../safety/">
+      
+      
+        <link rel="next" href="../prompts/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Subagents - GeoAgent</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans:300,300i,400,400i,700,700i%7CRegular:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Google Sans";--md-code-font:"Regular"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../css/timeago.css">
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#subagents" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="GeoAgent" class="md-header__button md-logo" aria-label="GeoAgent" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GeoAgent
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Subagents
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/opengeos/GeoAgent" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="GeoAgent" class="md-nav__button md-logo" aria-label="GeoAgent" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GeoAgent
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/opengeos/GeoAgent" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/opengeos/GeoAgent/releases" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/opengeos/GeoAgent/issues" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Intro
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/stac_search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stac search
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/maplibre_viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maplibre viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/earth_science_queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Earth science queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/contextual_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contextual qa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geoagent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeoAgent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Result
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decorators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decorators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subagents
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subagents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#coordinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coordinator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Coordinator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.coordinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        coordinator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="coordinator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.coordinator.default_subagents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default_subagents()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Planner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.planner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        planner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="planner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.planner.PLANNER_SUBAGENT" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PLANNER_SUBAGENT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.data.data_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        data_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.analysis.analysis_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.context.context_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.mapping.mapping_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mapping_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qgis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QGIS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="QGIS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.qgis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qgis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="qgis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.qgis.qgis_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qgis_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geoai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeoAI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoAI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.geoai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        geoai
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geoai">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.geoai.geoai_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        geoai_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nasa-earthdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NASA Earthdata
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NASA Earthdata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.earthdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        earthdata
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="earthdata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.earthdata.earthdata_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        earthdata_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Prompts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../llm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalogs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalogs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web UI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#coordinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coordinator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Coordinator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.coordinator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        coordinator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="coordinator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.coordinator.default_subagents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default_subagents()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Planner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.planner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        planner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="planner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.planner.PLANNER_SUBAGENT" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PLANNER_SUBAGENT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.data.data_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        data_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.analysis.analysis_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analysis_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.context.context_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.mapping.mapping_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mapping_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qgis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QGIS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="QGIS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.qgis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qgis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="qgis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.qgis.qgis_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        qgis_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geoai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeoAI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoAI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.geoai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        geoai
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="geoai">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.geoai.geoai_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        geoai_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nasa-earthdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NASA Earthdata
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NASA Earthdata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.earthdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        earthdata
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="earthdata">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.agents.earthdata.earthdata_subagent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        earthdata_subagent()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+
+  
+  
+
+
+<h1 id="subagents">Subagents<a class="headerlink" href="#subagents" title="Permanent link">&para;</a></h1>
+<p>Phase 2 replaced the v0.x 4-agent class hierarchy with declarative deepagents subagent specs. Each module here exposes either a constant <code>*_SUBAGENT</code> dict (no runtime state) or a factory function returning one. <code>default_subagents(ctx)</code> assembles the active list from the runtime <code>GeoAgentContext</code>.</p>
+<h2 id="coordinator">Coordinator<a class="headerlink" href="#coordinator" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.coordinator" class="doc doc-heading">
+        <code>geoagent.agents.coordinator</code>
+
+
+
+<a href="#geoagent.agents.coordinator" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Coordinator helper — assemble the active subagent list for a run.</p>
+<p>The coordinator's <em>system prompt</em> lives in
+:data:<code>geoagent.core.prompts.COORDINATOR_PROMPT</code> and is wired into the
+top-level deepagents agent by :func:<code>geoagent.core.factory.create_geo_agent</code>.</p>
+<p>This module exposes :func:<code>default_subagents</code>, which the factory calls
+with the active :class:<code>geoagent.core.context.GeoAgentContext</code> to build
+the list of declarative <code>SubAgent</code> dicts. Subagents are added based on
+runtime state: planner / data / analysis / context always run; mapping
+appears when a live map widget is provided; qgis when an iface is
+provided; geoai and earthdata when their optional packages are
+importable.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.coordinator.default_subagents" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">default_subagents</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.agents.coordinator.default_subagents" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Return the active subagent list for <code>ctx</code>.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ctx</code></td>
+        <td><code>GeoAgentContext</code></td>
+        <td><p>The runtime context. Inspecting <code>ctx.map_obj</code> and
+<code>ctx.qgis_iface</code> decides which runtime-bound subagents to
+include.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>A list of declarative ``SubAgent`` dicts ready to pass to
+</code></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/coordinator.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">default_subagents</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">GeoAgentContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the active subagent list for ``ctx``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ctx: The runtime context. Inspecting ``ctx.map_obj`` and</span>
+<span class="sd">            ``ctx.qgis_iface`` decides which runtime-bound subagents to</span>
+<span class="sd">            include.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of declarative ``SubAgent`` dicts ready to pass to</span>
+<span class="sd">        :func:`deepagents.create_deep_agent` as ``subagents=``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subagents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">PLANNER_SUBAGENT</span><span class="p">,</span>
+        <span class="n">data_subagent</span><span class="p">(),</span>
+        <span class="n">analysis_subagent</span><span class="p">(),</span>
+        <span class="n">context_subagent</span><span class="p">(),</span>
+    <span class="p">]</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="n">mapping_subagent</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">map_obj</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">subagents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+    <span class="n">qgis</span> <span class="o">=</span> <span class="n">qgis_subagent</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">qgis_iface</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">qgis_project</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">qgis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">subagents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">qgis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">builder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">geoai_subagent</span><span class="p">,</span> <span class="n">earthdata_subagent</span><span class="p">):</span>
+        <span class="n">sub</span> <span class="o">=</span> <span class="n">builder</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">sub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">subagents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">subagents</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="planner">Planner<a class="headerlink" href="#planner" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.planner" class="doc doc-heading">
+        <code>geoagent.agents.planner</code>
+
+
+
+<a href="#geoagent.agents.planner" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Planner subagent — LLM-only, no tools.</p>
+<p>Decomposes a natural-language geospatial query into a structured plan
+(intent / location / time range / dataset / analysis type) the
+coordinator can use to delegate. Replaces the legacy
+<code>geoagent/core/planner.py</code> <code>Planner</code> class without re-introducing
+its Pydantic <code>PlannerOutput</code> model — the coordinator consumes the
+planner's output as free-form text now.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="geoagent.agents.planner.PLANNER_SUBAGENT" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">PLANNER_SUBAGENT</span><span class="p">:</span> <span class="nb">dict</span></code>
+
+
+<a href="#geoagent.agents.planner.PLANNER_SUBAGENT" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Planner :class:<code>deepagents.SubAgent</code> spec — LLM-only, no tools.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="data">Data<a class="headerlink" href="#data" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.data" class="doc doc-heading">
+        <code>geoagent.agents.data</code>
+
+
+
+<a href="#geoagent.agents.data" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Data subagent — STAC search and DuckDB spatial SQL.</p>
+<p>Replaces the legacy <code>geoagent/core/data_agent.py</code> <code>DataAgent</code> class
+with a deepagents subagent whose tool set is the union of STAC and
+DuckDB tool factories.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.data.data_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">data_subagent</span><span class="p">()</span></code>
+
+
+<a href="#geoagent.agents.data.data_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the Data :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict[str, Any]</code></td>
+      <td><p>A subagent dict with <code>name</code>, <code>description</code>, <code>system_prompt</code>,
+and a <code>tools</code> list combining STAC search and DuckDB spatial SQL
+tools. Tools whose required packages (pystac_client, duckdb) are
+unavailable are silently dropped by the registry.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/data.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">data_subagent</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the Data :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict with ``name``, ``description``, ``system_prompt``,</span>
+<span class="sd">        and a ``tools`` list combining STAC search and DuckDB spatial SQL</span>
+<span class="sd">        tools. Tools whose required packages (pystac_client, duckdb) are</span>
+<span class="sd">        unavailable are silently dropped by the registry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">DATA_PROMPT</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.data.duckdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">duckdb_tools</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">stac_tools</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Search STAC catalogs (Planetary Computer, Earth Search, &quot;</span>
+            <span class="s2">&quot;USGS, NASA CMR) and DuckDB spatial sources (Overture, &quot;</span>
+            <span class="s2">&quot;GeoParquet) for the requested datasets. Reports URLs and &quot;</span>
+            <span class="s2">&quot;metadata; does not download large rasters.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">DATA_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">stac_tools</span><span class="p">()</span> <span class="o">+</span> <span class="n">duckdb_tools</span><span class="p">(),</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="analysis">Analysis<a class="headerlink" href="#analysis" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.analysis" class="doc doc-heading">
+        <code>geoagent.agents.analysis</code>
+
+
+
+<a href="#geoagent.agents.analysis" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Analysis subagent — raster + vector analysis with code generation.</p>
+<p>Replaces the legacy 1541-line <code>geoagent/core/analysis_agent.py</code>
+<code>AnalysisAgent</code> class. The handler patterns (NDVI/EVI/SAVI, zonal
+stats, change detection, time series, land_cover/elevation/water_mapping/
+fire_detection/snow_cover/surface_temperature/event_impact) live in
+:data:<code>geoagent.core.prompts.ANALYSIS_PROMPT</code>; the actual computation is
+performed by the raster and vector tool factories.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.analysis.analysis_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">analysis_subagent</span><span class="p">()</span></code>
+
+
+<a href="#geoagent.agents.analysis.analysis_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the Analysis :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict[str, Any]</code></td>
+      <td><p>A subagent dict combining the raster and vector tool factories.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/analysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">analysis_subagent</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the Analysis :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict combining the raster and vector tool factories.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ANALYSIS_PROMPT</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.data.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">raster_tools</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.data.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">vector_tools</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;analysis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Compute spectral indices (NDVI, EVI, SAVI, NDWI), zonal &quot;</span>
+            <span class="s2">&quot;statistics, change detection, time-series summaries, and &quot;</span>
+            <span class="s2">&quot;vector operations (buffer, spatial join, filter, geometry &quot;</span>
+            <span class="s2">&quot;summaries). Generates reproducible Python code for every &quot;</span>
+            <span class="s2">&quot;computation.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">ANALYSIS_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">raster_tools</span><span class="p">()</span> <span class="o">+</span> <span class="n">vector_tools</span><span class="p">(),</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.context" class="doc doc-heading">
+        <code>geoagent.agents.context</code>
+
+
+
+<a href="#geoagent.agents.context" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Context subagent — conversational Q&amp;A.</p>
+<p>Replaces the legacy <code>geoagent/core/context_agent.py</code> <code>ContextAgent</code>
+class. EXPLAIN-style queries (<code>what is X?</code>, <code>why does Y happen?</code>)
+are answered here without retrieving or rendering data.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.context.context_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">context_subagent</span><span class="p">()</span></code>
+
+
+<a href="#geoagent.agents.context.context_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the Context :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict[str, Any]</code></td>
+      <td><p>A subagent dict with no tools — answers from LLM knowledge alone.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/context.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">context_subagent</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the Context :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict with no tools — answers from LLM knowledge alone.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONTEXT_PROMPT</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;context&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Answer EXPLAIN-style geospatial / earth-science questions &quot;</span>
+            <span class="s2">&quot;in prose. No data retrieval or map rendering.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">CONTEXT_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="mapping">Mapping<a class="headerlink" href="#mapping" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.mapping" class="doc doc-heading">
+        <code>geoagent.agents.mapping</code>
+
+
+
+<a href="#geoagent.agents.mapping" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>Mapping subagent — bound to a live <code>leafmap.Map</code> or <code>anymap.Map</code>.</p>
+<p>The mapping subagent absorbs the responsibilities of the legacy
+<code>geoagent/core/viz_agent.py</code> <code>VizAgent</code> class for the case where an
+interactive map widget is part of the runtime context. For one-off map
+rendering without a live widget, the data-side viz tools (under
+:mod:<code>geoagent.tools.data.viz</code>) handle that path via the analysis
+subagent.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.mapping.mapping_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">mapping_subagent</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.agents.mapping.mapping_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the Mapping :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>map_obj</code></td>
+        <td><code>Any</code></td>
+        <td><p>A live <code>leafmap.Map</code> (or <code>leafmap.maplibregl.Map</code>)
+or <code>anymap.Map</code> instance. The subagent's tools are bound
+to it via closure. Passing <code>None</code> returns <code>None</code> so the
+caller can skip the spec.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Optional[dict[str, Any]]</code></td>
+      <td><p>A subagent dict, or <code>None</code> when <code>map_obj</code> is <code>None</code>.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/mapping.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">mapping_subagent</span><span class="p">(</span><span class="n">map_obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the Mapping :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        map_obj: A live ``leafmap.Map`` (or ``leafmap.maplibregl.Map``)</span>
+<span class="sd">            or ``anymap.Map`` instance. The subagent&#39;s tools are bound</span>
+<span class="sd">            to it via closure. Passing ``None`` returns ``None`` so the</span>
+<span class="sd">            caller can skip the spec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict, or ``None`` when ``map_obj`` is ``None``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">map_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">MAPPING_PROMPT</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.anymap</span><span class="w"> </span><span class="kn">import</span> <span class="n">anymap_tools</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.leafmap</span><span class="w"> </span><span class="kn">import</span> <span class="n">leafmap_tools</span>
+
+    <span class="n">is_anymap</span> <span class="o">=</span> <span class="s2">&quot;anymap&quot;</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span>
+    <span class="n">tools</span> <span class="o">=</span> <span class="n">anymap_tools</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_anymap</span> <span class="k">else</span> <span class="n">leafmap_tools</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;mapping&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Manipulate the active interactive map widget: list, add, &quot;</span>
+            <span class="s2">&quot;and remove layers; change the basemap; set centre / zoom; &quot;</span>
+            <span class="s2">&quot;save the map to HTML. Use this whenever the user wants to &quot;</span>
+            <span class="s2">&quot;see results on their existing map.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">MAPPING_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">tools</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="qgis">QGIS<a class="headerlink" href="#qgis" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.qgis" class="doc doc-heading">
+        <code>geoagent.agents.qgis</code>
+
+
+
+<a href="#geoagent.agents.qgis" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>QGIS subagent — bound to a live <code>QgisInterface</code> and <code>QgsProject</code>.</p>
+<p>This subagent only exists when the runtime context includes a real (or
+mocked) QGIS interface. Module import is safe outside QGIS because all
+QGIS-specific imports happen lazily inside
+:mod:<code>geoagent.tools.qgis</code>.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.qgis.qgis_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">qgis_subagent</span><span class="p">(</span><span class="n">iface</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.agents.qgis.qgis_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the QGIS :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>iface</code></td>
+        <td><code>Any</code></td>
+        <td><p>A QGIS <code>QgisInterface</code> instance (or
+:class:<code>geoagent.testing.MockQGISIface</code>). <code>None</code> returns
+<code>None</code> so the caller can skip the spec.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>project</code></td>
+        <td><code>Any</code></td>
+        <td><p>Optional <code>QgsProject</code> instance.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Optional[dict[str, Any]]</code></td>
+      <td><p>A subagent dict, or <code>None</code> when <code>iface</code> is <code>None</code>.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/qgis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">qgis_subagent</span><span class="p">(</span><span class="n">iface</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">project</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the QGIS :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        iface: A QGIS ``QgisInterface`` instance (or</span>
+<span class="sd">            :class:`geoagent.testing.MockQGISIface`). ``None`` returns</span>
+<span class="sd">            ``None`` so the caller can skip the spec.</span>
+<span class="sd">        project: Optional ``QgsProject`` instance.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict, or ``None`` when ``iface`` is ``None``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">iface</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">QGIS_PROMPT</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.qgis</span><span class="w"> </span><span class="kn">import</span> <span class="n">qgis_tools</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;qgis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Operate inside a running QGIS Python: list and inspect &quot;</span>
+            <span class="s2">&quot;project layers, navigate the map canvas, add vector / &quot;</span>
+            <span class="s2">&quot;raster data, run processing algorithms (with confirmation), &quot;</span>
+            <span class="s2">&quot;and produce PyQGIS code snippets.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">QGIS_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">qgis_tools</span><span class="p">(</span><span class="n">iface</span><span class="p">,</span> <span class="n">project</span><span class="p">),</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="geoai">GeoAI<a class="headerlink" href="#geoai" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.geoai" class="doc doc-heading">
+        <code>geoagent.agents.geoai</code>
+
+
+
+<a href="#geoagent.agents.geoai" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>GeoAI subagent — segmentation, object detection, classification.</p>
+<p>Returns <code>None</code> when the optional <code>geoai</code> package is not installed,
+so :func:<code>geoagent.agents.coordinator.default_subagents</code> can transparently
+skip it.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.geoai.geoai_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">geoai_subagent</span><span class="p">()</span></code>
+
+
+<a href="#geoagent.agents.geoai.geoai_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the GeoAI :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Optional[dict[str, Any]]</code></td>
+      <td><p>A subagent dict, or <code>None</code> when <code>geoai</code> is unavailable.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/geoai.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">geoai_subagent</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the GeoAI :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict, or ``None`` when ``geoai`` is unavailable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.geoai</span><span class="w"> </span><span class="kn">import</span> <span class="n">geoai_tools</span>
+
+    <span class="n">tools</span> <span class="o">=</span> <span class="n">geoai_tools</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tools</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">GEOAI_PROMPT</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;geoai&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Run segmentation, object detection, or whole-image &quot;</span>
+            <span class="s2">&quot;classification on raster imagery via the geoai package.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">GEOAI_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">tools</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+<h2 id="nasa-earthdata">NASA Earthdata<a class="headerlink" href="#nasa-earthdata" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-object doc-module">
+
+
+
+<h3 id="geoagent.agents.earthdata" class="doc doc-heading">
+        <code>geoagent.agents.earthdata</code>
+
+
+
+<a href="#geoagent.agents.earthdata" class="headerlink" title="Permanent link">&para;</a></h3>
+
+    <div class="doc doc-contents first">
+
+      <p>NASA Earthdata subagent — search and download CMR granules.</p>
+<p>Returns <code>None</code> when <code>earthaccess</code> is not installed.</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.agents.earthdata.earthdata_subagent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">earthdata_subagent</span><span class="p">()</span></code>
+
+
+<a href="#geoagent.agents.earthdata.earthdata_subagent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build the NASA Earthdata :class:<code>deepagents.SubAgent</code> spec.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Optional[dict[str, Any]]</code></td>
+      <td><p>A subagent dict, or <code>None</code> when <code>earthaccess</code> is unavailable.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/agents/earthdata.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">earthdata_subagent</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the NASA Earthdata :class:`deepagents.SubAgent` spec.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A subagent dict, or ``None`` when ``earthaccess`` is unavailable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.nasa_earthdata</span><span class="w"> </span><span class="kn">import</span> <span class="n">earthdata_tools</span>
+
+    <span class="n">tools</span> <span class="o">=</span> <span class="n">earthdata_tools</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tools</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">EARTHDATA_PROMPT</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;earthdata&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Search NASA&#39;s CMR for granules and (with explicit user &quot;</span>
+            <span class="s2">&quot;approval) download them via earthaccess.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">EARTHDATA_PROMPT</span><span class="p">,</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="n">tools</span><span class="p">,</span>
+    <span class="p">}</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:03:34 UTC"><span class="timeago" datetime="2026-04-27T04:03:34+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:03:34 UTC">2026-04-27</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:03:34 UTC"><span class="timeago" datetime="2026-04-27T04:03:34+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:03:34 UTC">2026-04-27</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Qiusheng Wu
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../js/timeago.min.js"></script>
+      
+        <script src="../js/timeago_mkdocs_material.js"></script>
+      
+    
+  </body>
+</html>

@@ -5,7 +5,7 @@
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
-         <loc>https://geoagent.gishub.org/analysis_agent/</loc>
+         <loc>https://geoagent.gishub.org/agents/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
@@ -13,11 +13,19 @@
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
+         <loc>https://geoagent.gishub.org/context/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
          <loc>https://geoagent.gishub.org/contributing/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
-         <loc>https://geoagent.gishub.org/data_agent/</loc>
+         <loc>https://geoagent.gishub.org/decorators/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/factory/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
@@ -33,11 +41,19 @@
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
-         <loc>https://geoagent.gishub.org/models/</loc>
+         <loc>https://geoagent.gishub.org/prompts/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
-         <loc>https://geoagent.gishub.org/planner/</loc>
+         <loc>https://geoagent.gishub.org/registry/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/result/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/safety/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
@@ -50,10 +66,6 @@
     </url>
     <url>
          <loc>https://geoagent.gishub.org/usage/</loc>
-         <lastmod>2026-04-27</lastmod>
-    </url>
-    <url>
-         <loc>https://geoagent.gishub.org/viz_agent/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
