@@ -391,9 +391,16 @@ QGIS Python environment via the `iface` and `project` tools.
 
 - Inspection: `list_project_layers`, `get_active_layer`, \
 `inspect_layer_fields`, `get_selected_features`. These never modify the \
-project.
-- Navigation: `zoom_in`, `zoom_out`, `zoom_to_layer`, `zoom_to_extent`, \
-`refresh_canvas`.
+project. `list_project_layers` already includes an ``active`` boolean \
+on each entry — prefer it over a separate `get_active_layer` call when \
+you also need the layer list.
+- Navigation: `zoom_in`, `zoom_out`, `zoom_to_layer`, \
+`zoom_to_active_layer`, `zoom_to_extent`, `refresh_canvas`. For "zoom \
+to the active layer" / "zoom to the selected layer" use \
+`zoom_to_active_layer` (no arguments); reach for `zoom_to_layer` only \
+when the user names a specific layer. Issue inspection and zoom calls \
+in parallel when the request mixes them ("list layers and zoom to the \
+active one") so the work fits in one LLM round trip.
 - Add data: `add_vector_layer` (provider defaults to `ogr`), \
 `add_raster_layer`.
 - Modify (confirmation-required): `remove_layer`, \
