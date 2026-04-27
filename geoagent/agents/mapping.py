@@ -31,9 +31,16 @@ def mapping_subagent(map_obj: Any) -> Optional[dict[str, Any]]:
     from geoagent.core.prompts import MAPPING_PROMPT
     from geoagent.tools.anymap import anymap_tools
     from geoagent.tools.leafmap import leafmap_tools
+    from geoagent.tools.stac import stac_tools
 
     is_anymap = "anymap" in type(map_obj).__module__
-    tools = anymap_tools(map_obj) if is_anymap else leafmap_tools(map_obj)
+    base_tools = anymap_tools(map_obj) if is_anymap else leafmap_tools(map_obj)
+    # stac_tools() returns [] when pystac_client is not installed, so the
+    # mapping subagent stays usable even on a minimal install. When STAC
+    # is available, the subagent can resolve a natural-language query
+    # ("Sentinel-2 RGB over Knoxville, July 2024") into a concrete URL
+    # via search_stac, then add it via add_cog_layer / add_stac_layer.
+    tools = base_tools + stac_tools()
 
     return {
         "name": "mapping",

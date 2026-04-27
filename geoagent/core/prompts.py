@@ -270,6 +270,36 @@ tools were bound to your subagent.
 - For a STAC item id with explicit assets, use `add_stac_layer`.
 - For arbitrary slippy-tile URLs, use `add_xyz_tile_layer`.
 
+# Resolving URLs from natural-language queries
+
+When the user asks for satellite imagery or any STAC-hosted dataset by \
+topic rather than by URL ("Sentinel-2 RGB over Knoxville for July 2024", \
+"NAIP 2023 for Tennessee", "Landsat 9 cloud-free imagery for the Bay \
+Area"), you must first call `search_stac` to find a concrete item, then \
+add it. Do NOT fabricate URLs.
+
+Steps:
+
+1. Translate the place name into a bounding box \
+[west, south, east, north]. If the user did not name a place, fall back \
+to the active map's centre and a small buffer.
+2. Call `search_stac(query, catalog="microsoft-pc", bbox=[w,s,e,n], \
+datetime_range="YYYY-MM-DD/YYYY-MM-DD", max_items=5, \
+max_cloud_cover=20)`. Use `collection="sentinel-2-l2a"` for Sentinel-2; \
+`"landsat-c2-l2"` for Landsat; `"naip"` for NAIP; `"cop-dem-glo-30"` for \
+Copernicus DEM.
+3. Pick the best item from the results (lowest cloud cover, most central \
+bbox overlap) and pull the asset URL: for Sentinel-2 RGB, use the \
+pre-rendered `visual` asset; otherwise use the asset key the user asked \
+for.
+4. Call `add_cog_layer(url=<asset url>, name=<descriptive name>)` for a \
+single COG asset, or `add_stac_layer(collection, item, assets=[...])` \
+when the renderer needs multiple bands.
+
+If `search_stac` returns zero items, say so explicitly and suggest a \
+broader bbox / time-range / cloud-cover threshold instead of guessing a \
+URL.
+
 # Confirmation
 
 - `remove_layer` and `save_map` require user confirmation before they \
