@@ -1,9 +1,9 @@
 [project]
 name = "GeoAgent"
-version = "0.2.0"
-description = "An AI agent for geospatial data analysis and visualization"
+version = "1.0.0"
+description = "A centralized AI agent framework for Open Geospatial Python packages and QGIS plugins"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 keywords = [
     "GeoAgent",
     "geospatial",
@@ -12,6 +12,10 @@ keywords = [
     "STAC",
     "remote sensing",
     "earth observation",
+    "QGIS",
+    "leafmap",
+    "anymap",
+    "deepagents",
 ]
 license = {text = "MIT License"}
 authors = [
@@ -22,17 +26,13 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
 
 dependencies = [
-    "langgraph>=0.2",
-    "langchain>=0.3",
-    "langchain-core>=0.3",
-    "langchain-openai>=0.2",
+    "deepagents>=0.5.3",
     "leafmap>=0.43",
     "pystac-client>=0.8",
     "planetary-computer>=1.0",
@@ -53,21 +53,56 @@ dependencies = [
 geoagent = "geoagent.cli:main"
 
 [project.optional-dependencies]
-llm = [
-    "langchain-anthropic>=0.2",
-    "langchain-google-genai>=2.0",
+openai = [
+    "langchain-openai>=1.0",
+]
+
+anthropic = [
+    "langchain-anthropic>=1.4",
+]
+
+google = [
+    "langchain-google-genai>=4.2",
 ]
 
 ollama = [
-    "langchain-ollama>=0.2",
+    "langchain-ollama>=1.0",
+]
+
+llm = [
+    "GeoAgent[openai,anthropic,google,ollama]",
+]
+
+anymap = [
+    "anymap",
+]
+
+geoai = [
+    "geoai",
+]
+
+earthengine = [
+    "earthengine-api>=1.0",
+]
+
+nasa_earthdata = [
+    "earthaccess>=0.10",
+]
+
+stac = [
+    "pystac-client>=0.8",
+    "planetary-computer>=1.0",
 ]
 
 ui = [
     "solara>=1.35",
 ]
 
+# QGIS is environment-installed (system package), not pip; this extra is a marker.
+qgis = []
+
 all = [
-    "GeoAgent[llm,ollama,ui]",
+    "GeoAgent[llm,anymap,geoai,earthengine,nasa_earthdata,ui]",
 ]
 
 dev = [
@@ -80,13 +115,13 @@ dev = [
 [tool]
 [tool.setuptools.packages.find]
 include = ["geoagent*"]
-exclude = ["docs*", "tests*", "notebooks*"]
+exclude = ["docs*", "tests*", "notebooks*", "examples*"]
 
 [tool.distutils.bdist_wheel]
 universal = true
 
 [tool.bumpversion]
-current_version = "0.2.0"
+current_version = "1.0.0"
 commit = true
 tag = true
 
