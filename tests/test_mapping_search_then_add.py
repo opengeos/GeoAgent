@@ -170,3 +170,56 @@ def test_mapping_subagent_includes_stac_tools() -> None:
     assert "search_stac" in tool_names
     assert "add_stac_layer" in tool_names
     assert "add_cog_layer" in tool_names
+
+
+def test_add_cog_layer_refuses_planetary_computer_url() -> None:
+    """A Planetary Computer blob URL must be rejected with a clear redirect.
+
+    PC's public TiTiler cannot tile raw ``*.blob.core.windows.net``
+    hrefs (KeyError: 'tiles'). The wrapper detects PC URLs and returns
+    a redirect message pointing at the canonical
+    ``add_stac_layer(..., titiler_endpoint="pc")`` path. The redirect
+    is returned as a plain string (a ``ToolMessage`` body), so the LLM
+    can read the guidance and retry rather than the chat crashing.
+    """
+    from geoagent.tools.leafmap import leafmap_tools
+
+    fake_map = MockLeafmap()
+    tools = leafmap_tools(fake_map)
+    add_cog = next(t for t in tools if t.name == "add_cog_layer")
+
+    pc_url = (
+        "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/"
+        "17/S/KV/2024/07/29/T17SKV_20240729T160829_TCI_10m.tif"
+    )
+    result = add_cog.invoke({"url": pc_url, "name": "S2 RGB"})
+
+    assert "add_stac_layer" in result
+    assert "titiler_endpoint" in result
+    assert fake_map.layers == [], "the PC URL must not have been added"
+
+
+def test_add_cog_layer_returns_error_string_on_leafmap_failure() -> None:
+    """When leafmap raises, the tool returns a string so the LLM can recover.
+
+    A previous bug propagated leafmap's ``KeyError`` up through deepagents
+    and crashed the whole chat (``executed_tools=[]``). The wrapper now
+    catches the exception and returns a descriptive string, which
+    becomes the ``ToolMessage`` content the LLM sees on its next turn.
+    """
+    from geoagent.tools.leafmap import leafmap_tools
+
+    class _BoomMap(MockLeafmap):
+        def add_cog_layer(self, *args, **kwargs):  # type: ignore[override]
+            raise RuntimeError("simulated TiTiler failure")
+
+    boom_map = _BoomMap()
+    tools = leafmap_tools(boom_map)
+    add_cog = next(t for t in tools if t.name == "add_cog_layer")
+
+    result = add_cog.invoke({"url": "https://example.com/public.tif", "name": "X"})
+
+    assert isinstance(result, str)
+    assert "add_cog_layer failed" in result
+    assert "RuntimeError" in result
+    assert "simulated TiTiler failure" in result

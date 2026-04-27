@@ -289,19 +289,27 @@ max_cloud_cover=20)`. Use `collection="sentinel-2-l2a"` for Sentinel-2; \
 `"landsat-c2-l2"` for Landsat; `"naip"` for NAIP; `"cop-dem-glo-30"` for \
 Copernicus DEM.
 3. Pick the best item (lowest cloud cover, most central bbox overlap) \
-and note its `id` and the asset key the user wants (for Sentinel-2 RGB, \
-use the pre-rendered `visual` asset).
-4. Render the item. The right tool depends on the catalog:
-   - **Planetary Computer items (catalog="microsoft-pc")** must be \
-rendered via `add_stac_layer(collection, item=<id>, assets=[<key>], \
-titiler_endpoint="pc")`. Microsoft's hosted TiTiler signs SAS-protected \
-asset URLs internally; calling `add_cog_layer` with a raw PC href fails \
-because the public TiTiler cannot read unsigned PC assets.
-   - **Other catalogs** (Element 84 earth-search, USGS, etc.) expose \
-public COG URLs. For a single asset use \
-`add_cog_layer(url=<asset href>, name=<descriptive name>)`; for multi-\
-band rendering use `add_stac_layer(collection, item, assets=[...])` with \
-no titiler_endpoint.
+and note its `id` and the asset key the user wants. For Sentinel-2 RGB, \
+use the pre-rendered `visual` asset.
+4. Render the item with `add_stac_layer`. **For Planetary Computer \
+items (catalog="microsoft-pc"), pass `titiler_endpoint="pc"`** so \
+Microsoft's hosted TiTiler handles tiling and SAS signing internally:
+
+   `add_stac_layer(collection="sentinel-2-l2a", \
+item="<id>", assets=["visual"], titiler_endpoint="pc", \
+name="<descriptive name>")`
+
+   This is the canonical pattern; see \
+https://leafmap.org/maplibre/stac/ for the leafmap example. \
+**Do NOT call `add_cog_layer` with a Planetary Computer asset URL** — \
+PC blob URLs (``*.blob.core.windows.net``) cannot be tiled by the \
+public TiTiler. The tool will refuse such calls and tell you to use \
+`add_stac_layer` instead.
+
+5. For non-PC catalogs (earth-search, USGS, public buckets) you may \
+use `add_cog_layer(url=<public COG href>, name=...)` for a single \
+asset. Use `add_stac_layer` (without `titiler_endpoint`) when the \
+renderer needs multiple bands.
 
 If `search_stac` returns zero items, say so explicitly and suggest a \
 broader bbox / time-range / cloud-cover threshold instead of guessing a \

@@ -21,6 +21,24 @@ from geoagent.core.decorators import geo_tool
 _NAME_KW_ALIASES = ("name", "layer_name")
 
 
+def _is_planetary_computer_url(url: str) -> bool:
+    """Return ``True`` when ``url`` points at Planetary Computer blob storage.
+
+    PC stores all hosted assets under ``*.blob.core.windows.net``. These
+    URLs are SAS-protected and must be tiled via PC's hosted TiTiler
+    (``add_stac_layer(..., titiler_endpoint="pc")``) rather than handed
+    raw to the public TiTiler that leafmap's ``add_cog_layer`` defaults
+    to.
+
+    Args:
+        url: A candidate raster URL.
+
+    Returns:
+        ``True`` when the URL host is a PC blob endpoint.
+    """
+    return isinstance(url, str) and "blob.core.windows.net" in url
+
+
 def _safe_call(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
     """Call the first available method on ``obj`` from ``names``.
 
@@ -364,13 +382,24 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        _safe_call(
-            m,
-            ["add_raster", "add_cog_layer"],
-            path_or_url,
-            layer_name=name,
-            colormap=colormap,
-        )
+        if _is_planetary_computer_url(path_or_url):
+            return (
+                "Refusing to call add_raster_data with a Planetary Computer "
+                "asset URL: PC's public TiTiler cannot tile raw blob hrefs. "
+                "Call add_stac_layer(collection=..., item=..., assets=[...], "
+                "titiler_endpoint='pc') instead. See "
+                "https://leafmap.org/maplibre/stac/ for the canonical pattern."
+            )
+        try:
+            _safe_call(
+                m,
+                ["add_raster", "add_cog_layer"],
+                path_or_url,
+                layer_name=name,
+                colormap=colormap,
+            )
+        except Exception as exc:
+            return f"add_raster_data failed: {type(exc).__name__}: {exc}"
         return f"Added raster layer {name!r}."
 
     @geo_tool(
@@ -415,7 +444,10 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
             kwargs["titiler_endpoint"] = titiler_endpoint
         layer_name = name or item or collection
         kwargs["name"] = layer_name
-        _safe_call(m, ["add_stac_layer"], **kwargs)
+        try:
+            _safe_call(m, ["add_stac_layer"], **kwargs)
+        except Exception as exc:
+            return f"add_stac_layer failed: {type(exc).__name__}: {exc}"
         return f"Added STAC layer {layer_name!r}."
 
     @geo_tool(
@@ -449,10 +481,22 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         Returns:
             A status string.
         """
+        if _is_planetary_computer_url(url):
+            return (
+                "Refusing to call add_cog_layer with a Planetary Computer "
+                "asset URL: PC's public TiTiler cannot tile raw blob hrefs. "
+                "Call add_stac_layer(collection=..., item=..., assets=[...], "
+                "titiler_endpoint='pc') instead — Microsoft's hosted TiTiler "
+                "handles SAS signing for STAC items internally. See "
+                "https://leafmap.org/maplibre/stac/ for the canonical pattern."
+            )
         kwargs: dict[str, Any] = {"name": name, "colormap": colormap}
         if titiler_endpoint is not None:
             kwargs["titiler_endpoint"] = titiler_endpoint
-        _safe_call(m, ["add_cog_layer"], url, **kwargs)
+        try:
+            _safe_call(m, ["add_cog_layer"], url, **kwargs)
+        except Exception as exc:
+            return f"add_cog_layer failed: {type(exc).__name__}: {exc}"
         return f"Added COG layer {name!r}."
 
     @geo_tool(
