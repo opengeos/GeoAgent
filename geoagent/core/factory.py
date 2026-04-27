@@ -245,6 +245,77 @@ def for_anymap(
     return create_geo_agent(tools=tools, context=context, **kwargs)
 
 
+class _SyncToolGraph:
+    """Wrap a compiled deepagents graph to keep tool execution synchronous.
+
+    LangGraph's ``ToolNode`` always dispatches tool calls through a
+    ``ContextThreadPoolExecutor``, which moves tool bodies onto worker
+    threads. Inside QGIS this corrupts ``iface`` and the layer tree
+    (Qt requires main-thread affinity for the canvas / project / layer
+    tree). The :func:`geoagent.tools._inline_executor.inline_tool_execution`
+    context manager flips a ``ContextVar`` that a stable wrapper around
+    LangGraph's executor factory consults — when the flag is set the
+    wrapper returns an inline executor, otherwise it delegates to the
+    original factory. This makes the patch safe to use concurrently
+    across threads and async tasks: each context carries its own flag
+    value, so unrelated runs do not inherit the inline executor.
+
+    Because the user's ``agent.invoke()`` runs on the QGIS main thread,
+    every tool body then runs on the main thread. No Qt thread
+    marshaling is needed and no event-loop pumping is required.
+
+    Coverage:
+
+    - Synchronous and async tool-executing entry points are wrapped:
+      ``invoke``, ``stream``, ``ainvoke``, ``astream``, and
+      ``astream_events``. Anything reachable through these methods
+      (``stream_log``, ``batch`` chained internally, etc.) inherits
+      the gating because it shares the same ``ContextVar`` scope.
+    - Methods we do not wrap (``get_state``, custom attributes, the
+      various LangGraph admin methods that do not run tools) fall
+      through to the inner graph via ``__getattr__``. They are not
+      tool-executing paths so QGIS thread affinity is irrelevant.
+    """
+
+    def __init__(self, inner: Any) -> None:
+        self._inner = inner
+
+    def invoke(self, *args: Any, **kwargs: Any) -> Any:
+        from geoagent.tools._inline_executor import inline_tool_execution
+
+        with inline_tool_execution():
+            return self._inner.invoke(*args, **kwargs)
+
+    def stream(self, *args: Any, **kwargs: Any) -> Any:
+        from geoagent.tools._inline_executor import inline_tool_execution
+
+        with inline_tool_execution():
+            yield from self._inner.stream(*args, **kwargs)
+
+    async def ainvoke(self, *args: Any, **kwargs: Any) -> Any:
+        from geoagent.tools._inline_executor import inline_tool_execution
+
+        with inline_tool_execution():
+            return await self._inner.ainvoke(*args, **kwargs)
+
+    async def astream(self, *args: Any, **kwargs: Any) -> Any:
+        from geoagent.tools._inline_executor import inline_tool_execution
+
+        with inline_tool_execution():
+            async for chunk in self._inner.astream(*args, **kwargs):
+                yield chunk
+
+    async def astream_events(self, *args: Any, **kwargs: Any) -> Any:
+        from geoagent.tools._inline_executor import inline_tool_execution
+
+        with inline_tool_execution():
+            async for event in self._inner.astream_events(*args, **kwargs):
+                yield event
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+
 def for_qgis(
     iface: Any,
     project: Any = None,
@@ -267,8 +338,13 @@ def for_qgis(
         **kwargs: Forwarded to :func:`create_geo_agent`.
 
     Returns:
-        A compiled deepagents agent. By default no LangGraph checkpointer
-        is attached, so the returned graph can be driven via
+        A compiled deepagents agent wrapped so ``.invoke()`` /
+        ``.stream()`` / ``.ainvoke()`` / ``.astream()`` runs every tool
+        body inline on the calling thread (the QGIS main thread when
+        called from QGIS's Python console). This avoids the Qt
+        thread-affinity violations that would otherwise corrupt iface
+        and crash QGIS. By default no LangGraph checkpointer is
+        attached, so the graph can be driven via
         ``graph.invoke({"messages": [...]})`` without supplying a
         ``thread_id``. Pass ``checkpointer=<MemorySaver()>`` explicitly
         to opt into HITL / thread persistence.
@@ -291,7 +367,8 @@ def for_qgis(
         qgis_iface=iface, qgis_project=project
     )
     kwargs.setdefault("checkpointer", _NO_CHECKPOINTER_DEFAULT)
-    return create_geo_agent(tools=tools, context=context, **kwargs)
+    inner = create_geo_agent(tools=tools, context=context, **kwargs)
+    return _SyncToolGraph(inner)
 
 
 __all__ = [

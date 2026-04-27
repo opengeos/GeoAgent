@@ -188,3 +188,76 @@ def test_for_leafmap_honors_explicit_checkpointer(monkeypatch) -> None:
         checkpointer=saver,
     )
     assert captured.get("checkpointer") is saver
+
+
+def test_for_qgis_wraps_graph_to_force_inline_tool_execution(monkeypatch) -> None:
+    """``for_qgis`` returns a wrapper that activates inline tool execution.
+
+    LangGraph's ``ToolNode`` always offloads tool calls to a worker
+    thread pool. Under QGIS that corrupts iface and crashes the
+    process; the QGIS path must run tools inline on the calling
+    thread. The wrapper applied by ``for_qgis`` enters the
+    :func:`inline_tool_execution` context manager around every
+    ``invoke`` / ``stream`` / ``ainvoke`` / ``astream`` /
+    ``astream_events`` call. The context manager flips a
+    :class:`contextvars.ContextVar` that the stable wrapper around
+    LangGraph's executor factory consults — so inside the call,
+    ``get_executor_for_config`` returns the inline executor; outside,
+    the gating flag is reset and the wrapper delegates to the
+    original factory.
+    """
+    import langgraph.prebuilt.tool_node as _tool_node_mod
+
+    from geoagent.tools import _inline_executor as _inline_mod
+    from geoagent.tools._inline_executor import _InlineExecutor
+
+    captured: dict[str, object] = {}
+
+    class _FakeInner:
+        def invoke(self, *args, **kwargs):
+            # Snapshot the executor factory at the moment ``invoke`` runs.
+            captured["executor"] = _tool_node_mod.get_executor_for_config({})
+            captured["flag_inside"] = _inline_mod._inline_active.get()
+            return "ok"
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: lambda **_: _FakeInner()
+    )
+
+    agent = for_qgis(MockQGISIface(), llm=_fake_llm(), include_stac=False)
+
+    result = agent.invoke({"messages": []})
+
+    assert result == "ok"
+    assert isinstance(captured["executor"], _InlineExecutor)
+    assert captured["flag_inside"] is True
+    # The gating ContextVar is reset once invoke() returns. The wrapper
+    # itself stays installed (it's permanent and concurrency-safe).
+    assert _inline_mod._inline_active.get() is False
+
+
+def test_for_qgis_wrapper_forwards_other_attributes(monkeypatch) -> None:
+    """Non-overridden methods / attributes pass through to the inner graph.
+
+    The wrapper only wraps invoke / stream / ainvoke / astream;
+    everything else (``get_state``, custom attrs, etc.) must be
+    visible via ``__getattr__``.
+    """
+
+    class _FakeInner:
+        custom_attr = 42
+
+        def get_state(self):
+            return "inner-state"
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: lambda **_: _FakeInner()
+    )
+
+    agent = for_qgis(MockQGISIface(), llm=_fake_llm(), include_stac=False)
+    assert agent.custom_attr == 42
+    assert agent.get_state() == "inner-state"
