@@ -27,6 +27,7 @@ from typing import Any, Callable, Optional
 from langgraph.types import Command
 
 from .context import GeoAgentContext
+from .decorators import get_geo_meta
 from .factory import create_geo_agent
 from .result import GeoAgentResponse
 from .safety import ConfirmCallback, ConfirmRequest, auto_approve_safe_only
@@ -74,6 +75,17 @@ class GeoAgent:
         >>> resp = agent.chat("Search Sentinel-2 for Knoxville in July 2024")
         >>> resp.success
         True
+
+    Note:
+        ``GeoAgent`` builds its deepagents graph at construction time.
+        Subagents that bind to live runtime objects (mapping, qgis) are
+        included only when the corresponding context attribute is set
+        at that moment. Passing ``target_map`` to :meth:`chat` later
+        rebuilds the graph so the mapping subagent can be added — but
+        a brand-new :class:`langgraph.checkpoint.memory.MemorySaver`
+        is created with it, so previous conversation state is reset.
+        For long-lived sessions, prefer ``geoagent.for_leafmap(m)`` /
+        ``GeoAgent(context=GeoAgentContext(map_obj=m))`` at start.
     """
 
     def __init__(
@@ -94,19 +106,55 @@ class GeoAgent:
         self._confirm: ConfirmCallback = confirm or auto_approve_safe_only
         self._catalogs = catalogs or []
         self._thread_id = thread_id or f"geoagent-{uuid.uuid4().hex[:12]}"
+        # Remember the construction args so we can rebuild the graph
+        # when a chat() call changes the runtime context (e.g. a new
+        # target_map that needs the mapping subagent).
+        self._construction = {
+            "llm": llm,
+            "provider": provider,
+            "model": model,
+            "tools": list(_tools or []),
+            "extra_tools": list(tools or []),
+            "checkpointer": checkpointer,
+        }
         self._tools_by_name: dict[str, Any] = {}
-        for t in list(_tools or []) + list(tools or []):
+        self._build_graph()
+
+    def _build_graph(self) -> None:
+        """(Re)build the deepagents graph for the current context.
+
+        Called once at construction and again whenever :meth:`chat`
+        receives a ``target_map`` that differs from the current
+        context's ``map_obj``. The graph is rebuilt with a fresh
+        :class:`MemorySaver` (when none was supplied) so HITL
+        checkpoint state for the previous topology is dropped cleanly.
+        """
+        from geoagent.agents.coordinator import default_subagents
+
+        subagents = default_subagents(self._context)
+        # Cache base + subagent tools by name so the confirm callback
+        # gets full @geo_tool metadata (category, description) for
+        # tools that live inside subagents (mapping, qgis, geoai, ...).
+        self._tools_by_name = {}
+        for t in self._construction["tools"] + self._construction["extra_tools"]:
             name = getattr(t, "name", None)
             if name:
                 self._tools_by_name[name] = t
+        for sub in subagents:
+            for t in sub.get("tools") or []:
+                name = getattr(t, "name", None)
+                if name:
+                    self._tools_by_name[name] = t
+
         self._graph = create_geo_agent(
-            llm=llm,
-            provider=provider,
-            model=model,
-            tools=_tools,
-            extra_tools=tools or [],
+            llm=self._construction["llm"],
+            provider=self._construction["provider"],
+            model=self._construction["model"],
+            tools=self._construction["tools"] or None,
+            extra_tools=self._construction["extra_tools"],
             context=self._context,
-            checkpointer=checkpointer,
+            subagents=subagents,
+            checkpointer=self._construction["checkpointer"],
         )
 
     # ------------------------------------------------------------------
@@ -122,9 +170,14 @@ class GeoAgent:
 
         Args:
             query: The user's request.
-            target_map: Optional live map widget to fold into the
-                runtime context for this call. Mutates the agent's
-                context so subsequent calls also see the map.
+            target_map: Optional live map widget to bind for this call.
+                When supplied and different from the current context's
+                ``map_obj``, the deepagents graph is rebuilt so the
+                mapping subagent (with tools bound to the new widget)
+                is included. Note: rebuilding the graph also resets
+                conversation state. For stable long-running sessions,
+                pass ``map_obj`` via the :class:`GeoAgentContext` at
+                construction or use :func:`geoagent.for_leafmap`.
             status_callback: Optional callable invoked with short status
                 strings as the agent progresses. Currently used only for
                 interrupt / resume notifications; tool-level streaming
@@ -132,17 +185,25 @@ class GeoAgent:
 
         Returns:
             A :class:`GeoAgentResponse` populated from the deepagents
-            final state. Tool names that ran are listed in
-            :attr:`GeoAgentResponse.executed_tools`; tools the user
-            cancelled via the confirm callback are in
-            :attr:`GeoAgentResponse.cancelled_tools`.
+            final state.
+
+            ``executed_tools`` is derived from the actual ``ToolMessage``
+            stream (i.e. tools whose body ran, including safe tools that
+            never required confirmation), with rejected confirmation
+            stubs filtered out by tool-call id.
+
+            ``cancelled_tools`` lists tool names the user rejected via
+            the confirm callback.
         """
-        if target_map is not None:
+        if target_map is not None and target_map is not self._context.map_obj:
             self._context = self._context.with_overrides(map_obj=target_map)
+            self._build_graph()
+            # New graph = new MemorySaver = stale thread; assign a fresh id.
+            self._thread_id = f"geoagent-{uuid.uuid4().hex[:12]}"
 
         config = {"configurable": {"thread_id": self._thread_id}}
-        executed: list[str] = []
         cancelled: list[str] = []
+        rejected_tool_call_ids: set[str] = set()
         start = time.time()
 
         try:
@@ -157,17 +218,14 @@ class GeoAgent:
                 interrupts = self._extract_interrupts(result)
                 if not interrupts:
                     break
+                pending_tool_call_ids = self._tool_call_ids_for_interrupt(
+                    result, len(interrupts)
+                )
                 decisions = []
-                for req in interrupts:
+                for index, req in enumerate(interrupts):
                     tool_name = req.get("name") or req.get("action_name") or ""
                     args = req.get("args") or {}
-                    confirm_req = ConfirmRequest(
-                        tool_name=tool_name,
-                        args=dict(args),
-                        description=self._tool_description(tool_name, req),
-                        category=None,
-                        metadata={},
-                    )
+                    confirm_req = self._build_confirm_request(tool_name, args, req)
                     if status_callback is not None:
                         try:
                             status_callback(f"awaiting confirmation: {tool_name}")
@@ -176,17 +234,19 @@ class GeoAgent:
                     approved = bool(self._confirm(confirm_req))
                     if approved:
                         decisions.append({"type": "approve"})
-                        executed.append(tool_name)
                     else:
                         decisions.append(
                             {"type": "reject", "message": "User cancelled."}
                         )
                         cancelled.append(tool_name)
+                        if index < len(pending_tool_call_ids):
+                            rejected_tool_call_ids.add(pending_tool_call_ids[index])
                 result = self._graph.invoke(
                     Command(resume={"decisions": decisions}),
                     config=config,
                 )
             elapsed = time.time() - start
+            executed = _executed_tools_from_messages(result, rejected_tool_call_ids)
             return _adapt_result(result, executed, cancelled, elapsed)
         except Exception as exc:
             elapsed = time.time() - start
@@ -195,7 +255,7 @@ class GeoAgent:
                 success=False,
                 error_message=str(exc),
                 execution_time=elapsed,
-                executed_tools=executed,
+                executed_tools=[],
                 cancelled_tools=cancelled,
             )
 
@@ -259,6 +319,90 @@ class GeoAgent:
                 return desc
         return action_request.get("description", "")
 
+    def _build_confirm_request(
+        self,
+        tool_name: str,
+        args: dict[str, Any],
+        action_request: dict[str, Any],
+    ) -> ConfirmRequest:
+        """Construct a :class:`ConfirmRequest` enriched with tool metadata.
+
+        For tools registered with :func:`@geo_tool`, ``category`` and
+        the full GeoAgent metadata dict are pulled from the cached
+        tool's ``metadata["geo"]``. Tools defined with the plain
+        LangChain ``@tool`` decorator return an empty metadata dict and
+        ``category=None``.
+        """
+        tool = self._tools_by_name.get(tool_name)
+        meta = get_geo_meta(tool) if tool is not None else {}
+        return ConfirmRequest(
+            tool_name=tool_name,
+            args=dict(args),
+            description=self._tool_description(tool_name, action_request),
+            category=meta.get("category"),
+            metadata=dict(meta),
+        )
+
+    @staticmethod
+    def _tool_call_ids_for_interrupt(result: Any, count: int) -> list[str]:
+        """Pull the most recent N tool-call ids from the message stream.
+
+        DeepAgents' interrupt payload carries ``action_requests`` in the
+        same order as the AIMessage's ``tool_calls`` list. We zip those
+        positionally so a rejection can be associated with a specific
+        ``ToolMessage`` later (matching by ``tool_call_id``).
+        """
+        if not isinstance(result, dict):
+            return []
+        messages = result.get("messages") or []
+        for msg in reversed(messages):
+            tool_calls = getattr(msg, "tool_calls", None)
+            if tool_calls:
+                ids = [tc.get("id", "") for tc in tool_calls if tc.get("id")]
+                return ids[-count:] if count <= len(ids) else ids
+        return []
+
+
+def _executed_tools_from_messages(
+    result: Any,
+    rejected_tool_call_ids: set[str],
+) -> list[str]:
+    """Derive ``executed_tools`` from the final ToolMessage stream.
+
+    Walks the result's message log, collecting ``name`` from every
+    :class:`~langchain_core.messages.ToolMessage` whose ``tool_call_id``
+    is *not* in ``rejected_tool_call_ids``. This captures both
+    confirmation-approved tools and "safe" tools that ran without
+    requiring HITL approval, while excluding the placeholder
+    ``ToolMessage`` deepagents inserts when the user rejected a call.
+
+    Args:
+        result: The dict returned by the final ``graph.invoke(...)``.
+        rejected_tool_call_ids: Tool-call ids the user rejected via the
+            confirm callback. Their corresponding ToolMessages are
+            stubs that should not count as executions.
+
+    Returns:
+        A list of tool names in the order they ran. Duplicates are
+        preserved so a single name appearing twice means the tool ran
+        twice.
+    """
+    if not isinstance(result, dict):
+        return []
+    out: list[str] = []
+    for msg in result.get("messages") or []:
+        # Avoid an `isinstance` import-time dependency on langchain_core's
+        # ToolMessage; the duck-typed check is sufficient here.
+        if type(msg).__name__ != "ToolMessage":
+            continue
+        tcid = getattr(msg, "tool_call_id", None)
+        if tcid and tcid in rejected_tool_call_ids:
+            continue
+        name = getattr(msg, "name", None)
+        if name:
+            out.append(name)
+    return out
+
 
 def _adapt_result(
     result: Any,
@@ -270,8 +414,9 @@ def _adapt_result(
 
     Args:
         result: The dict returned by the final ``graph.invoke(...)``.
-        executed: Names of confirmation-required tools the user
-            approved.
+        executed: Names of tools whose body ran (derived from the
+            final ToolMessage stream by
+            :func:`_executed_tools_from_messages`).
         cancelled: Names of confirmation-required tools the user
             rejected.
         elapsed: Wall-clock seconds spent in the agent run.

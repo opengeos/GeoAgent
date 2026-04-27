@@ -107,7 +107,6 @@ def create_geo_agent(
     resolved_model = resolve_model(llm=llm, provider=provider, model=model)
 
     tool_list = _as_list(tools) + _as_list(extra_tools)
-    interrupt_on = build_interrupt_on(tool_list) or None
 
     context = context or GeoAgentContext()
 
@@ -115,6 +114,16 @@ def create_geo_agent(
         from geoagent.agents.coordinator import default_subagents
 
         subagents = default_subagents(context)
+
+    # Build interrupt_on from the union of base tools and every subagent's
+    # tools. Confirmation-required tools that live only inside a subagent
+    # (e.g. mapping's remove_layer / save_map, qgis's run_processing_algorithm)
+    # would otherwise execute without firing the HITL interrupt.
+    interrupt_tool_pool: list[BaseTool] = list(tool_list)
+    for sub in subagents:
+        for t in sub.get("tools") or []:
+            interrupt_tool_pool.append(t)
+    interrupt_on = build_interrupt_on(interrupt_tool_pool) or None
 
     if checkpointer is None:
         from langgraph.checkpoint.memory import MemorySaver

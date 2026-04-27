@@ -74,8 +74,13 @@ def test_confirm_callback_receives_request_and_approves() -> None:
     request = seen[0]
     assert request.tool_name == "remove_layer"
     assert request.args == {"name": "NDVI"}
-    # The cached @geo_tool description should flow through to the request.
+    # The cached @geo_tool description flows through to the request.
     assert "Remove a named layer" in request.description
+    # @geo_tool metadata (category + the full geo dict) is preserved
+    # so a UI can render a category icon, link to docs, etc.
+    assert request.category == "map"
+    assert request.metadata.get("requires_confirmation") is True
+    assert request.metadata.get("category") == "map"
     assert "remove_layer" in resp.executed_tools
     assert "remove_layer" not in resp.cancelled_tools
 
@@ -136,3 +141,67 @@ def test_safe_tool_does_not_trigger_confirm() -> None:
     assert resp.success is True
     assert seen == []  # callback never fired
     assert resp.cancelled_tools == []
+    # Safe tools that ran are now visible in executed_tools (derived
+    # from the ToolMessage stream, not from the confirm-loop).
+    assert "safe_inspect" in resp.executed_tools
+
+
+def test_executed_tools_derived_from_tool_messages() -> None:
+    """Approved confirmation tools and safe tools both land in executed_tools."""
+    agent = GeoAgent(
+        llm=make_fake(
+            [
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "id": "tc-confirm",
+                            "name": "remove_layer",
+                            "args": {"name": "X"},
+                        },
+                        {
+                            "id": "tc-safe",
+                            "name": "safe_inspect",
+                            "args": {"query": "Q"},
+                        },
+                    ],
+                ),
+                AIMessage(content="All done."),
+            ]
+        ),
+        tools=[remove_layer, safe_inspect],
+        confirm=lambda _r: True,
+    )
+    resp = agent.chat("Remove X then inspect Q")
+    assert resp.success is True
+    # Both tools' bodies ran, so both names appear in executed_tools.
+    assert "remove_layer" in resp.executed_tools
+    assert "safe_inspect" in resp.executed_tools
+    assert resp.cancelled_tools == []
+
+
+def test_rejected_tool_call_excluded_from_executed_tools() -> None:
+    """A rejection ToolMessage stub must not count as an execution."""
+    agent = GeoAgent(
+        llm=make_fake(
+            [
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "id": "tc1",
+                            "name": "remove_layer",
+                            "args": {"name": "X"},
+                        }
+                    ],
+                ),
+                AIMessage(content="Cancelled."),
+            ]
+        ),
+        tools=[remove_layer],
+        confirm=lambda _r: False,
+    )
+    resp = agent.chat("Remove X")
+    assert resp.success is True
+    assert resp.executed_tools == []
+    assert resp.cancelled_tools == ["remove_layer"]
