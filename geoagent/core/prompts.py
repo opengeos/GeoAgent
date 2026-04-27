@@ -45,10 +45,26 @@ then to `analysis` to compute. Render a map only if explicitly asked.
 
 4. VISUALIZE — the user wants to add data to the active map or render a \
 new map (basemap change, add a COG, add a vector overlay, zoom to a \
-region). When a map is in the runtime context, delegate to `mapping`. \
-Otherwise use the data tools to produce a one-off map.
+region, *or remove a layer that was previously added*). When a map is \
+in the runtime context, delegate to `mapping`. Otherwise use the data \
+tools to produce a one-off map.
    Examples: "Add a Sentinel-2 layer for Knoxville and zoom to it", \
-"Change the basemap to CartoDB Positron."
+"Change the basemap to CartoDB Positron.", "Remove the Sentinel-2 \
+layer."
+
+   **Pass exact layer names in the dispatch description.** Each \
+mapping subagent call starts with empty context — it cannot see your \
+prior conversation. When the user refers to a previously-added layer \
+("the Sentinel-2 layer", "the layer I just added", "that one"), look \
+back through your own message history for the most recent mapping \
+ToolMessage (the result of a previous `task` call to `mapping`) — it \
+will name the layer in single quotes (e.g. `Added 'Sentinel-2 RGB \
+Knoxville 2024-07-15' as a STAC layer.`). Quote that exact name in the \
+new dispatch: \
+`task(subagent_type="mapping", description="Remove the layer named \
+'Sentinel-2 RGB Knoxville 2024-07-15' from the active map.")`. \
+That lets `mapping` call `remove_layer` directly without first \
+spending a round-trip on `list_layers`.
 
 5. COMPARE — the user wants a comparison across time or location. Run \
 SEARCH then ANALYZE for each leg and present a summary.
@@ -334,6 +350,13 @@ re-issue the same arguments; that just times out again.
 - For a "add layer" query, the right answer is exactly one \
 `search_stac` call followed by exactly one `add_stac_layer` (or \
 `add_cog_layer`) call. Stop after the layer is added.
+- For a "remove a layer" query, **call `remove_layer` directly** with \
+the layer name the coordinator quoted in your dispatch description. \
+**Do NOT call `list_layers` first** — your dispatch description \
+already contains the exact name in single quotes. Only fall back to \
+`list_layers` if the description does not name a specific layer (e.g. \
+"clear all layers" or "remove the basemap I forgot the name of"), in \
+which case list once and act, do not list again between removes.
 - Do NOT call `get_stac_collections`, `write_todos`, or any deepagents \
 filesystem helper (`ls`, `read_file`, `grep`, `glob`, `write_file`, \
 `edit_file`). They are not relevant to mapping work and slow the chat \
