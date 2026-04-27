@@ -41,6 +41,14 @@ def _as_list(value: Optional[Iterable[BaseTool]]) -> list[BaseTool]:
     return list(value) if value is not None else []
 
 
+# Sentinel used by the convenience factories to mean "no checkpointer
+# unless the caller asks for one". ``create_geo_agent`` interprets
+# ``checkpointer=False`` as opt-out. We don't want to overwrite a value
+# the caller explicitly passes, so we only inject the default when
+# ``checkpointer`` is absent from kwargs entirely.
+_NO_CHECKPOINTER_DEFAULT = False
+
+
 def create_geo_agent(
     *,
     tools: Optional[Iterable[BaseTool]] = None,
@@ -164,7 +172,13 @@ def for_leafmap(
         **kwargs: Forwarded to :func:`create_geo_agent`.
 
     Returns:
-        A compiled deepagents agent.
+        A compiled deepagents agent. By default no LangGraph checkpointer
+        is attached, so the returned graph can be driven via
+        ``graph.invoke({"messages": [...]})`` without supplying a
+        ``thread_id``. Pass ``checkpointer=<MemorySaver()>`` (or any
+        other ``Checkpointer``) explicitly to opt into HITL / thread
+        persistence; in that case every ``.invoke()`` call must include
+        ``config={"configurable": {"thread_id": ...}}``.
     """
     from geoagent.tools.leafmap import leafmap_tools
 
@@ -182,6 +196,7 @@ def for_leafmap(
     if extra_tools is not None:
         tools += list(extra_tools)
     context = kwargs.pop("context", None) or GeoAgentContext(map_obj=m)
+    kwargs.setdefault("checkpointer", _NO_CHECKPOINTER_DEFAULT)
     return create_geo_agent(tools=tools, context=context, **kwargs)
 
 
@@ -204,7 +219,11 @@ def for_anymap(
         **kwargs: Forwarded to :func:`create_geo_agent`.
 
     Returns:
-        A compiled deepagents agent.
+        A compiled deepagents agent. By default no LangGraph checkpointer
+        is attached, so the returned graph can be driven via
+        ``graph.invoke({"messages": [...]})`` without supplying a
+        ``thread_id``. Pass ``checkpointer=<MemorySaver()>`` explicitly
+        to opt into HITL / thread persistence.
     """
     from geoagent.tools.anymap import anymap_tools
 
@@ -222,6 +241,7 @@ def for_anymap(
     if extra_tools is not None:
         tools += list(extra_tools)
     context = kwargs.pop("context", None) or GeoAgentContext(map_obj=m)
+    kwargs.setdefault("checkpointer", _NO_CHECKPOINTER_DEFAULT)
     return create_geo_agent(tools=tools, context=context, **kwargs)
 
 
@@ -247,7 +267,11 @@ def for_qgis(
         **kwargs: Forwarded to :func:`create_geo_agent`.
 
     Returns:
-        A compiled deepagents agent.
+        A compiled deepagents agent. By default no LangGraph checkpointer
+        is attached, so the returned graph can be driven via
+        ``graph.invoke({"messages": [...]})`` without supplying a
+        ``thread_id``. Pass ``checkpointer=<MemorySaver()>`` explicitly
+        to opt into HITL / thread persistence.
     """
     from geoagent.tools.qgis import qgis_tools
 
@@ -266,6 +290,7 @@ def for_qgis(
     context = kwargs.pop("context", None) or GeoAgentContext(
         qgis_iface=iface, qgis_project=project
     )
+    kwargs.setdefault("checkpointer", _NO_CHECKPOINTER_DEFAULT)
     return create_geo_agent(tools=tools, context=context, **kwargs)
 
 
