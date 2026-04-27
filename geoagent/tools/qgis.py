@@ -139,31 +139,16 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
     def list_project_layers() -> list[dict[str, Any]]:
         """List all layers in the active QGIS project.
 
-        Each entry includes an ``active`` boolean so the model does not
-        need a separate ``get_active_layer`` round-trip just to know
-        which layer is currently active.
-
         Returns:
-            A list of dicts ``{"name", "type", "source", "active"}``.
+            A list of dicts ``{"name": ..., "type": ..., "source": ...}``.
         """
-        active_layer = iface.activeLayer() if hasattr(iface, "activeLayer") else None
-        active_id = (
-            active_layer.id()
-            if active_layer is not None and hasattr(active_layer, "id")
-            else None
-        )
         out: list[dict[str, Any]] = []
         for layer in _project().mapLayers().values():
-            layer_id = layer.id() if hasattr(layer, "id") else None
-            is_active = (
-                active_id is not None and layer_id is not None and layer_id == active_id
-            ) or (active_layer is layer)
             out.append(
                 {
                     "name": layer.name(),
                     "type": str(layer.type()),
                     "source": layer.source(),
-                    "active": is_active,
                 }
             )
         return out
@@ -217,34 +202,6 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         iface.mapCanvas().zoomOut()
         return "Zoomed out."
 
-    def _zoom_to_layer_object(layer: Any) -> None:
-        """Apply the canvas extent for an already-resolved layer.
-
-        Prefer the explicit ``setExtent`` + ``refresh`` path over
-        ``iface.zoomToActiveLayer()``. The latter updates the canvas
-        extent but does not always trigger XYZ tile providers (Google
-        Satellite, OSM, ESRI) to refetch tiles at the new zoom-pyramid
-        level, leaving basemaps stuck on upscaled lower-resolution
-        tiles. ``setExtent`` + ``refresh`` mirrors the path QGIS uses
-        for user-driven zoom and resolves the tile pyramid correctly.
-        ``iface.zoomToActiveLayer`` stays as a fallback for canvas
-        types where ``setExtent`` is unavailable (e.g. test mocks).
-        """
-        canvas = iface.mapCanvas()
-        extent = layer.extent() if hasattr(layer, "extent") else None
-        if extent is not None and hasattr(canvas, "setExtent"):
-            # Re-project from the layer's CRS to the canvas / project
-            # CRS before applying. A GeoJSON loaded as EPSG:4326 has a
-            # lat/lon extent that ``setExtent`` would otherwise
-            # interpret as Web-Mercator metres, zooming to ~(0, 0) and
-            # rendering as a blank canvas.
-            extent = _transform_extent_to_canvas_crs(layer, canvas, extent)
-            canvas.setExtent(extent)
-            if hasattr(canvas, "refresh"):
-                canvas.refresh()
-        elif hasattr(iface, "zoomToActiveLayer"):
-            iface.zoomToActiveLayer()
-
     @geo_tool(
         category="qgis",
         requires_packages=("qgis",),
@@ -261,31 +218,32 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         """
         layer = _resolve_layer(_project(), layer_name)
         iface.setActiveLayer(layer)
-        _zoom_to_layer_object(layer)
+        canvas = iface.mapCanvas()
+        # Prefer the explicit ``setExtent`` + ``refresh`` path over
+        # ``iface.zoomToActiveLayer()``. The latter updates the extent
+        # but does not always trigger XYZ tile providers (Google
+        # Satellite, OSM, ESRI) to refetch tiles at the new zoom-pyramid
+        # level, leaving basemaps stuck on upscaled lower-resolution
+        # tiles. ``setExtent`` + ``refresh`` mirrors the path QGIS uses
+        # for user-driven zoom and resolves the tile pyramid correctly.
+        # ``iface.zoomToActiveLayer`` stays as a fallback for canvas
+        # types where ``setExtent`` is unavailable (e.g. test mocks
+        # without the method) — call it AFTER setExtent so the iface
+        # path runs only when needed.
+        extent = layer.extent() if hasattr(layer, "extent") else None
+        if extent is not None and hasattr(canvas, "setExtent"):
+            # Re-project from the layer's CRS to the canvas / project
+            # CRS before applying the extent. A GeoJSON loaded as
+            # EPSG:4326 has a lat/lon extent that ``setExtent`` would
+            # otherwise interpret as Web-Mercator metres, zooming to
+            # ~(0, 0) and rendering as a blank canvas.
+            extent = _transform_extent_to_canvas_crs(layer, canvas, extent)
+            canvas.setExtent(extent)
+            if hasattr(canvas, "refresh"):
+                canvas.refresh()
+        elif hasattr(iface, "zoomToActiveLayer"):
+            iface.zoomToActiveLayer()
         return f"Zoomed to layer {layer_name!r}."
-
-    @geo_tool(
-        category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
-    )
-    def zoom_to_active_layer() -> str:
-        """Zoom the canvas to the currently active layer's extent.
-
-        Use this when the user says "zoom to the active layer" or "zoom
-        to the selected layer" — it does not need a layer name and
-        skips the extra ``get_active_layer`` round trip the model would
-        otherwise need to feed ``zoom_to_layer``.
-
-        Returns:
-            A status string. Reports a no-op when no layer is active.
-        """
-        layer = iface.activeLayer()
-        if layer is None:
-            return "No active layer to zoom to."
-        _zoom_to_layer_object(layer)
-        name = layer.name() if hasattr(layer, "name") else "<unnamed>"
-        return f"Zoomed to active layer {name!r}."
 
     @geo_tool(
         category="qgis",
@@ -544,7 +502,6 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         zoom_in,
         zoom_out,
         zoom_to_layer,
-        zoom_to_active_layer,
         zoom_to_extent,
         add_vector_layer,
         add_raster_layer,

@@ -39,7 +39,6 @@ def test_factory_returns_tools_for_iface() -> None:
         "zoom_in",
         "zoom_out",
         "zoom_to_layer",
-        "zoom_to_active_layer",
         "zoom_to_extent",
         "add_vector_layer",
         "add_raster_layer",
@@ -231,68 +230,6 @@ def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
     tools["zoom_to_layer"].invoke({"layer_name": "Buildings"})
     assert canvas.extent() == (-115.3, 36.1, -115.0, 36.3)
     assert canvas.refresh_count == before_refresh + 1
-
-
-def test_list_project_layers_marks_active_layer() -> None:
-    """``list_project_layers`` flags the active layer so the model can
-    skip a separate ``get_active_layer`` round trip when it needs both
-    the layer list and the active-layer name in the same step.
-    """
-    project = MockQGISProject()
-    iface = MockQGISIface(project=project)
-    a = MockQGISLayer("Roads", "/tmp/r.shp", "vector")
-    b = MockQGISLayer("Buildings", "/tmp/b.shp", "vector")
-    project.addMapLayer(a)
-    project.addMapLayer(b)
-    iface.setActiveLayer(b)
-
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    layers = tools["list_project_layers"].invoke({})
-
-    by_name = {layer["name"]: layer for layer in layers}
-    assert by_name["Roads"]["active"] is False
-    assert by_name["Buildings"]["active"] is True
-
-
-def test_list_project_layers_marks_no_active_when_unset() -> None:
-    project = MockQGISProject()
-    iface = MockQGISIface(project=project)
-    project.addMapLayer(MockQGISLayer("Roads", "/tmp/r.shp", "vector"))
-
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    layers = tools["list_project_layers"].invoke({})
-    assert layers[0]["active"] is False
-
-
-def test_zoom_to_active_layer_zooms_to_iface_active() -> None:
-    """``zoom_to_active_layer`` reads the iface's active layer and
-    routes through the same setExtent + transform path as
-    ``zoom_to_layer`` — so the model can call it with no arguments
-    and skip the ``get_active_layer`` -> ``zoom_to_layer`` two-hop
-    pattern.
-    """
-    project = MockQGISProject()
-    iface = MockQGISIface(project=project)
-    canvas = iface.mapCanvas()
-    layer = MockQGISLayer(
-        "Buildings", "/tmp/b.shp", extent=(-115.3, 36.1, -115.0, 36.3)
-    )
-    project.addMapLayer(layer)
-    iface.setActiveLayer(layer)
-
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    out = tools["zoom_to_active_layer"].invoke({})
-    assert "Zoomed to active layer" in out
-    assert "Buildings" in out
-    assert canvas.extent() == (-115.3, 36.1, -115.0, 36.3)
-
-
-def test_zoom_to_active_layer_handles_no_active() -> None:
-    project = MockQGISProject()
-    iface = MockQGISIface(project=project)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    out = tools["zoom_to_active_layer"].invoke({})
-    assert "No active layer" in out
 
 
 def test_zoom_to_layer_raises_when_missing() -> None:
