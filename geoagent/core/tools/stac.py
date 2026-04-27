@@ -27,13 +27,14 @@ def search_stac(
     bbox: Optional[List[float]] = None,
     datetime_range: Optional[str] = None,
     collections: Optional[List[str]] = None,
-    max_items: int = 10,
+    max_items: int = 5,
     max_cloud_cover: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """Search any STAC catalog for items matching the given criteria.
 
     This tool searches STAC catalogs to find satellite imagery and other geospatial
-    assets based on location, time, and other filters.
+    assets based on location, time, and other filters. Results are sorted by
+    cloud cover ascending so the cleanest scene is item ``[0]``.
 
     Args:
         query: Free-text search query to describe what you're looking for
@@ -41,7 +42,9 @@ def search_stac(
         bbox: Bounding box as [west, south, east, north] in WGS84 coordinates
         datetime_range: Date range in format "2023-01-01/2023-12-31" or "2023-01-01"
         collections: List of collection IDs to search within
-        max_items: Maximum number of items to return (default: 10)
+        max_items: Maximum number of items to return (default: 5). Keep this
+            small — large values ask the catalog to scan many pages and can
+            time out on busy services like Planetary Computer.
         max_cloud_cover: Maximum cloud cover percentage (0-100) to filter results
 
     Returns:
@@ -130,6 +133,15 @@ def search_stac(
 
         search_params["limit"] = max_items
 
+        # Sort by cloud cover ascending whenever a cloud-cover filter is in
+        # play — the first item is then the cleanest scene, which is what
+        # the LLM almost always wants. Skip when no cloud filter is set
+        # (catalogs without eo:cloud_cover would reject the sort key).
+        if max_cloud_cover is not None:
+            search_params["sortby"] = [
+                {"field": "properties.eo:cloud_cover", "direction": "asc"}
+            ]
+
         # Perform search
         search = client.search(**search_params)
 
@@ -197,7 +209,23 @@ def search_stac(
 
     except Exception as e:
         logger.error(f"Error searching STAC catalog: {e}")
-        return [{"error": str(e), "query": query, "catalog": catalog}]
+        msg = str(e)
+        hint = (
+            "Try narrowing the request: shrink the bbox, shorten "
+            "`datetime_range`, or pass a smaller `max_items`. Do NOT retry "
+            "with the same arguments — that will time out again."
+        )
+        return [
+            {
+                "error": msg,
+                "hint": hint,
+                "query": query,
+                "catalog": catalog,
+                "bbox": bbox,
+                "datetime_range": datetime_range,
+                "max_items": max_items,
+            }
+        ]
 
 
 @tool

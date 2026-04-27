@@ -14,17 +14,17 @@ logger = logging.getLogger(__name__)
 # Provider configurations with default models
 PROVIDERS: Dict[str, Dict[str, str]] = {
     "openai": {
-        "default_model": "gpt-4.1",
+        "default_model": "gpt-5.5",
         "env_var": "OPENAI_API_KEY",
         "package": "langchain-openai",
     },
     "anthropic": {
-        "default_model": "claude-sonnet-4-5-20250929",
+        "default_model": "claude-sonnet-4-6",
         "env_var": "ANTHROPIC_API_KEY",
         "package": "langchain-anthropic",
     },
     "google": {
-        "default_model": "gemini-2.5-flash",
+        "default_model": "gemini-3.1-flash-lite-preview",
         "env_var": "GOOGLE_API_KEY",
         "package": "langchain-google-genai",
     },
@@ -273,7 +273,7 @@ def resolve_model(
     * an explicit ``llm`` object (a LangChain ``BaseChatModel`` instance),
     * a ``provider`` name (e.g. ``"openai"``) plus an optional ``model``,
     * a ``model`` string in deepagents' ``"provider:model"`` shorthand
-      (e.g. ``"google_genai:gemini-2.5-flash"``,
+      (e.g. ``"google_genai:gemini-3.1-flash-lite-preview"``,
       ``"anthropic:claude-sonnet-4-5"``), which is routed verbatim to
       :func:`langchain.chat_models.init_chat_model` for full parity with
       :func:`deepagents.create_deep_agent`,

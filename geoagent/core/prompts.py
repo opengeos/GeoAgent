@@ -45,10 +45,26 @@ then to `analysis` to compute. Render a map only if explicitly asked.
 
 4. VISUALIZE — the user wants to add data to the active map or render a \
 new map (basemap change, add a COG, add a vector overlay, zoom to a \
-region). When a map is in the runtime context, delegate to `mapping`. \
-Otherwise use the data tools to produce a one-off map.
+region, *or remove a layer that was previously added*). When a map is \
+in the runtime context, delegate to `mapping`. Otherwise use the data \
+tools to produce a one-off map.
    Examples: "Add a Sentinel-2 layer for Knoxville and zoom to it", \
-"Change the basemap to CartoDB Positron."
+"Change the basemap to CartoDB Positron.", "Remove the Sentinel-2 \
+layer."
+
+   **Pass exact layer names in the dispatch description.** Each \
+mapping subagent call starts with empty context — it cannot see your \
+prior conversation. When the user refers to a previously-added layer \
+("the Sentinel-2 layer", "the layer I just added", "that one"), look \
+back through your own message history for the most recent mapping \
+ToolMessage (the result of a previous `task` call to `mapping`) — it \
+will name the layer in single quotes (e.g. `Added 'Sentinel-2 RGB \
+Knoxville 2024-07-15' as a STAC layer.`). Quote that exact name in the \
+new dispatch: \
+`task(subagent_type="mapping", description="Remove the layer named \
+'Sentinel-2 RGB Knoxville 2024-07-15' from the active map.")`. \
+That lets `mapping` call `remove_layer` directly without first \
+spending a round-trip on `list_layers`.
 
 5. COMPARE — the user wants a comparison across time or location. Run \
 SEARCH then ANALYZE for each leg and present a summary.
@@ -89,6 +105,19 @@ explicitly asked for NDVI or a vegetation index.
 no map in the runtime context.
 - Do NOT pass `sentinel-2-l2a` as the dataset unless the user explicitly \
 asks for satellite imagery, spectral indices, or Sentinel-2.
+- Do NOT call the deepagents filesystem helpers (`ls`, `read_file`, \
+`write_file`, `edit_file`, `glob`, `grep`, `execute`) — they exist for \
+code-writing agents and have no role in geospatial workflows. Calling \
+them just slows the chat down.
+- Do NOT call `write_todos` for single-step requests like "add a \
+layer", "search for X", "what is Y". Plan with `write_todos` only for \
+genuine multi-step workflows that span more than two subagent \
+dispatches.
+- Do NOT call `get_stac_collections` before `search_stac`; \
+`search_stac` accepts a `collections` argument directly.
+- For VISUALIZE queries with a map in context, delegate to `mapping` \
+on the FIRST step — do not search yourself, the mapping subagent has \
+its own `search_stac`.
 """
 
 
@@ -269,6 +298,75 @@ tools were bound to your subagent.
 - For `.pmtiles`, use `add_pmtiles_layer`.
 - For a STAC item id with explicit assets, use `add_stac_layer`.
 - For arbitrary slippy-tile URLs, use `add_xyz_tile_layer`.
+
+# Resolving URLs from natural-language queries
+
+When the user asks for satellite imagery or any STAC-hosted dataset by \
+topic rather than by URL ("Sentinel-2 RGB over Knoxville for July 2024", \
+"NAIP 2023 for Tennessee", "Landsat 9 cloud-free imagery for the Bay \
+Area"), you must first call `search_stac` to find a concrete item, then \
+add it. Do NOT fabricate URLs.
+
+Steps:
+
+1. Translate the place name into a bounding box \
+[west, south, east, north]. If the user did not name a place, fall back \
+to the active map's centre and a small buffer.
+2. Call `search_stac(query, catalog="microsoft-pc", bbox=[w,s,e,n], \
+datetime_range="YYYY-MM-DD/YYYY-MM-DD", max_items=5, \
+max_cloud_cover=20)`. Use `collection="sentinel-2-l2a"` for Sentinel-2; \
+`"landsat-c2-l2"` for Landsat; `"naip"` for NAIP; `"cop-dem-glo-30"` for \
+Copernicus DEM.
+3. Pick the best item (lowest cloud cover, most central bbox overlap) \
+and note its `id` and the asset key the user wants. For Sentinel-2 RGB, \
+use the pre-rendered `visual` asset.
+4. Render the item with `add_stac_layer`. **For Planetary Computer \
+items (catalog="microsoft-pc"), pass `titiler_endpoint="pc"`** so \
+Microsoft's hosted TiTiler handles tiling and SAS signing internally:
+
+   `add_stac_layer(collection="sentinel-2-l2a", \
+item="<id>", assets=["visual"], titiler_endpoint="pc", \
+name="<descriptive name>")`
+
+   This is the canonical pattern; see \
+https://leafmap.org/maplibre/stac/ for the leafmap example. \
+**Do NOT call `add_cog_layer` with a Planetary Computer asset URL** — \
+PC blob URLs (``*.blob.core.windows.net``) cannot be tiled by the \
+public TiTiler. The tool will refuse such calls and tell you to use \
+`add_stac_layer` instead.
+
+5. For non-PC catalogs (earth-search, USGS, public buckets) you may \
+use `add_cog_layer(url=<public COG href>, name=...)` for a single \
+asset. Use `add_stac_layer` (without `titiler_endpoint`) when the \
+renderer needs multiple bands.
+
+If `search_stac` returns zero items or an `{"error": ...}` dict, say so \
+explicitly and **change the query** before retrying — narrow a too-\
+wide bbox, shorten the time range, or raise `max_cloud_cover`. Do NOT \
+re-issue the same arguments; that just times out again.
+
+# Stay focused
+
+- For a "add layer" query, the right answer is exactly one \
+`search_stac` call followed by exactly one `add_stac_layer` (or \
+`add_cog_layer`) call. Stop after the layer is added.
+- For a "remove a layer" query, **call `remove_layer` directly** with \
+whatever name keyword the user gave. The tool accepts either the full \
+layer name OR a unique substring (case-insensitive), so \
+`remove_layer(name="Sentinel-2")` will resolve to a layer named \
+`Sentinel-2 RGB Knoxville 2024-07-15` automatically. \
+**Do NOT call `list_layers` first** — the resolver runs inside the \
+tool. Only fall back to `list_layers` if `remove_layer` returns an \
+``ambiguous`` message and you need to pick between the candidates it \
+listed, or if the request is genuinely listing-shaped ("clear all \
+layers", "what layers are on the map").
+- Do NOT call `get_stac_collections`, `write_todos`, or any deepagents \
+filesystem helper (`ls`, `read_file`, `grep`, `glob`, `write_file`, \
+`edit_file`). They are not relevant to mapping work and slow the chat \
+down significantly.
+- Do NOT call `set_center`, `zoom_to_bounds`, or `change_basemap` \
+unless the user explicitly asked for that — `add_stac_layer`'s \
+default `fit_bounds=True` already pans the map onto the layer.
 
 # Confirmation
 

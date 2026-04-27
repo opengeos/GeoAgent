@@ -90,9 +90,9 @@ GeoAgent supports multiple LLM providers. You need at least one configured to us
 
 | Provider       | Default Model                | API Key Env Variable | Install Extra                       |
 | -------------- | ---------------------------- | -------------------- | ----------------------------------- |
-| OpenAI         | `gpt-4.1`                    | `OPENAI_API_KEY`     | `pip install "geoagent[openai]"`    |
-| Anthropic      | `claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY`  | `pip install "geoagent[anthropic]"` |
-| Google Gemini  | `gemini-2.5-flash`           | `GOOGLE_API_KEY`     | `pip install "geoagent[google]"`    |
+| OpenAI         | `gpt-5.5`                    | `OPENAI_API_KEY`     | `pip install "geoagent[openai]"`    |
+| Anthropic      | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY`  | `pip install "geoagent[anthropic]"` |
+| Google Gemini  | `gemini-3.1-flash-lite-preview`           | `GOOGLE_API_KEY`     | `pip install "geoagent[google]"`    |
 | Ollama (local) | `llama3.1`                   | *(none needed)*      | `pip install "geoagent[ollama]"`    |
 
 ### Setting API keys
@@ -110,7 +110,7 @@ from geoagent import GeoAgent
 
 agent = GeoAgent()                                          # auto-detect
 agent = GeoAgent(provider="anthropic")                      # named provider
-agent = GeoAgent(provider="openai", model="gpt-4o-mini")    # provider + model
+agent = GeoAgent(provider="openai", model="gpt-5.4-mini")    # provider + model
 ```
 
 ### Local LLMs via Ollama
@@ -129,7 +129,7 @@ agent = GeoAgent(provider="ollama", model="llama3.1")
 ```python
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0.0)
+llm = ChatOpenAI(model="gpt-5.4", temperature=0.0)
 agent = GeoAgent(llm=llm)
 ```
 

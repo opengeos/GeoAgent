@@ -21,6 +21,96 @@ from geoagent.core.decorators import geo_tool
 _NAME_KW_ALIASES = ("name", "layer_name")
 
 
+def _layer_names(m: Any) -> list[str]:
+    """Return the active layer names on ``m`` in display order.
+
+    Handles three shapes:
+
+    - leafmap.maplibregl.Map exposes ``layer_names`` (list[str]).
+    - leafmap.Map / older leafmap exposes ``layers`` as a list of layer
+      objects with a ``.name`` attribute.
+    - :class:`MockLeafmap` (test stub) stores ``layers`` as a list of
+      dicts with a ``"name"`` key.
+
+    Args:
+        m: A live map widget or compatible mock.
+
+    Returns:
+        The list of layer names in their existing order. Empty when the
+        map exposes none of the recognised attributes.
+    """
+    names_attr = getattr(m, "layer_names", None)
+    if isinstance(names_attr, list):
+        return [str(n) for n in names_attr if n]
+    layers = getattr(m, "layers", None)
+    if isinstance(layers, list):
+        out: list[str] = []
+        for layer in layers:
+            if isinstance(layer, dict):
+                name = layer.get("name")
+            else:
+                name = getattr(layer, "name", None)
+            if name:
+                out.append(str(name))
+        return out
+    return []
+
+
+def _resolve_layer_name(m: Any, query: str) -> tuple[Optional[str], list[str]]:
+    """Resolve a user-supplied layer reference to an exact map layer name.
+
+    Tries an exact match first. If the query does not match any layer
+    exactly, falls back to a case-insensitive substring match against
+    the live layer index. This lets the LLM say "Sentinel-2" without
+    having had to call ``list_layers`` first to learn the full name
+    ``Sentinel-2 RGB Knoxville 2024-07-15``.
+
+    Args:
+        m: A live map widget or compatible mock.
+        query: The user / LLM's reference to a layer (full name,
+            substring, or keyword).
+
+    Returns:
+        ``(resolved, candidates)``:
+
+        - If exactly one layer matches, ``resolved`` is its full name
+          and ``candidates`` is ``[resolved]``.
+        - If multiple layers match, ``resolved`` is ``None`` and
+          ``candidates`` lists every matching layer name so the caller
+          can ask for disambiguation.
+        - If no layer matches, ``resolved`` is ``None`` and
+          ``candidates`` is empty.
+    """
+    names = _layer_names(m)
+    if not names or not query:
+        return None, []
+    if query in names:
+        return query, [query]
+    needle = query.casefold()
+    matches = [n for n in names if needle in n.casefold()]
+    if len(matches) == 1:
+        return matches[0], matches
+    return None, matches
+
+
+def _is_planetary_computer_url(url: str) -> bool:
+    """Return ``True`` when ``url`` points at Planetary Computer blob storage.
+
+    PC stores all hosted assets under ``*.blob.core.windows.net``. These
+    URLs are SAS-protected and must be tiled via PC's hosted TiTiler
+    (``add_stac_layer(..., titiler_endpoint="pc")``) rather than handed
+    raw to the public TiTiler that leafmap's ``add_cog_layer`` defaults
+    to.
+
+    Args:
+        url: A candidate raster URL.
+
+    Returns:
+        ``True`` when the URL host is a PC blob endpoint.
+    """
+    return isinstance(url, str) and "blob.core.windows.net" in url
+
+
 def _safe_call(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
     """Call the first available method on ``obj`` from ``names``.
 
@@ -163,16 +253,35 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
     def remove_layer(name: str) -> str:
         """Remove a layer from the map by display name.
 
+        Accepts either the layer's full name or a unique substring of
+        it (case-insensitive). For example, ``remove_layer("Sentinel-2")``
+        will remove a layer named ``"Sentinel-2 RGB Knoxville 2024-07-15"``
+        as long as no other layer's name also contains "sentinel-2".
+        This lets the agent skip a round-trip through ``list_layers``
+        when the user says "remove the Sentinel-2 layer".
+
         Args:
-            name: The display name of the layer to remove.
+            name: The display name (or a unique substring) of the layer
+                to remove.
 
         Returns:
-            A status string indicating whether the layer was removed.
+            A status string. On success: ``Removed layer 'X'.``
+            On ambiguous match: ``Layer 'X' is ambiguous; matched: …``
+            so the caller can disambiguate without listing layers.
+            On miss: ``Layer 'X' not found.``
         """
+        resolved, candidates = _resolve_layer_name(m, name)
+        if resolved is None and len(candidates) > 1:
+            joined = ", ".join(repr(c) for c in candidates)
+            return (
+                f"Layer {name!r} is ambiguous; matched multiple layers: "
+                f"{joined}. Call remove_layer with the full name to pick one."
+            )
+        target = resolved or name
         if hasattr(m, "remove_layer"):
-            removed = m.remove_layer(name)
+            removed = m.remove_layer(target)
             if removed in (None, True):
-                return f"Removed layer {name!r}."
+                return f"Removed layer {target!r}."
             return f"Layer {name!r} not found."
         layers = getattr(m, "layers", None)
         if isinstance(layers, list):
@@ -185,10 +294,10 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
                     if isinstance(layer, dict)
                     else getattr(layer, "name", None)
                 )
-                != name
+                != target
             ]
             if len(m.layers) < before:
-                return f"Removed layer {name!r}."
+                return f"Removed layer {target!r}."
         return f"Layer {name!r} not found."
 
     @geo_tool(
@@ -364,13 +473,24 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        _safe_call(
-            m,
-            ["add_raster", "add_cog_layer"],
-            path_or_url,
-            layer_name=name,
-            colormap=colormap,
-        )
+        if _is_planetary_computer_url(path_or_url):
+            return (
+                "Refusing to call add_raster_data with a Planetary Computer "
+                "asset URL: PC's public TiTiler cannot tile raw blob hrefs. "
+                "Call add_stac_layer(collection=..., item=..., assets=[...], "
+                "titiler_endpoint='pc') instead. See "
+                "https://leafmap.org/maplibre/stac/ for the canonical pattern."
+            )
+        try:
+            _safe_call(
+                m,
+                ["add_raster", "add_cog_layer"],
+                path_or_url,
+                layer_name=name,
+                colormap=colormap,
+            )
+        except Exception as exc:
+            return f"add_raster_data failed: {type(exc).__name__}: {exc}"
         return f"Added raster layer {name!r}."
 
     @geo_tool(
@@ -383,22 +503,42 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         item: Optional[str] = None,
         assets: Optional[list[str]] = None,
         name: Optional[str] = None,
+        titiler_endpoint: Optional[str] = None,
     ) -> str:
         """Add a STAC layer to the map.
+
+        For items returned by ``search_stac(catalog="microsoft-pc", ...)``,
+        pass ``titiler_endpoint="pc"`` so leafmap renders the layer via
+        Planetary Computer's hosted TiTiler, which signs SAS-protected
+        asset URLs internally. For other catalogs (e.g. ``earth-search``),
+        leave ``titiler_endpoint`` unset to use leafmap's default.
 
         Args:
             collection: STAC collection identifier.
             item: STAC item identifier (optional).
             assets: List of asset keys to render.
             name: Display name (defaults to the collection or item id).
+            titiler_endpoint: TiTiler service to use. ``"pc"`` selects
+                Planetary Computer's TiTiler (handles SAS signing for
+                Microsoft PC items). ``None`` falls back to leafmap's
+                default public TiTiler.
 
         Returns:
             A status string.
         """
-        kwargs = {"collection": collection, "item": item, "assets": assets or []}
+        kwargs: dict[str, Any] = {
+            "collection": collection,
+            "item": item,
+            "assets": assets or [],
+        }
+        if titiler_endpoint is not None:
+            kwargs["titiler_endpoint"] = titiler_endpoint
         layer_name = name or item or collection
         kwargs["name"] = layer_name
-        _safe_call(m, ["add_stac_layer"], **kwargs)
+        try:
+            _safe_call(m, ["add_stac_layer"], **kwargs)
+        except Exception as exc:
+            return f"add_stac_layer failed: {type(exc).__name__}: {exc}"
         return f"Added STAC layer {layer_name!r}."
 
     @geo_tool(
@@ -410,18 +550,44 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         url: str,
         name: str,
         colormap: str = "viridis",
+        titiler_endpoint: Optional[str] = None,
     ) -> str:
         """Add a Cloud Optimized GeoTIFF layer.
 
+        For Planetary Computer asset URLs (Sentinel-2 ``visual``,
+        Landsat assets, etc.), prefer ``add_stac_layer`` with
+        ``titiler_endpoint="pc"`` instead of this tool: PC's hosted
+        TiTiler handles SAS signing for you, whereas a public TiTiler
+        called against a raw, unsigned PC href will fail with a missing
+        ``tiles`` key.
+
         Args:
-            url: COG URL.
+            url: COG URL. For Planetary Computer assets, the URL must
+                already be SAS-signed (or use ``add_stac_layer`` instead).
             name: Display name.
             colormap: Colormap name.
+            titiler_endpoint: Optional TiTiler service. ``None`` uses
+                leafmap's default public TiTiler.
 
         Returns:
             A status string.
         """
-        _safe_call(m, ["add_cog_layer"], url, name=name, colormap=colormap)
+        if _is_planetary_computer_url(url):
+            return (
+                "Refusing to call add_cog_layer with a Planetary Computer "
+                "asset URL: PC's public TiTiler cannot tile raw blob hrefs. "
+                "Call add_stac_layer(collection=..., item=..., assets=[...], "
+                "titiler_endpoint='pc') instead — Microsoft's hosted TiTiler "
+                "handles SAS signing for STAC items internally. See "
+                "https://leafmap.org/maplibre/stac/ for the canonical pattern."
+            )
+        kwargs: dict[str, Any] = {"name": name, "colormap": colormap}
+        if titiler_endpoint is not None:
+            kwargs["titiler_endpoint"] = titiler_endpoint
+        try:
+            _safe_call(m, ["add_cog_layer"], url, **kwargs)
+        except Exception as exc:
+            return f"add_cog_layer failed: {type(exc).__name__}: {exc}"
         return f"Added COG layer {name!r}."
 
     @geo_tool(

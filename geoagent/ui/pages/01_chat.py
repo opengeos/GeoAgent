@@ -51,7 +51,7 @@ PROVIDER_LIST = list(PROVIDERS.keys())
 
 
 def _get_default_model(prov: str) -> str:
-    return PROVIDERS.get(prov, {}).get("default_model", "gpt-4.1")
+    return PROVIDERS.get(prov, {}).get("default_model", "gpt-5.5")
 
 
 def _get_or_create_agent(prov: str, mdl: str) -> GeoAgent:

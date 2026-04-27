@@ -24,6 +24,7 @@ import time
 import uuid
 from typing import Any, Callable, Optional
 
+from langchain_core.callbacks import BaseCallbackHandler
 from langgraph.types import Command
 
 from .context import GeoAgentContext
@@ -201,7 +202,11 @@ class GeoAgent:
             # New graph = new MemorySaver = stale thread; assign a fresh id.
             self._thread_id = f"geoagent-{uuid.uuid4().hex[:12]}"
 
-        config = {"configurable": {"thread_id": self._thread_id}}
+        collector = _ToolEventCollector()
+        config = {
+            "configurable": {"thread_id": self._thread_id},
+            "callbacks": [collector],
+        }
         cancelled: list[str] = []
         rejected_tool_call_ids: set[str] = set()
         start = time.time()
@@ -246,7 +251,7 @@ class GeoAgent:
                     config=config,
                 )
             elapsed = time.time() - start
-            executed = _executed_tools_from_messages(result, rejected_tool_call_ids)
+            executed = collector.completed
             return _adapt_result(result, executed, cancelled, elapsed)
         except Exception as exc:
             elapsed = time.time() - start
@@ -363,45 +368,49 @@ class GeoAgent:
         return []
 
 
-def _executed_tools_from_messages(
-    result: Any,
-    rejected_tool_call_ids: set[str],
-) -> list[str]:
-    """Derive ``executed_tools`` from the final ToolMessage stream.
+class _ToolEventCollector(BaseCallbackHandler):
+    """Collect names of tools whose body completed during a graph run.
 
-    Walks the result's message log, collecting ``name`` from every
-    :class:`~langchain_core.messages.ToolMessage` whose ``tool_call_id``
-    is *not* in ``rejected_tool_call_ids``. This captures both
-    confirmation-approved tools and "safe" tools that ran without
-    requiring HITL approval, while excluding the placeholder
-    ``ToolMessage`` deepagents inserts when the user rejected a call.
+    Records ``on_tool_start`` events keyed by ``run_id`` and resolves
+    them to a chronological completion list in ``on_tool_end``. Because
+    LangGraph's ``interrupt_on`` raises before the tool body runs, a
+    rejected confirmation-required tool never reaches ``on_tool_end``
+    and is therefore correctly excluded from ``completed``.
 
-    Args:
-        result: The dict returned by the final ``graph.invoke(...)``.
-        rejected_tool_call_ids: Tool-call ids the user rejected via the
-            confirm callback. Their corresponding ToolMessages are
-            stubs that should not count as executions.
-
-    Returns:
-        A list of tool names in the order they ran. Duplicates are
-        preserved so a single name appearing twice means the tool ran
-        twice.
+    Crucially, the callback is invoked at every nesting depth, so tools
+    that fire inside a deepagents subagent (dispatched via the ``task``
+    tool) are surfaced here even though their messages are filtered out
+    of the parent graph state. The parent's ``task`` invocation itself
+    also lands in ``completed`` so the caller can see both the
+    dispatcher and the inner work.
     """
-    if not isinstance(result, dict):
-        return []
-    out: list[str] = []
-    for msg in result.get("messages") or []:
-        # Avoid an `isinstance` import-time dependency on langchain_core's
-        # ToolMessage; the duck-typed check is sufficient here.
-        if type(msg).__name__ != "ToolMessage":
-            continue
-        tcid = getattr(msg, "tool_call_id", None)
-        if tcid and tcid in rejected_tool_call_ids:
-            continue
-        name = getattr(msg, "name", None)
+
+    def __init__(self) -> None:
+        self._pending: dict[str, str] = {}
+        self.completed: list[str] = []
+
+    def on_tool_start(  # type: ignore[override]
+        self,
+        serialized: dict[str, Any],
+        input_str: str,
+        *,
+        run_id: Any,
+        **kwargs: Any,
+    ) -> None:
+        name = (serialized or {}).get("name") or kwargs.get("name") or ""
         if name:
-            out.append(name)
-    return out
+            self._pending[str(run_id)] = name
+
+    def on_tool_end(  # type: ignore[override]
+        self,
+        output: Any,
+        *,
+        run_id: Any,
+        **kwargs: Any,
+    ) -> None:
+        name = self._pending.pop(str(run_id), None)
+        if name:
+            self.completed.append(name)
 
 
 def _adapt_result(
