@@ -89,11 +89,14 @@ nav:
         - examples/event_monitoring.ipynb
     - API Reference:
         - GeoAgent: geoagent.md
-        - Models: models.md
-        - Planner: planner.md
-        - Data Agent: data_agent.md
-        - Analysis Agent: analysis_agent.md
-        - Visualization Agent: viz_agent.md
+        - Factory: factory.md
+        - Context: context.md
+        - Result: result.md
+        - Decorators: decorators.md
+        - Registry: registry.md
+        - Safety: safety.md
+        - Subagents: agents.md
+        - System Prompts: prompts.md
         - LLM: llm.md
         - Catalogs: catalogs.md
         - Tools: tools.md
