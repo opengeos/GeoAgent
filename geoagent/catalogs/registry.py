@@ -59,6 +59,19 @@ BUILTIN_CATALOGS = {
 # Default catalog to use when none specified
 DEFAULT_CATALOG = "earth_search"
 
+# Aliases mapping prompt-facing / user-friendly catalog names to canonical
+# registry keys. Lookups also try the hyphen-to-underscore form, so both
+# "microsoft-pc" and "microsoft_pc" resolve to "planetary_computer".
+CATALOG_ALIASES = {
+    "microsoft-pc": "planetary_computer",
+    "microsoft_pc": "planetary_computer",
+    "planetary-computer": "planetary_computer",
+    "earth-search": "earth_search",
+    "usgs-landsat": "usgs",
+    "nasa-cmr": "nasa_cmr",
+    "nasa-veda": "nasa_veda",
+}
+
 
 class CatalogRegistry:
     """Registry for STAC catalogs with built-in and custom endpoints."""
@@ -85,13 +98,23 @@ class CatalogRegistry:
         """
         Get catalog information by name.
 
+        Accepts canonical registry keys, hyphenated variants, and the
+        prompt-facing aliases listed in :data:`CATALOG_ALIASES`.
+
         Args:
-            name: Catalog name
+            name: Catalog name or alias
 
         Returns:
             CatalogInfo object or None if not found
         """
-        return self._catalogs.get(name)
+        if name in self._catalogs:
+            return self._catalogs[name]
+        canonical = CATALOG_ALIASES.get(name) or CATALOG_ALIASES.get(
+            name.replace("-", "_")
+        )
+        if canonical and canonical in self._catalogs:
+            return self._catalogs[canonical]
+        return None
 
     def add_catalog(
         self,
@@ -142,18 +165,23 @@ class CatalogRegistry:
             available = ", ".join(self._catalogs.keys())
             raise ValueError(f"Catalog '{name}' not found. Available: {available}")
 
+        # Use the canonical name from the resolved CatalogInfo so per-catalog
+        # branches (auth headers, Planetary Computer signing) still match when
+        # the caller passed an alias like "microsoft-pc".
+        canonical_name = catalog.name
+
         # Check authentication
         if catalog.requires_auth and catalog.auth_env_var:
             if not os.getenv(catalog.auth_env_var):
                 raise RuntimeError(
-                    f"Catalog '{name}' requires authentication. "
+                    f"Catalog '{canonical_name}' requires authentication. "
                     f"Set environment variable: {catalog.auth_env_var}"
                 )
 
         client_kwargs = {}
 
         # Handle authentication for specific catalogs
-        if name == "nasa_cmr" and catalog.auth_env_var:
+        if canonical_name == "nasa_cmr" and catalog.auth_env_var:
             token = os.getenv(catalog.auth_env_var)
             if token:
                 client_kwargs["headers"] = {"Authorization": f"Bearer {token}"}
@@ -163,7 +191,7 @@ class CatalogRegistry:
             client = pystac_client.Client.open(catalog.url, **client_kwargs)
 
             # Special handling for Planetary Computer signing
-            if name == "planetary_computer":
+            if canonical_name == "planetary_computer":
                 try:
                     import planetary_computer
 
@@ -192,7 +220,9 @@ class CatalogRegistry:
             return client
 
         except Exception as e:
-            raise RuntimeError(f"Failed to connect to catalog '{name}': {str(e)}")
+            raise RuntimeError(
+                f"Failed to connect to catalog '{canonical_name}': {str(e)}"
+            )
 
     def get_collection_index(
         self, catalog_name: str = "planetary_computer"
