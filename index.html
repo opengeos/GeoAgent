@@ -1878,19 +1878,19 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <tbody>
 <tr>
 <td>OpenAI</td>
-<td><code>gpt-4.1</code></td>
+<td><code>gpt-5.5</code></td>
 <td><code>OPENAI_API_KEY</code></td>
 <td><code>pip install "geoagent[openai]"</code></td>
 </tr>
 <tr>
 <td>Anthropic</td>
-<td><code>claude-sonnet-4-5-20250929</code></td>
+<td><code>claude-sonnet-4-6</code></td>
 <td><code>ANTHROPIC_API_KEY</code></td>
 <td><code>pip install "geoagent[anthropic]"</code></td>
 </tr>
 <tr>
 <td>Google Gemini</td>
-<td><code>gemini-2.5-flash</code></td>
+<td><code>gemini-3.1-flash-lite-preview</code></td>
 <td><code>GOOGLE_API_KEY</code></td>
 <td><code>pip install "geoagent[google]"</code></td>
 </tr>
@@ -1921,8 +1921,8 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">()</span>                                          <span class="c1"># auto-detect</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">)</span>                      <span class="c1"># named provider</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>    <span class="c1"># provider + model</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;google&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5.4-mini&quot;</span><span class="p">)</span>    <span class="c1"># provider + model</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;google&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-3.1-flash-lite-preview&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="using-ollama-local-llms">Using Ollama (local LLMs)<a class="headerlink" href="#using-ollama-local-llms" title="Permanent link">&para;</a></h3>
 <p>To run GeoAgent with a local LLM via <a href="https://ollama.com/">Ollama</a>, no API key is needed:</p>
@@ -1939,7 +1939,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <span class="normal">3</span>
 <span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatOpenAI</span>
 
-<span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5.4&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="n">llm</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
@@ -2106,7 +2106,7 @@ geoagent<span class="w"> </span>ui
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 02:53:21 UTC"><span class="timeago" datetime="2026-04-27T02:53:21+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 02:53:21 UTC">2026-04-27</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 16:05:37 UTC"><span class="timeago" datetime="2026-04-27T16:05:37+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 16:05:37 UTC">2026-04-27</span>
   </span>
 
     

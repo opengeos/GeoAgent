@@ -1795,7 +1795,11 @@ For long-lived sessions, prefer <code>geoagent.for_leafmap(m)</code> /
             <span class="c1"># New graph = new MemorySaver = stale thread; assign a fresh id.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;geoagent-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
-        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span><span class="p">}}</span>
+        <span class="n">collector</span> <span class="o">=</span> <span class="n">_ToolEventCollector</span><span class="p">()</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span><span class="p">},</span>
+            <span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">collector</span><span class="p">],</span>
+        <span class="p">}</span>
         <span class="n">cancelled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">rejected_tool_call_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -1840,7 +1844,7 @@ For long-lived sessions, prefer <code>geoagent.for_leafmap(m)</code> /
                     <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-            <span class="n">executed</span> <span class="o">=</span> <span class="n">_executed_tools_from_messages</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rejected_tool_call_ids</span><span class="p">)</span>
+            <span class="n">executed</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">completed</span>
             <span class="k">return</span> <span class="n">_adapt_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">executed</span><span class="p">,</span> <span class="n">cancelled</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
@@ -2119,7 +2123,11 @@ the confirm callback.</p></td>
         <span class="c1"># New graph = new MemorySaver = stale thread; assign a fresh id.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;geoagent-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span><span class="p">}}</span>
+    <span class="n">collector</span> <span class="o">=</span> <span class="n">_ToolEventCollector</span><span class="p">()</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span><span class="p">},</span>
+        <span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">collector</span><span class="p">],</span>
+    <span class="p">}</span>
     <span class="n">cancelled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">rejected_tool_call_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -2164,7 +2172,7 @@ the confirm callback.</p></td>
                 <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-        <span class="n">executed</span> <span class="o">=</span> <span class="n">_executed_tools_from_messages</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">rejected_tool_call_ids</span><span class="p">)</span>
+        <span class="n">executed</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">completed</span>
         <span class="k">return</span> <span class="n">_adapt_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">executed</span><span class="p">,</span> <span class="n">cancelled</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>

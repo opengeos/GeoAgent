@@ -2738,9 +2738,16 @@ caller can skip the spec.</p></td>
     <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">MAPPING_PROMPT</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.anymap</span><span class="w"> </span><span class="kn">import</span> <span class="n">anymap_tools</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.leafmap</span><span class="w"> </span><span class="kn">import</span> <span class="n">leafmap_tools</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">stac_tools</span>
 
     <span class="n">is_anymap</span> <span class="o">=</span> <span class="s2">&quot;anymap&quot;</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span>
-    <span class="n">tools</span> <span class="o">=</span> <span class="n">anymap_tools</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_anymap</span> <span class="k">else</span> <span class="n">leafmap_tools</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span>
+    <span class="n">base_tools</span> <span class="o">=</span> <span class="n">anymap_tools</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_anymap</span> <span class="k">else</span> <span class="n">leafmap_tools</span><span class="p">(</span><span class="n">map_obj</span><span class="p">)</span>
+    <span class="c1"># stac_tools() returns [] when pystac_client is not installed, so the</span>
+    <span class="c1"># mapping subagent stays usable even on a minimal install. When STAC</span>
+    <span class="c1"># is available, the subagent can resolve a natural-language query</span>
+    <span class="c1"># (&quot;Sentinel-2 RGB over Knoxville, July 2024&quot;) into a concrete URL</span>
+    <span class="c1"># via search_stac, then add it via add_cog_layer / add_stac_layer.</span>
+    <span class="n">tools</span> <span class="o">=</span> <span class="n">base_tools</span> <span class="o">+</span> <span class="n">stac_tools</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;mapping&quot;</span><span class="p">,</span>
