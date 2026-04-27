@@ -73,6 +73,10 @@
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
+         <loc>https://geoagent.gishub.org/examples/custom_tools/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
          <loc>https://geoagent.gishub.org/examples/earth_science_queries/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
@@ -81,7 +85,15 @@
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>
+         <loc>https://geoagent.gishub.org/examples/hitl_confirm/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
          <loc>https://geoagent.gishub.org/examples/intro/</loc>
+         <lastmod>2026-04-27</lastmod>
+    </url>
+    <url>
+         <loc>https://geoagent.gishub.org/examples/live_mapping/</loc>
          <lastmod>2026-04-27</lastmod>
     </url>
     <url>

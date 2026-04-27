@@ -680,6 +680,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ask-geoagent-for-the-same-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ask GeoAgent for the same data
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -704,6 +715,34 @@
     
   
     Maplibre viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../live_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live mapping
   
 
     
@@ -788,6 +827,62 @@
     
   
     Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hitl_confirm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hitl confirm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom tools
   
 
     
@@ -1301,6 +1396,17 @@
     <span class="md-ellipsis">
       
         Add a Custom Catalog
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ask-geoagent-for-the-same-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ask GeoAgent for the same data
       
     </span>
   </a>
@@ -2375,6 +2481,65 @@ print(f"Custom catalog URL: {cat.url}")</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<hr/>
+<h2 id="ask-geoagent-for-the-same-data">Ask GeoAgent for the same data<a class="anchor-link" href="#ask-geoagent-for-the-same-data">¶</a></h2><p>The data subagent wraps the same STAC tooling shown above. Asking the agent in natural language fires <code>search_stac</code> (and possibly <code>get_stac_collections</code>) under the hood. Inspect <code>result.executed_tools</code> to confirm.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
+    <span class="s2">"Find the most recent Sentinel-2 scenes over Knoxville TN with cloud cover under 15%."</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Success:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tools fired:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"---"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">[:</span><span class="mi">600</span><span class="p">])</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-7">from geoagent import GeoAgent
+
+agent = GeoAgent()
+result = agent.search(
+    "Find the most recent Sentinel-2 scenes over Knoxville TN with cloud cover under 15%."
+)
+print("Success:", result.success)
+print("Tools fired:", result.executed_tools)
+if result.answer_text:
+    print("---")
+    print(result.answer_text[:600])</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div> <!-- jp-Notebook -->
 </div> <!-- jupyter-wrapper -->
 
@@ -2404,7 +2569,7 @@ print(f"Custom catalog URL: {cat.url}")</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 06:02:26 UTC"><span class="timeago" datetime="2026-02-01T06:02:26+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 06:02:26 UTC">2026-02-01</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:48:40 UTC"><span class="timeago" datetime="2026-04-27T04:48:40+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:48:40 UTC">2026-04-27</span>
   </span>
 
     

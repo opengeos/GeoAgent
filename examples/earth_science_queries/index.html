@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://geoagent.gishub.org/examples/earth_science_queries/">
       
       
-        <link rel="prev" href="../maplibre_viz/">
+        <link rel="prev" href="../live_mapping/">
       
       
         <link rel="next" href="../contextual_qa/">
@@ -619,6 +619,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../live_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -876,6 +904,62 @@
     
   
     Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hitl_confirm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hitl confirm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom tools
   
 
     
@@ -2242,6 +2326,17 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Each query routes through GeoAgent's deepagents pipeline: the planner picks an appropriate dataset, the <strong>data subagent</strong> runs <code>search_stac</code> against the matching STAC catalog (Planetary Computer, Earth Search, NASA VEDA, etc.), and the <strong>mapping subagent</strong> renders the result. Inspect <code>result.executed_tools</code> to confirm which tools fired for each prompt.</p>
+</div>
+</div>
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -2331,19 +2426,15 @@ agent = GeoAgent()</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me thermal anomalies in Australia in January 2024"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">result = agent.chat("Show me thermal anomalies in Australia in January 2024")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2370,15 +2461,11 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me burned area mapping for Montana wildfire regions in 2023"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4">result = agent.chat("Show me burned area mapping for Montana wildfire regions in 2023")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
 result.map</div>
 </div>
 </div>
@@ -2443,19 +2530,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me surface water in Bangladesh"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-6">result = agent.chat("Show me surface water in Bangladesh")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2520,19 +2603,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me snow cover in Quebec in January 2024"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-8">result = agent.chat("Show me snow cover in Quebec in January 2024")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2597,19 +2676,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me sea surface temperature near Madagascar"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-10">result = agent.chat("Show me sea surface temperature near Madagascar")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2636,15 +2711,11 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me land surface temperature for Phoenix Arizona in July 2024"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-11">result = agent.chat("Show me land surface temperature for Phoenix Arizona in July 2024")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
 result.map</div>
 </div>
 </div>
@@ -2709,19 +2780,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me vegetation indices for Ukraine in June 2024"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-13">result = agent.chat("Show me vegetation indices for Ukraine in June 2024")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2786,19 +2853,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me cropland data for Florida"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-15">result = agent.chat("Show me cropland data for Florida")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2863,19 +2926,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me radar imagery of Houston Texas during August 2017"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-17">result = agent.chat("Show me radar imagery of Houston Texas during August 2017")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -2940,19 +2999,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me LIDAR height data for Denver Colorado"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-19">result = agent.chat("Show me LIDAR height data for Denver Colorado")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -3017,19 +3072,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me HLS Landsat imagery for Greece in June 2024"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-21">result = agent.chat("Show me HLS Landsat imagery for Greece in June 2024")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -3094,15 +3145,11 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me elevation profile for the Grand Canyon"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-23">result = agent.chat("Show me elevation profile for the Grand Canyon")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
 result.map</div>
 </div>
 </div>
@@ -3129,15 +3176,11 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me ALOS World DEM for Berlanga Spain"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-24">result = agent.chat("Show me ALOS World DEM for Berlanga Spain")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
 result.map</div>
 </div>
 </div>
@@ -3175,19 +3218,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me net production for San Jose California"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-25">result = agent.chat("Show me net production for San Jose California")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -3252,19 +3291,15 @@ result.map</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me nadir BRDF reflectance for Mexico"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2"> | Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-27">result = agent.chat("Show me nadir BRDF reflectance for Mexico")
-print(
-    f"Success: {result.success} | Items: {result.data.total_items if result.data else 0}"
-)
-if result.data and result.data.items:
-    print(f"Collection: {result.data.items[0].get('collection')}")
+print(f"Success: {result.success} | Items: {len((result.data or {}).get('items', []))}")
+if result.data and (result.data or {}).get("items", []):
+    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
 result.map</div>
 </div>
 </div>
@@ -3410,7 +3445,7 @@ result.map</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 2, 2026 06:10:27 UTC"><span class="timeago" datetime="2026-02-02T06:10:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 2, 2026 06:10:27 UTC">2026-02-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:48:40 UTC"><span class="timeago" datetime="2026-04-27T04:48:40+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:48:40 UTC">2026-04-27</span>
   </span>
 
     

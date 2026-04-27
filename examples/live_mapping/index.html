@@ -12,13 +12,13 @@
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://geoagent.gishub.org/examples/event_monitoring/">
+        <link rel="canonical" href="https://geoagent.gishub.org/examples/live_mapping/">
       
       
-        <link rel="prev" href="../contextual_qa/">
+        <link rel="prev" href="../maplibre_viz/">
       
       
-        <link rel="next" href="../hitl_confirm/">
+        <link rel="next" href="../earth_science_queries/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Event monitoring - GeoAgent</title>
+        <title>Live mapping - GeoAgent</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#event-monitoring-and-disaster-assessment" class="md-skip">
+        <a href="#live-mapping-with-a-map-bound" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Event monitoring
+              Live mapping
             
           </span>
         </div>
@@ -619,10 +619,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../live_mapping/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live mapping
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -638,6 +665,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#three-ways-to-bind-a-map-and-which-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three ways to bind a map (and which to use)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-1-list-current-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat 1 — list current layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-2-add-a-sentinel-2-rgb-cog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat 2 — add a Sentinel-2 RGB COG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-3-change-the-basemap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat 3 — change the basemap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-4-remove-a-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat 4 — remove a layer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inspecting-the-mapping-subagents-footprint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspecting the mapping subagent's footprint
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -703,37 +827,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Event monitoring
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../event_monitoring/" class="md-nav__link">
         
   
   
@@ -749,103 +846,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-hurricane-monitoring-with-sar" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Hurricane Monitoring with SAR
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-wildfire-detection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Wildfire Detection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-flood-monitoring" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Flood Monitoring
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-urban-expansion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Urban Expansion
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-contextual-event-questions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Contextual Event Questions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-nasa-veda-catalog" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. NASA VEDA Catalog
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1359,10 +1359,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-hurricane-monitoring-with-sar" class="md-nav__link">
+  <a href="#three-ways-to-bind-a-map-and-which-to-use" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Hurricane Monitoring with SAR
+        Three ways to bind a map (and which to use)
       
     </span>
   </a>
@@ -1370,10 +1370,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-wildfire-detection" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Wildfire Detection
+        Setup
       
     </span>
   </a>
@@ -1381,10 +1381,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-flood-monitoring" class="md-nav__link">
+  <a href="#chat-1-list-current-layers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Flood Monitoring
+        Chat 1 — list current layers
       
     </span>
   </a>
@@ -1392,10 +1392,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-urban-expansion" class="md-nav__link">
+  <a href="#chat-2-add-a-sentinel-2-rgb-cog" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Urban Expansion
+        Chat 2 — add a Sentinel-2 RGB COG
       
     </span>
   </a>
@@ -1403,10 +1403,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-contextual-event-questions" class="md-nav__link">
+  <a href="#chat-3-change-the-basemap" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Contextual Event Questions
+        Chat 3 — change the basemap
       
     </span>
   </a>
@@ -1414,10 +1414,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-nasa-veda-catalog" class="md-nav__link">
+  <a href="#chat-4-remove-a-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. NASA VEDA Catalog
+        Chat 4 — remove a layer
       
     </span>
   </a>
@@ -1425,10 +1425,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
+  <a href="#inspecting-the-mapping-subagents-footprint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Summary
+        Inspecting the mapping subagent's footprint
       
     </span>
   </a>
@@ -1449,7 +1449,7 @@
               <article class="md-content__inner md-typeset">
                 
 
-    <a href="/examples/event_monitoring/event_monitoring.ipynb" title="Download Notebook" class="md-content__button md-icon">
+    <a href="/examples/live_mapping/live_mapping.ipynb" title="Download Notebook" class="md-content__button md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7z"/></svg>
     </a>
 
@@ -2183,19 +2183,45 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="event-monitoring-and-disaster-assessment">Event Monitoring and Disaster Assessment<a class="anchor-link" href="#event-monitoring-and-disaster-assessment">¶</a></h1><p>This notebook demonstrates GeoAgent's ability to search for satellite data related to natural disasters and environmental events — hurricanes, wildfires, floods, and more.</p>
-<p>GeoAgent automatically selects the right data collection and time range for event-based queries.</p>
+<h1 id="live-mapping-with-a-map-bound-geoagent">Live mapping with a map-bound <code>GeoAgent</code><a class="anchor-link" href="#live-mapping-with-a-map-bound-geoagent">¶</a></h1><p>When you build a <code>GeoAgent</code> with a live <code>leafmap.maplibregl.Map</code> in its <code>GeoAgentContext</code>, the <strong>mapping subagent</strong> is added to the active subagent list and its tools (add layer, remove layer, set basemap, fly to, save) are wired to the very <code>Map</code> widget you passed in. Subsequent natural-language <code>agent.chat(...)</code> calls mutate that <code>Map</code> in place, so re-displaying the same widget shows the agent's work.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="three-ways-to-bind-a-map-and-which-to-use">Three ways to bind a map (and which to use)<a class="anchor-link" href="#three-ways-to-bind-a-map-and-which-to-use">¶</a></h2><p>GeoAgent exposes three ways to give an agent a live map. They differ in which API they expose and in how they manage state across calls:</p>
+<ul>
+<li><code>GeoAgent(context=GeoAgentContext(map_obj=m))</code> — builds the facade with <code>map_obj=m</code> already in the context. The deepagents graph and its <code>MemorySaver</code> thread persist across many chats, so the agent can reason about what it did before. Use this when you want the <code>.chat()</code> API and <code>GeoAgentResponse</code> introspection. <strong>This notebook uses this form.</strong></li>
+<li><code>agent.chat(query, target_map=m)</code> — switches an existing <code>GeoAgent</code> to a new map. The graph is rebuilt and a fresh thread id is rotated in (see <a href="https://github.com/opengeos/GeoAgent/blob/main/geoagent/core/agent.py"><code>agent.py</code></a>), which resets conversation history. Use this when you need to hand the agent a different map mid-session.</li>
+<li><code>for_leafmap(m)</code> — a lower-level factory that returns a compiled deepagents <code>CompiledStateGraph</code> (not the <code>GeoAgent</code> facade). It does not expose <code>.chat()</code> or build a <code>GeoAgentResponse</code>; call it via <code>.invoke({"messages": [{"role": "user", "content": ...}]})</code>. Reach for it when you want to drive deepagents directly.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="setup">Setup<a class="anchor-link" href="#setup">¶</a></h2>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2213,16 +2239,18 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># %pip install geoagent</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span><span class="p">,</span> <span class="n">GeoAgentContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">leafmap.maplibregl</span><span class="w"> </span><span class="kn">import</span> <span class="n">Map</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1"># %pip install geoagent</div>
+<div class="clipboard-copy-txt" id="cell-1">from geoagent import GeoAgent, GeoAgentContext
+from leafmap.maplibregl import Map</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2240,31 +2268,31 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
-
-<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">Map</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">83.92</span><span class="p">,</span> <span class="mf">35.96</span><span class="p">],</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># Knoxville, TN</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">GeoAgentContext</span><span class="p">(</span><span class="n">map_obj</span><span class="o">=</span><span class="n">m</span><span class="p">))</span>
+<span class="n">m</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">from geoagent import GeoAgent
-
-agent = GeoAgent()</div>
+<div class="clipboard-copy-txt" id="cell-2">m = Map(center=[-83.92, 35.96], zoom=10)  # Knoxville, TN
+agent = GeoAgent(context=GeoAgentContext(map_obj=m))
+m</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1-hurricane-monitoring-with-sar">1. Hurricane Monitoring with SAR<a class="anchor-link" href="#1-hurricane-monitoring-with-sar">¶</a></h2><p>SAR (Synthetic Aperture Radar) imagery works through clouds and at night, making it ideal for monitoring hurricane impacts.</p>
+<h2 id="chat-1-list-current-layers">Chat 1 — list current layers<a class="anchor-link" href="#chat-1-list-current-layers">¶</a></h2>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2282,36 +2310,33 @@ agent = GeoAgent()</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-    <span class="s2">"Show me radar imagery of Houston Texas during Hurricane Harvey August 2017"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"List the current map layers."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tools fired:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">[:</span><span class="mi">400</span><span class="p">])</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">result = agent.chat(
-    "Show me radar imagery of Houston Texas during Hurricane Harvey August 2017"
-)
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-if result.data and (result.data or {}).get("items", []):
-    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
-result.map</div>
+<div class="clipboard-copy-txt" id="cell-3">result = agent.chat("List the current map layers.")
+print("Tools fired:", result.executed_tools)
+if result.answer_text:
+    print(result.answer_text[:400])</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="chat-2-add-a-sentinel-2-rgb-cog">Chat 2 — add a Sentinel-2 RGB COG<a class="anchor-link" href="#chat-2-add-a-sentinel-2-rgb-cog">¶</a></h2>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2329,27 +2354,31 @@ result.map</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Add a Sentinel-2 RGB COG layer over Knoxville TN for July 2024."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tools fired:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="n">m</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">print(result.code)</div>
+<div class="clipboard-copy-txt" id="cell-4">result = agent.chat("Add a Sentinel-2 RGB COG layer over Knoxville TN for July 2024.")
+print("Tools fired:", result.executed_tools)
+m</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2-wildfire-detection">2. Wildfire Detection<a class="anchor-link" href="#2-wildfire-detection">¶</a></h2><p>MODIS thermal anomaly data detects active fires and burned areas globally.</p>
+<h2 id="chat-3-change-the-basemap">Chat 3 — change the basemap<a class="anchor-link" href="#chat-3-change-the-basemap">¶</a></h2>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=10">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2367,28 +2396,31 @@ result.map</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show wildfire activity in Southern California in January 2025"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Switch the basemap to Carto Voyager."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tools fired:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="n">m</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">result = agent.chat("Show wildfire activity in Southern California in January 2025")
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
+<div class="clipboard-copy-txt" id="cell-5">result = agent.chat("Switch the basemap to Carto Voyager.")
+print("Tools fired:", result.executed_tools)
+m</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=11">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="chat-4-remove-a-layer">Chat 4 — remove a layer<a class="anchor-link" href="#chat-4-remove-a-layer">¶</a></h2><p>Because the same <code>GeoAgent</code> instance keeps a single thread alive, the agent remembers the layer names from chat 2 and can act on them by ordinal reference.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2406,22 +2438,31 @@ result.map</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me burned area mapping for Montana wildfire regions 2023"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Remove the Sentinel-2 layer."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Tools fired:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="n">m</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">result = agent.chat("Show me burned area mapping for Montana wildfire regions 2023")
-print(f"Success: {result.success}")
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
+<div class="clipboard-copy-txt" id="cell-6">result = agent.chat("Remove the Sentinel-2 layer.")
+print("Tools fired:", result.executed_tools)
+m</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=13">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="inspecting-the-mapping-subagents-footprint">Inspecting the mapping subagent's footprint<a class="anchor-link" href="#inspecting-the-mapping-subagents-footprint">¶</a></h2><p><code>result.executed_tools</code> enumerates every tool the agent actually invoked during the call, in order. For mapping queries you should see entries like <code>list_layers</code>, <code>add_layer</code>, <code>set_basemap</code>, and <code>remove_layer</code> from the mapping subagent.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=14">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2439,355 +2480,21 @@ result.map</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="p">(</span>
+    <span class="s2">"Save the current map to /tmp/knoxville.html"</span><span class="p">,</span>
+    <span class="s2">"Zoom out to fit all layers."</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">query</span><span class="si">!r:</span><span class="s2">60s</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">executed_tools</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">print(result.code)</div>
+<div class="clipboard-copy-txt" id="cell-7">for query in (
+    "Save the current map to /tmp/knoxville.html",
+    "Zoom out to fit all layers.",
+):
+    r = agent.chat(query)
+    print(f"{query!r:60s} -&gt; {r.executed_tools}")</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3-flood-monitoring">3. Flood Monitoring<a class="anchor-link" href="#3-flood-monitoring">¶</a></h2><p>SAR imagery from Sentinel-1 can detect flooding through clouds, day or night.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me flood extent in Pakistan during August 2022"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-8">result = agent.chat("Show me flood extent in Pakistan during August 2022")
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-9">print(result.code)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4-urban-expansion">4. Urban Expansion<a class="anchor-link" href="#4-urban-expansion">¶</a></h2><p>High-resolution satellite imagery can reveal urban growth patterns over time.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-    <span class="s2">"Show me high resolution satellite imagery of Dubai urban expansion in 2020"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-10">result = agent.chat(
-    "Show me high resolution satellite imagery of Dubai urban expansion in 2020"
-)
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-11">print(result.code)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5-contextual-event-questions">5. Contextual Event Questions<a class="anchor-link" href="#5-contextual-event-questions">¶</a></h2><p>Ask GeoAgent about events and it will provide contextual answers using LLM knowledge.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"How was NYC impacted by Hurricane Sandy?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-12">result = agent.chat("How was NYC impacted by Hurricane Sandy?")
-print(f"Intent: {(result.plan or {}).get('intent')}")
-print()
-if result.answer_text:
-    print(result.answer_text)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-    <span class="s2">"What satellites are most useful for monitoring volcanic eruptions?"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-13">result = agent.chat(
-    "What satellites are most useful for monitoring volcanic eruptions?"
-)
-print(f"Intent: {(result.plan or {}).get('intent')}")
-print()
-if result.answer_text:
-    print(result.answer_text)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="6-nasa-veda-catalog">6. NASA VEDA Catalog<a class="anchor-link" href="#6-nasa-veda-catalog">¶</a></h2><p>GeoAgent now includes the NASA VEDA (Visualization, Exploration, and Data Analysis) catalog alongside Microsoft Planetary Computer.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.catalogs.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">CatalogRegistry</span>
-
-<span class="n">reg</span> <span class="o">=</span> <span class="n">CatalogRegistry</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">reg</span><span class="o">.</span><span class="n">list_catalogs</span><span class="p">():</span>
-    <span class="n">auth</span> <span class="o">=</span> <span class="s2">" (auth required)"</span> <span class="k">if</span> <span class="n">cat</span><span class="o">.</span><span class="n">requires_auth</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cat</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">25s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cat</span><span class="o">.</span><span class="n">url</span><span class="si">}{</span><span class="n">auth</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-14">from geoagent.catalogs.registry import CatalogRegistry
-
-reg = CatalogRegistry()
-for cat in reg.list_catalogs():
-    auth = " (auth required)" if cat.requires_auth else ""
-    print(f"{cat.name:25s} {cat.url}{auth}")</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>GeoAgent supports event-based queries by automatically selecting the right collection:</p>
-<table>
-<thead>
-<tr>
-<th>Event Type</th>
-<th>Data Source</th>
-<th>Example</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Hurricanes / Floods</td>
-<td>Sentinel-1 GRD (SAR)</td>
-<td>"Show radar imagery of Houston during Harvey"</td>
-</tr>
-<tr>
-<td>Wildfires</td>
-<td>MODIS Thermal (14A1)</td>
-<td>"Show wildfire activity in California"</td>
-</tr>
-<tr>
-<td>Burned Areas</td>
-<td>MODIS Thermal (14A1)</td>
-<td>"Show burned areas in Montana 2023"</td>
-</tr>
-<tr>
-<td>Snow Events</td>
-<td>MODIS Snow (10A1)</td>
-<td>"Show snow cover in Quebec"</td>
-</tr>
-<tr>
-<td>Urban Change</td>
-<td>Sentinel-2 L2A</td>
-<td>"Show Dubai urban expansion in 2020"</td>
-</tr>
-<tr>
-<td>Impact Analysis</td>
-<td>ContextAgent (LLM)</td>
-<td>"How was NYC impacted by Hurricane Sandy?"</td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 </div>
@@ -2831,7 +2538,7 @@ for cat in reg.list_catalogs():
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 2, 2026 06:10:27 UTC"><span class="timeago" datetime="2026-02-02T06:10:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 2, 2026 06:10:27 UTC">2026-02-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:48:40 UTC"><span class="timeago" datetime="2026-04-27T04:48:40+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:48:40 UTC">2026-04-27</span>
   </span>
 
     

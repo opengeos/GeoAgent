@@ -12,13 +12,13 @@
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://geoagent.gishub.org/examples/event_monitoring/">
+        <link rel="canonical" href="https://geoagent.gishub.org/examples/hitl_confirm/">
       
       
-        <link rel="prev" href="../contextual_qa/">
+        <link rel="prev" href="../event_monitoring/">
       
       
-        <link rel="next" href="../hitl_confirm/">
+        <link rel="next" href="../custom_tools/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Event monitoring - GeoAgent</title>
+        <title>Hitl confirm - GeoAgent</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#event-monitoring-and-disaster-assessment" class="md-skip">
+        <a href="#human-in-the-loop-tool-confirmation" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Event monitoring
+              Hitl confirm
             
           </span>
         </div>
@@ -703,6 +703,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../event_monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -722,7 +750,7 @@
   <span class="md-ellipsis">
     
   
-    Event monitoring
+    Hitl confirm
   
 
     
@@ -740,7 +768,7 @@
   <span class="md-ellipsis">
     
   
-    Event monitoring
+    Hitl confirm
   
 
     
@@ -766,10 +794,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-hurricane-monitoring-with-sar" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Hurricane Monitoring with SAR
+        Setup
       
     </span>
   </a>
@@ -777,10 +805,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-wildfire-detection" class="md-nav__link">
+  <a href="#define-a-confirmation-required-tool" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Wildfire Detection
+        Define a confirmation-required tool
       
     </span>
   </a>
@@ -788,10 +816,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-flood-monitoring" class="md-nav__link">
+  <a href="#default-callback-rejects-everything" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Flood Monitoring
+        Default callback rejects everything
       
     </span>
   </a>
@@ -799,10 +827,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-urban-expansion" class="md-nav__link">
+  <a href="#a-custom-callback-that-prints-the-request-and-approves" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Urban Expansion
+        A custom callback that prints the request and approves
       
     </span>
   </a>
@@ -810,10 +838,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-contextual-event-questions" class="md-nav__link">
+  <a href="#only-safe-in-fully-sandboxed-sessions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Contextual Event Questions
+        — only safe in fully sandboxed sessions
       
     </span>
   </a>
@@ -821,21 +849,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-nasa-veda-catalog" class="md-nav__link">
+  <a href="#how-it-wires-together" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. NASA VEDA Catalog
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary
+        How it wires together
       
     </span>
   </a>
@@ -846,34 +863,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../hitl_confirm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Hitl confirm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1359,10 +1348,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-hurricane-monitoring-with-sar" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Hurricane Monitoring with SAR
+        Setup
       
     </span>
   </a>
@@ -1370,10 +1359,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-wildfire-detection" class="md-nav__link">
+  <a href="#define-a-confirmation-required-tool" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Wildfire Detection
+        Define a confirmation-required tool
       
     </span>
   </a>
@@ -1381,10 +1370,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-flood-monitoring" class="md-nav__link">
+  <a href="#default-callback-rejects-everything" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Flood Monitoring
+        Default callback rejects everything
       
     </span>
   </a>
@@ -1392,10 +1381,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-urban-expansion" class="md-nav__link">
+  <a href="#a-custom-callback-that-prints-the-request-and-approves" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Urban Expansion
+        A custom callback that prints the request and approves
       
     </span>
   </a>
@@ -1403,10 +1392,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-contextual-event-questions" class="md-nav__link">
+  <a href="#only-safe-in-fully-sandboxed-sessions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Contextual Event Questions
+        — only safe in fully sandboxed sessions
       
     </span>
   </a>
@@ -1414,21 +1403,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-nasa-veda-catalog" class="md-nav__link">
+  <a href="#how-it-wires-together" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. NASA VEDA Catalog
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary
+        How it wires together
       
     </span>
   </a>
@@ -1449,7 +1427,7 @@
               <article class="md-content__inner md-typeset">
                 
 
-    <a href="/examples/event_monitoring/event_monitoring.ipynb" title="Download Notebook" class="md-content__button md-icon">
+    <a href="/examples/hitl_confirm/hitl_confirm.ipynb" title="Download Notebook" class="md-content__button md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7z"/></svg>
     </a>
 
@@ -2183,19 +2161,30 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="event-monitoring-and-disaster-assessment">Event Monitoring and Disaster Assessment<a class="anchor-link" href="#event-monitoring-and-disaster-assessment">¶</a></h1><p>This notebook demonstrates GeoAgent's ability to search for satellite data related to natural disasters and environmental events — hurricanes, wildfires, floods, and more.</p>
-<p>GeoAgent automatically selects the right data collection and time range for event-based queries.</p>
+<h1 id="human-in-the-loop-tool-confirmation">Human-in-the-loop tool confirmation<a class="anchor-link" href="#human-in-the-loop-tool-confirmation">¶</a></h1><p>GeoAgent classifies tools as either <em>safe</em> (read-only, navigation, preview) or <em>confirmation-required</em> (destructive, expensive, externally-visible). When a confirmation-required tool is about to fire, the deepagents graph pauses and emits an <code>__interrupt__</code>. <code>GeoAgent.chat()</code> routes that interrupt through a <code>ConfirmCallback</code> you supply at construction.</p>
+<p>This notebook walks through the two built-in callbacks plus a custom one.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="setup">Setup<a class="anchor-link" href="#setup">¶</a></h2>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2213,16 +2202,41 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># %pip install geoagent</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GeoAgent</span><span class="p">,</span>
+    <span class="n">ConfirmCallback</span><span class="p">,</span>
+    <span class="n">ConfirmRequest</span><span class="p">,</span>
+    <span class="n">auto_approve_all</span><span class="p">,</span>
+    <span class="n">auto_approve_safe_only</span><span class="p">,</span>
+    <span class="n">geo_tool</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1"># %pip install geoagent</div>
+<div class="clipboard-copy-txt" id="cell-1">from geoagent import (
+    GeoAgent,
+    ConfirmCallback,
+    ConfirmRequest,
+    auto_approve_all,
+    auto_approve_safe_only,
+    geo_tool,
+)</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="define-a-confirmation-required-tool">Define a confirmation-required tool<a class="anchor-link" href="#define-a-confirmation-required-tool">¶</a></h2><p>We define a tiny toy tool so the demo does not depend on QGIS, Earth Engine, or a live map. Setting <code>requires_confirmation=True</code> flips it into the interrupt path.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2240,31 +2254,47 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="nd">@geo_tool</span><span class="p">(</span>
+    <span class="n">category</span><span class="o">=</span><span class="s2">"data"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Pretend to delete a dataset by name."</span><span class="p">,</span>
+    <span class="n">requires_confirmation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Pretend to delete the named dataset (no-op for the demo)."""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"deleted dataset: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
 
-<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">()</span>
+
+<span class="n">delete_dataset</span><span class="o">.</span><span class="n">metadata</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">from geoagent import GeoAgent
+<div class="clipboard-copy-txt" id="cell-2">@geo_tool(
+    category="data",
+    description="Pretend to delete a dataset by name.",
+    requires_confirmation=True,
+)
+def delete_dataset(name: str) -&gt; str:
+    """Pretend to delete the named dataset (no-op for the demo)."""
+    return f"deleted dataset: {name}"
 
-agent = GeoAgent()</div>
+
+delete_dataset.metadata</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1-hurricane-monitoring-with-sar">1. Hurricane Monitoring with SAR<a class="anchor-link" href="#1-hurricane-monitoring-with-sar">¶</a></h2><p>SAR (Synthetic Aperture Radar) imagery works through clouds and at night, making it ideal for monitoring hurricane impacts.</p>
+<h2 id="default-callback-rejects-everything">Default callback rejects everything<a class="anchor-link" href="#default-callback-rejects-everything">¶</a></h2><p>When no <code>confirm=</code> is supplied, <code>GeoAgent</code> uses <code>auto_approve_safe_only</code>, which <strong>rejects</strong> every confirmation-required call. Safe tools still run, but the destructive <code>delete_dataset</code> cannot fire silently.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2282,36 +2312,36 @@ agent = GeoAgent()</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-    <span class="s2">"Show me radar imagery of Houston Texas during Hurricane Harvey August 2017"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">[]):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Collection: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'collection'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">delete_dataset</span><span class="p">])</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Delete the dataset named lulc-2024."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"success:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"executed:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"cancelled:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">cancelled_tools</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">result = agent.chat(
-    "Show me radar imagery of Houston Texas during Hurricane Harvey August 2017"
-)
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-if result.data and (result.data or {}).get("items", []):
-    print(f"Collection: {(result.data or {}).get('items', [])[0].get('collection')}")
-result.map</div>
+<div class="clipboard-copy-txt" id="cell-3">agent = GeoAgent(tools=[delete_dataset])
+result = agent.chat("Delete the dataset named lulc-2024.")
+print("success:", result.success)
+print("executed:", result.executed_tools)
+print("cancelled:", result.cancelled_tools)</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="a-custom-callback-that-prints-the-request-and-approves">A custom callback that prints the request and approves<a class="anchor-link" href="#a-custom-callback-that-prints-the-request-and-approves">¶</a></h2><p>A <code>ConfirmCallback</code> is just <code>Callable[[ConfirmRequest], bool]</code>. The request includes the proposed tool name, the args, the description (lifted from the <code>@geo_tool</code> docstring), the category, and the full GeoAgent metadata dict.</p>
+<p>Notebooks cannot reliably block on <code>input()</code>, so this demo callback prints the request and returns <code>True</code>. Replace the body with <code>input('approve? ') == 'y'</code> in a CLI session to gate on real user input.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2329,27 +2359,57 @@ result.map</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">interactive_confirm</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">ConfirmRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Confirm request:"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  tool: </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  args: </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">args</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  description: </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  category: </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">category</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  metadata: </span><span class="si">{</span><span class="n">req</span><span class="o">.</span><span class="n">metadata</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">delete_dataset</span><span class="p">],</span> <span class="n">confirm</span><span class="o">=</span><span class="n">interactive_confirm</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Delete the dataset named lulc-2024."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"---"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"executed:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"cancelled:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">cancelled_tools</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"answer:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">print(result.code)</div>
+<div class="clipboard-copy-txt" id="cell-4">def interactive_confirm(req: ConfirmRequest) -&gt; bool:
+    print("Confirm request:")
+    print(f"  tool: {req.tool_name}")
+    print(f"  args: {req.args}")
+    print(f"  description: {req.description}")
+    print(f"  category: {req.category}")
+    print(f"  metadata: {req.metadata}")
+    return True
+
+
+agent = GeoAgent(tools=[delete_dataset], confirm=interactive_confirm)
+result = agent.chat("Delete the dataset named lulc-2024.")
+print("---")
+print("executed:", result.executed_tools)
+print("cancelled:", result.cancelled_tools)
+print("answer:", result.answer_text)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2-wildfire-detection">2. Wildfire Detection<a class="anchor-link" href="#2-wildfire-detection">¶</a></h2><p>MODIS thermal anomaly data detects active fires and burned areas globally.</p>
+<h2 id="auto_approve_all-only-safe-in-fully-sandboxed-sessions"><code>auto_approve_all</code> — only safe in fully sandboxed sessions<a class="anchor-link" href="#auto_approve_all-only-safe-in-fully-sandboxed-sessions">¶</a></h2><p><code>auto_approve_all</code> is provided for tests and trusted automation. Every confirmation request returns <code>True</code>, so destructive tools fire without human review. Do not use this as a default in interactive applications.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=10">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2367,427 +2427,34 @@ result.map</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show wildfire activity in Southern California in January 2025"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">delete_dataset</span><span class="p">],</span> <span class="n">confirm</span><span class="o">=</span><span class="n">auto_approve_all</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Delete the dataset named lulc-2024."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"executed:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"cancelled:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">cancelled_tools</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">result = agent.chat("Show wildfire activity in Southern California in January 2025")
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me burned area mapping for Montana wildfire regions 2023"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-6">result = agent.chat("Show me burned area mapping for Montana wildfire regions 2023")
-print(f"Success: {result.success}")
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-7">print(result.code)</div>
+<div class="clipboard-copy-txt" id="cell-5">agent = GeoAgent(tools=[delete_dataset], confirm=auto_approve_all)
+result = agent.chat("Delete the dataset named lulc-2024.")
+print("executed:", result.executed_tools)
+print("cancelled:", result.cancelled_tools)</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3-flood-monitoring">3. Flood Monitoring<a class="anchor-link" href="#3-flood-monitoring">¶</a></h2><p>SAR imagery from Sentinel-1 can detect flooding through clouds, day or night.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Show me flood extent in Pakistan during August 2022"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-8">result = agent.chat("Show me flood extent in Pakistan during August 2022")
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-9">print(result.code)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4-urban-expansion">4. Urban Expansion<a class="anchor-link" href="#4-urban-expansion">¶</a></h2><p>High-resolution satellite imagery can reveal urban growth patterns over time.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-    <span class="s2">"Show me high resolution satellite imagery of Dubai urban expansion in 2020"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"Plan: intent=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">, dataset=</span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dataset'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="n">result</span><span class="o">.</span><span class="n">map</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-10">result = agent.chat(
-    "Show me high resolution satellite imagery of Dubai urban expansion in 2020"
-)
-print(f"Success: {result.success}")
-print(
-    f"Plan: intent={(result.plan or {}).get('intent')}, dataset={(result.plan or {}).get('dataset')}"
-)
-print(f"Items: {len((result.data or {}).get('items', []))}")
-result.map</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-11">print(result.code)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5-contextual-event-questions">5. Contextual Event Questions<a class="anchor-link" href="#5-contextual-event-questions">¶</a></h2><p>Ask GeoAgent about events and it will provide contextual answers using LLM knowledge.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"How was NYC impacted by Hurricane Sandy?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-12">result = agent.chat("How was NYC impacted by Hurricane Sandy?")
-print(f"Intent: {(result.plan or {}).get('intent')}")
-print()
-if result.answer_text:
-    print(result.answer_text)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-    <span class="s2">"What satellites are most useful for monitoring volcanic eruptions?"</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">()</span>
-<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-13">result = agent.chat(
-    "What satellites are most useful for monitoring volcanic eruptions?"
-)
-print(f"Intent: {(result.plan or {}).get('intent')}")
-print()
-if result.answer_text:
-    print(result.answer_text)</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="6-nasa-veda-catalog">6. NASA VEDA Catalog<a class="anchor-link" href="#6-nasa-veda-catalog">¶</a></h2><p>GeoAgent now includes the NASA VEDA (Visualization, Exploration, and Data Analysis) catalog alongside Microsoft Planetary Computer.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.catalogs.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">CatalogRegistry</span>
-
-<span class="n">reg</span> <span class="o">=</span> <span class="n">CatalogRegistry</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">reg</span><span class="o">.</span><span class="n">list_catalogs</span><span class="p">():</span>
-    <span class="n">auth</span> <span class="o">=</span> <span class="s2">" (auth required)"</span> <span class="k">if</span> <span class="n">cat</span><span class="o">.</span><span class="n">requires_auth</span> <span class="k">else</span> <span class="s2">""</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cat</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">25s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cat</span><span class="o">.</span><span class="n">url</span><span class="si">}{</span><span class="n">auth</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-14">from geoagent.catalogs.registry import CatalogRegistry
-
-reg = CatalogRegistry()
-for cat in reg.list_catalogs():
-    auth = " (auth required)" if cat.requires_auth else ""
-    print(f"{cat.name:25s} {cat.url}{auth}")</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<hr/>
-<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>GeoAgent supports event-based queries by automatically selecting the right collection:</p>
-<table>
-<thead>
-<tr>
-<th>Event Type</th>
-<th>Data Source</th>
-<th>Example</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Hurricanes / Floods</td>
-<td>Sentinel-1 GRD (SAR)</td>
-<td>"Show radar imagery of Houston during Harvey"</td>
-</tr>
-<tr>
-<td>Wildfires</td>
-<td>MODIS Thermal (14A1)</td>
-<td>"Show wildfire activity in California"</td>
-</tr>
-<tr>
-<td>Burned Areas</td>
-<td>MODIS Thermal (14A1)</td>
-<td>"Show burned areas in Montana 2023"</td>
-</tr>
-<tr>
-<td>Snow Events</td>
-<td>MODIS Snow (10A1)</td>
-<td>"Show snow cover in Quebec"</td>
-</tr>
-<tr>
-<td>Urban Change</td>
-<td>Sentinel-2 L2A</td>
-<td>"Show Dubai urban expansion in 2020"</td>
-</tr>
-<tr>
-<td>Impact Analysis</td>
-<td>ContextAgent (LLM)</td>
-<td>"How was NYC impacted by Hurricane Sandy?"</td>
-</tr>
-</tbody>
-</table>
+<h2 id="how-it-wires-together">How it wires together<a class="anchor-link" href="#how-it-wires-together">¶</a></h2><ol>
+<li><code>@geo_tool(requires_confirmation=True)</code> stamps GeoAgent metadata onto the   <code>BaseTool</code>.</li>
+<li>The factory at construction time builds a deepagents <code>interrupt_on</code> from   every confirmation-required tool's name.</li>
+<li>When the agent proposes one of those tools, the graph emits   <code>__interrupt__</code> with <code>action_requests</code>.</li>
+<li><code>GeoAgent.chat()</code> routes each pending request through your   <code>ConfirmCallback</code>, then resumes the graph with   <code>Command(resume={'decisions': [...]})</code>.</li>
+<li>Approved tools run; rejected tools land in <code>result.cancelled_tools</code> and   their stub <code>ToolMessage</code>s are excluded from <code>result.executed_tools</code>.</li>
+</ol>
 </div>
 </div>
 </div>
@@ -2831,7 +2498,7 @@ for cat in reg.list_catalogs():
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 2, 2026 06:10:27 UTC"><span class="timeago" datetime="2026-02-02T06:10:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 2, 2026 06:10:27 UTC">2026-02-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:48:40 UTC"><span class="timeago" datetime="2026-04-27T04:48:40+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:48:40 UTC">2026-04-27</span>
   </span>
 
     

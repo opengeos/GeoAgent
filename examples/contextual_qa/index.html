@@ -622,6 +622,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../live_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../earth_science_queries/" class="md-nav__link">
         
   
@@ -799,6 +827,62 @@
     
   
     Event monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hitl_confirm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hitl confirm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom tools
   
 
     
@@ -2177,14 +2261,14 @@ agent = GeoAgent()</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What is NDVI and how is it calculated?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">result = agent.chat("What is NDVI and how is it calculated?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print(f"Success: {result.success}")
 print()
 if result.answer_text:
@@ -2214,13 +2298,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"How do synthetic aperture radar (SAR) satellites work?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4">result = agent.chat("How do synthetic aperture radar (SAR) satellites work?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2249,13 +2333,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Explain the difference between Landsat and Sentinel-2 satellites"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">result = agent.chat("Explain the difference between Landsat and Sentinel-2 satellites")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2295,13 +2379,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"How was NYC impacted by Hurricane Sandy?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-6">result = agent.chat("How was NYC impacted by Hurricane Sandy?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2330,13 +2414,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What was the impact of Hurricane Florence 2018 in North Carolina?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-7">result = agent.chat("What was the impact of Hurricane Florence 2018 in North Carolina?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2367,7 +2451,7 @@ if result.answer_text:
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
     <span class="s2">"How did vegetation recover after flooding in Missouri River valley 2023?"</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
@@ -2375,7 +2459,7 @@ if result.answer_text:
 <div class="clipboard-copy-txt" id="cell-8">result = agent.chat(
     "How did vegetation recover after flooding in Missouri River valley 2023?"
 )
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2417,7 +2501,7 @@ if result.answer_text:
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
     <span class="s2">"What are the long-term climate trends affecting Pacific Northwest forests?"</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
@@ -2425,7 +2509,7 @@ if result.answer_text:
 <div class="clipboard-copy-txt" id="cell-9">result = agent.chat(
     "What are the long-term climate trends affecting Pacific Northwest forests?"
 )
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2456,7 +2540,7 @@ if result.answer_text:
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
     <span class="s2">"Explain the correlation between El Niño events and wildfire patterns"</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
@@ -2464,7 +2548,7 @@ if result.answer_text:
 <div class="clipboard-copy-txt" id="cell-10">result = agent.chat(
     "Explain the correlation between El Niño events and wildfire patterns"
 )
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2495,7 +2579,7 @@ if result.answer_text:
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
     <span class="s2">"What is urban heat island effect and which cities are most affected?"</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
@@ -2503,7 +2587,7 @@ if result.answer_text:
 <div class="clipboard-copy-txt" id="cell-11">result = agent.chat(
     "What is urban heat island effect and which cities are most affected?"
 )
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2543,13 +2627,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What is the STAC specification and why is it important?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-12">result = agent.chat("What is the STAC specification and why is it important?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2578,13 +2662,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What are Cloud Optimized GeoTIFFs and why are they useful?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-13">result = agent.chat("What are Cloud Optimized GeoTIFFs and why are they useful?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2613,13 +2697,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What is the difference between raster and vector data in GIS?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-14">result = agent.chat("What is the difference between raster and vector data in GIS?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2648,13 +2732,13 @@ if result.answer_text:
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What Python libraries are commonly used for geospatial analysis?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-15">result = agent.chat("What Python libraries are commonly used for geospatial analysis?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print()
 if result.answer_text:
     print(result.answer_text)</div>
@@ -2697,8 +2781,8 @@ if result.answer_text:
 <span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
     <span class="s2">"Show me Sentinel-2 imagery of the Amazon rainforest in August 2024"</span>
 <span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">total_items</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">0</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Items: </span><span class="si">{</span><span class="nb">len</span><span class="p">((</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'items'</span><span class="p">,</span><span class="w"> </span><span class="p">[]))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Has answer_text: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">map</span>
 </pre></div>
@@ -2706,8 +2790,8 @@ if result.answer_text:
 result = agent.chat(
     "Show me Sentinel-2 imagery of the Amazon rainforest in August 2024"
 )
-print(f"Intent: {result.plan.intent}")
-print(f"Items: {result.data.total_items if result.data else 0}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
+print(f"Items: {len((result.data or {}).get('items', []))}")
 print(f"Has answer_text: {result.answer_text is not None}")
 result.map</div>
 </div>
@@ -2736,7 +2820,7 @@ result.map</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># This should trigger explanation</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"What causes deforestation in the Amazon rainforest?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="o">.</span><span class="n">intent</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Intent: </span><span class="si">{</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">plan</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'intent'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Has answer_text: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">answer_text</span><span class="p">:</span>
@@ -2744,7 +2828,7 @@ result.map</div>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-17"># This should trigger explanation
 result = agent.chat("What causes deforestation in the Amazon rainforest?")
-print(f"Intent: {result.plan.intent}")
+print(f"Intent: {(result.plan or {}).get('intent')}")
 print(f"Has answer_text: {result.answer_text is not None}")
 print()
 if result.answer_text:
@@ -2838,7 +2922,7 @@ if result.answer_text:
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 2, 2026 06:10:27 UTC"><span class="timeago" datetime="2026-02-02T06:10:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 2, 2026 06:10:27 UTC">2026-02-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:48:40 UTC"><span class="timeago" datetime="2026-04-27T04:48:40+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:48:40 UTC">2026-04-27</span>
   </span>
 
     
