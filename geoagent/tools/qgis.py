@@ -160,13 +160,25 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         """
         layer = _resolve_layer(_project(), layer_name)
         iface.setActiveLayer(layer)
-        if hasattr(iface, "zoomToActiveLayer"):
+        canvas = iface.mapCanvas()
+        # Prefer the explicit ``setExtent`` + ``refresh`` path over
+        # ``iface.zoomToActiveLayer()``. The latter updates the extent
+        # but does not always trigger XYZ tile providers (Google
+        # Satellite, OSM, ESRI) to refetch tiles at the new zoom-pyramid
+        # level, leaving basemaps stuck on upscaled lower-resolution
+        # tiles. ``setExtent`` + ``refresh`` mirrors the path QGIS uses
+        # for user-driven zoom and resolves the tile pyramid correctly.
+        # ``iface.zoomToActiveLayer`` stays as a fallback for canvas
+        # types where ``setExtent`` is unavailable (e.g. test mocks
+        # without the method) — call it AFTER setExtent so the iface
+        # path runs only when needed.
+        extent = layer.extent() if hasattr(layer, "extent") else None
+        if extent is not None and hasattr(canvas, "setExtent"):
+            canvas.setExtent(extent)
+            if hasattr(canvas, "refresh"):
+                canvas.refresh()
+        elif hasattr(iface, "zoomToActiveLayer"):
             iface.zoomToActiveLayer()
-        else:
-            extent = layer.extent() if hasattr(layer, "extent") else None
-            if extent is not None:
-                iface.mapCanvas().setExtent(extent)
-                iface.mapCanvas().refresh()
         return f"Zoomed to layer {layer_name!r}."
 
     @geo_tool(
