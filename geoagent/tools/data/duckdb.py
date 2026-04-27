@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from langchain_core.tools import BaseTool
 
-from geoagent.tools.stac import _stamp
+from geoagent.core.decorators import stamp_geo_meta
 
 
 def duckdb_tools() -> list[BaseTool]:
@@ -29,7 +29,7 @@ def duckdb_tools() -> list[BaseTool]:
     requirements = ["duckdb"]
     tools = (query_spatial_data, query_overture, analyze_spatial_data)
     for tool in tools:
-        _stamp(
+        stamp_geo_meta(
             tool,
             category="data",
             requires_confirmation=False,

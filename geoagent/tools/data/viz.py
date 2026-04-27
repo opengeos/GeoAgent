@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from langchain_core.tools import BaseTool
 
-from geoagent.tools.stac import _stamp
+from geoagent.core.decorators import stamp_geo_meta
 
 
 def viz_tools() -> list[BaseTool]:
@@ -46,7 +46,7 @@ def viz_tools() -> list[BaseTool]:
         create_3d_terrain_map,
     )
     for tool in safe_tools:
-        _stamp(
+        stamp_geo_meta(
             tool,
             category="map",
             requires_confirmation=False,

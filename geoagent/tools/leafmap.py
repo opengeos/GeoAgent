@@ -18,9 +18,16 @@ from langchain_core.tools import BaseTool
 
 from geoagent.core.decorators import geo_tool
 
+_NAME_KW_ALIASES = ("name", "layer_name")
+
 
 def _safe_call(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
     """Call the first available method on ``obj`` from ``names``.
+
+    If the chosen method rejects a ``name=`` / ``layer_name=`` kwarg with a
+    ``TypeError``, retry with the other alias before giving up. leafmap and
+    anymap occasionally disagree on which spelling each helper expects, and
+    the fallback methods we degrade to may use the alternate alias.
 
     Args:
         obj: Target object (a leafmap Map or similar).
@@ -33,10 +40,29 @@ def _safe_call(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
 
     Raises:
         AttributeError: If none of ``names`` exists on ``obj``.
+        TypeError: If the chosen method rejects the kwargs even after
+            trying the alternative ``name`` / ``layer_name`` alias.
     """
     for n in names:
-        if hasattr(obj, n):
-            return getattr(obj, n)(*args, **kwargs)
+        if not hasattr(obj, n):
+            continue
+        method = getattr(obj, n)
+        try:
+            return method(*args, **kwargs)
+        except TypeError:
+            # Try the alternate spelling of the layer-name kwarg, if any.
+            for primary, alternate in (
+                ("name", "layer_name"),
+                ("layer_name", "name"),
+            ):
+                if primary in kwargs and alternate not in kwargs:
+                    alt = dict(kwargs)
+                    alt[alternate] = alt.pop(primary)
+                    try:
+                        return method(*args, **alt)
+                    except TypeError:
+                        continue
+            raise
     raise AttributeError(
         f"None of {names!r} found on {type(obj).__name__}; cannot perform action."
     )
@@ -182,7 +208,9 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
             A status string.
         """
         _safe_call(m, ["set_center"], lon, lat, zoom)
-        return f"Centred on ({lat}, {lon})" + (f" at zoom {zoom}." if zoom else ".")
+        return f"Centred on ({lat}, {lon})" + (
+            f" at zoom {zoom}." if zoom is not None else "."
+        )
 
     @geo_tool(
         category="map",

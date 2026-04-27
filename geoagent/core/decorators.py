@@ -120,3 +120,31 @@ def get_category(tool_obj: BaseTool) -> Optional[str]:
 def get_required_packages(tool_obj: BaseTool) -> list[str]:
     """Return the list of Python packages required by ``tool_obj``."""
     return list(get_geo_meta(tool_obj).get("requires_packages", []))
+
+
+def stamp_geo_meta(tool_obj: BaseTool, **fields: Any) -> BaseTool:
+    """Stamp GeoAgent metadata onto an already-built LangChain tool.
+
+    Useful when a tool was created with the plain LangChain ``@tool``
+    decorator (e.g. legacy v0.x tools, or tools imported from another
+    package) and needs to be enrolled in the GeoAgent registry without
+    re-decorating it.
+
+    Existing values under ``tool.metadata["geo"]`` are preserved; ``fields``
+    are merged in on top.
+
+    Args:
+        tool_obj: A LangChain ``BaseTool``.
+        **fields: GeoAgent metadata keys (``category``,
+            ``requires_confirmation``, ``requires_packages``,
+            ``context_keys``).
+
+    Returns:
+        The same tool object, with ``metadata["geo"]`` updated in place.
+    """
+    meta = dict(tool_obj.metadata or {})
+    geo = dict(meta.get(GEO_META_KEY, {}))
+    geo.update(fields)
+    meta[GEO_META_KEY] = geo
+    tool_obj.metadata = meta
+    return tool_obj

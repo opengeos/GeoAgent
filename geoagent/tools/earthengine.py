@@ -86,14 +86,16 @@ def earthengine_tools(ee_initialized: bool = True) -> list[BaseTool]:
         index: str = "NDVI",
         red_band: str = "B4",
         nir_band: str = "B8",
+        green_band: str = "B3",
     ) -> dict[str, Any]:
         """Compute a spectral index on an EE Image.
 
         Args:
             asset_id: Earth Engine asset ID for the source image.
-            index: Index name (``"NDVI"``, ``"NDWI"``, ``"EVI"``).
-            red_band: Red band name.
-            nir_band: NIR band name.
+            index: Index name (``"NDVI"``, ``"NDWI"``).
+            red_band: Red band name (used by NDVI).
+            nir_band: NIR band name (used by NDVI and NDWI).
+            green_band: Green band name (used by NDWI).
 
         Returns:
             A dict with ``"asset_id"`` and ``"index"`` keys describing the
@@ -101,10 +103,13 @@ def earthengine_tools(ee_initialized: bool = True) -> list[BaseTool]:
             ``getInfo`` only on small AOIs).
         """
         image = ee.Image(asset_id)  # type: ignore[union-attr]
-        if index.upper() == "NDVI":
+        idx = index.upper()
+        if idx == "NDVI":
+            # NDVI = (NIR - Red) / (NIR + Red)
             result = image.normalizedDifference([nir_band, red_band]).rename("NDVI")
-        elif index.upper() == "NDWI":
-            result = image.normalizedDifference([nir_band, red_band]).rename("NDWI")
+        elif idx == "NDWI":
+            # NDWI (McFeeters) = (Green - NIR) / (Green + NIR)
+            result = image.normalizedDifference([green_band, nir_band]).rename("NDWI")
         else:
             raise ValueError(f"Unsupported index {index!r}.")
         return {"asset_id": asset_id, "index": index, "image_id": str(result)}

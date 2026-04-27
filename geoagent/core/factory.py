@@ -58,8 +58,12 @@ def create_geo_agent(
     """Build a deepagents-compiled GeoAgent runnable.
 
     Args:
-        tools: Explicit tool list. If ``None``, the registry is used.
-        extra_tools: Additional tools appended to ``tools``.
+        tools: Explicit base tool list. If ``None``, no base tools are used;
+            callers typically obtain a list from the per-package factories
+            (:func:`for_leafmap` etc.) or from
+            :func:`geoagent.core.registry.get_tools`.
+        extra_tools: Additional tools appended to ``tools`` after both inputs
+            are normalised to lists.
         context: Runtime context. Defaults to an empty
             :class:`GeoAgentContext`. The dataclass type is passed to
             deepagents as ``context_schema``.
@@ -89,7 +93,7 @@ def create_geo_agent(
 
     from .llm import resolve_model
 
-    resolved_model = resolve_model(llm=llm or model, provider=provider)
+    resolved_model = resolve_model(llm=llm, provider=provider, model=model)
 
     tool_list = _as_list(tools) + _as_list(extra_tools)
     interrupt_on = build_interrupt_on(tool_list) or None

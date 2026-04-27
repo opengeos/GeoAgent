@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from langchain_core.tools import BaseTool
 
-from geoagent.tools.stac import _stamp
+from geoagent.core.decorators import stamp_geo_meta
 
 
 def vector_tools() -> list[BaseTool]:
@@ -38,7 +38,7 @@ def vector_tools() -> list[BaseTool]:
         analyze_geometries,
     )
     for tool in tools:
-        _stamp(
+        stamp_geo_meta(
             tool,
             category="data",
             requires_confirmation=False,

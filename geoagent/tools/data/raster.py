@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from langchain_core.tools import BaseTool
 
-from geoagent.tools.stac import _stamp
+from geoagent.core.decorators import stamp_geo_meta
 
 
 def raster_tools() -> list[BaseTool]:
@@ -30,7 +30,7 @@ def raster_tools() -> list[BaseTool]:
 
     requirements = ["rasterio", "rioxarray", "xarray"]
     for tool in (load_raster, compute_index, raster_to_array, zonal_stats):
-        _stamp(
+        stamp_geo_meta(
             tool,
             category="data",
             requires_confirmation=False,

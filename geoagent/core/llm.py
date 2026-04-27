@@ -272,4 +272,8 @@ def resolve_model(
         return llm
     if provider is not None:
         return get_llm(provider=provider, model=model, **kwargs)
+    if isinstance(model, str) and ":" in model:
+        # deepagents-style "provider:model" string — split and dispatch.
+        head, _, tail = model.partition(":")
+        return get_llm(provider=head, model=tail, **kwargs)
     return get_default_llm(**kwargs)

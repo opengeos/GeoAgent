@@ -11,29 +11,9 @@ unchanged.
 
 from __future__ import annotations
 
-from typing import Any
-
 from langchain_core.tools import BaseTool
 
-from geoagent.core.decorators import GEO_META_KEY
-
-
-def _stamp(tool: BaseTool, **geo_meta: Any) -> BaseTool:
-    """Stamp GeoAgent metadata onto an already-built LangChain tool.
-
-    Args:
-        tool: A LangChain ``BaseTool``.
-        **geo_meta: Keys to merge into ``tool.metadata["geo"]``.
-
-    Returns:
-        The same tool, with metadata mutated.
-    """
-    meta = dict(tool.metadata or {})
-    geo = dict(meta.get(GEO_META_KEY, {}))
-    geo.update(geo_meta)
-    meta[GEO_META_KEY] = geo
-    tool.metadata = meta
-    return tool
+from geoagent.core.decorators import stamp_geo_meta
 
 
 def stac_tools() -> list[BaseTool]:
@@ -49,13 +29,13 @@ def stac_tools() -> list[BaseTool]:
     except ImportError:
         return []
 
-    _stamp(
+    stamp_geo_meta(
         search_stac,
         category="data",
         requires_confirmation=False,
         requires_packages=["pystac_client"],
     )
-    _stamp(
+    stamp_geo_meta(
         get_stac_collections,
         category="data",
         requires_confirmation=False,

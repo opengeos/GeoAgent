@@ -13,6 +13,7 @@ from geoagent.core.decorators import (
     geo_tool,
     get_geo_meta,
     needs_confirmation,
+    stamp_geo_meta,
 )
 from geoagent.core.result import GeoAgentResponse
 from geoagent.core.safety import (
@@ -23,20 +24,15 @@ from geoagent.core.safety import (
     build_interrupt_on,
 )
 
-# Factory functions are lazily importable so deepagents missing doesn't
-# break `import geoagent`.
-try:
-    from geoagent.core.factory import (
-        create_geo_agent,
-        for_anymap,
-        for_leafmap,
-        for_qgis,
-    )
-except ImportError:  # pragma: no cover - exercised when deepagents missing
-    create_geo_agent = None  # type: ignore[assignment]
-    for_anymap = None  # type: ignore[assignment]
-    for_leafmap = None  # type: ignore[assignment]
-    for_qgis = None  # type: ignore[assignment]
+# Factory module imports deepagents lazily inside its function bodies, so
+# importing the factory itself should not fail when deepagents is absent.
+# Importing unconditionally avoids masking unrelated import-time errors.
+from geoagent.core.factory import (
+    create_geo_agent,
+    for_anymap,
+    for_leafmap,
+    for_qgis,
+)
 
 # Backward-compatible legacy GeoAgent class (Phase 2 will rebuild this on
 # top of the deepagents factory).
@@ -92,6 +88,7 @@ __all__ = [
     "geo_tool",
     "get_geo_meta",
     "needs_confirmation",
+    "stamp_geo_meta",
     "ConfirmCallback",
     "ConfirmRequest",
     "auto_approve_all",
