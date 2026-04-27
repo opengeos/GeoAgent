@@ -127,13 +127,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        canvas = iface.mapCanvas()
-        canvas.zoomIn()
-        # ``QgsMapCanvas`` defers redraws after a programmatic extent
-        # change — XYZ tile layers (Google Satellite, OSM, etc.) won't
-        # request fresh tiles until ``refresh()`` is called explicitly.
-        if hasattr(canvas, "refresh"):
-            canvas.refresh()
+        iface.mapCanvas().zoomIn()
         return "Zoomed in."
 
     @geo_tool(
@@ -147,10 +141,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        canvas = iface.mapCanvas()
-        canvas.zoomOut()
-        if hasattr(canvas, "refresh"):
-            canvas.refresh()
+        iface.mapCanvas().zoomOut()
         return "Zoomed out."
 
     @geo_tool(
@@ -169,19 +160,13 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         """
         layer = _resolve_layer(_project(), layer_name)
         iface.setActiveLayer(layer)
-        canvas = iface.mapCanvas()
         if hasattr(iface, "zoomToActiveLayer"):
             iface.zoomToActiveLayer()
         else:
             extent = layer.extent() if hasattr(layer, "extent") else None
             if extent is not None:
-                canvas.setExtent(extent)
-        # ``zoomToActiveLayer`` updates the canvas extent but does not
-        # always trigger a redraw of XYZ tile layers (Google Satellite,
-        # OSM, etc.) — without an explicit ``refresh()`` the basemap can
-        # appear blank at the new extent until the user pans manually.
-        if hasattr(canvas, "refresh"):
-            canvas.refresh()
+                iface.mapCanvas().setExtent(extent)
+                iface.mapCanvas().refresh()
         return f"Zoomed to layer {layer_name!r}."
 
     @geo_tool(
