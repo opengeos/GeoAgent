@@ -133,6 +133,80 @@ def test_zoom_to_layer_resolves_layer() -> None:
     assert iface.activeLayer() is layer
 
 
+def test_zoom_to_layer_transforms_extent_when_layer_crs_differs(monkeypatch) -> None:
+    """A layer in a different CRS than the canvas must have its extent
+    transformed before ``setExtent`` is called.
+
+    Without the transform, a GeoJSON loaded as EPSG:4326 hands lat/lon
+    coordinates (-115.x, 36.x) to a Web-Mercator canvas (EPSG:3857),
+    which interprets them as metres near (0, 0) and renders blank.
+    Faking a tiny ``qgis.core`` so the transform path runs end-to-end
+    in tests without needing real QGIS.
+    """
+    import sys
+    import types
+
+    project = MockQGISProject()
+    iface = MockQGISIface(project=project)
+    canvas = iface.mapCanvas()
+
+    layer_extent = (-115.3, 36.1, -115.0, 36.3)  # lat/lon
+    layer = MockQGISLayer("Buildings", "/tmp/b.shp", extent=layer_extent)
+    project.addMapLayer(layer)
+
+    class _Crs:
+        def __init__(self, name):
+            self.name = name
+
+        def __eq__(self, other):
+            return isinstance(other, _Crs) and self.name == other.name
+
+        def __hash__(self):
+            return hash(self.name)
+
+    layer_crs = _Crs("EPSG:4326")
+    canvas_crs = _Crs("EPSG:3857")
+    layer.crs = lambda: layer_crs  # type: ignore[method-assign]
+
+    class _MapSettings:
+        def destinationCrs(self):
+            return canvas_crs
+
+    canvas.mapSettings = lambda: _MapSettings()  # type: ignore[method-assign]
+
+    transformed_extent = (-12_835_000.0, 4_330_000.0, -12_801_000.0, 4_355_000.0)
+
+    class _CoordTransform:
+        def __init__(self, src, dst, project_arg):
+            assert src is layer_crs
+            assert dst is canvas_crs
+
+        def transformBoundingBox(self, extent):
+            assert extent == layer_extent
+            return transformed_extent
+
+    class _QgsProject:
+        @staticmethod
+        def instance():
+            return object()
+
+    fake_qgs_core = types.SimpleNamespace(
+        QgsCoordinateTransform=_CoordTransform,
+        QgsProject=_QgsProject,
+    )
+    fake_qgis = types.SimpleNamespace(core=fake_qgs_core)
+    monkeypatch.setitem(sys.modules, "qgis", fake_qgis)
+    monkeypatch.setitem(sys.modules, "qgis.core", fake_qgs_core)
+
+    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools["zoom_to_layer"].invoke({"layer_name": "Buildings"})
+
+    assert canvas.extent() == transformed_extent, (
+        "zoom_to_layer must hand the canvas an extent in the canvas CRS, "
+        "not in the layer's native CRS"
+    )
+
+
 def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
     """Layers with ``extent()`` must drive ``setExtent`` + ``refresh``.
 
