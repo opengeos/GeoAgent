@@ -230,7 +230,7 @@ class TestImports(unittest.TestCase):
 
     def test_search_stac_uses_registry_without_warning(self) -> None:
         """The registry path must not emit a warning for prompt-facing names."""
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import MagicMock
 
         from geoagent.core.tools import stac as stac_tool
 

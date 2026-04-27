@@ -109,9 +109,13 @@ class CatalogRegistry:
         """
         if name in self._catalogs:
             return self._catalogs[name]
-        canonical = CATALOG_ALIASES.get(name) or CATALOG_ALIASES.get(
-            name.replace("-", "_")
-        )
+        # Try the hyphen-to-underscore form against the canonical registry
+        # before consulting CATALOG_ALIASES, so newly-added catalogs work
+        # under their hyphenated form without needing a new alias entry.
+        underscore = name.replace("-", "_")
+        if underscore in self._catalogs:
+            return self._catalogs[underscore]
+        canonical = CATALOG_ALIASES.get(name) or CATALOG_ALIASES.get(underscore)
         if canonical and canonical in self._catalogs:
             return self._catalogs[canonical]
         return None
