@@ -253,16 +253,28 @@ class _SyncToolGraph:
     threads. Inside QGIS this corrupts ``iface`` and the layer tree
     (Qt requires main-thread affinity for the canvas / project / layer
     tree). The :func:`geoagent.tools._inline_executor.inline_tool_execution`
-    context manager monkey-patches LangGraph's executor factory for the
-    duration of a call so each tool runs inline on the calling thread.
+    context manager flips a ``ContextVar`` that a stable wrapper around
+    LangGraph's executor factory consults — when the flag is set the
+    wrapper returns an inline executor, otherwise it delegates to the
+    original factory. This makes the patch safe to use concurrently
+    across threads and async tasks: each context carries its own flag
+    value, so unrelated runs do not inherit the inline executor.
 
-    Because the user's ``agent.invoke()`` is itself called on the QGIS
-    main thread, every tool body then runs on the main thread. No Qt
-    thread marshaling is needed and no event-loop pumping is required.
+    Because the user's ``agent.invoke()`` runs on the QGIS main thread,
+    every tool body then runs on the main thread. No Qt thread
+    marshaling is needed and no event-loop pumping is required.
 
-    Other public surface (``ainvoke``, ``astream``, ``stream_events``,
-    ``get_state``, etc.) is forwarded unchanged via ``__getattr__`` so
-    the wrapper is a transparent stand-in for the inner graph.
+    Coverage:
+
+    - Synchronous and async tool-executing entry points are wrapped:
+      ``invoke``, ``stream``, ``ainvoke``, ``astream``, and
+      ``astream_events``. Anything reachable through these methods
+      (``stream_log``, ``batch`` chained internally, etc.) inherits
+      the gating because it shares the same ``ContextVar`` scope.
+    - Methods we do not wrap (``get_state``, custom attributes, the
+      various LangGraph admin methods that do not run tools) fall
+      through to the inner graph via ``__getattr__``. They are not
+      tool-executing paths so QGIS thread affinity is irrelevant.
     """
 
     def __init__(self, inner: Any) -> None:
@@ -292,6 +304,13 @@ class _SyncToolGraph:
         with inline_tool_execution():
             async for chunk in self._inner.astream(*args, **kwargs):
                 yield chunk
+
+    async def astream_events(self, *args: Any, **kwargs: Any) -> Any:
+        from geoagent.tools._inline_executor import inline_tool_execution
+
+        with inline_tool_execution():
+            async for event in self._inner.astream_events(*args, **kwargs):
+                yield event
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
