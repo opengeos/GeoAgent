@@ -133,68 +133,72 @@ def get_llm(
 def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
     """Get a default LLM by checking available API keys.
 
-    Checks environment variables in order: OpenAI, Anthropic, Google, Ollama.
-    Returns the first available provider.
+    Tries cloud providers first in the order OpenAI, Anthropic, Google, and
+    only falls back to a local Ollama model when none of those have an API
+    key in the environment. The Ollama fallback emits a ``logging.WARNING``
+    so the caller can see why the agent might be misbehaving: the default
+    Ollama model (``llama3.1`` 8B Q4) is too small to drive the deepagents
+    multi-subagent coordinator reliably, so silent fallback would leave the
+    user with an agent that "runs" but never fires any tools.
 
     Args:
         temperature: Sampling temperature.
         **kwargs: Additional keyword arguments passed to the LLM constructor.
 
     Returns:
-        A LangChain BaseChatModel instance.
+        A LangChain ``BaseChatModel`` instance.
 
     Raises:
-        RuntimeError: If no LLM provider is available.
+        RuntimeError: If no provider is usable (no cloud key in the
+            environment AND ``langchain-ollama`` is not importable).
     """
-    # Try providers in priority order
-    for provider_name, config in PROVIDERS.items():
-        env_var = config["env_var"]
+    cloud_providers = [
+        (name, config)
+        for name, config in PROVIDERS.items()
+        if config["env_var"] is not None
+    ]
+    for provider_name, config in cloud_providers:
+        if not os.getenv(config["env_var"]):
+            continue
+        try:
+            return get_llm(provider=provider_name, temperature=temperature, **kwargs)
+        except ImportError:
+            logger.warning(
+                f"{config['package']} not installed, skipping {provider_name}"
+            )
+            continue
 
-        # Ollama has no API key requirement
-        if env_var is None:
-            try:
-                return get_llm(
-                    provider=provider_name, temperature=temperature, **kwargs
-                )
-            except ImportError:
-                continue
+    # No cloud provider was usable. Fall back to local Ollama with a loud
+    # warning. The deepagents multi-subagent coordinator GeoAgent compiles
+    # is heavy enough that small local models (e.g. 8B-class Ollama
+    # models) routinely emit empty or text-only responses with no
+    # tool_calls populated, leaving the agent looking like it works while
+    # never actually firing a tool. Surface that risk instead of hiding it.
+    ollama_config = PROVIDERS.get("ollama")
+    if ollama_config is not None:
+        try:
+            llm = get_llm(provider="ollama", temperature=temperature, **kwargs)
+        except ImportError:
+            pass
+        else:
+            logger.warning(
+                "No cloud LLM API key found in environment "
+                "(OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY). "
+                "Falling back to Ollama '%s'. The deepagents coordinator "
+                "GeoAgent uses needs strong tool-calling; small local "
+                "models often return empty content with no tool_calls, so "
+                "tools may never fire. Set a cloud API key for reliable "
+                "behavior, or pass an explicit `provider`/`model` to "
+                "GeoAgent that you have verified can drive the coordinator.",
+                ollama_config["default_model"],
+            )
+            return llm
 
-        # Check if API key is set
-        if os.getenv(env_var):
-            try:
-                return get_llm(
-                    provider=provider_name, temperature=temperature, **kwargs
-                )
-            except ImportError:
-                logger.warning(
-                    f"{config['package']} not installed, skipping {provider_name}"
-                )
-                continue
-
-    # Return MockLLM when no providers are available
-    logger.warning("No LLM provider available, using MockLLM")
-    return MockLLM()
-
-
-class MockLLM:
-    """Mock LLM for testing and development when no real LLM is available."""
-
-    def __init__(self, name: str = "MockLLM"):
-        self.name = name
-
-    def invoke(self, prompt: str) -> str:
-        """Mock LLM invocation.
-
-        Args:
-            prompt: Input prompt
-
-        Returns:
-            Mock response
-        """
-        return f"Mock response to: {prompt[:100]}..."
-
-    def __str__(self) -> str:
-        return self.name
+    raise RuntimeError(
+        "No LLM provider is available. Set OPENAI_API_KEY, "
+        "ANTHROPIC_API_KEY, or GOOGLE_API_KEY, or install langchain-ollama "
+        "and run a local Ollama server."
+    )
 
 
 def get_available_providers() -> List[str]:
@@ -247,33 +251,49 @@ def resolve_model(
 ) -> Any:
     """Resolve the tri-form ``llm`` / ``provider`` / ``model`` arguments.
 
-    GeoAgent's public API accepts any of three forms for picking the LLM:
+    GeoAgent's public API accepts any of these forms for picking the LLM:
 
     * an explicit ``llm`` object (a LangChain ``BaseChatModel`` instance),
     * a ``provider`` name (e.g. ``"openai"``) plus an optional ``model``,
+    * a ``model`` string in deepagents' ``"provider:model"`` shorthand
+      (e.g. ``"google_genai:gemini-2.5-flash"``,
+      ``"anthropic:claude-sonnet-4-5"``), which is routed verbatim to
+      :func:`langchain.chat_models.init_chat_model` for full parity with
+      :func:`deepagents.create_deep_agent`,
     * neither, in which case :func:`get_default_llm` picks the first
-      available provider from the environment.
+      available cloud provider from the environment, or falls back to
+      Ollama with a warning.
 
-    This function normalises all three into a single ``BaseChatModel`` ready
-    to pass to :func:`deepagents.create_deep_agent` as its ``model=``
-    argument.
+    This function normalises all forms into a single ``BaseChatModel``
+    ready to pass to :func:`deepagents.create_deep_agent` as its
+    ``model=`` argument.
 
     Args:
         llm: A pre-built LangChain chat model. Returned unchanged if given.
         provider: A provider name from :data:`PROVIDERS`.
-        model: A model name override for ``provider``.
-        **kwargs: Forwarded to :func:`get_llm` when constructing a new model.
+        model: A model name override for ``provider``, or a
+            ``"provider:model"`` shorthand when ``provider`` is omitted.
+        **kwargs: Forwarded to the underlying constructor (:func:`get_llm`
+            or :func:`init_chat_model`).
 
     Returns:
-        A LangChain ``BaseChatModel`` (or :class:`MockLLM` when no provider
-        is available and no ``llm`` was supplied).
+        A LangChain ``BaseChatModel``.
+
+    Raises:
+        RuntimeError: If no provider is usable and no ``llm`` was supplied.
+            See :func:`get_default_llm`.
     """
     if llm is not None:
         return llm
     if provider is not None:
         return get_llm(provider=provider, model=model, **kwargs)
     if isinstance(model, str) and ":" in model:
-        # deepagents-style "provider:model" string — split and dispatch.
-        head, _, tail = model.partition(":")
-        return get_llm(provider=head, model=tail, **kwargs)
+        # deepagents-style "provider:model" string. Hand it to
+        # langchain.chat_models.init_chat_model verbatim so the full set
+        # of langchain provider namespaces is supported (google_genai,
+        # google_vertexai, groq, together, azure_openai, ...). Matches
+        # the behavior of deepagents.create_deep_agent for string models.
+        from langchain.chat_models import init_chat_model
+
+        return init_chat_model(model, **kwargs)
     return get_default_llm(**kwargs)
