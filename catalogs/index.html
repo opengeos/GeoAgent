@@ -1757,6 +1757,7 @@
 
 
 
+
   <div class="doc doc-object doc-class">
 
 
@@ -1863,13 +1864,27 @@ CatalogRegistry        </code>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get catalog information by name.</span>
 
+<span class="sd">        Accepts canonical registry keys, hyphenated variants, and the</span>
+<span class="sd">        prompt-facing aliases listed in :data:`CATALOG_ALIASES`.</span>
+
 <span class="sd">        Args:</span>
-<span class="sd">            name: Catalog name</span>
+<span class="sd">            name: Catalog name or alias</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            CatalogInfo object or None if not found</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="c1"># Try the hyphen-to-underscore form against the canonical registry</span>
+        <span class="c1"># before consulting CATALOG_ALIASES, so newly-added catalogs work</span>
+        <span class="c1"># under their hyphenated form without needing a new alias entry.</span>
+        <span class="n">underscore</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">underscore</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">[</span><span class="n">underscore</span><span class="p">]</span>
+        <span class="n">canonical</span> <span class="o">=</span> <span class="n">CATALOG_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">CATALOG_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">underscore</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">canonical</span> <span class="ow">and</span> <span class="n">canonical</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">[</span><span class="n">canonical</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">add_catalog</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1920,18 +1935,23 @@ CatalogRegistry        </code>
             <span class="n">available</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Catalog &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+        <span class="c1"># Use the canonical name from the resolved CatalogInfo so per-catalog</span>
+        <span class="c1"># branches (auth headers, Planetary Computer signing) still match when</span>
+        <span class="c1"># the caller passed an alias like &quot;microsoft-pc&quot;.</span>
+        <span class="n">canonical_name</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">name</span>
+
         <span class="c1"># Check authentication</span>
         <span class="k">if</span> <span class="n">catalog</span><span class="o">.</span><span class="n">requires_auth</span> <span class="ow">and</span> <span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Catalog &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; requires authentication. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Catalog &#39;</span><span class="si">{</span><span class="n">canonical_name</span><span class="si">}</span><span class="s2">&#39; requires authentication. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Set environment variable: </span><span class="si">{</span><span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
         <span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Handle authentication for specific catalogs</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nasa_cmr&quot;</span> <span class="ow">and</span> <span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">canonical_name</span> <span class="o">==</span> <span class="s2">&quot;nasa_cmr&quot;</span> <span class="ow">and</span> <span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">:</span>
             <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">token</span><span class="p">:</span>
                 <span class="n">client_kwargs</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
@@ -1941,7 +1961,7 @@ CatalogRegistry        </code>
             <span class="n">client</span> <span class="o">=</span> <span class="n">pystac_client</span><span class="o">.</span><span class="n">Client</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">client_kwargs</span><span class="p">)</span>
 
             <span class="c1"># Special handling for Planetary Computer signing</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;planetary_computer&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">canonical_name</span> <span class="o">==</span> <span class="s2">&quot;planetary_computer&quot;</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="kn">import</span><span class="w"> </span><span class="nn">planetary_computer</span>
 
@@ -1970,7 +1990,9 @@ CatalogRegistry        </code>
             <span class="k">return</span> <span class="n">client</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to connect to catalog &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to connect to catalog &#39;</span><span class="si">{</span><span class="n">canonical_name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_collection_index</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">catalog_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;planetary_computer&quot;</span>
@@ -2189,6 +2211,8 @@ CatalogRegistry        </code>
     <div class="doc doc-contents ">
 
       <p>Get catalog information by name.</p>
+<p>Accepts canonical registry keys, hyphenated variants, and the
+prompt-facing aliases listed in :data:<code>CATALOG_ALIASES</code>.</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2204,7 +2228,7 @@ CatalogRegistry        </code>
       <tr>
         <td><code>name</code></td>
         <td><code>str</code></td>
-        <td><p>Catalog name</p></td>
+        <td><p>Catalog name or alias</p></td>
         <td><em>required</em></td>
       </tr>
   </tbody>
@@ -2230,13 +2254,27 @@ CatalogRegistry        </code>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get catalog information by name.</span>
 
+<span class="sd">    Accepts canonical registry keys, hyphenated variants, and the</span>
+<span class="sd">    prompt-facing aliases listed in :data:`CATALOG_ALIASES`.</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        name: Catalog name</span>
+<span class="sd">        name: Catalog name or alias</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        CatalogInfo object or None if not found</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="c1"># Try the hyphen-to-underscore form against the canonical registry</span>
+    <span class="c1"># before consulting CATALOG_ALIASES, so newly-added catalogs work</span>
+    <span class="c1"># under their hyphenated form without needing a new alias entry.</span>
+    <span class="n">underscore</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">underscore</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">[</span><span class="n">underscore</span><span class="p">]</span>
+    <span class="n">canonical</span> <span class="o">=</span> <span class="n">CATALOG_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">CATALOG_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">underscore</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">canonical</span> <span class="ow">and</span> <span class="n">canonical</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="p">[</span><span class="n">canonical</span><span class="p">]</span>
+    <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div>
         </details>
     </div>
@@ -2336,18 +2374,23 @@ CatalogRegistry        </code>
         <span class="n">available</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Catalog &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not found. Available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+    <span class="c1"># Use the canonical name from the resolved CatalogInfo so per-catalog</span>
+    <span class="c1"># branches (auth headers, Planetary Computer signing) still match when</span>
+    <span class="c1"># the caller passed an alias like &quot;microsoft-pc&quot;.</span>
+    <span class="n">canonical_name</span> <span class="o">=</span> <span class="n">catalog</span><span class="o">.</span><span class="n">name</span>
+
     <span class="c1"># Check authentication</span>
     <span class="k">if</span> <span class="n">catalog</span><span class="o">.</span><span class="n">requires_auth</span> <span class="ow">and</span> <span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Catalog &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; requires authentication. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Catalog &#39;</span><span class="si">{</span><span class="n">canonical_name</span><span class="si">}</span><span class="s2">&#39; requires authentication. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Set environment variable: </span><span class="si">{</span><span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
     <span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="c1"># Handle authentication for specific catalogs</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nasa_cmr&quot;</span> <span class="ow">and</span> <span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">canonical_name</span> <span class="o">==</span> <span class="s2">&quot;nasa_cmr&quot;</span> <span class="ow">and</span> <span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">:</span>
         <span class="n">token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">auth_env_var</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">token</span><span class="p">:</span>
             <span class="n">client_kwargs</span><span class="p">[</span><span class="s2">&quot;headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
@@ -2357,7 +2400,7 @@ CatalogRegistry        </code>
         <span class="n">client</span> <span class="o">=</span> <span class="n">pystac_client</span><span class="o">.</span><span class="n">Client</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">catalog</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">client_kwargs</span><span class="p">)</span>
 
         <span class="c1"># Special handling for Planetary Computer signing</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;planetary_computer&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">canonical_name</span> <span class="o">==</span> <span class="s2">&quot;planetary_computer&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="kn">import</span><span class="w"> </span><span class="nn">planetary_computer</span>
 
@@ -2386,7 +2429,9 @@ CatalogRegistry        </code>
         <span class="k">return</span> <span class="n">client</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to connect to catalog &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to connect to catalog &#39;</span><span class="si">{</span><span class="n">canonical_name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
