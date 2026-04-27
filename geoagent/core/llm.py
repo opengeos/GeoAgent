@@ -237,3 +237,39 @@ def check_api_keys() -> Dict[str, bool]:
         name: config["env_var"] is None or bool(os.getenv(config["env_var"]))
         for name, config in PROVIDERS.items()
     }
+
+
+def resolve_model(
+    llm: Optional[Any] = None,
+    provider: Optional[str] = None,
+    model: Optional[str] = None,
+    **kwargs: Any,
+) -> Any:
+    """Resolve the tri-form ``llm`` / ``provider`` / ``model`` arguments.
+
+    GeoAgent's public API accepts any of three forms for picking the LLM:
+
+    * an explicit ``llm`` object (a LangChain ``BaseChatModel`` instance),
+    * a ``provider`` name (e.g. ``"openai"``) plus an optional ``model``,
+    * neither, in which case :func:`get_default_llm` picks the first
+      available provider from the environment.
+
+    This function normalises all three into a single ``BaseChatModel`` ready
+    to pass to :func:`deepagents.create_deep_agent` as its ``model=``
+    argument.
+
+    Args:
+        llm: A pre-built LangChain chat model. Returned unchanged if given.
+        provider: A provider name from :data:`PROVIDERS`.
+        model: A model name override for ``provider``.
+        **kwargs: Forwarded to :func:`get_llm` when constructing a new model.
+
+    Returns:
+        A LangChain ``BaseChatModel`` (or :class:`MockLLM` when no provider
+        is available and no ``llm`` was supplied).
+    """
+    if llm is not None:
+        return llm
+    if provider is not None:
+        return get_llm(provider=provider, model=model, **kwargs)
+    return get_default_llm(**kwargs)
