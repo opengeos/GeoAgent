@@ -288,13 +288,20 @@ datetime_range="YYYY-MM-DD/YYYY-MM-DD", max_items=5, \
 max_cloud_cover=20)`. Use `collection="sentinel-2-l2a"` for Sentinel-2; \
 `"landsat-c2-l2"` for Landsat; `"naip"` for NAIP; `"cop-dem-glo-30"` for \
 Copernicus DEM.
-3. Pick the best item from the results (lowest cloud cover, most central \
-bbox overlap) and pull the asset URL: for Sentinel-2 RGB, use the \
-pre-rendered `visual` asset; otherwise use the asset key the user asked \
-for.
-4. Call `add_cog_layer(url=<asset url>, name=<descriptive name>)` for a \
-single COG asset, or `add_stac_layer(collection, item, assets=[...])` \
-when the renderer needs multiple bands.
+3. Pick the best item (lowest cloud cover, most central bbox overlap) \
+and note its `id` and the asset key the user wants (for Sentinel-2 RGB, \
+use the pre-rendered `visual` asset).
+4. Render the item. The right tool depends on the catalog:
+   - **Planetary Computer items (catalog="microsoft-pc")** must be \
+rendered via `add_stac_layer(collection, item=<id>, assets=[<key>], \
+titiler_endpoint="pc")`. Microsoft's hosted TiTiler signs SAS-protected \
+asset URLs internally; calling `add_cog_layer` with a raw PC href fails \
+because the public TiTiler cannot read unsigned PC assets.
+   - **Other catalogs** (Element 84 earth-search, USGS, etc.) expose \
+public COG URLs. For a single asset use \
+`add_cog_layer(url=<asset href>, name=<descriptive name>)`; for multi-\
+band rendering use `add_stac_layer(collection, item, assets=[...])` with \
+no titiler_endpoint.
 
 If `search_stac` returns zero items, say so explicitly and suggest a \
 broader bbox / time-range / cloud-cover threshold instead of guessing a \

@@ -1,19 +1,22 @@
-"""End-to-end test: mapping subagent searches STAC and adds a COG layer.
+"""End-to-end test: mapping subagent searches STAC and adds a layer.
 
 Reproduces the ``docs/examples/live_mapping.ipynb`` "Add a Sentinel-2 RGB
-COG layer over Knoxville TN for July 2024" flow with a fake LLM and a
+layer over Knoxville TN for July 2024" flow with a fake LLM and a
 :class:`MockLeafmap`. ``search_stac``'s network call is monkeypatched to
 return a canned item, so the test runs offline.
 
-Pins three contracts at once:
+Pins four contracts:
 
-1. The mapping subagent now has access to ``stac_tools()`` (the regression
+1. The mapping subagent has access to ``stac_tools()`` (the regression
    the bug report flagged).
-2. The mock map records the COG layer with the resolved asset URL — i.e.
-   the layer actually gets added rather than the agent silently giving up.
-3. ``executed_tools`` surfaces the subagent's inner tool calls
-   (``search_stac`` and ``add_cog_layer``), not just the parent ``task``
-   dispatcher.
+2. For Planetary Computer items, the canonical render path is
+   ``add_stac_layer(collection, item, assets, titiler_endpoint="pc")``
+   so PC's hosted TiTiler signs SAS-protected asset URLs internally.
+3. The mock map records the layer with the right collection / item /
+   asset and the ``titiler_endpoint`` kwarg gets passed through.
+4. ``executed_tools`` surfaces the subagent's inner tool calls
+   (``search_stac`` and ``add_stac_layer``), not just the parent
+   ``task`` dispatcher.
 """
 
 from __future__ import annotations
@@ -26,12 +29,13 @@ from tests._fakes import make_fake
 
 _KNOXVILLE_BBOX = [-84.05, 35.85, -83.80, 36.05]
 _DATETIME_RANGE = "2024-07-01/2024-07-31"
-_FAKE_VISUAL_URL = "https://example.invalid/sentinel2/visual.tif"
+_ITEM_ID = "S2A_TILE_2024-07-15"
 _LAYER_NAME = "Sentinel-2 RGB Knoxville 2024-07-15"
+_FAKE_VISUAL_HREF = "https://example.invalid/sentinel2/visual.tif"
 
 
 def _fake_stac_items() -> list[dict[str, object]]:
-    """Canned single-item STAC response with a ``visual`` COG asset.
+    """Canned single-item STAC response with a ``visual`` asset.
 
     Returns:
         A list with one item dict shaped like the real ``search_stac``
@@ -39,24 +43,27 @@ def _fake_stac_items() -> list[dict[str, object]]:
     """
     return [
         {
-            "id": "S2A_TILE_2024-07-15",
+            "id": _ITEM_ID,
             "datetime": "2024-07-15T16:30:00Z",
             "bbox": _KNOXVILLE_BBOX,
             "collection": "sentinel-2-l2a",
             "cloud_cover": 5.0,
-            "assets": {"visual": _FAKE_VISUAL_URL},
+            "assets": {"visual": _FAKE_VISUAL_HREF},
         }
     ]
 
 
-def test_mapping_subagent_searches_stac_then_adds_cog(monkeypatch) -> None:
-    """The mapping subagent resolves a natural-language query into a layer.
+def test_mapping_subagent_pc_path_uses_stac_layer_with_pc_titiler(monkeypatch) -> None:
+    """For Planetary Computer items, render via add_stac_layer + pc TiTiler.
 
     Drives the agent through:
-        coordinator -> task(mapping) -> search_stac -> add_cog_layer
+        coordinator -> task(mapping) -> search_stac -> add_stac_layer
 
-    and asserts the MockLeafmap recorded the COG and that
-    ``executed_tools`` includes the inner subagent calls.
+    where ``add_stac_layer`` is called with ``titiler_endpoint="pc"`` so
+    Microsoft's hosted TiTiler signs SAS-protected hrefs internally.
+    Asserts the MockLeafmap recorded the STAC layer with the right
+    fields and that the inner subagent tools surface in
+    ``executed_tools``.
     """
     from geoagent.core.tools import stac as stac_mod
 
@@ -78,7 +85,7 @@ def test_mapping_subagent_searches_stac_then_adds_cog(monkeypatch) -> None:
                             "name": "task",
                             "args": {
                                 "description": (
-                                    "Add a Sentinel-2 RGB COG layer over "
+                                    "Add a Sentinel-2 RGB layer over "
                                     "Knoxville TN for July 2024."
                                 ),
                                 "subagent_type": "mapping",
@@ -108,35 +115,44 @@ def test_mapping_subagent_searches_stac_then_adds_cog(monkeypatch) -> None:
                     content="",
                     tool_calls=[
                         {
-                            "id": "tc-cog-1",
-                            "name": "add_cog_layer",
+                            "id": "tc-stac-1",
+                            "name": "add_stac_layer",
                             "args": {
-                                "url": _FAKE_VISUAL_URL,
+                                "collection": "sentinel-2-l2a",
+                                "item": _ITEM_ID,
+                                "assets": ["visual"],
                                 "name": _LAYER_NAME,
-                                "colormap": "viridis",
+                                "titiler_endpoint": "pc",
                             },
                         }
                     ],
                 ),
-                AIMessage(content=f"Added {_LAYER_NAME!r} as a COG layer."),
+                AIMessage(content=f"Added {_LAYER_NAME!r}."),
                 AIMessage(content="Done."),
             ]
         ),
         context=GeoAgentContext(map_obj=fake_map),
     )
 
-    resp = agent.chat("Add a Sentinel-2 RGB COG layer over Knoxville TN for July 2024.")
+    resp = agent.chat("Add a Sentinel-2 RGB layer over Knoxville TN for July 2024.")
 
     assert resp.success, resp.error_message
 
-    cog_layers = [layer for layer in fake_map.layers if layer.get("type") == "cog"]
-    assert len(cog_layers) == 1, fake_map.layers
-    assert cog_layers[0]["url"] == _FAKE_VISUAL_URL
-    assert cog_layers[0]["name"] == _LAYER_NAME
+    stac_layers = [layer for layer in fake_map.layers if layer.get("type") == "stac"]
+    assert len(stac_layers) == 1, fake_map.layers
+    layer = stac_layers[0]
+    assert layer["collection"] == "sentinel-2-l2a"
+    assert layer["item"] == _ITEM_ID
+    assert layer["assets"] == ["visual"]
+    assert layer["name"] == _LAYER_NAME
+    # The crux of this test: titiler_endpoint must reach leafmap so PC's
+    # hosted TiTiler handles SAS signing — the public TiTiler default
+    # would fail with KeyError 'tiles' on an unsigned PC href.
+    assert layer["titiler_endpoint"] == "pc"
 
     assert "task" in resp.executed_tools
     assert "search_stac" in resp.executed_tools
-    assert "add_cog_layer" in resp.executed_tools
+    assert "add_stac_layer" in resp.executed_tools
 
 
 def test_mapping_subagent_includes_stac_tools() -> None:
@@ -152,4 +168,5 @@ def test_mapping_subagent_includes_stac_tools() -> None:
     assert spec is not None
     tool_names = {getattr(t, "name", None) for t in spec["tools"]}
     assert "search_stac" in tool_names
+    assert "add_stac_layer" in tool_names
     assert "add_cog_layer" in tool_names

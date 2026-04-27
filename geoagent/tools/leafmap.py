@@ -383,19 +383,36 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         item: Optional[str] = None,
         assets: Optional[list[str]] = None,
         name: Optional[str] = None,
+        titiler_endpoint: Optional[str] = None,
     ) -> str:
         """Add a STAC layer to the map.
+
+        For items returned by ``search_stac(catalog="microsoft-pc", ...)``,
+        pass ``titiler_endpoint="pc"`` so leafmap renders the layer via
+        Planetary Computer's hosted TiTiler, which signs SAS-protected
+        asset URLs internally. For other catalogs (e.g. ``earth-search``),
+        leave ``titiler_endpoint`` unset to use leafmap's default.
 
         Args:
             collection: STAC collection identifier.
             item: STAC item identifier (optional).
             assets: List of asset keys to render.
             name: Display name (defaults to the collection or item id).
+            titiler_endpoint: TiTiler service to use. ``"pc"`` selects
+                Planetary Computer's TiTiler (handles SAS signing for
+                Microsoft PC items). ``None`` falls back to leafmap's
+                default public TiTiler.
 
         Returns:
             A status string.
         """
-        kwargs = {"collection": collection, "item": item, "assets": assets or []}
+        kwargs: dict[str, Any] = {
+            "collection": collection,
+            "item": item,
+            "assets": assets or [],
+        }
+        if titiler_endpoint is not None:
+            kwargs["titiler_endpoint"] = titiler_endpoint
         layer_name = name or item or collection
         kwargs["name"] = layer_name
         _safe_call(m, ["add_stac_layer"], **kwargs)
@@ -410,18 +427,32 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
         url: str,
         name: str,
         colormap: str = "viridis",
+        titiler_endpoint: Optional[str] = None,
     ) -> str:
         """Add a Cloud Optimized GeoTIFF layer.
 
+        For Planetary Computer asset URLs (Sentinel-2 ``visual``,
+        Landsat assets, etc.), prefer ``add_stac_layer`` with
+        ``titiler_endpoint="pc"`` instead of this tool: PC's hosted
+        TiTiler handles SAS signing for you, whereas a public TiTiler
+        called against a raw, unsigned PC href will fail with a missing
+        ``tiles`` key.
+
         Args:
-            url: COG URL.
+            url: COG URL. For Planetary Computer assets, the URL must
+                already be SAS-signed (or use ``add_stac_layer`` instead).
             name: Display name.
             colormap: Colormap name.
+            titiler_endpoint: Optional TiTiler service. ``None`` uses
+                leafmap's default public TiTiler.
 
         Returns:
             A status string.
         """
-        _safe_call(m, ["add_cog_layer"], url, name=name, colormap=colormap)
+        kwargs: dict[str, Any] = {"name": name, "colormap": colormap}
+        if titiler_endpoint is not None:
+            kwargs["titiler_endpoint"] = titiler_endpoint
+        _safe_call(m, ["add_cog_layer"], url, **kwargs)
         return f"Added COG layer {name!r}."
 
     @geo_tool(
