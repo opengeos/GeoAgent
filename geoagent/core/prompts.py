@@ -89,6 +89,19 @@ explicitly asked for NDVI or a vegetation index.
 no map in the runtime context.
 - Do NOT pass `sentinel-2-l2a` as the dataset unless the user explicitly \
 asks for satellite imagery, spectral indices, or Sentinel-2.
+- Do NOT call the deepagents filesystem helpers (`ls`, `read_file`, \
+`write_file`, `edit_file`, `glob`, `grep`, `execute`) — they exist for \
+code-writing agents and have no role in geospatial workflows. Calling \
+them just slows the chat down.
+- Do NOT call `write_todos` for single-step requests like "add a \
+layer", "search for X", "what is Y". Plan with `write_todos` only for \
+genuine multi-step workflows that span more than two subagent \
+dispatches.
+- Do NOT call `get_stac_collections` before `search_stac`; \
+`search_stac` accepts a `collections` argument directly.
+- For VISUALIZE queries with a map in context, delegate to `mapping` \
+on the FIRST step — do not search yourself, the mapping subagent has \
+its own `search_stac`.
 """
 
 
@@ -311,9 +324,23 @@ use `add_cog_layer(url=<public COG href>, name=...)` for a single \
 asset. Use `add_stac_layer` (without `titiler_endpoint`) when the \
 renderer needs multiple bands.
 
-If `search_stac` returns zero items, say so explicitly and suggest a \
-broader bbox / time-range / cloud-cover threshold instead of guessing a \
-URL.
+If `search_stac` returns zero items or an `{"error": ...}` dict, say so \
+explicitly and **change the query** before retrying — narrow a too-\
+wide bbox, shorten the time range, or raise `max_cloud_cover`. Do NOT \
+re-issue the same arguments; that just times out again.
+
+# Stay focused
+
+- For a "add layer" query, the right answer is exactly one \
+`search_stac` call followed by exactly one `add_stac_layer` (or \
+`add_cog_layer`) call. Stop after the layer is added.
+- Do NOT call `get_stac_collections`, `write_todos`, or any deepagents \
+filesystem helper (`ls`, `read_file`, `grep`, `glob`, `write_file`, \
+`edit_file`). They are not relevant to mapping work and slow the chat \
+down significantly.
+- Do NOT call `set_center`, `zoom_to_bounds`, or `change_basemap` \
+unless the user explicitly asked for that — `add_stac_layer`'s \
+default `fit_bounds=True` already pans the map onto the layer.
 
 # Confirmation
 
