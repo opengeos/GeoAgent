@@ -207,6 +207,91 @@ def test_zoom_to_layer_transforms_extent_when_layer_crs_differs(monkeypatch) -> 
     )
 
 
+def test_zoom_to_extent_transforms_bbox_to_canvas_crs(monkeypatch) -> None:
+    """``zoom_to_extent`` must reproject the bbox into the canvas CRS.
+
+    The default ``crs`` argument is ``"EPSG:4326"`` because LLMs
+    naturally produce place-name extents in lat/lon. A Web-Mercator
+    canvas (EPSG:3857) cannot consume those numbers directly without a
+    transform — passing them straight to ``setExtent`` zooms to a
+    sliver near (0, 0) in metres and renders blank. Faking a tiny
+    ``qgis.core`` so the transform path runs end-to-end in tests
+    without needing real QGIS.
+    """
+    import sys
+    import types
+
+    iface = MockQGISIface()
+    canvas = iface.mapCanvas()
+
+    class _Crs:
+        def __init__(self, authid):
+            self.authid = authid
+
+        def __eq__(self, other):
+            return isinstance(other, _Crs) and self.authid == other.authid
+
+        def __hash__(self):
+            return hash(self.authid)
+
+    src_crs = _Crs("EPSG:4326")
+    dst_crs = _Crs("EPSG:3857")
+
+    class _MapSettings:
+        def destinationCrs(self):
+            return dst_crs
+
+    canvas.mapSettings = lambda: _MapSettings()  # type: ignore[method-assign]
+
+    seattle_latlon = (-122.5, 47.5, -122.2, 47.7)
+    seattle_mercator = (-13_637_000.0, 6_038_000.0, -13_604_000.0, 6_069_000.0)
+
+    # Use a simple 4-tuple as the QgsRectangle stand-in so MockQGISCanvas's
+    # ``setExtent`` (which calls ``tuple(extent)``) can record it cleanly.
+    def _Rect(w, s, e, n):
+        return (w, s, e, n)
+
+    class _CoordTransform:
+        def __init__(self, src, dst, project_arg):
+            assert src == src_crs
+            assert dst == dst_crs
+
+        def transformBoundingBox(self, rect):
+            assert tuple(rect) == seattle_latlon
+            return _Rect(*seattle_mercator)
+
+    class _QgsProject:
+        @staticmethod
+        def instance():
+            return object()
+
+    fake_qgs_core = types.SimpleNamespace(
+        QgsCoordinateReferenceSystem=lambda authid: _Crs(authid),
+        QgsCoordinateTransform=_CoordTransform,
+        QgsProject=_QgsProject,
+        QgsRectangle=_Rect,
+    )
+    fake_qgis = types.SimpleNamespace(core=fake_qgs_core)
+    monkeypatch.setitem(sys.modules, "qgis", fake_qgis)
+    monkeypatch.setitem(sys.modules, "qgis.core", fake_qgs_core)
+
+    project = MockQGISProject()
+    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools["zoom_to_extent"].invoke(
+        {
+            "west": seattle_latlon[0],
+            "south": seattle_latlon[1],
+            "east": seattle_latlon[2],
+            "north": seattle_latlon[3],
+        }
+    )
+
+    assert canvas.extent() == seattle_mercator, (
+        "zoom_to_extent must hand the canvas a bbox in the canvas CRS, "
+        "not in the LLM-supplied lat/lon CRS"
+    )
+
+
 def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
     """Layers with ``extent()`` must drive ``setExtent`` + ``refresh``.
 
