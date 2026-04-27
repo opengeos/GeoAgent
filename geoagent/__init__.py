@@ -34,12 +34,8 @@ from geoagent.core.factory import (
     for_qgis,
 )
 
-# Backward-compatible legacy GeoAgent class (Phase 2 will rebuild this on
-# top of the deepagents factory).
-try:
-    from geoagent.core.agent import GeoAgent
-except ImportError:
-    GeoAgent = None  # type: ignore[assignment]
+# GeoAgent facade rebuilt on deepagents (Phase 2).
+from geoagent.core.agent import GeoAgent
 
 # Legacy v0.x tool re-exports (preserve names from the previous public API).
 try:

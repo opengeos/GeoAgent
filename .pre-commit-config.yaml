@@ -20,3 +20,13 @@ repos:
     rev: 0.9.1
     hooks:
       - id: nbstripout
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+        - id: codespell
+          args:
+              [
+                  "--ignore-words-list=pre-empt,alos",
+                  "--skip=*.csv,*.geojson,*.json,*.yml,*.min.js,*.bundle.js,*.html,*cff,*.pdf",
+              ]

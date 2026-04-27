@@ -1,30 +1,77 @@
 #!/usr/bin/env python
 
-"""Tests for `geoagent` package."""
+"""Public-API smoke tests for the v1 GeoAgent package."""
+
+from __future__ import annotations
 
 import unittest
 
 
 class TestImports(unittest.TestCase):
-    """Test that all modules can be imported."""
+    """Confirm the documented public API is importable and well-shaped."""
 
-    def test_package_import(self):
-        """Test top-level package import."""
+    def test_package_import(self) -> None:
         import geoagent
 
         self.assertIsNotNone(geoagent.__version__)
 
-    def test_llm_import(self):
-        """Test LLM module import."""
-        from geoagent.core.llm import get_llm, get_default_llm, PROVIDERS
+    def test_v1_facade_exports(self) -> None:
+        from geoagent import (
+            GeoAgent,
+            GeoAgentContext,
+            GeoAgentResponse,
+            create_geo_agent,
+            for_anymap,
+            for_leafmap,
+            for_qgis,
+        )
 
-        self.assertIn("openai", PROVIDERS)
-        self.assertIn("anthropic", PROVIDERS)
-        self.assertIn("google", PROVIDERS)
-        self.assertIn("ollama", PROVIDERS)
+        self.assertTrue(hasattr(GeoAgent, "chat"))
+        self.assertTrue(hasattr(GeoAgent, "search"))
+        self.assertTrue(hasattr(GeoAgent, "analyze"))
+        self.assertTrue(hasattr(GeoAgent, "visualize"))
+        self.assertTrue(callable(create_geo_agent))
+        self.assertTrue(callable(for_leafmap))
+        self.assertTrue(callable(for_anymap))
+        self.assertTrue(callable(for_qgis))
+        # Dataclasses construct without args.
+        self.assertIsNotNone(GeoAgentContext())
+        self.assertIsNotNone(GeoAgentResponse())
 
-    def test_catalog_registry(self):
-        """Test catalog registry import and basic functionality."""
+    def test_v1_decorators_and_safety(self) -> None:
+        from geoagent import (
+            ConfirmCallback,
+            ConfirmRequest,
+            auto_approve_all,
+            auto_approve_safe_only,
+            build_interrupt_on,
+            geo_tool,
+            get_geo_meta,
+            needs_confirmation,
+            stamp_geo_meta,
+        )
+
+        # Smoke: ConfirmRequest is a dataclass we can construct directly.
+        req = ConfirmRequest(tool_name="t", args={}, description="", category=None)
+        self.assertFalse(auto_approve_safe_only(req))
+        self.assertTrue(auto_approve_all(req))
+        self.assertEqual(build_interrupt_on([]), {})
+        self.assertTrue(callable(geo_tool))
+        self.assertTrue(callable(get_geo_meta))
+        self.assertTrue(callable(needs_confirmation))
+        self.assertTrue(callable(stamp_geo_meta))
+        # ConfirmCallback is an alias; just confirm it imports.
+        self.assertIsNotNone(ConfirmCallback)
+
+    def test_llm_module(self) -> None:
+        from geoagent.core.llm import PROVIDERS, get_default_llm, get_llm
+
+        for provider in ("openai", "anthropic", "google", "ollama"):
+            self.assertIn(provider, PROVIDERS)
+        self.assertTrue(callable(get_llm))
+        self.assertTrue(callable(get_default_llm))
+
+    def test_catalog_registry(self) -> None:
         from geoagent.catalogs.registry import CatalogRegistry
 
         reg = CatalogRegistry()
@@ -34,62 +81,40 @@ class TestImports(unittest.TestCase):
         self.assertIn("earth_search", names)
         self.assertIn("planetary_computer", names)
 
-    def test_planner_import(self):
-        """Test planner module import."""
-        from geoagent.core.planner import Planner, PlannerOutput, Intent
+    def test_subagent_factories(self) -> None:
+        from geoagent.agents import (
+            PLANNER_SUBAGENT,
+            analysis_subagent,
+            context_subagent,
+            data_subagent,
+            default_subagents,
+        )
+        from geoagent.core.context import GeoAgentContext
 
-        self.assertEqual(Intent.SEARCH.value, "search")
-        self.assertEqual(Intent.ANALYZE.value, "analyze")
-        self.assertEqual(Intent.VISUALIZE.value, "visualize")
-        self.assertEqual(Intent.COMPARE.value, "compare")
+        for sub in (
+            PLANNER_SUBAGENT,
+            data_subagent(),
+            analysis_subagent(),
+            context_subagent(),
+        ):
+            for key in ("name", "description", "system_prompt", "tools"):
+                self.assertIn(key, sub)
 
-    def test_models_import(self):
-        """Test shared models import."""
-        from geoagent.core.models import (
-            PlannerOutput,
-            DataResult,
-            AnalysisResult,
-            GeoAgentResponse,
+        names = {s["name"] for s in default_subagents(GeoAgentContext())}
+        self.assertEqual(
+            {"planner", "data", "analysis", "context"} - names,
+            set(),
+            f"Expected the four core subagents in default_subagents; got {names}",
         )
 
-        self.assertIsNotNone(PlannerOutput)
-        self.assertIsNotNone(DataResult)
-        self.assertIsNotNone(AnalysisResult)
-        self.assertIsNotNone(GeoAgentResponse)
-
-    def test_agent_import(self):
-        """Test GeoAgent class import."""
-        from geoagent.core.agent import GeoAgent
-
-        self.assertTrue(hasattr(GeoAgent, "chat"))
-        self.assertTrue(hasattr(GeoAgent, "search"))
-        self.assertTrue(hasattr(GeoAgent, "analyze"))
-        self.assertTrue(hasattr(GeoAgent, "visualize"))
-
-    def test_tools_import(self):
-        """Test all tool modules import."""
-        from geoagent.core.tools.stac import search_stac
-        from geoagent.core.tools.duckdb_tool import query_spatial_data
-        from geoagent.core.tools.raster import load_raster, compute_index
-        from geoagent.core.tools.vector import read_vector
-        from geoagent.core.tools.viz import show_on_map
-
-        self.assertIsNotNone(search_stac)
-        self.assertIsNotNone(query_spatial_data)
-        self.assertIsNotNone(load_raster)
-        self.assertIsNotNone(read_vector)
-        self.assertIsNotNone(show_on_map)
-
-    def test_available_providers(self):
-        """Test checking available providers."""
+    def test_check_api_keys(self) -> None:
         from geoagent.core.llm import check_api_keys
 
         keys = check_api_keys()
         self.assertIsInstance(keys, dict)
         self.assertIn("openai", keys)
 
-    def test_add_custom_catalog(self):
-        """Test adding a custom catalog to the registry."""
+    def test_add_custom_catalog(self) -> None:
         from geoagent.catalogs.registry import CatalogRegistry
 
         reg = CatalogRegistry()

@@ -29,8 +29,6 @@ jobs:
                   pip install --no-cache-dir Cython
                   pip install -r requirements.txt -r requirements_dev.txt
                   pip install .
-            - name: Discover typos with codespell
-              run: codespell --skip="*.csv,*.geojson,*.json,*.js,*.html,*cff,*.pdf,./.git" --ignore-words-list="aci,acount,alos,hist"
             - name: PKG-TEST
               run: |
                   pytest tests/ -v
