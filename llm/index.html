@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1071,6 +1071,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#geoagent.core.llm.resolve_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resolve_model()
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1280,6 +1291,17 @@
     <span class="md-ellipsis">
       
         get_llm()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.llm.resolve_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resolve_model()
       
     </span>
   </a>
@@ -1910,6 +1932,130 @@ Returns the first available provider.</p>
             <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.core.llm.resolve_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">resolve_model</span><span class="p">(</span><span class="n">llm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.llm.resolve_model" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Resolve the tri-form <code>llm</code> / <code>provider</code> / <code>model</code> arguments.</p>
+<p>GeoAgent's public API accepts any of three forms for picking the LLM:</p>
+<ul>
+<li>an explicit <code>llm</code> object (a LangChain <code>BaseChatModel</code> instance),</li>
+<li>a <code>provider</code> name (e.g. <code>"openai"</code>) plus an optional <code>model</code>,</li>
+<li>neither, in which case :func:<code>get_default_llm</code> picks the first
+  available provider from the environment.</li>
+</ul>
+<p>This function normalises all three into a single <code>BaseChatModel</code> ready
+to pass to :func:<code>deepagents.create_deep_agent</code> as its <code>model=</code>
+argument.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>llm</code></td>
+        <td><code>Optional[Any]</code></td>
+        <td><p>A pre-built LangChain chat model. Returned unchanged if given.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>provider</code></td>
+        <td><code>Optional[str]</code></td>
+        <td><p>A provider name from :data:<code>PROVIDERS</code>.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>model</code></td>
+        <td><code>Optional[str]</code></td>
+        <td><p>A model name override for <code>provider</code>.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td><code>Any</code></td>
+        <td><p>Forwarded to :func:<code>get_llm</code> when constructing a new model.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>A LangChain ``BaseChatModel`` (or </code></td>
+      <td><p>is available and no <code>llm</code> was supplied).</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/llm.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_model</span><span class="p">(</span>
+    <span class="n">llm</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the tri-form ``llm`` / ``provider`` / ``model`` arguments.</span>
+
+<span class="sd">    GeoAgent&#39;s public API accepts any of three forms for picking the LLM:</span>
+
+<span class="sd">    * an explicit ``llm`` object (a LangChain ``BaseChatModel`` instance),</span>
+<span class="sd">    * a ``provider`` name (e.g. ``&quot;openai&quot;``) plus an optional ``model``,</span>
+<span class="sd">    * neither, in which case :func:`get_default_llm` picks the first</span>
+<span class="sd">      available provider from the environment.</span>
+
+<span class="sd">    This function normalises all three into a single ``BaseChatModel`` ready</span>
+<span class="sd">    to pass to :func:`deepagents.create_deep_agent` as its ``model=``</span>
+<span class="sd">    argument.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        llm: A pre-built LangChain chat model. Returned unchanged if given.</span>
+<span class="sd">        provider: A provider name from :data:`PROVIDERS`.</span>
+<span class="sd">        model: A model name override for ``provider``.</span>
+<span class="sd">        **kwargs: Forwarded to :func:`get_llm` when constructing a new model.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A LangChain ``BaseChatModel`` (or :class:`MockLLM` when no provider</span>
+<span class="sd">        is available and no ``llm`` was supplied).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">llm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">llm</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+        <span class="c1"># deepagents-style &quot;provider:model&quot; string — split and dispatch.</span>
+        <span class="n">head</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">get_llm</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">head</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">tail</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_default_llm</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
