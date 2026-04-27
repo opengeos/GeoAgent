@@ -84,9 +84,12 @@ nav:
         - examples/intro.ipynb
         - examples/stac_search.ipynb
         - examples/maplibre_viz.ipynb
+        - examples/live_mapping.ipynb
         - examples/earth_science_queries.ipynb
         - examples/contextual_qa.ipynb
         - examples/event_monitoring.ipynb
+        - examples/hitl_confirm.ipynb
+        - examples/custom_tools.ipynb
     - API Reference:
         - GeoAgent: geoagent.md
         - Factory: factory.md
