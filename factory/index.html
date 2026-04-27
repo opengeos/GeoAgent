@@ -2048,8 +2048,13 @@ data tool sets.</p></td>
   </thead>
   <tbody>
     <tr>
-      <td><code>A compiled deepagents agent. By default no LangGraph checkpointer
-is attached, so the returned graph can be driven via
+      <td><code>A compiled deepagents agent wrapped so ``.invoke()`` /
+``.stream()`` / ``.ainvoke()`` / ``.astream()`` runs every tool
+body inline on the calling thread (the QGIS main thread when
+called from QGIS&#39;s Python console). This avoids the Qt
+thread-affinity violations that would otherwise corrupt iface
+and crash QGIS. By default no LangGraph checkpointer is
+attached, so the graph can be driven via
 ``graph.invoke({&#34;messages&#34;</code></td>
       <td><p>[...]})<code>without supplying a</code>thread_id<code>. Pass</code>checkpointer=<MemorySaver()>`` explicitly
 to opt into HITL / thread persistence.</p></td>
@@ -2080,8 +2085,13 @@ to opt into HITL / thread persistence.</p></td>
 <span class="sd">        **kwargs: Forwarded to :func:`create_geo_agent`.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A compiled deepagents agent. By default no LangGraph checkpointer</span>
-<span class="sd">        is attached, so the returned graph can be driven via</span>
+<span class="sd">        A compiled deepagents agent wrapped so ``.invoke()`` /</span>
+<span class="sd">        ``.stream()`` / ``.ainvoke()`` / ``.astream()`` runs every tool</span>
+<span class="sd">        body inline on the calling thread (the QGIS main thread when</span>
+<span class="sd">        called from QGIS&#39;s Python console). This avoids the Qt</span>
+<span class="sd">        thread-affinity violations that would otherwise corrupt iface</span>
+<span class="sd">        and crash QGIS. By default no LangGraph checkpointer is</span>
+<span class="sd">        attached, so the graph can be driven via</span>
 <span class="sd">        ``graph.invoke({&quot;messages&quot;: [...]})`` without supplying a</span>
 <span class="sd">        ``thread_id``. Pass ``checkpointer=&lt;MemorySaver()&gt;`` explicitly</span>
 <span class="sd">        to opt into HITL / thread persistence.</span>
@@ -2104,7 +2114,8 @@ to opt into HITL / thread persistence.</p></td>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span> <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span>
     <span class="p">)</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;checkpointer&quot;</span><span class="p">,</span> <span class="n">_NO_CHECKPOINTER_DEFAULT</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">create_geo_agent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">inner</span> <span class="o">=</span> <span class="n">create_geo_agent</span><span class="p">(</span><span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_SyncToolGraph</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
