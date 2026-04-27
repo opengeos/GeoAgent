@@ -134,12 +134,14 @@ def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
     """Get a default LLM by checking available API keys.
 
     Tries cloud providers first in the order OpenAI, Anthropic, Google, and
-    only falls back to a local Ollama model when none of those have an API
-    key in the environment. The Ollama fallback emits a ``logging.WARNING``
-    so the caller can see why the agent might be misbehaving: the default
-    Ollama model (``llama3.1`` 8B Q4) is too small to drive the deepagents
-    multi-subagent coordinator reliably, so silent fallback would leave the
-    user with an agent that "runs" but never fires any tools.
+    falls back to a local Ollama model when no cloud provider is usable
+    (for example, because no cloud API key is set or because the matching
+    LangChain integration package is not installed). The Ollama fallback
+    emits a ``logging.WARNING`` so the caller can see why the agent might
+    be misbehaving: the default Ollama model (``llama3.1`` 8B Q4) is too
+    small to drive the deepagents multi-subagent coordinator reliably, so
+    silent fallback would leave the user with an agent that "runs" but
+    never fires any tools.
 
     Args:
         temperature: Sampling temperature.
@@ -157,23 +159,38 @@ def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
         for name, config in PROVIDERS.items()
         if config["env_var"] is not None
     ]
+    skipped_no_key: List[str] = []
+    skipped_missing_pkg: List[str] = []
     for provider_name, config in cloud_providers:
         if not os.getenv(config["env_var"]):
+            skipped_no_key.append(provider_name)
             continue
         try:
             return get_llm(provider=provider_name, temperature=temperature, **kwargs)
         except ImportError:
+            skipped_missing_pkg.append(f"{provider_name} ({config['package']})")
             logger.warning(
                 f"{config['package']} not installed, skipping {provider_name}"
             )
             continue
 
     # No cloud provider was usable. Fall back to local Ollama with a loud
-    # warning. The deepagents multi-subagent coordinator GeoAgent compiles
-    # is heavy enough that small local models (e.g. 8B-class Ollama
+    # warning. The deepagents multi-subagent coordinator GeoAgent uses
+    # is demanding enough that small local models (e.g. 8B-class Ollama
     # models) routinely emit empty or text-only responses with no
     # tool_calls populated, leaving the agent looking like it works while
     # never actually firing a tool. Surface that risk instead of hiding it.
+    if skipped_missing_pkg:
+        reason = (
+            "no cloud LLM provider was usable: API keys were set but "
+            f"required packages are missing for: {', '.join(skipped_missing_pkg)}"
+        )
+    else:
+        reason = (
+            "no cloud LLM API key found in environment "
+            "(OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY)"
+        )
+
     ollama_config = PROVIDERS.get("ollama")
     if ollama_config is not None:
         try:
@@ -182,22 +199,22 @@ def get_default_llm(temperature: float = 0.1, **kwargs) -> Any:
             pass
         else:
             logger.warning(
-                "No cloud LLM API key found in environment "
-                "(OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY). "
-                "Falling back to Ollama '%s'. The deepagents coordinator "
-                "GeoAgent uses needs strong tool-calling; small local "
-                "models often return empty content with no tool_calls, so "
-                "tools may never fire. Set a cloud API key for reliable "
-                "behavior, or pass an explicit `provider`/`model` to "
-                "GeoAgent that you have verified can drive the coordinator.",
+                "%s. Falling back to Ollama '%s'. GeoAgent needs strong "
+                "tool-calling; small local models often return empty "
+                "content with no tool_calls, so tools may never fire. Set "
+                "a cloud API key (and install the matching langchain "
+                "package) for reliable behavior, or pass an explicit "
+                "`provider`/`model` to GeoAgent that you have verified "
+                "can drive the coordinator.",
+                reason,
                 ollama_config["default_model"],
             )
             return llm
 
     raise RuntimeError(
-        "No LLM provider is available. Set OPENAI_API_KEY, "
-        "ANTHROPIC_API_KEY, or GOOGLE_API_KEY, or install langchain-ollama "
-        "and run a local Ollama server."
+        f"No LLM provider is available ({reason}). Install langchain-ollama "
+        "and run a local Ollama server, or set OPENAI_API_KEY, "
+        "ANTHROPIC_API_KEY, or GOOGLE_API_KEY with the matching package."
     )
 
 
