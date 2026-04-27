@@ -351,12 +351,15 @@ re-issue the same arguments; that just times out again.
 `search_stac` call followed by exactly one `add_stac_layer` (or \
 `add_cog_layer`) call. Stop after the layer is added.
 - For a "remove a layer" query, **call `remove_layer` directly** with \
-the layer name the coordinator quoted in your dispatch description. \
-**Do NOT call `list_layers` first** — your dispatch description \
-already contains the exact name in single quotes. Only fall back to \
-`list_layers` if the description does not name a specific layer (e.g. \
-"clear all layers" or "remove the basemap I forgot the name of"), in \
-which case list once and act, do not list again between removes.
+whatever name keyword the user gave. The tool accepts either the full \
+layer name OR a unique substring (case-insensitive), so \
+`remove_layer(name="Sentinel-2")` will resolve to a layer named \
+`Sentinel-2 RGB Knoxville 2024-07-15` automatically. \
+**Do NOT call `list_layers` first** — the resolver runs inside the \
+tool. Only fall back to `list_layers` if `remove_layer` returns an \
+``ambiguous`` message and you need to pick between the candidates it \
+listed, or if the request is genuinely listing-shaped ("clear all \
+layers", "what layers are on the map").
 - Do NOT call `get_stac_collections`, `write_todos`, or any deepagents \
 filesystem helper (`ls`, `read_file`, `grep`, `glob`, `write_file`, \
 `edit_file`). They are not relevant to mapping work and slow the chat \

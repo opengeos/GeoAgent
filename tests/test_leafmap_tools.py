@@ -70,6 +70,79 @@ def test_remove_layer_mutates_map() -> None:
     assert len(m.layers) == 0
 
 
+def test_remove_layer_resolves_unique_substring() -> None:
+    """A partial keyword resolves to the layer that contains it.
+
+    The user often refers to layers by topic ("the Sentinel-2 layer")
+    rather than full name ("Sentinel-2 RGB Knoxville 2024-07-15"). The
+    resolver lets the LLM call ``remove_layer`` with the keyword and
+    skip a round-trip through ``list_layers``.
+    """
+    m = MockLeafmap()
+    tools = {t.name: t for t in leafmap_tools(m)}
+    tools["add_layer"].invoke(
+        {
+            "url": "https://example.com/s2.tif",
+            "name": "Sentinel-2 RGB Knoxville 2024-07-15",
+            "layer_type": "cog",
+        }
+    )
+    result = tools["remove_layer"].invoke({"name": "Sentinel-2"})
+    assert "Removed" in result
+    assert "Sentinel-2 RGB Knoxville 2024-07-15" in result
+    assert m.layers == []
+
+
+def test_remove_layer_substring_is_case_insensitive() -> None:
+    m = MockLeafmap()
+    tools = {t.name: t for t in leafmap_tools(m)}
+    tools["add_layer"].invoke(
+        {
+            "url": "https://example.com/dem.tif",
+            "name": "Cop-DEM 30m Tennessee",
+            "layer_type": "cog",
+        }
+    )
+    result = tools["remove_layer"].invoke({"name": "tennessee"})
+    assert "Removed" in result
+    assert m.layers == []
+
+
+def test_remove_layer_reports_ambiguous_matches() -> None:
+    """Multiple substring matches are reported back so the LLM can disambiguate.
+
+    The tool deliberately does not pick one to avoid silently removing
+    the wrong layer when the user's keyword matches several layers.
+    """
+    m = MockLeafmap()
+    tools = {t.name: t for t in leafmap_tools(m)}
+    for full in ("Sentinel-2 RGB July", "Sentinel-2 RGB August"):
+        tools["add_layer"].invoke(
+            {
+                "url": f"https://example.com/{full}.tif",
+                "name": full,
+                "layer_type": "cog",
+            }
+        )
+
+    result = tools["remove_layer"].invoke({"name": "Sentinel-2"})
+    assert "ambiguous" in result.lower()
+    assert "'Sentinel-2 RGB July'" in result
+    assert "'Sentinel-2 RGB August'" in result
+    # Map state must be untouched on ambiguous match.
+    assert {layer["name"] for layer in m.layers} == {
+        "Sentinel-2 RGB July",
+        "Sentinel-2 RGB August",
+    }
+
+
+def test_remove_layer_reports_miss() -> None:
+    m = MockLeafmap()
+    tools = {t.name: t for t in leafmap_tools(m)}
+    result = tools["remove_layer"].invoke({"name": "NonExistent"})
+    assert "not found" in result
+
+
 def test_set_center_and_zoom_in() -> None:
     m = MockLeafmap()
     tools = {t.name: t for t in leafmap_tools(m)}

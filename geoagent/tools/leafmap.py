@@ -21,6 +21,78 @@ from geoagent.core.decorators import geo_tool
 _NAME_KW_ALIASES = ("name", "layer_name")
 
 
+def _layer_names(m: Any) -> list[str]:
+    """Return the active layer names on ``m`` in display order.
+
+    Handles three shapes:
+
+    - leafmap.maplibregl.Map exposes ``layer_names`` (list[str]).
+    - leafmap.Map / older leafmap exposes ``layers`` as a list of layer
+      objects with a ``.name`` attribute.
+    - :class:`MockLeafmap` (test stub) stores ``layers`` as a list of
+      dicts with a ``"name"`` key.
+
+    Args:
+        m: A live map widget or compatible mock.
+
+    Returns:
+        The list of layer names in their existing order. Empty when the
+        map exposes none of the recognised attributes.
+    """
+    names_attr = getattr(m, "layer_names", None)
+    if isinstance(names_attr, list):
+        return [str(n) for n in names_attr if n]
+    layers = getattr(m, "layers", None)
+    if isinstance(layers, list):
+        out: list[str] = []
+        for layer in layers:
+            if isinstance(layer, dict):
+                name = layer.get("name")
+            else:
+                name = getattr(layer, "name", None)
+            if name:
+                out.append(str(name))
+        return out
+    return []
+
+
+def _resolve_layer_name(m: Any, query: str) -> tuple[Optional[str], list[str]]:
+    """Resolve a user-supplied layer reference to an exact map layer name.
+
+    Tries an exact match first. If the query does not match any layer
+    exactly, falls back to a case-insensitive substring match against
+    the live layer index. This lets the LLM say "Sentinel-2" without
+    having had to call ``list_layers`` first to learn the full name
+    ``Sentinel-2 RGB Knoxville 2024-07-15``.
+
+    Args:
+        m: A live map widget or compatible mock.
+        query: The user / LLM's reference to a layer (full name,
+            substring, or keyword).
+
+    Returns:
+        ``(resolved, candidates)``:
+
+        - If exactly one layer matches, ``resolved`` is its full name
+          and ``candidates`` is ``[resolved]``.
+        - If multiple layers match, ``resolved`` is ``None`` and
+          ``candidates`` lists every matching layer name so the caller
+          can ask for disambiguation.
+        - If no layer matches, ``resolved`` is ``None`` and
+          ``candidates`` is empty.
+    """
+    names = _layer_names(m)
+    if not names or not query:
+        return None, []
+    if query in names:
+        return query, [query]
+    needle = query.casefold()
+    matches = [n for n in names if needle in n.casefold()]
+    if len(matches) == 1:
+        return matches[0], matches
+    return None, matches
+
+
 def _is_planetary_computer_url(url: str) -> bool:
     """Return ``True`` when ``url`` points at Planetary Computer blob storage.
 
@@ -181,16 +253,35 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
     def remove_layer(name: str) -> str:
         """Remove a layer from the map by display name.
 
+        Accepts either the layer's full name or a unique substring of
+        it (case-insensitive). For example, ``remove_layer("Sentinel-2")``
+        will remove a layer named ``"Sentinel-2 RGB Knoxville 2024-07-15"``
+        as long as no other layer's name also contains "sentinel-2".
+        This lets the agent skip a round-trip through ``list_layers``
+        when the user says "remove the Sentinel-2 layer".
+
         Args:
-            name: The display name of the layer to remove.
+            name: The display name (or a unique substring) of the layer
+                to remove.
 
         Returns:
-            A status string indicating whether the layer was removed.
+            A status string. On success: ``Removed layer 'X'.``
+            On ambiguous match: ``Layer 'X' is ambiguous; matched: …``
+            so the caller can disambiguate without listing layers.
+            On miss: ``Layer 'X' not found.``
         """
+        resolved, candidates = _resolve_layer_name(m, name)
+        if resolved is None and len(candidates) > 1:
+            joined = ", ".join(repr(c) for c in candidates)
+            return (
+                f"Layer {name!r} is ambiguous; matched multiple layers: "
+                f"{joined}. Call remove_layer with the full name to pick one."
+            )
+        target = resolved or name
         if hasattr(m, "remove_layer"):
-            removed = m.remove_layer(name)
+            removed = m.remove_layer(target)
             if removed in (None, True):
-                return f"Removed layer {name!r}."
+                return f"Removed layer {target!r}."
             return f"Layer {name!r} not found."
         layers = getattr(m, "layers", None)
         if isinstance(layers, list):
@@ -203,10 +294,10 @@ def leafmap_tools(m: Any) -> list[BaseTool]:
                     if isinstance(layer, dict)
                     else getattr(layer, "name", None)
                 )
-                != name
+                != target
             ]
             if len(m.layers) < before:
-                return f"Removed layer {name!r}."
+                return f"Removed layer {target!r}."
         return f"Layer {name!r} not found."
 
     @geo_tool(
