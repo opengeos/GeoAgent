@@ -173,31 +173,3 @@ def test_refresh_canvas_increments_counter() -> None:
     before = iface.mapCanvas().refresh_count
     tools["refresh_canvas"].invoke({})
     assert iface.mapCanvas().refresh_count == before + 1
-
-
-def test_factory_wraps_tools_with_main_thread_marshaler() -> None:
-    """Every tool returned by ``qgis_tools()`` must route through the
-    Qt main-thread marshaler.
-
-    LangGraph's ``ToolNode`` dispatches tool bodies on worker threads.
-    Touching ``iface`` / ``mapCanvas`` from off-thread crashes QGIS,
-    so the factory wraps each tool's ``func`` so it forwards through
-    :func:`geoagent.tools._qt_marshal.run_on_qgis_main_thread`. The
-    wrapper short-circuits when Qt isn't loaded, so this test only
-    needs to confirm the wrapping is wired in by checking that the
-    tool's ``func`` is the closure defined in ``_wrap_for_main_thread``.
-    """
-    from geoagent.tools.qgis import _wrap_for_main_thread  # noqa: F401
-
-    iface = MockQGISIface()
-    project = MockQGISProject()
-    tools = qgis_tools(iface, project)
-    assert tools, "factory must return at least one tool"
-    for tool in tools:
-        # The wrapper's qualified name contains "_wrap_for_main_thread",
-        # which lets us assert the wrap without relying on identity
-        # comparison against a closure that's already been swapped in.
-        assert "_wrap_for_main_thread" in tool.func.__qualname__, (
-            f"tool {tool.name!r} bypasses the main-thread marshaler; "
-            f"qualname={tool.func.__qualname__!r}"
-        )

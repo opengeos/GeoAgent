@@ -24,38 +24,6 @@ from langchain_core.tools import BaseTool
 from geoagent.core.decorators import geo_tool
 
 
-def _wrap_for_main_thread(tool: BaseTool) -> BaseTool:
-    """Marshal a tool's body to the QGIS / Qt main thread.
-
-    Replaces ``tool.func`` (the underlying callable for a LangChain
-    ``StructuredTool``) with a closure that forwards every call through
-    :func:`geoagent.tools._qt_marshal.run_on_qgis_main_thread`. The
-    LangChain-visible metadata (``name``, ``description``, ``args_schema``,
-    and the ``@geo_tool`` ``metadata["geo"]`` payload) is preserved
-    intact — only the call site of the body is wrapped.
-
-    Outside of QGIS the marshaler is a passthrough, so the existing
-    :class:`MockQGISIface`-based tests in ``tests/test_qgis_tools.py``
-    keep running on the main thread without paying any marshaling cost.
-
-    Args:
-        tool: The :class:`langchain_core.tools.BaseTool` to wrap.
-
-    Returns:
-        The same tool instance (mutated in place) so calling code can
-        chain or list-comprehend.
-    """
-    from geoagent.tools._qt_marshal import run_on_qgis_main_thread
-
-    original = tool.func
-
-    def wrapped(*args: Any, **kwargs: Any) -> Any:
-        return run_on_qgis_main_thread(original, *args, **kwargs)
-
-    tool.func = wrapped
-    return tool
-
-
 def _resolve_layer(project: Any, layer_name: str) -> Any:
     """Resolve a layer by name from a project.
 
@@ -464,7 +432,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         iface.mapCanvas().refresh()
         return "Canvas refreshed."
 
-    tools = [
+    return [
         list_project_layers,
         get_active_layer,
         zoom_in,
@@ -481,7 +449,6 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         open_attribute_table,
         refresh_canvas,
     ]
-    return [_wrap_for_main_thread(t) for t in tools]
 
 
 __all__ = ["qgis_tools"]

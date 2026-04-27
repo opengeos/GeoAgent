@@ -188,3 +188,68 @@ def test_for_leafmap_honors_explicit_checkpointer(monkeypatch) -> None:
         checkpointer=saver,
     )
     assert captured.get("checkpointer") is saver
+
+
+def test_for_qgis_wraps_graph_to_force_inline_tool_execution(monkeypatch) -> None:
+    """``for_qgis`` returns a wrapper that patches the LangGraph executor.
+
+    LangGraph's ``ToolNode`` always offloads tool calls to a worker
+    thread pool. Under QGIS that corrupts iface and crashes the
+    process; the QGIS path must run tools inline on the calling
+    thread. The wrapper applied by ``for_qgis`` swaps
+    ``langgraph.prebuilt.tool_node.get_executor_for_config`` for the
+    duration of each ``invoke()`` / ``stream()`` / ``ainvoke()`` /
+    ``astream()`` call, then restores it on exit.
+    """
+    import langgraph.prebuilt.tool_node as _tool_node_mod
+
+    from geoagent.tools._inline_executor import _InlineExecutor
+
+    captured: dict[str, object] = {}
+
+    class _FakeInner:
+        def invoke(self, *args, **kwargs):
+            # Snapshot the executor factory at the moment ``invoke`` runs.
+            captured["executor"] = _tool_node_mod.get_executor_for_config({})
+            return "ok"
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: lambda **_: _FakeInner()
+    )
+
+    original = _tool_node_mod.get_executor_for_config
+    agent = for_qgis(MockQGISIface(), llm=_fake_llm(), include_stac=False)
+
+    result = agent.invoke({"messages": []})
+
+    assert result == "ok"
+    assert isinstance(captured["executor"], _InlineExecutor)
+    # Restored after the call returns.
+    assert _tool_node_mod.get_executor_for_config is original
+
+
+def test_for_qgis_wrapper_forwards_other_attributes(monkeypatch) -> None:
+    """Non-overridden methods / attributes pass through to the inner graph.
+
+    The wrapper only wraps invoke / stream / ainvoke / astream;
+    everything else (``get_state``, custom attrs, etc.) must be
+    visible via ``__getattr__``.
+    """
+
+    class _FakeInner:
+        custom_attr = 42
+
+        def get_state(self):
+            return "inner-state"
+
+    import geoagent.core.factory as factory_mod
+
+    monkeypatch.setattr(
+        factory_mod, "_require_deepagents", lambda: lambda **_: _FakeInner()
+    )
+
+    agent = for_qgis(MockQGISIface(), llm=_fake_llm(), include_stac=False)
+    assert agent.custom_attr == 42
+    assert agent.get_state() == "inner-state"
