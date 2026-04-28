@@ -154,17 +154,29 @@ class GeoAgent:
             return other.chat(query)
 
         if (
-            self._context.metadata.get("integration") == "nasa_opera"
+            self._context.metadata.get("integration")
+            in {"nasa_earthdata", "nasa_opera"}
             and self._qgis_safe_mode
             and is_qt_gui_thread()
         ):
+            integration = self._context.metadata.get("integration")
+            label = (
+                "NASA Earthdata" if integration == "nasa_earthdata" else "NASA OPERA"
+            )
+            helper = (
+                "the NASA Earthdata AI Assistant panel"
+                if integration == "nasa_earthdata"
+                else (
+                    "the NASA OPERA AI Assistant panel or "
+                    "geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "
+                    "for direct QGIS-console workflows"
+                )
+            )
             return GeoAgentResponse(
                 success=False,
                 error_message=(
-                    "NASA OPERA chat should be launched from a worker thread inside "
-                    "QGIS. Use the NASA OPERA AI Assistant panel or "
-                    "geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "
-                    "for direct QGIS-console workflows."
+                    f"{label} chat should be launched from a worker thread inside "
+                    f"QGIS. Use {helper}."
                 ),
                 map=self._context.map_obj,
             )
