@@ -26,6 +26,7 @@ from geoagent.core.factory import (
     for_anymap,
     for_gee_data_catalogs,
     for_leafmap,
+    for_nasa_earthdata,
     for_nasa_opera,
     for_qgis,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "for_anymap",
     "for_gee_data_catalogs",
     "for_leafmap",
+    "for_nasa_earthdata",
     "for_nasa_opera",
     "for_qgis",
     "geo_tool",

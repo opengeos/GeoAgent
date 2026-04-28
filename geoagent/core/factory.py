@@ -16,8 +16,27 @@ from geoagent.core.agent import GeoAgent
 from geoagent.tools.anymap import anymap_tools
 from geoagent.tools.gee_data_catalogs import gee_data_catalogs_tools
 from geoagent.tools.leafmap import leafmap_tools
+from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
+
+NASA_EARTHDATA_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS for the NASA Earthdata plugin.
+Use the NASA Earthdata tools to search the dataset catalog, search CMR
+granules, display footprints, and load raster assets into the current QGIS
+project.
+
+Workflow guidance:
+- Search the catalog first when the user names a topic rather than an exact
+  NASA Earthdata short name.
+- If the user gives no location, use the current QGIS map extent.
+- Search granules before displaying footprints or loading rasters.
+- For raster display, choose a specific COG or GeoTIFF data link from search
+  results. Loading data can download protected assets and requires user
+  confirmation.
+- Keep responses concise and include dataset short names, result counts,
+  date ranges, and relevant first-result identifiers when available.
+"""
 
 NASA_OPERA_SYSTEM_PROMPT = """\
 You are an AI assistant embedded in QGIS for NASA OPERA satellite data.
@@ -94,8 +113,10 @@ def assemble_tools(
     include_leafmap: bool = False,
     include_anymap: bool = False,
     include_qgis: bool = False,
+    include_nasa_earthdata: bool = False,
     include_nasa_opera: bool = False,
     include_gee_data_catalogs: bool = False,
+    nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     fast: bool = False,
 ) -> tuple[list[Any], GeoToolRegistry]:
@@ -114,6 +135,16 @@ def assemble_tools(
         qt = _filter_by_imports(qgis_tools(context.qgis_iface, context.qgis_project))
         register_all_tools(registry, qt)
         collected.extend(qt)
+    if include_nasa_earthdata:
+        earthdata_tool_list = _filter_by_imports(
+            earthdata_tools(
+                context.qgis_iface,
+                context.qgis_project,
+                plugin=nasa_earthdata_plugin,
+            )
+        )
+        register_all_tools(registry, earthdata_tool_list)
+        collected.extend(earthdata_tool_list)
     if include_nasa_opera:
         opera_tools = _filter_by_imports(
             nasa_opera_tools(context.qgis_iface, context.qgis_project)
@@ -336,6 +367,60 @@ def for_nasa_opera(
     )
 
 
+def for_nasa_earthdata(
+    iface: Any,
+    project: Any = None,
+    *,
+    plugin: Any | None = None,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+) -> GeoAgent:
+    """Bind an agent to the NASA Earthdata QGIS plugin runtime.
+
+    The factory exposes native NASA Earthdata tools and, by default, the
+    general QGIS map/project tools used for navigation and layer management.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "nasa_earthdata",
+            "system_prompt": NASA_EARTHDATA_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_nasa_earthdata=True,
+        nasa_earthdata_plugin=plugin,
+        extra_tools=extra_tools,
+        fast=fast,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 def for_gee_data_catalogs(
     iface: Any,
     project: Any = None,
@@ -396,6 +481,7 @@ __all__ = [
     "for_anymap",
     "for_gee_data_catalogs",
     "for_leafmap",
+    "for_nasa_earthdata",
     "for_nasa_opera",
     "for_qgis",
     "register_all_tools",
