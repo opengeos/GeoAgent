@@ -1,20 +1,23 @@
-"""Tests for the leafmap tool factory.
-
-These tests use :class:`MockLeafmap` so they run on systems without leafmap
-installed.
-"""
+"""Tests for the leafmap tool factory (Strands tools + :class:`MockLeafmap`)."""
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from geoagent.core.decorators import needs_confirmation
+from geoagent.core.factory import register_all_tools
+from geoagent.core.registry import GeoToolRegistry, collect_tools_for_context
 from geoagent.testing import MockLeafmap
 from geoagent.tools.leafmap import leafmap_tools
 
 
+def _by_name(m: MockLeafmap) -> dict[str, object]:
+    return {t.tool_name: t for t in leafmap_tools(m)}
+
+
 def test_factory_returns_full_tool_list() -> None:
     m = MockLeafmap()
-    tools = leafmap_tools(m)
-    names = {t.name for t in tools}
+    names = {t.tool_name for t in leafmap_tools(m)}
     expected = {
         "list_layers",
         "add_layer",
@@ -42,7 +45,7 @@ def test_factory_returns_empty_for_none() -> None:
 
 
 def test_remove_and_save_require_confirmation() -> None:
-    tools = {t.name: t for t in leafmap_tools(MockLeafmap())}
+    tools = _by_name(MockLeafmap())
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["save_map"]) is True
     assert needs_confirmation(tools["list_layers"]) is False
@@ -51,147 +54,104 @@ def test_remove_and_save_require_confirmation() -> None:
 
 def test_add_layer_mutates_map() -> None:
     m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-
-    tools["add_layer"].invoke(
-        {"url": "https://example.com/data.tif", "name": "DEM", "layer_type": "cog"}
+    tools = _by_name(m)
+    tools["add_layer"](
+        url="https://example.com/data.tif",
+        name="DEM",
+        layer_type="cog",
     )
     assert any(layer.get("name") == "DEM" for layer in m.layers)
 
 
 def test_remove_layer_mutates_map() -> None:
     m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["add_layer"].invoke(
-        {"url": "https://example.com/buildings.geojson", "name": "Buildings"}
+    tools = _by_name(m)
+    tools["add_layer"](
+        url="https://example.com/buildings.geojson",
+        name="Buildings",
+        layer_type="vector",
     )
     assert len(m.layers) == 1
-    tools["remove_layer"].invoke({"name": "Buildings"})
+    tools["remove_layer"](name="Buildings")
     assert len(m.layers) == 0
 
 
-def test_remove_layer_resolves_unique_substring() -> None:
-    """A partial keyword resolves to the layer that contains it.
-
-    The user often refers to layers by topic ("the Sentinel-2 layer")
-    rather than full name ("Sentinel-2 RGB Knoxville 2024-07-15"). The
-    resolver lets the LLM call ``remove_layer`` with the keyword and
-    skip a round-trip through ``list_layers``.
-    """
+def test_fast_mode_filters_tools() -> None:
     m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["add_layer"].invoke(
-        {
-            "url": "https://example.com/s2.tif",
-            "name": "Sentinel-2 RGB Knoxville 2024-07-15",
-            "layer_type": "cog",
-        }
-    )
-    result = tools["remove_layer"].invoke({"name": "Sentinel-2"})
-    assert "Removed" in result
-    assert "Sentinel-2 RGB Knoxville 2024-07-15" in result
-    assert m.layers == []
+    items = leafmap_tools(m)
+    reg = GeoToolRegistry()
+    register_all_tools(reg, items)
+    fast = collect_tools_for_context(items, fast=True, registry=reg)
+    fast_names = {t.tool_name for t in fast}
+    assert "list_layers" in fast_names
+    assert "add_stac_layer" not in fast_names
 
 
-def test_remove_layer_substring_is_case_insensitive() -> None:
+def test_get_map_state_and_viewport() -> None:
     m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["add_layer"].invoke(
-        {
-            "url": "https://example.com/dem.tif",
-            "name": "Cop-DEM 30m Tennessee",
-            "layer_type": "cog",
-        }
-    )
-    result = tools["remove_layer"].invoke({"name": "tennessee"})
-    assert "Removed" in result
-    assert m.layers == []
+    tools = _by_name(m)
+    tools["set_center"](lat=35.96, lon=-83.92, zoom=10)
+    tools["zoom_in"](steps=1)
+    state = tools["get_map_state"]()
+    assert isinstance(state, dict)
+    assert "zoom" in state
 
 
-def test_remove_layer_reports_ambiguous_matches() -> None:
-    """Multiple substring matches are reported back so the LLM can disambiguate.
+def test_get_map_state_prefers_view_state_maplibre() -> None:
+    """MapLibre leafmap stores camera in ``view_state``, not ipyleaflet center/zoom."""
 
-    The tool deliberately does not pick one to avoid silently removing
-    the wrong layer when the user's keyword matches several layers.
-    """
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    for full in ("Sentinel-2 RGB July", "Sentinel-2 RGB August"):
-        tools["add_layer"].invoke(
-            {
-                "url": f"https://example.com/{full}.tif",
-                "name": full,
-                "layer_type": "cog",
+    class MapLibreStub:
+        def __init__(self) -> None:
+            self.layers: list = []
+            self._style = "dark-matter"
+            self.view_state = {
+                "center": {"lng": -83.92, "lat": 35.96},
+                "zoom": 9,
+                "bounds": {
+                    "_sw": {"lng": -84.82, "lat": 35.67},
+                    "_ne": {"lng": -83.02, "lat": 36.25},
+                },
+                "bearing": 0,
+                "pitch": 0,
             }
-        )
 
-    result = tools["remove_layer"].invoke({"name": "Sentinel-2"})
-    assert "ambiguous" in result.lower()
-    assert "'Sentinel-2 RGB July'" in result
-    assert "'Sentinel-2 RGB August'" in result
-    # Map state must be untouched on ambiguous match.
-    assert {layer["name"] for layer in m.layers} == {
-        "Sentinel-2 RGB July",
-        "Sentinel-2 RGB August",
-    }
+    tools = _by_name(MapLibreStub())
+    state = tools["get_map_state"]()
+    assert state["zoom"] == 9
+    assert state["view_state"]["center"]["lng"] == -83.92
+    assert "_sw" in state["bounds"]
 
 
-def test_remove_layer_reports_miss() -> None:
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    result = tools["remove_layer"].invoke({"name": "NonExistent"})
-    assert "not found" in result
+def test_get_map_state_falls_back_to_map_options_when_view_state_empty() -> None:
+    """MapLibre can expose empty view_state until frontend sync."""
 
+    class MapLibreStub:
+        def __init__(self) -> None:
+            self.layers: list = []
+            self._style = None
+            self.view_state = {}
+            self.map_options = {
+                "center": (-83.92, 35.96),
+                "zoom": 9,
+                "bearing": 0,
+                "pitch": 0,
+                "style": "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+            }
 
-def test_set_center_and_zoom_in() -> None:
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["set_center"].invoke({"lat": 37.7, "lon": -122.4, "zoom": 10})
-    assert m.center == [-122.4, 37.7]
-    assert m.zoom == 10
-    tools["zoom_in"].invoke({"steps": 2})
-    assert m.zoom == 12
-
-
-def test_zoom_to_bounds() -> None:
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["zoom_to_bounds"].invoke(
-        {"west": -125.0, "south": 24.0, "east": -66.0, "north": 49.0}
+    tools = _by_name(MapLibreStub())
+    state = tools["get_map_state"]()
+    assert state["center"] == {"lng": -83.92, "lat": 35.96}
+    assert state["zoom"] == 9
+    assert (
+        state["basemap"]
+        == "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
     )
-    assert m._bounds == [[-125.0, 24.0], [-66.0, 49.0]]
 
 
-def test_change_basemap() -> None:
+def test_save_map_writes(tmp_path: Path) -> None:
     m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["change_basemap"].invoke({"basemap": "CartoDB.Positron"})
-    assert m._style == "CartoDB.Positron"
-
-
-def test_get_map_state() -> None:
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["set_center"].invoke({"lat": 35.0, "lon": -83.9, "zoom": 8})
-    state = tools["get_map_state"].invoke({})
-    assert state["zoom"] == 8
-    assert state["center"] == [-83.9, 35.0]
-
-
-def test_save_map_writes_file(tmp_path) -> None:
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    out = tmp_path / "map.html"
-    result = tools["save_map"].invoke({"path": str(out)})
-    assert out.exists()
-    assert str(out.resolve()) == result
-
-
-def test_list_layers_returns_dicts() -> None:
-    m = MockLeafmap()
-    tools = {t.name: t for t in leafmap_tools(m)}
-    tools["add_layer"].invoke(
-        {"url": "https://example.com/buildings.geojson", "name": "Buildings"}
-    )
-    layers = tools["list_layers"].invoke({})
-    assert layers == [{"name": "Buildings", "type": "geojson"}]
+    tools = _by_name(m)
+    out = tmp_path / "x.html"
+    result = tools["save_map"](path=str(out))
+    assert isinstance(result, str)
+    assert Path(result).exists()

@@ -1,39 +1,5 @@
 # Subagents
 
-Phase 2 replaced the v0.x 4-agent class hierarchy with declarative deepagents subagent specs. Each module here exposes either a constant `*_SUBAGENT` dict (no runtime state) or a factory function returning one. `default_subagents(ctx)` assembles the active list from the runtime `GeoAgentContext`.
+GeoAgent **2.x** uses a **single Strands `Agent`** by default for low latency. Optional multi-agent patterns (agents-as-tools in Strands) may be documented in a future release.
 
-## Coordinator
-
-::: geoagent.agents.coordinator
-
-## Planner
-
-::: geoagent.agents.planner
-
-## Data
-
-::: geoagent.agents.data
-
-## Analysis
-
-::: geoagent.agents.analysis
-
-## Context
-
-::: geoagent.agents.context
-
-## Mapping
-
-::: geoagent.agents.mapping
-
-## QGIS
-
-::: geoagent.agents.qgis
-
-## GeoAI
-
-::: geoagent.agents.geoai
-
-## NASA Earthdata
-
-::: geoagent.agents.earthdata
+See [Strands multi-agent docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/agents-as-tools/).

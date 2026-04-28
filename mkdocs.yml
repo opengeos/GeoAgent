@@ -82,26 +82,18 @@ nav:
     - Contributing: contributing.md
     - Examples:
         - examples/intro.ipynb
-        - examples/stac_search.ipynb
-        - examples/maplibre_viz.ipynb
         - examples/live_mapping.ipynb
-        - examples/earth_science_queries.ipynb
-        - examples/contextual_qa.ipynb
-        - examples/event_monitoring.ipynb
-        - examples/hitl_confirm.ipynb
-        - examples/custom_tools.ipynb
+        - examples/qgis_agent.ipynb
     - API Reference:
         - GeoAgent: geoagent.md
         - Factory: factory.md
+        - Model: model.md
         - Context: context.md
         - Result: result.md
         - Decorators: decorators.md
         - Registry: registry.md
         - Safety: safety.md
-        - Subagents: agents.md
         - System Prompts: prompts.md
-        - LLM: llm.md
-        - Catalogs: catalogs.md
         - Tools: tools.md
         - Web UI: ui.md
 

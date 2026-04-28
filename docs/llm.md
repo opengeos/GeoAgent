@@ -1,5 +1,5 @@
-# LLM Provider
+# Models
 
-Multi-provider LLM abstraction supporting OpenAI, Anthropic, Google Gemini, and Ollama.
+The LangChain-era `geoagent.core.llm` module was replaced by **`geoagent.core.model`** (`resolve_model`, `get_llm`, `GeoAgentConfig`).
 
-::: geoagent.core.llm
+See [Model](model.md) for API reference.

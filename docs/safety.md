@@ -1,5 +1,5 @@
-# Safety and Confirmation
+# Safety and confirmation
 
-GeoAgent classifies tools as either safe (read-only inspection, navigation, preview) or confirmation-required (remove, save, export, download, run long jobs). Confirmation-required tools are wired into deepagents' `interrupt_on` so the agent pauses before they execute. The host application supplies a `ConfirmCallback` to bridge those interrupts to its UI.
+GeoAgent marks tools with `requires_confirmation`, `destructive`, or `long_running` metadata. At runtime, `ConfirmationHookProvider` handles Strands `BeforeToolCallEvent` and calls your `ConfirmCallback`; denied calls set `cancel_tool` on the event.
 
 ::: geoagent.core.safety

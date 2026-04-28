@@ -27,20 +27,11 @@ jobs:
               uses: actions/setup-python@v6
               with:
                   python-version: ${{ matrix.config.py }}
-            - name: Install GDAL
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install --no-cache-dir Cython
-                  pip install --find-links=https://girder.github.io/large_image_wheels --no-cache GDAL
-            - name: Test GDAL installation
-              run: |
-                  python -c "from osgeo import gdal"
-                  gdalinfo --version
             - name: Install dependencies
               run: |
-                  pip install --user -r requirements.txt
-                  pip install pytest
-                  pip install .
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+                  pip install -e ".[dev]"
             - name: PKG-TEST
               run: |
                   pytest tests/ -v

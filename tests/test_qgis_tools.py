@@ -32,7 +32,7 @@ def test_factory_returns_tools_for_iface() -> None:
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = qgis_tools(iface, project)
-    names = {t.name for t in tools}
+    names = {t.tool_name for t in tools}
     expected = {
         "list_project_layers",
         "get_active_layer",
@@ -56,7 +56,7 @@ def test_factory_returns_tools_for_iface() -> None:
 def test_remove_layer_and_run_processing_require_confirmation() -> None:
     iface = MockQGISIface()
     project = MockQGISProject()
-    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["run_processing_algorithm"]) is True
     assert needs_confirmation(tools["zoom_in"]) is False
@@ -66,9 +66,11 @@ def test_remove_layer_and_run_processing_require_confirmation() -> None:
 def test_add_vector_layer_invokes_iface() -> None:
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    tools["add_vector_layer"].invoke(
-        {"path_or_uri": "/tmp/x.shp", "name": "Roads", "provider": "ogr"}
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    tools["add_vector_layer"](
+        path_or_uri="/tmp/x.shp",
+        name="Roads",
+        provider="ogr",
     )
     assert "Roads" in project.mapLayers()
 
@@ -77,8 +79,8 @@ def test_remove_layer_drops_from_project() -> None:
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     project.addMapLayer(MockQGISLayer("Buildings", "/tmp/b.shp"))
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    out = tools["remove_layer"].invoke({"layer_name": "Buildings"})
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    out = tools["remove_layer"](layer_name="Buildings")
     assert "Buildings" not in project.mapLayers()
     assert "Removed" in out
 
@@ -86,9 +88,9 @@ def test_remove_layer_drops_from_project() -> None:
 def test_zoom_in_invokes_canvas() -> None:
     iface = MockQGISIface()
     project = MockQGISProject()
-    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     initial_scale = iface.mapCanvas().scale_value
-    tools["zoom_in"].invoke({})
+    tools["zoom_in"]()
     assert iface.mapCanvas().scale_value == initial_scale / 2
 
 
@@ -97,8 +99,8 @@ def test_list_project_layers() -> None:
     project.addMapLayer(MockQGISLayer("A", "a.shp", "vector"))
     project.addMapLayer(MockQGISLayer("B", "b.tif", "raster"))
     iface = MockQGISIface(project=project)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    layers = tools["list_project_layers"].invoke({})
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    layers = tools["list_project_layers"]()
     names = {layer["name"] for layer in layers}
     assert names == {"A", "B"}
 
@@ -106,8 +108,8 @@ def test_list_project_layers() -> None:
 def test_get_active_layer_returns_none_when_unset() -> None:
     iface = MockQGISIface()
     project = MockQGISProject()
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    out = tools["get_active_layer"].invoke({})
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    out = tools["get_active_layer"]()
     assert out == {"active_layer": None}
 
 
@@ -117,8 +119,8 @@ def test_get_active_layer_returns_metadata() -> None:
     layer = MockQGISLayer("Active", "a.shp", "vector")
     project.addMapLayer(layer)
     iface.setActiveLayer(layer)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    out = tools["get_active_layer"].invoke({})
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    out = tools["get_active_layer"]()
     assert out["name"] == "Active"
     assert out["source"] == "a.shp"
 
@@ -128,8 +130,8 @@ def test_zoom_to_layer_resolves_layer() -> None:
     iface = MockQGISIface(project=project)
     layer = MockQGISLayer("Target", "t.shp")
     project.addMapLayer(layer)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    tools["zoom_to_layer"].invoke({"layer_name": "Target"})
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    tools["zoom_to_layer"](layer_name="Target")
     assert iface.activeLayer() is layer
 
 
@@ -198,8 +200,8 @@ def test_zoom_to_layer_transforms_extent_when_layer_crs_differs(monkeypatch) -> 
     monkeypatch.setitem(sys.modules, "qgis", fake_qgis)
     monkeypatch.setitem(sys.modules, "qgis.core", fake_qgs_core)
 
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    tools["zoom_to_layer"].invoke({"layer_name": "Buildings"})
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    tools["zoom_to_layer"](layer_name="Buildings")
 
     assert canvas.extent() == transformed_extent, (
         "zoom_to_layer must hand the canvas an extent in the canvas CRS, "
@@ -276,14 +278,12 @@ def test_zoom_to_extent_transforms_bbox_to_canvas_crs(monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "qgis.core", fake_qgs_core)
 
     project = MockQGISProject()
-    tools = {t.name: t for t in qgis_tools(iface, project)}
-    tools["zoom_to_extent"].invoke(
-        {
-            "west": seattle_latlon[0],
-            "south": seattle_latlon[1],
-            "east": seattle_latlon[2],
-            "north": seattle_latlon[3],
-        }
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    tools["zoom_to_extent"](
+        west=seattle_latlon[0],
+        south=seattle_latlon[1],
+        east=seattle_latlon[2],
+        north=seattle_latlon[3],
     )
 
     assert canvas.extent() == seattle_mercator, (
@@ -310,9 +310,9 @@ def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
         "Buildings", "/tmp/b.shp", extent=(-115.3, 36.1, -115.0, 36.3)
     )
     project.addMapLayer(layer)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     before_refresh = canvas.refresh_count
-    tools["zoom_to_layer"].invoke({"layer_name": "Buildings"})
+    tools["zoom_to_layer"](layer_name="Buildings")
     assert canvas.extent() == (-115.3, 36.1, -115.0, 36.3)
     assert canvas.refresh_count == before_refresh + 1
 
@@ -320,15 +320,30 @@ def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
 def test_zoom_to_layer_raises_when_missing() -> None:
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
-    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     with pytest.raises(LookupError):
-        tools["zoom_to_layer"].invoke({"layer_name": "NotThere"})
+        tools["zoom_to_layer"](layer_name="NotThere")
 
 
 def test_refresh_canvas_increments_counter() -> None:
     iface = MockQGISIface()
     project = MockQGISProject()
-    tools = {t.name: t for t in qgis_tools(iface, project)}
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     before = iface.mapCanvas().refresh_count
-    tools["refresh_canvas"].invoke({})
+    tools["refresh_canvas"]()
     assert iface.mapCanvas().refresh_count == before + 1
+
+
+def test_qgis_tools_route_calls_through_gui_marshal(monkeypatch) -> None:
+    iface = MockQGISIface()
+    project = MockQGISProject()
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    calls: list[str] = []
+
+    def _marshal(func):
+        calls.append("called")
+        return func()
+
+    monkeypatch.setitem(qgis_tools.__globals__, "run_on_qt_gui_thread", _marshal)
+    tools["zoom_in"]()
+    assert calls == ["called"]

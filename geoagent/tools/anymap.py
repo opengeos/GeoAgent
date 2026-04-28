@@ -12,13 +12,12 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from langchain_core.tools import BaseTool
-
 from geoagent.core.decorators import geo_tool
+from geoagent.tools._map_state import map_state_from_widget
 from geoagent.tools.leafmap import _safe_call
 
 
-def anymap_tools(m: Any) -> list[BaseTool]:
+def anymap_tools(m: Any) -> list[Any]:
     """Build the anymap tool set bound to a live map instance.
 
     Args:
@@ -26,15 +25,13 @@ def anymap_tools(m: Any) -> list[BaseTool]:
             ``None`` returns an empty list.
 
     Returns:
-        A list of LangChain ``BaseTool`` instances.
+        A list of Strands tool objects.
     """
     if m is None:
         return []
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def list_layers() -> list[dict[str, Any]]:
         """List the layers currently on the map.
@@ -63,8 +60,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def add_layer(url: str, name: str, layer_type: str = "auto") -> str:
         """Add a layer to the map by URL.
@@ -104,8 +99,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
     @geo_tool(
         category="map",
         requires_confirmation=True,
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def remove_layer(name: str) -> str:
         """Remove a named layer from the map.
@@ -125,8 +118,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def set_center(lat: float, lon: float, zoom: Optional[int] = None) -> str:
         """Centre the map on a coordinate.
@@ -144,8 +135,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def set_zoom(zoom: int) -> str:
         """Set the zoom level.
@@ -164,8 +153,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def zoom_in(steps: int = 1) -> str:
         """Zoom in by a number of steps."""
@@ -179,8 +166,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def zoom_out(steps: int = 1) -> str:
         """Zoom out by a number of steps."""
@@ -194,8 +179,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def zoom_to_bounds(west: float, south: float, east: float, north: float) -> str:
         """Zoom the map to a bounding box.
@@ -215,8 +198,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def change_basemap(basemap: str) -> str:
         """Change the basemap style.
@@ -232,8 +213,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def add_vector_data(
         path_or_url: str,
@@ -261,8 +240,6 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def add_raster_data(
         path_or_url: str,
@@ -290,24 +267,14 @@ def anymap_tools(m: Any) -> list[BaseTool]:
 
     @geo_tool(
         category="map",
-        requires_packages=("anymap",),
-        context_keys=("map_obj",),
     )
     def get_map_state() -> dict[str, Any]:
-        """Return centre, zoom, bounds, basemap, and layer count."""
-        return {
-            "center": list(getattr(m, "center", []) or []),
-            "zoom": getattr(m, "zoom", None),
-            "bounds": getattr(m, "_bounds", None),
-            "basemap": getattr(m, "_style", None),
-            "layer_count": len(getattr(m, "layers", []) or []),
-        }
+        """Return map camera state; MapLibre-like maps use ``view_state``."""
+        return map_state_from_widget(m)
 
     @geo_tool(
         category="map",
         requires_confirmation=True,
-        requires_packages=("anymap",),
-        context_keys=("map_obj", "workdir"),
     )
     def save_map(path: str) -> str:
         """Export the map to a standalone HTML file.

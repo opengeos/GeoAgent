@@ -14,12 +14,12 @@ import subprocess
 
 def _run_streamlit_app() -> int:
     try:
-        from geoagent.ui import APP_PATH
+        from geoagent.ui import PAGES_DIR
     except Exception as e:
         print(f"Failed to locate UI app: {e}")
         return 1
 
-    cmd = [sys.executable, "-m", "solara", "run", APP_PATH]
+    cmd = [sys.executable, "-m", "solara", "run", PAGES_DIR]
     try:
         return subprocess.call(cmd)
     except FileNotFoundError:

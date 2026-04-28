@@ -1,286 +1,155 @@
 # GeoAgent
 
-[![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/opengeos/GeoAgent/blob/main)
-[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/opengeos/GeoAgent/HEAD)
-[![image](https://img.shields.io/pypi/v/geoagent.svg)](https://pypi.python.org/pypi/geoagent)
-[![image](https://static.pepy.tech/badge/geoagent)](https://pepy.tech/project/geoagent)
-[![Conda Recipe](https://img.shields.io/badge/recipe-geoagent-green.svg)](https://github.com/conda-forge/geoagent-feedstock)
-[![image](https://img.shields.io/conda/vn/conda-forge/geoagent.svg)](https://anaconda.org/conda-forge/geoagent)
-[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/geoagent.svg)](https://anaconda.org/conda-forge/geoagent)
-[![image](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**GeoAgent** is a centralized AI agent layer for Open Geospatial Python stacks and QGIS plugins. Downstream packages (**geoai**, **leafmap**, **anymap**, **geemap**, QGIS GeoAI / GEE Catalogs / NASA Earthdata plugins, …) reuse one framework instead of each shipping duplicate orchestration code.
 
-A centralized AI agent framework for Open Geospatial Python packages and QGIS plugins. GeoAgent is the shared AI layer that lets `leafmap`, `anymap`, `geoai`, `geemap`, and QGIS plugins (GeoAI, GEE Data Catalogs, NASA Earthdata, ...) plug their tools into a common agent runtime built on [DeepAgents](https://github.com/langchain-ai/deepagents) without each project re-implementing its own orchestration.
+Version **2.x** is built on **[Strands Agents](https://strandsagents.com/)** ([sdk-python](https://github.com/strands-agents/sdk-python)): one Python `Agent`, custom `@geo_tool` wrappers, multiple model providers, hooks for safety/confirmation, and direct tool calls via `agent.strands_agent.tool.<name>(...)`.
 
-- **Documentation**: <https://geoagent.gishub.org>
-- **Source code**: <https://github.com/opengeos/GeoAgent>
-- **PyPI**: <https://pypi.python.org/pypi/geoagent>
+---
 
-## Why a centralized agent layer?
+## Why a shared agent layer?
 
-Downstream packages should focus on what they do best — mapping, ML, data access — and leave agent orchestration to a single place. GeoAgent provides:
+- **One mental model** for tools, prompts, provider configuration, and human-in-the-loop confirmation.
+- **Thin adapters** per environment (`for_leafmap`, `for_anymap`, `for_qgis`) bind live objects (`leafmap.Map`, `anymap.Map`, `qgis.utils.iface`) via closures so secrets and widgets never cross the LLM boundary incorrectly.
+- **Low latency by default**: a single agent, short prompts, optional **`fast=True`** mode with a reduced tool surface for simple map actions.
 
-- A **DeepAgents-based core** that handles tool calling, subagent dispatch, human-in-the-loop confirmation, and conversation state.
-- **Tool adapters** that wrap live runtime objects (a `leafmap.Map`, an `anymap.Map`, the QGIS `iface`, a GeoAI workflow) into LangChain tools the agent can call directly.
-- A **`@geo_tool` decorator** with safety classification so destructive operations (remove, save, export, download, run-processing) require user approval before they execute.
-- A **runtime context** (`GeoAgentContext`) that carries the current map, QGIS interface, working directory, and user preferences into every tool invocation.
-- **Per-package helpers** — `geoagent.for_leafmap(m)`, `geoagent.for_anymap(m)`, `geoagent.for_qgis(iface)` — that build a ready-to-use agent in one line.
-
-Downstream packages register their own tools via `register_many(my_tools)` and instantiate an agent via `geoagent.create_geo_agent(...)`; they do not depend on `langgraph`, `langchain-openai`, or any LLM SDK directly.
-
-## Features
-
-- **Centralized agent runtime** built on [DeepAgents](https://github.com/langchain-ai/deepagents) (LangGraph under the hood)
-- **Live map control** for `leafmap.Map` and `anymap.Map`: list/add/remove layers, zoom, pan, change basemap, save HTML
-- **QGIS plugin integration**, import-safe outside QGIS — the `qgis` package is never imported at module load
-- **GeoAI workflows**: segmentation, object detection, image classification (when `geoai` is installed)
-- **Earth Engine** and **NASA Earthdata** tools (opt-in extras)
-- **STAC search** across Earth Search, Planetary Computer, USGS, and NASA CMR catalogs
-- **Spatial SQL** with DuckDB for GeoParquet and Overture Maps
-- **Raster** (xarray / rioxarray / rasterio) and **vector** (geopandas) analysis tools
-- **Multi-LLM support**: OpenAI, Anthropic, Google Gemini, Ollama
-- **Human-in-the-loop confirmation** via a pluggable `ConfirmCallback` for destructive operations
-- **Code transparency** — generated Python code is returned for reproducibility
-- **Mock-friendly testing** with `geoagent.testing` mocks for leafmap, anymap, and QGIS
+---
 
 ## Installation
 
-GeoAgent v1.0 requires **Python 3.11+**.
-
 ```bash
-pip install geoagent
+pip install GeoAgent
 ```
 
-Or install from conda-forge:
+**Core** wheels pull in `strands-agents` and `pydantic` only. Geospatial stacks are optional extras (see `pyproject.toml`):
+
+| Extra | Purpose |
+|-------|---------|
+| `GeoAgent[openai]` | OpenAI models via Strands |
+| `GeoAgent[anthropic]` | Anthropic Claude |
+| `GeoAgent[ollama]` | Local Ollama |
+| `GeoAgent[leafmap]` | leafmap for live maps |
+| `GeoAgent[anymap]` | anymap |
+| `GeoAgent[stac]` | STAC client stack (Phase 2 tools) |
+| `GeoAgent[earthdata]` | NASA Earthdata (`earthaccess`) |
+| `GeoAgent[geoai]` | geoai |
+| `GeoAgent[earthengine]` | Earth Engine API |
+| `GeoAgent[ui]` | Solara UI helper deps |
+
+Developers:
 
 ```bash
-conda install -c conda-forge geoagent
+pip install -e ".[dev]"
+pre-commit install
 ```
 
-### Optional extras
+---
 
-Pick the extras you need; the base install stays lightweight.
+## Provider configuration
 
-| Extra | Adds | When to install |
-|---|---|---|
-| `[openai]` | `langchain-openai` | OpenAI / Azure OpenAI models |
-| `[anthropic]` | `langchain-anthropic` | Anthropic Claude models |
-| `[google]` | `langchain-google-genai` | Google Gemini models |
-| `[ollama]` | `langchain-ollama` | Local Ollama models |
-| `[llm]` | all of the above |  |
-| `[anymap]` | `anymap` | anymap-based maps |
-| `[geoai]` | `geoai` | GeoAI segmentation / detection / classification |
-| `[earthengine]` | `earthengine-api` | Google Earth Engine |
-| `[nasa_earthdata]` | `earthaccess` | NASA Earthdata search & download |
-| `[ui]` | `solara` | the Solara web UI |
-| `[all]` | everything above |  |
+Set API keys with environment variables (no hardcoded secrets):
 
-```bash
-# Common combos
-pip install "geoagent[openai,leafmap]"       # leafmap + OpenAI agent
-pip install "geoagent[anthropic,geoai]"      # Claude + GeoAI segmentation
-pip install "geoagent[ollama]"               # local LLM only
-pip install "geoagent[all]"                  # everything
-```
+- **OpenAI**: `OPENAI_API_KEY`, optional `OPENAI_MODEL`
+- **Anthropic**: `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL`
+- **AWS Bedrock**: standard AWS credential chain + model access
+- **Ollama**: `OLLAMA_HOST` (default `http://127.0.0.1:11434`), optional `OLLAMA_MODEL`
 
-QGIS itself is environment-installed (system package), so the `[qgis]` marker extra exists for completeness; the QGIS tools auto-detect QGIS at runtime.
+`GeoAgentConfig` (`provider`, `model`, `temperature`, `max_tokens`, …) overrides env defaults.
 
-## LLM setup
+---
 
-GeoAgent supports multiple LLM providers. You need at least one configured to use the agent.
-
-| Provider       | Default Model                | API Key Env Variable | Install Extra                       |
-| -------------- | ---------------------------- | -------------------- | ----------------------------------- |
-| OpenAI         | `gpt-5.5`                    | `OPENAI_API_KEY`     | `pip install "geoagent[openai]"`    |
-| Anthropic      | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY`  | `pip install "geoagent[anthropic]"` |
-| Google Gemini  | `gemini-3.1-flash-lite-preview`           | `GOOGLE_API_KEY`     | `pip install "geoagent[google]"`    |
-| Ollama (local) | `llama3.1`                   | *(none needed)*      | `pip install "geoagent[ollama]"`    |
-
-### Setting API keys
-
-```bash
-export OPENAI_API_KEY="your-openai-key"
-export ANTHROPIC_API_KEY="your-anthropic-key"
-export GOOGLE_API_KEY="your-google-key"
-```
-
-By default, GeoAgent auto-detects the first provider with credentials in the order OpenAI → Anthropic → Google → Ollama. To pick a provider and model explicitly:
+## Quickstart
 
 ```python
-from geoagent import GeoAgent
+from geoagent import GeoAgent, GeoAgentConfig
 
-agent = GeoAgent()                                          # auto-detect
-agent = GeoAgent(provider="anthropic")                      # named provider
-agent = GeoAgent(provider="openai", model="gpt-5.4-mini")    # provider + model
+# Uses provider inferred from environment (see GeoAgentConfig).
+agent = GeoAgent(config=GeoAgentConfig(provider="openai", model="gpt-4o-mini"))
+resp = agent.chat("Explain what STAC is in two sentences.")
+print(resp.answer_text)
 ```
 
-### Local LLMs via Ollama
+### leafmap
 
 ```bash
-ollama pull llama3.1
-pip install "geoagent[ollama]"
+pip install "GeoAgent[leafmap,openai]"
 ```
-
-```python
-agent = GeoAgent(provider="ollama", model="llama3.1")
-```
-
-### Custom LangChain chat model
-
-```python
-from langchain_openai import ChatOpenAI
-
-llm = ChatOpenAI(model="gpt-5.4", temperature=0.0)
-agent = GeoAgent(llm=llm)
-```
-
-## Quick start
-
-```python
-from geoagent import GeoAgent
-
-agent = GeoAgent()
-result = agent.chat("Show NDVI for San Francisco in July 2024")
-result.map          # interactive map widget for Jupyter
-print(result.code)  # the generated Python code
-```
-
-## Working with a live map (leafmap / anymap)
 
 ```python
 import leafmap
 from geoagent import for_leafmap
 
-m = leafmap.Map(center=[35.96, -83.92], zoom=10)
+m = leafmap.Map()
 agent = for_leafmap(m)
-
-agent.invoke({"messages": [
-    {"role": "user", "content": "Add a Sentinel-2 layer for Knoxville and zoom to it."}
-]})
-
-m  # the agent has mutated the map in place
+agent.chat("Change the basemap to CartoDB Positron and zoom in.")
 ```
 
-The same pattern works for `anymap`:
+### anymap
 
 ```python
-from anymap import Map
 from geoagent import for_anymap
 
-agent = for_anymap(Map())
+agent = for_anymap(m)  # m = anymap.Map(...)
 ```
 
-## Working from a QGIS plugin
+### QGIS
 
 ```python
 from qgis.utils import iface
 from geoagent import for_qgis
 
 agent = for_qgis(iface)
-agent.invoke({"messages": [
-    {"role": "user", "content": "Zoom to the active layer and list all project layers."}
-]})
+agent.chat("List layers in this project.")
 ```
 
-The QGIS adapter is **import-safe outside QGIS**: `import geoagent.tools.qgis` works on any Python and the tool list is empty until a real `iface` is supplied. You can also pre-build agents in headless tests with the supplied mocks.
+`geoagent.tools.qgis` stays **import-safe** without QGIS: it never imports `qgis` at module import time.
+
+### Advanced: custom tools
+
+```python
+from geoagent import create_agent, GeoAgentContext, geo_tool
+
+@geo_tool(category="demo")
+def hello(name: str) -> str:
+    """Greet the user."""
+    return f"Hello, {name}"
+
+agent = create_agent(context=GeoAgentContext(), tools=[hello()])
+```
+
+---
 
 ## Safety and confirmation
 
-Tools are classified as either safe (inspect, list, zoom, pan, get-state, generate-code) or **confirmation-required** (remove, delete, save, export, download, run long processing jobs, submit Earth Engine tasks). Confirmation-required tools are wired into deepagents' `interrupt_on` so the agent pauses before they execute.
+Tools carry metadata (`requires_confirmation`, `destructive`, `long_running`). Before a gated tool runs, Strands **`BeforeToolCallEvent`** hooks call your **`ConfirmCallback`**. If you do not pass one, **`auto_approve_safe_only`** denies every confirmation request (nothing destructive runs silently).
 
-The host application supplies a `ConfirmCallback` to bridge those interrupts to its UI:
+---
 
-```python
-from geoagent import GeoAgent, ConfirmRequest
+## Downstream integration
 
-def confirm(request: ConfirmRequest) -> bool:
-    print(f"Approve {request.tool_name}({request.args})? [y/N]")
-    return input().strip().lower() == "y"
+1. Add `GeoAgent` as a dependency with the extras you need.
+2. At runtime, build an agent with `for_leafmap` / `for_anymap` / `for_qgis` or `create_agent`.
+3. Wire `confirm=` to your UI (Qt dialog in QGIS, modal in Jupyter, CLI `input()`, etc.).
+4. Optionally expose **`agent.strands_agent`** for power users who want raw Strands streaming or `agent.tool.*` direct execution.
 
-agent = GeoAgent(confirm=confirm)
-```
+---
 
-Built-in callbacks ship for Jupyter (`input()` prompt), Solara (modal dialog), and CLI (`y/N`); the default `auto_approve_safe_only` rejects every confirmation request, so confirmation-required tools never run silently.
+## Examples
 
-## Defining your own tool
+Runnable Jupyter notebooks live under **`docs/examples/`** — intro, MapLibre (`live_mapping`), and QGIS mock (`qgis_agent`) — see `examples/README.md`. Prompt ideas:
 
-Tools are plain Python functions wrapped with `@geo_tool`. The decorator produces a LangChain `BaseTool`, so the result plugs straight into `create_geo_agent(tools=[...])`.
+- “List the layers on the current map.”
+- “Zoom to Knoxville, Tennessee.”
+- “Inspect the fields of the active QGIS layer.”
 
-```python
-from geoagent import geo_tool, create_geo_agent
-
-@geo_tool(category="data", requires_confirmation=False)
-def search_my_catalog(query: str, limit: int = 10) -> list[dict]:
-    """Search a domain-specific catalog and return matches."""
-    ...
-
-agent = create_geo_agent(tools=[search_my_catalog])
-```
-
-Confirmation-required tools auto-populate `interrupt_on`:
-
-```python
-@geo_tool(category="io", requires_confirmation=True)
-def overwrite_dataset(path: str) -> str:
-    """Overwrite an existing dataset."""
-    ...
-```
-
-## Web UI
-
-GeoAgent includes a Solara-based chat interface with a persistent, interactive map.
-
-```bash
-pip install "geoagent[ui]"
-geoagent ui
-```
-
-Or run directly:
-
-```bash
-solara run geoagent/ui/pages
-```
-
-Features:
-- **Persistent map** — layers accumulate across queries on the same interactive MapLibre map
-- **Native widget rendering** — full bidirectional map interaction (zoom, pan, click)
-- **Chat interface** — natural language queries with real-time status updates
-- **Provider selection** — switch between OpenAI, Anthropic, Google Gemini, or Ollama
-- **Code transparency** — toggle generated code display for reproducibility
-
-You can also launch it programmatically:
-
-```python
-from geoagent.ui import launch_ui
-
-launch_ui()
-```
-
-## Architecture
-
-```
-geoagent/
-├── core/             # @geo_tool, GeoAgentContext, registry, safety, factory
-├── tools/            # leafmap / anymap / qgis / geoai / earthengine /
-│   └── data/         #   nasa_earthdata / stac + raster, vector, duckdb, viz
-├── agents/           # subagent specs (mapping, qgis, geoai, earthdata, ...)
-├── integrations/     # jupyter, qgis plugin, solara, cli helpers
-├── testing/          # MockLeafmap, MockAnymap, MockQGISIface, MockQGISProject
-└── ui/               # Solara pages
-```
-
-The runtime is a [DeepAgents](https://github.com/langchain-ai/deepagents) `create_deep_agent` graph configured with:
-
-- **Tools** assembled by per-package factories (`leafmap_tools(m)`, `qgis_tools(iface)`, ...) and registered with `@geo_tool` metadata
-- **Subagents** for planning, data search, raster/vector analysis, mapping, QGIS, GeoAI, and Earthdata workflows
-- **`interrupt_on`** auto-built from tool metadata for human-in-the-loop confirmation
-- **`context_schema=GeoAgentContext`** to carry runtime state into tools
-
-## Migration from v0.x
-
-GeoAgent v1.0 is a substantial rewrite. The core public API (`from geoagent import GeoAgent; agent.chat(...)`) is preserved, but internals are now built on [DeepAgents](https://github.com/langchain-ai/deepagents) and require Python 3.11+. The legacy LangChain 0.3 / LangGraph 0.2 stack is no longer used; deepagents pulls LangChain 1.x transitively.
-
-If you held references to legacy modules under `geoagent.core.tools.*`, they continue to work as-is for now and are also re-exported (with `@geo_tool` metadata) from the new `geoagent.tools.*` and `geoagent.tools.data.*` paths.
+---
 
 ## License
 
-MIT
+MIT — see `LICENSE`.
+
+---
+
+## Links
+
+- [Strands Agents documentation](https://strandsagents.com/)
+- [Repository](https://github.com/opengeos/GeoAgent)

@@ -1,14 +1,4 @@
-"""Runtime context object passed to GeoAgent runs.
-
-The :class:`GeoAgentContext` is a thin dataclass that carries non-LLM-visible
-runtime state into tool invocations: the live map widget, the QGIS interface
-and project handles, the working directory, and user preferences. Live mutable
-objects (the map widget, the QGIS iface) are typically captured via closure in
-the tool factories under :mod:`geoagent.tools`; LLM-visible scalars (workdir,
-current layer, user_preferences) are exposed to deepagents as a typed
-``context_schema`` and accessed by tools through LangChain's ``ToolRuntime``
-injection.
-"""
+"""Runtime context for GeoAgent tools and prompts."""
 
 from __future__ import annotations
 
@@ -19,25 +9,20 @@ from typing import Any, Optional
 
 @dataclass
 class GeoAgentContext:
-    """Runtime context for a GeoAgent invocation.
+    """Scalar and handle fields for a GeoAgent run.
+
+    Live objects (map widgets, QGIS iface) are normally captured via closure
+    in tool factories; this dataclass holds references for prompts and tools
+    that read context explicitly.
 
     Attributes:
-        map_obj: A live interactive map instance (e.g. ``leafmap.Map`` or
-            ``anymap.Map``). Captured by closure in :func:`leafmap_tools` /
-            :func:`anymap_tools`; not serialised across the LLM boundary.
-        qgis_iface: The QGIS ``QgisInterface`` (typically ``qgis.utils.iface``)
-            when running inside a QGIS Python environment.
-        qgis_project: The active ``QgsProject`` handle. Optional even when
-            ``qgis_iface`` is provided; tools fall back to
-            ``QgsProject.instance()``.
-        workdir: Working directory used for downloads, exports, and other I/O
-            tools. Defaults to the current working directory.
-        current_layer: Optional name of the layer the user most recently
-            referenced. The coordinator may set this so subsequent commands
-            ("zoom to it", "buffer the selected layer") have a target.
-        user_preferences: Free-form user-level preferences (e.g. preferred
-            basemap, default colormap). Tools and prompts may consult this
-            dict to tailor outputs.
+        map_obj: leafmap.Map, anymap.Map, or similar.
+        qgis_iface: QGIS ``QgisInterface`` when inside QGIS.
+        qgis_project: Optional ``QgsProject`` (tools may fall back to instance).
+        workdir: Working directory for downloads and exports.
+        current_layer: Optional layer name hint for follow-up commands.
+        user_preferences: Free-form preferences for prompts/tools.
+        metadata: Arbitrary JSON-serializable metadata for integrations.
     """
 
     map_obj: Optional[Any] = None
@@ -46,16 +31,10 @@ class GeoAgentContext:
     workdir: Path = field(default_factory=Path.cwd)
     current_layer: Optional[str] = None
     user_preferences: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def with_overrides(self, **kwargs: Any) -> "GeoAgentContext":
-        """Return a copy of this context with selected fields overridden.
-
-        Args:
-            **kwargs: Field overrides; unknown fields raise ``TypeError``.
-
-        Returns:
-            A new :class:`GeoAgentContext` instance.
-        """
+        """Return a copy with selected fields replaced."""
         from dataclasses import replace
 
         return replace(self, **kwargs)

@@ -1,128 +1,129 @@
-"""Capability-tagged tool registry.
-
-The registry is a process-wide singleton dict that lets downstream packages
-register :func:`geoagent.core.decorators.geo_tool`-decorated tools and lets
-the agent factory pick a subset of them at construction time. Tools whose
-``requires_packages`` are not importable are silently filtered out so that
-``import geoagent.tools.qgis`` works on a non-QGIS Python without raising.
-
-Typical usage in a downstream package's tool module::
-
-    from geoagent.core.registry import register
-    from geoagent.core.decorators import geo_tool
-
-    @register
-    @geo_tool(category="data", requires_packages=("pystac_client",))
-    def my_tool(...): ...
-
-The factory then calls :func:`get_tools` with category filters to assemble
-the active tool list for an agent.
-"""
+"""GeoAgent tool metadata registry."""
 
 from __future__ import annotations
 
-from importlib.util import find_spec
-from typing import Iterable, Optional
-
-from langchain_core.tools import BaseTool
-
-from .decorators import get_geo_meta
-
-_TOOLS: dict[str, BaseTool] = {}
-_PKG_CACHE: dict[str, bool] = {}
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Sequence
 
 
-def _have(pkg: str) -> bool:
-    """Cached check for whether a Python package is importable.
+@dataclass
+class GeoToolMeta:
+    """Metadata for a registered Strands tool."""
 
-    Args:
-        pkg: A top-level distribution / module name (e.g. ``"qgis"``,
-            ``"leafmap"``).
-
-    Returns:
-        ``True`` if the package can be located by
-        :func:`importlib.util.find_spec`.
-    """
-    if pkg not in _PKG_CACHE:
-        try:
-            _PKG_CACHE[pkg] = find_spec(pkg) is not None
-        except (ImportError, ValueError):
-            _PKG_CACHE[pkg] = False
-    return _PKG_CACHE[pkg]
+    name: str
+    description: str = ""
+    category: str = "general"
+    requires_confirmation: bool = False
+    destructive: bool = False
+    long_running: bool = False
+    available_in: tuple[str, ...] = ("full",)
+    requires_packages: tuple[str, ...] = ()
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
-def register(tool: BaseTool) -> BaseTool:
-    """Register a single tool in the global registry.
+class GeoToolRegistry:
+    """Maps tool names to :class:`GeoToolMeta`."""
 
-    Idempotent: re-registering a tool with the same name overwrites the
-    previous entry. Returns the tool to support decorator-style usage.
+    def __init__(self) -> None:
+        self._by_name: dict[str, GeoToolMeta] = {}
 
-    Args:
-        tool: A LangChain ``BaseTool`` (typically produced by
-            :func:`geo_tool`).
+    def register_tool(self, tool_obj: Any, meta: GeoToolMeta) -> None:
+        """Register metadata for a Strands decorated tool."""
+        name = getattr(tool_obj, "tool_name", None) or meta.name
+        self._by_name[str(name)] = meta
 
-    Returns:
-        The same tool, unchanged.
-    """
-    _TOOLS[tool.name] = tool
-    return tool
+    def register(self, meta: GeoToolMeta) -> None:
+        """Register metadata by explicit name."""
+        self._by_name[meta.name] = meta
+
+    def get(self, tool_name: str) -> GeoToolMeta | None:
+        return self._by_name.get(tool_name)
+
+    def list_names(self) -> list[str]:
+        """Return registered tool names."""
+        return sorted(self._by_name.keys())
+
+    def get_all_tools_config(self) -> list[dict[str, Any]]:
+        """Return tool metadata as serializable config records.
+
+        Mirrors the type of inspection users expect from Strands-facing
+        registries while preserving GeoAgent-specific metadata.
+        """
+        out: list[dict[str, Any]] = []
+        for name in self.list_names():
+            meta = self._by_name[name]
+            out.append(
+                {
+                    "name": meta.name,
+                    "description": meta.description,
+                    "category": meta.category,
+                    "requires_confirmation": meta.requires_confirmation,
+                    "destructive": meta.destructive,
+                    "long_running": meta.long_running,
+                    "available_in": list(meta.available_in),
+                    "requires_packages": list(meta.requires_packages),
+                    "extra": dict(meta.extra),
+                }
+            )
+        return out
+
+    def needs_user_confirmation(self, meta: GeoToolMeta) -> bool:
+        """Return True if the tool should go through the confirm callback."""
+        return bool(meta.requires_confirmation or meta.destructive or meta.long_running)
 
 
-def register_many(tools: Iterable[BaseTool]) -> None:
-    """Register an iterable of tools.
-
-    Args:
-        tools: Tools to register.
-    """
-    for t in tools:
-        register(t)
-
-
-def unregister(name: str) -> None:
-    """Remove a tool from the registry by name. No-op if absent."""
-    _TOOLS.pop(name, None)
-
-
-def clear() -> None:
-    """Remove all registered tools. Primarily useful in tests."""
-    _TOOLS.clear()
-
-
-def all_tools() -> list[BaseTool]:
-    """Return every registered tool, regardless of availability."""
-    return list(_TOOLS.values())
+# Names allowed in fast mode when metadata lacks explicit ``available_in``.
+FAST_TOOL_FALLBACK: frozenset[str] = frozenset(
+    {
+        # leafmap / anymap (same function names)
+        "list_layers",
+        "get_map_state",
+        "zoom_in",
+        "zoom_out",
+        "set_zoom",
+        "set_center",
+        "change_basemap",
+        # qgis (safe navigation / inspection)
+        "list_project_layers",
+        "get_active_layer",
+        "zoom_to_layer",
+        "inspect_layer_fields",
+        "refresh_canvas",
+        "zoom_to_extent",
+    }
+)
 
 
-def get_tools(
-    categories: Optional[Iterable[str]] = None,
-    available_only: bool = True,
-) -> list[BaseTool]:
-    """Return registered tools filtered by category and availability.
+def collect_tools_for_context(
+    tool_objects: Sequence[Any],
+    *,
+    fast: bool,
+    registry: GeoToolRegistry,
+) -> list[Any]:
+    """Filter tools for fast mode using metadata or :data:`FAST_TOOL_FALLBACK`."""
 
-    Args:
-        categories: If provided, only return tools whose ``category`` is in
-            this iterable. ``None`` returns all categories.
-        available_only: If ``True`` (the default), drop tools whose
-            ``requires_packages`` are not importable.
+    if not fast:
+        return list(tool_objects)
 
-    Returns:
-        A list of matching ``BaseTool`` instances, in insertion order.
-    """
-    cats = set(categories) if categories else None
-    out: list[BaseTool] = []
-    for tool in _TOOLS.values():
-        meta = get_geo_meta(tool)
-        if cats is not None and meta.get("category") not in cats:
+    out: list[Any] = []
+    for t in tool_objects:
+        name = getattr(t, "tool_name", None)
+        if name is None:
             continue
-        if available_only:
-            required = meta.get("requires_packages", [])
-            if required and not all(_have(pkg) for pkg in required):
-                continue
-        out.append(tool)
+        meta = registry.get(str(name))
+        if meta is not None and "fast" in meta.available_in:
+            out.append(t)
+            continue
+        if str(name) in FAST_TOOL_FALLBACK:
+            out.append(t)
     return out
 
 
-def is_available(tool: BaseTool) -> bool:
-    """Return whether ``tool``'s required Python packages are importable."""
-    required = get_geo_meta(tool).get("requires_packages", [])
-    return all(_have(pkg) for pkg in required)
+def packages_available(requires: Iterable[str]) -> bool:
+    """Return True if every named package is importable."""
+    for pkg in requires:
+        try:
+            __import__(pkg)
+        except ImportError:
+            return False
+    return True

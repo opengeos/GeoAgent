@@ -19,9 +19,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from langchain_core.tools import BaseTool
-
 from geoagent.core.decorators import geo_tool
+from geoagent.tools._qt_marshal import run_on_qt_gui_thread
 
 
 def _transform_extent_to_canvas_crs(layer: Any, canvas: Any, extent: Any) -> Any:
@@ -166,7 +165,7 @@ def _resolve_layer(project: Any, layer_name: str) -> Any:
     return layers[0]
 
 
-def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
+def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
     """Build the QGIS tool set bound to a live ``QgisInterface``.
 
     Args:
@@ -178,15 +177,25 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
             back to ``QgsProject.instance()``.
 
     Returns:
-        A list of LangChain ``BaseTool`` instances. Empty when ``iface`` is
+        A list of Strands tool objects. Empty when ``iface`` is
         ``None``.
     """
     if iface is None:
         return []
 
+    def _on_gui(func: Any) -> Any:
+        return run_on_qt_gui_thread(func)
+
     def _project() -> Any:
         if project is not None:
             return project
+        if hasattr(iface, "project"):
+            try:
+                proj = iface.project()
+                if proj is not None:
+                    return proj
+            except Exception:
+                pass
         try:
             from qgis.core import QgsProject  # type: ignore[import-not-found]
 
@@ -198,8 +207,6 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface", "qgis_project"),
     )
     def list_project_layers() -> list[dict[str, Any]]:
         """List all layers in the active QGIS project.
@@ -207,21 +214,23 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A list of dicts ``{"name": ..., "type": ..., "source": ...}``.
         """
-        out: list[dict[str, Any]] = []
-        for layer in _project().mapLayers().values():
-            out.append(
-                {
-                    "name": layer.name(),
-                    "type": str(layer.type()),
-                    "source": layer.source(),
-                }
-            )
-        return out
+
+        def _run() -> list[dict[str, Any]]:
+            out: list[dict[str, Any]] = []
+            for layer in _project().mapLayers().values():
+                out.append(
+                    {
+                        "name": layer.name(),
+                        "type": str(layer.type()),
+                        "source": layer.source(),
+                    }
+                )
+            return out
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def get_active_layer() -> dict[str, Any]:
         """Return metadata for the currently active layer.
@@ -230,19 +239,21 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
             A dict with ``name``, ``type``, and ``source`` keys, or a single
             ``{"active_layer": None}`` if no layer is active.
         """
-        layer = iface.activeLayer()
-        if layer is None:
-            return {"active_layer": None}
-        return {
-            "name": layer.name(),
-            "type": str(layer.type()),
-            "source": layer.source(),
-        }
+
+        def _run() -> dict[str, Any]:
+            layer = iface.activeLayer()
+            if layer is None:
+                return {"active_layer": None}
+            return {
+                "name": layer.name(),
+                "type": str(layer.type()),
+                "source": layer.source(),
+            }
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def zoom_in() -> str:
         """Zoom the QGIS map canvas in by one step.
@@ -250,13 +261,15 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        iface.mapCanvas().zoomIn()
-        return "Zoomed in."
+
+        def _run() -> str:
+            iface.mapCanvas().zoomIn()
+            return "Zoomed in."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def zoom_out() -> str:
         """Zoom the QGIS map canvas out by one step.
@@ -264,13 +277,15 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        iface.mapCanvas().zoomOut()
-        return "Zoomed out."
+
+        def _run() -> str:
+            iface.mapCanvas().zoomOut()
+            return "Zoomed out."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface", "qgis_project"),
     )
     def zoom_to_layer(layer_name: str) -> str:
         """Zoom the canvas to the extent of a named layer.
@@ -281,39 +296,41 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        layer = _resolve_layer(_project(), layer_name)
-        iface.setActiveLayer(layer)
-        canvas = iface.mapCanvas()
-        # Prefer the explicit ``setExtent`` + ``refresh`` path over
-        # ``iface.zoomToActiveLayer()``. The latter updates the extent
-        # but does not always trigger XYZ tile providers (Google
-        # Satellite, OSM, ESRI) to refetch tiles at the new zoom-pyramid
-        # level, leaving basemaps stuck on upscaled lower-resolution
-        # tiles. ``setExtent`` + ``refresh`` mirrors the path QGIS uses
-        # for user-driven zoom and resolves the tile pyramid correctly.
-        # ``iface.zoomToActiveLayer`` stays as a fallback for canvas
-        # types where ``setExtent`` is unavailable (e.g. test mocks
-        # without the method) — call it AFTER setExtent so the iface
-        # path runs only when needed.
-        extent = layer.extent() if hasattr(layer, "extent") else None
-        if extent is not None and hasattr(canvas, "setExtent"):
-            # Re-project from the layer's CRS to the canvas / project
-            # CRS before applying the extent. A GeoJSON loaded as
-            # EPSG:4326 has a lat/lon extent that ``setExtent`` would
-            # otherwise interpret as Web-Mercator metres, zooming to
-            # ~(0, 0) and rendering as a blank canvas.
-            extent = _transform_extent_to_canvas_crs(layer, canvas, extent)
-            canvas.setExtent(extent)
-            if hasattr(canvas, "refresh"):
-                canvas.refresh()
-        elif hasattr(iface, "zoomToActiveLayer"):
-            iface.zoomToActiveLayer()
-        return f"Zoomed to layer {layer_name!r}."
+
+        def _run() -> str:
+            layer = _resolve_layer(_project(), layer_name)
+            iface.setActiveLayer(layer)
+            canvas = iface.mapCanvas()
+            # Prefer the explicit ``setExtent`` + ``refresh`` path over
+            # ``iface.zoomToActiveLayer()``. The latter updates the extent
+            # but does not always trigger XYZ tile providers (Google
+            # Satellite, OSM, ESRI) to refetch tiles at the new zoom-pyramid
+            # level, leaving basemaps stuck on upscaled lower-resolution
+            # tiles. ``setExtent`` + ``refresh`` mirrors the path QGIS uses
+            # for user-driven zoom and resolves the tile pyramid correctly.
+            # ``iface.zoomToActiveLayer`` stays as a fallback for canvas
+            # types where ``setExtent`` is unavailable (e.g. test mocks
+            # without the method) — call it AFTER setExtent so the iface
+            # path runs only when needed.
+            extent = layer.extent() if hasattr(layer, "extent") else None
+            if extent is not None and hasattr(canvas, "setExtent"):
+                # Re-project from the layer's CRS to the canvas / project
+                # CRS before applying the extent. A GeoJSON loaded as
+                # EPSG:4326 has a lat/lon extent that ``setExtent`` would
+                # otherwise interpret as Web-Mercator metres, zooming to
+                # ~(0, 0) and rendering as a blank canvas.
+                extent = _transform_extent_to_canvas_crs(layer, canvas, extent)
+                canvas.setExtent(extent)
+                if hasattr(canvas, "refresh"):
+                    canvas.refresh()
+            elif hasattr(iface, "zoomToActiveLayer"):
+                iface.zoomToActiveLayer()
+            return f"Zoomed to layer {layer_name!r}."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def zoom_to_extent(
         west: float,
@@ -344,16 +361,18 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        canvas = iface.mapCanvas()
-        rect = _transform_bbox_to_canvas_crs(canvas, west, south, east, north, crs)
-        canvas.setExtent(rect)
-        canvas.refresh()
-        return f"Zoomed to extent [{west}, {south}, {east}, {north}] ({crs})."
+
+        def _run() -> str:
+            canvas = iface.mapCanvas()
+            rect = _transform_bbox_to_canvas_crs(canvas, west, south, east, north, crs)
+            canvas.setExtent(rect)
+            canvas.refresh()
+            return f"Zoomed to extent [{west}, {south}, {east}, {north}] ({crs})."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def add_vector_layer(
         path_or_uri: str,
@@ -370,15 +389,17 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        layer = iface.addVectorLayer(path_or_uri, name, provider)
-        if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
-            return f"Failed to load vector layer from {path_or_uri!r}."
-        return f"Added vector layer {name!r}."
+
+        def _run() -> str:
+            layer = iface.addVectorLayer(path_or_uri, name, provider)
+            if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
+                return f"Failed to load vector layer from {path_or_uri!r}."
+            return f"Added vector layer {name!r}."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def add_raster_layer(path_or_uri: str, name: str) -> str:
         """Add a raster layer to the project.
@@ -390,16 +411,18 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        layer = iface.addRasterLayer(path_or_uri, name)
-        if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
-            return f"Failed to load raster layer from {path_or_uri!r}."
-        return f"Added raster layer {name!r}."
+
+        def _run() -> str:
+            layer = iface.addRasterLayer(path_or_uri, name)
+            if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
+                return f"Failed to load raster layer from {path_or_uri!r}."
+            return f"Added raster layer {name!r}."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
         requires_confirmation=True,
-        requires_packages=("qgis",),
-        context_keys=("qgis_project",),
     )
     def remove_layer(layer_name: str) -> str:
         """Remove a layer from the project.
@@ -410,21 +433,23 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        proj = _project()
-        layers = proj.mapLayersByName(layer_name)
-        if not layers:
-            return f"Layer {layer_name!r} not found."
-        for layer in layers:
-            try:
-                proj.removeMapLayer(layer.id())
-            except Exception:
-                proj.removeMapLayer(layer)
-        return f"Removed layer {layer_name!r}."
+
+        def _run() -> str:
+            proj = _project()
+            layers = proj.mapLayersByName(layer_name)
+            if not layers:
+                return f"Layer {layer_name!r} not found."
+            for layer in layers:
+                try:
+                    proj.removeMapLayer(layer.id())
+                except Exception:
+                    proj.removeMapLayer(layer)
+            return f"Removed layer {layer_name!r}."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_project",),
     )
     def set_layer_visibility(layer_name: str, visible: bool) -> str:
         """Show or hide a layer in the layer panel.
@@ -436,23 +461,25 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        proj = _project()
-        layer = _resolve_layer(proj, layer_name)
-        # Try the layer-tree-based path first; fall back to a simple attribute.
-        try:
-            tree_layer = proj.layerTreeRoot().findLayer(layer.id())  # type: ignore[attr-defined]
-            tree_layer.setItemVisibilityChecked(bool(visible))
-        except Exception:
+
+        def _run() -> str:
+            proj = _project()
+            layer = _resolve_layer(proj, layer_name)
+            # Try the layer-tree-based path first; fall back to a simple attribute.
             try:
-                layer.visible = bool(visible)
-            except Exception as exc:
-                return f"Could not set visibility on {layer_name!r}: {exc}"
-        return f"Layer {layer_name!r} visibility set to {visible}."
+                tree_layer = proj.layerTreeRoot().findLayer(layer.id())  # type: ignore[attr-defined]
+                tree_layer.setItemVisibilityChecked(bool(visible))
+            except Exception:
+                try:
+                    layer.visible = bool(visible)
+                except Exception as exc:
+                    return f"Could not set visibility on {layer_name!r}: {exc}"
+            return f"Layer {layer_name!r} visibility set to {visible}."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_project",),
     )
     def inspect_layer_fields(layer_name: str) -> list[dict[str, Any]]:
         """List fields and types for a vector layer.
@@ -463,28 +490,32 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A list of ``{"name": ..., "type": ...}`` per field.
         """
-        layer = _resolve_layer(_project(), layer_name)
-        out: list[dict[str, Any]] = []
-        for field in layer.fields():
-            if isinstance(field, dict):
-                out.append(
-                    {"name": field.get("name", ""), "type": field.get("type", "")}
-                )
-            else:
-                out.append(
-                    {
-                        "name": getattr(field, "name", lambda: "")(),
-                        "type": str(
-                            getattr(field, "typeName", lambda: type(field).__name__)()
-                        ),
-                    }
-                )
-        return out
+
+        def _run() -> list[dict[str, Any]]:
+            layer = _resolve_layer(_project(), layer_name)
+            out: list[dict[str, Any]] = []
+            for field in layer.fields():
+                if isinstance(field, dict):
+                    out.append(
+                        {"name": field.get("name", ""), "type": field.get("type", "")}
+                    )
+                else:
+                    out.append(
+                        {
+                            "name": getattr(field, "name", lambda: "")(),
+                            "type": str(
+                                getattr(
+                                    field, "typeName", lambda: type(field).__name__
+                                )()
+                            ),
+                        }
+                    )
+            return out
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface", "qgis_project"),
     )
     def get_selected_features(
         layer_name: Optional[str] = None,
@@ -499,28 +530,30 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
             A list of feature dicts (mock-friendly; the QGIS path returns a
             simple ``{"id": ..., "attributes": ...}``).
         """
-        if layer_name is None:
-            layer = iface.activeLayer()
-            if layer is None:
-                return []
-        else:
-            layer = _resolve_layer(_project(), layer_name)
-        features = layer.selectedFeatures()
-        out: list[dict[str, Any]] = []
-        for feature in features:
-            if isinstance(feature, dict):
-                out.append(feature)
+
+        def _run() -> list[dict[str, Any]]:
+            if layer_name is None:
+                layer = iface.activeLayer()
+                if layer is None:
+                    return []
             else:
-                attrs = getattr(feature, "attributes", lambda: [])()
-                fid = getattr(feature, "id", lambda: None)()
-                out.append({"id": fid, "attributes": list(attrs)})
-        return out
+                layer = _resolve_layer(_project(), layer_name)
+            features = layer.selectedFeatures()
+            out: list[dict[str, Any]] = []
+            for feature in features:
+                if isinstance(feature, dict):
+                    out.append(feature)
+                else:
+                    attrs = getattr(feature, "attributes", lambda: [])()
+                    fid = getattr(feature, "id", lambda: None)()
+                    out.append({"id": fid, "attributes": list(attrs)})
+            return out
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
         requires_confirmation=True,
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def run_processing_algorithm(
         algorithm_id: str, parameters: dict[str, Any]
@@ -534,16 +567,20 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             The algorithm's result dictionary.
         """
-        try:
-            import processing  # type: ignore[import-not-found]
-        except Exception as exc:  # pragma: no cover - QGIS-only path
-            raise RuntimeError("QGIS Processing framework is not available.") from exc
-        return processing.run(algorithm_id, parameters)
+
+        def _run() -> dict[str, Any]:
+            try:
+                import processing  # type: ignore[import-not-found]
+            except Exception as exc:  # pragma: no cover - QGIS-only path
+                raise RuntimeError(
+                    "QGIS Processing framework is not available."
+                ) from exc
+            return processing.run(algorithm_id, parameters)
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def open_attribute_table(layer_name: str) -> str:
         """Open the attribute table for a layer.
@@ -554,16 +591,18 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        layer = _resolve_layer(_project(), layer_name)
-        iface.setActiveLayer(layer)
-        if hasattr(iface, "showAttributeTable"):
-            iface.showAttributeTable(layer)  # type: ignore[attr-defined]
-        return f"Attribute table requested for {layer_name!r}."
+
+        def _run() -> str:
+            layer = _resolve_layer(_project(), layer_name)
+            iface.setActiveLayer(layer)
+            if hasattr(iface, "showAttributeTable"):
+                iface.showAttributeTable(layer)  # type: ignore[attr-defined]
+            return f"Attribute table requested for {layer_name!r}."
+
+        return _on_gui(_run)
 
     @geo_tool(
         category="qgis",
-        requires_packages=("qgis",),
-        context_keys=("qgis_iface",),
     )
     def refresh_canvas() -> str:
         """Refresh the QGIS map canvas.
@@ -571,8 +610,12 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[BaseTool]:
         Returns:
             A status string.
         """
-        iface.mapCanvas().refresh()
-        return "Canvas refreshed."
+
+        def _run() -> str:
+            iface.mapCanvas().refresh()
+            return "Canvas refreshed."
+
+        return _on_gui(_run)
 
     return [
         list_project_layers,
