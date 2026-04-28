@@ -87,11 +87,11 @@ def assemble_tools(
         register_all_tools(registry, qt)
         collected.extend(qt)
     if include_nasa_opera:
-        ot = _filter_by_imports(
+        opera_tools = _filter_by_imports(
             nasa_opera_tools(context.qgis_iface, context.qgis_project)
         )
-        register_all_tools(registry, ot)
-        collected.extend(ot)
+        register_all_tools(registry, opera_tools)
+        collected.extend(opera_tools)
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)

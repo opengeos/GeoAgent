@@ -11,9 +11,12 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
+import uuid
 from datetime import datetime
 from typing import Any, Callable, Optional
+from urllib.parse import urlparse
 
 from geoagent.core.decorators import geo_tool
 from geoagent.tools._qt_marshal import run_on_qt_gui_thread
@@ -90,8 +93,35 @@ def _earthdata_login() -> None:
     )
 
 
+_SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _safe_filename(value: str, *, fallback: str = "opera") -> str:
+    """Return a filesystem-safe basename derived from a user-provided string.
+
+    Strips path separators, query strings, and other non-portable characters so
+    the result can be joined with a temp/cache directory without escaping it.
+    """
+    candidate = os.path.basename(value or "").strip()
+    candidate = _SAFE_NAME_RE.sub("_", candidate).strip("._")
+    return candidate or fallback
+
+
+def _filename_from_url(url: str, *, fallback: str = "opera") -> str:
+    """Return a stable basename for ``url`` ignoring query strings."""
+    parsed = urlparse(url)
+    raw = os.path.basename(parsed.path) if parsed.scheme else os.path.basename(url)
+    return _safe_filename(raw, fallback=fallback)
+
+
 def _setup_gdal_for_earthdata() -> tuple[bool, Optional[str]]:
-    """Configure GDAL for Earthdata S3 access."""
+    """Configure GDAL for Earthdata S3 access.
+
+    TLS verification stays enabled by default. To work around hosts with broken
+    certificate chains, set ``GEOAGENT_OPERA_INSECURE_SSL=1`` in the
+    environment. The unsafe option is opt-in because it disables verification
+    for every subsequent GDAL HTTP read in the QGIS process.
+    """
     try:
         import earthaccess
         from osgeo import gdal
@@ -107,7 +137,12 @@ def _setup_gdal_for_earthdata() -> tuple[bool, Optional[str]]:
         gdal.SetConfigOption(
             "CPL_VSIL_CURL_ALLOWED_EXTENSIONS", ".tif,.TIF,.tiff,.TIFF"
         )
-        gdal.SetConfigOption("GDAL_HTTP_UNSAFESSL", "YES")
+        if os.environ.get("GEOAGENT_OPERA_INSECURE_SSL", "").lower() in {
+            "1",
+            "true",
+            "yes",
+        }:
+            gdal.SetConfigOption("GDAL_HTTP_UNSAFESSL", "YES")
         cookies = os.path.expanduser("~/cookies.txt")
         gdal.SetConfigOption("GDAL_HTTP_COOKIEFILE", cookies)
         gdal.SetConfigOption("GDAL_HTTP_COOKIEJAR", cookies)
@@ -500,7 +535,8 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         The tool tries GDAL virtual-file streaming first, then falls back to
         downloading the file through ``earthaccess``.
         """
-        name = layer_name or url.rstrip("/").split("/")[-1] or "OPERA Raster"
+        url_basename = _filename_from_url(url, fallback="opera_raster")
+        name = layer_name or url_basename or "OPERA Raster"
         if prefer_streaming:
             success, error = _setup_gdal_for_earthdata()
             if success:
@@ -522,7 +558,7 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             os.path.expanduser("~"), "nasa_opera_cache"
         )
         os.makedirs(target_dir, exist_ok=True)
-        local_path = os.path.join(target_dir, url.rstrip("/").split("/")[-1])
+        local_path = os.path.join(target_dir, url_basename)
         if not os.path.exists(local_path):
             downloaded = earthaccess.download([url], local_path=target_dir, threads=1)
             if downloaded:
@@ -543,6 +579,7 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         name="create_mosaic",
         requires_confirmation=True,
         long_running=True,
+        requires_packages=("osgeo", "earthaccess"),
     )
     def create_mosaic(
         urls: list[str],
@@ -552,7 +589,10 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         if not urls:
             return {"error": "No URLs provided."}
 
-        from osgeo import gdal  # type: ignore[import-not-found]
+        try:
+            from osgeo import gdal  # type: ignore[import-not-found]
+        except ImportError as exc:
+            return {"error": f"GDAL Python bindings are not available: {exc}"}
 
         success, error = _setup_gdal_for_earthdata()
         if not success:
@@ -568,7 +608,10 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         if not accessible:
             return {"error": "None of the provided OPERA URLs are accessible."}
 
-        vrt_path = os.path.join(tempfile.gettempdir(), f"{layer_name}.vrt")
+        safe_stem = _safe_filename(layer_name, fallback="opera_mosaic")
+        vrt_path = os.path.join(
+            tempfile.gettempdir(), f"{safe_stem}_{uuid.uuid4().hex}.vrt"
+        )
         vrt_ds = gdal.BuildVRT(vrt_path, accessible)
         if vrt_ds is None:
             return {"error": "Failed to build OPERA VRT mosaic."}
@@ -610,9 +653,20 @@ def submit_nasa_opera_search_task(
     reports progress through QGIS's Log Messages panel and message bar, and it
     retains the returned task in a module-level list so the task remains alive.
     """
+    if iface is None:
+        raise ValueError(
+            "submit_nasa_opera_search_task requires a QGIS iface; got None."
+        )
+
     from qgis.core import Qgis, QgsApplication, QgsTask  # type: ignore[import-not-found]
 
     tools = {tool.tool_name: tool for tool in nasa_opera_tools(iface, project)}
+    required = ("search_opera_data", "display_footprints")
+    missing = [name for name in required if name not in tools]
+    if missing:
+        raise RuntimeError(
+            "NASA OPERA tool registration missing required tools: " + ", ".join(missing)
+        )
 
     def _run(task: Any) -> dict[str, Any]:
         task.setProgress(1)
@@ -629,31 +683,40 @@ def submit_nasa_opera_search_task(
     def _finished(
         exception: BaseException | None, result: dict[str, Any] | None = None
     ) -> None:
-        if exception is not None:
+        try:
+            if exception is not None:
+                _qgis_log(
+                    iface,
+                    f"NASA OPERA search failed: {exception}",
+                    Qgis.MessageLevel.Critical,
+                )
+                if on_finished is not None:
+                    on_finished(None)
+                return
+            if result is None:
+                _qgis_log(
+                    iface,
+                    "NASA OPERA search was cancelled.",
+                    Qgis.MessageLevel.Warning,
+                )
+                if on_finished is not None:
+                    on_finished(None)
+                return
+
             _qgis_log(
                 iface,
-                f"NASA OPERA search failed: {exception}",
-                Qgis.MessageLevel.Critical,
+                f"NASA OPERA search finished: {result['count']} granules found.",
             )
+            if display_footprints:
+                footprint_result = tools["display_footprints"](layer_name=layer_name)
+                _qgis_log(iface, footprint_result)
             if on_finished is not None:
-                on_finished(None)
-            return
-        if result is None:
-            _qgis_log(
-                iface, "NASA OPERA search was cancelled.", Qgis.MessageLevel.Warning
-            )
-            if on_finished is not None:
-                on_finished(None)
-            return
-
-        _qgis_log(
-            iface, f"NASA OPERA search finished: {result['count']} granules found."
-        )
-        if display_footprints:
-            footprint_result = tools["display_footprints"](layer_name=layer_name)
-            _qgis_log(iface, footprint_result)
-        if on_finished is not None:
-            on_finished(result)
+                on_finished(result)
+        finally:
+            try:
+                _QGIS_TASKS.remove(task)
+            except ValueError:
+                pass
 
     task = QgsTask.fromFunction(
         "GeoAgent NASA OPERA search",

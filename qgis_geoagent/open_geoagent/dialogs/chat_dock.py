@@ -601,3 +601,20 @@ class ChatDockWidget(QDockWidget):
         self._last_assistant_markdown = ""
         self.copy_md_btn.setEnabled(False)
         self.transcript.clear()
+
+    def _shutdown_running_state(self):
+        """Stop the animated status timer when the dock is dismissed."""
+        try:
+            self._stop_running_status()
+        except Exception:
+            pass
+
+    def hideEvent(self, event):
+        """Stop the animated status timer when the dock is hidden."""
+        self._shutdown_running_state()
+        super().hideEvent(event)
+
+    def closeEvent(self, event):
+        """Stop the animated status timer when the dock is closed."""
+        self._shutdown_running_state()
+        super().closeEvent(event)
