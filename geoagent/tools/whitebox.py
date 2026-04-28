@@ -197,25 +197,36 @@ def _toolbox(wbt: Any, tool_name: str) -> str | None:
 
 
 def _layer_source_from_name(project: Any, layer_name: str) -> str | None:
-    """Resolve a QGIS layer display name to a file-backed data source."""
-    try:
-        matches = project.mapLayersByName(layer_name)
-    except Exception:
-        matches = []
-    if not matches:
-        return None
-    layer = matches[0]
-    try:
-        source = str(layer.source())
-    except Exception:
-        source = ""
-    source_path = source.split("|", 1)[0]
+    """Resolve a QGIS layer display name to a file-backed data source.
+
+    QGIS layer/project APIs are not thread-safe, so the actual reads are
+    marshalled onto the Qt GUI thread. Outside QGIS this degrades to a direct
+    call.
+    """
+
+    def _read_layer_source_path() -> str | None:
+        try:
+            matches = project.mapLayersByName(layer_name)
+        except Exception:
+            matches = []
+        if not matches:
+            return None
+        layer = matches[0]
+        try:
+            source = str(layer.source())
+        except Exception:
+            source = ""
+        return source.split("|", 1)[0]
+
+    source_path = run_on_qt_gui_thread(_read_layer_source_path)
     if source_path and os.path.exists(source_path):
         return source_path
-    raise ValueError(
-        f"QGIS layer '{layer_name}' is not backed by a local file. "
-        "Export the layer to a file or provide a file path for WhiteboxTools."
-    )
+    if source_path:
+        raise ValueError(
+            f"QGIS layer '{layer_name}' is not backed by a local file. "
+            "Export the layer to a file or provide a file path for WhiteboxTools."
+        )
+    return None
 
 
 def _resolve_existing_file(value: Any, project: Any) -> str:
@@ -229,7 +240,10 @@ def _resolve_existing_file(value: Any, project: Any) -> str:
     layer_path = _layer_source_from_name(project, text)
     if layer_path is not None:
         return layer_path
-    return text
+    raise ValueError(
+        f"Could not resolve existing file '{text}'. Provide a valid existing "
+        "file path or the name of a QGIS layer backed by a local file."
+    )
 
 
 def _default_output_path(tool_name: str, param: dict[str, Any], project: Any) -> str:
@@ -495,7 +509,6 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         if not isinstance(parameters, dict):
             raise ValueError("parameters must be a dictionary.")
         wbt = _wbt()
-        proj = _project()
         messages: list[str] = []
         if working_dir:
             wbt.set_working_dir(str(working_dir))
@@ -504,12 +517,17 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             wbt.set_compress_rasters(bool(compress_rasters))
         if max_procs is not None:
             wbt.set_max_procs(int(max_procs))
-        args, outputs, unknown = _build_run_args(
-            wbt=wbt,
-            tool_name=tool_name,
-            parameters=parameters,
-            project=proj,
-        )
+
+        def _resolve_args() -> tuple[list[str], list[dict[str, Any]], list[str]]:
+            proj = _project()
+            return _build_run_args(
+                wbt=wbt,
+                tool_name=tool_name,
+                parameters=parameters,
+                project=proj,
+            )
+
+        args, outputs, unknown = run_on_qt_gui_thread(_resolve_args)
         if unknown:
             raise ValueError(
                 "Unknown WhiteboxTools parameters: "
