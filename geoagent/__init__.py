@@ -24,6 +24,7 @@ from geoagent.core.safety import (
 from geoagent.core.factory import (
     create_agent,
     for_anymap,
+    for_gee_data_catalogs,
     for_leafmap,
     for_nasa_opera,
     for_qgis,
@@ -41,6 +42,7 @@ __all__ = [
     "GeoToolRegistry",
     "create_agent",
     "for_anymap",
+    "for_gee_data_catalogs",
     "for_leafmap",
     "for_nasa_opera",
     "for_qgis",
