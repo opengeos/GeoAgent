@@ -10,6 +10,7 @@ from geoagent.core.safety import ConfirmRequest
 
 
 def _build(meta: GeoToolMeta, callback) -> tuple[ConfirmationHookProvider, list[str]]:
+    """Build a confirmation hook with a small test registry."""
     registry = GeoToolRegistry()
     registry.register(meta)
     cancelled: list[str] = []
@@ -17,6 +18,7 @@ def _build(meta: GeoToolMeta, callback) -> tuple[ConfirmationHookProvider, list[
 
 
 def _event(name: str, args: dict, selected=None) -> SimpleNamespace:
+    """Create a minimal before-tool-call event object."""
     return SimpleNamespace(
         tool_use={"name": name, "input": args},
         selected_tool=selected,
@@ -25,6 +27,7 @@ def _event(name: str, args: dict, selected=None) -> SimpleNamespace:
 
 
 def test_denied_confirmation_cancels_and_records() -> None:
+    """Verify that denied confirmation cancels and records."""
     meta = GeoToolMeta(
         name="remove_layer",
         description="Remove a layer from the map.",
@@ -33,6 +36,7 @@ def test_denied_confirmation_cancels_and_records() -> None:
     requests: list[ConfirmRequest] = []
 
     def deny(req: ConfirmRequest) -> bool:
+        """Deny the confirmation request."""
         requests.append(req)
         return False
 
@@ -50,9 +54,11 @@ def test_denied_confirmation_cancels_and_records() -> None:
 
 
 def test_approved_confirmation_allows_tool() -> None:
+    """Verify that approved confirmation allows tool."""
     meta = GeoToolMeta(name="save_map", destructive=True)
 
     def approve(req: ConfirmRequest) -> bool:
+        """Approve the confirmation request."""
         return True
 
     hook, cancelled = _build(meta, approve)
@@ -65,10 +71,12 @@ def test_approved_confirmation_allows_tool() -> None:
 
 
 def test_unconfirmed_tool_skips_callback() -> None:
+    """Verify that unconfirmed tool skips callback."""
     meta = GeoToolMeta(name="list_layers")
     calls: list[ConfirmRequest] = []
 
     def callback(req: ConfirmRequest) -> bool:
+        """Handle the confirmation callback."""
         calls.append(req)
         return False
 

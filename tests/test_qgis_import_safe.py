@@ -20,6 +20,7 @@ def _reimport(name: str):
 
 
 def test_module_import_does_not_pull_qgis() -> None:
+    """Verify that module import does not pull qgis."""
     if "qgis" in sys.modules:
         pytest.skip("qgis is already imported in this environment.")
     module = _reimport("geoagent.tools.qgis")
@@ -29,6 +30,7 @@ def test_module_import_does_not_pull_qgis() -> None:
 
 
 def test_qgis_tools_with_none_iface_returns_empty_list() -> None:
+    """Verify that qgis tools with none iface returns empty list."""
     from geoagent.tools.qgis import qgis_tools
 
     assert qgis_tools(None) == []

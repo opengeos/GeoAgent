@@ -180,6 +180,7 @@ class OpenGeoAgent:
             self._chat_dock.raise_()
 
     def _on_chat_visibility_changed(self, visible):
+        """Handle chat visibility changed."""
         self.chat_action.setChecked(visible)
 
     def _dependencies_missing(self):
@@ -242,6 +243,7 @@ class OpenGeoAgent:
             self._settings_dock.raise_()
 
     def _on_settings_visibility_changed(self, visible):
+        """Handle settings visibility changed."""
         self.settings_action.setChecked(visible)
 
     def show_about(self):

@@ -15,6 +15,7 @@ from geoagent import __version__
 
 @solara.component
 def Page():
+    """Render the Solara page."""
     with solara.AppBarTitle("GeoAgent chat"):
         pass
     with solara.Column(align="center"):

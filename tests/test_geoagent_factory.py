@@ -7,15 +7,19 @@ from geoagent.testing import MockLeafmap
 
 
 class _MockModel:
+    """Provide a test double for MockModel."""
+
     stateful = False
 
 
 def test_create_agent_empty_tools() -> None:
+    """Verify that create agent empty tools."""
     a = create_agent(tools=[], context=GeoAgentContext(), model=_MockModel())
     assert a.strands_agent.tool_names == []
 
 
 def test_for_leafmap_registers_tools() -> None:
+    """Verify that for leafmap registers tools."""
     m = MockLeafmap()
     a = for_leafmap(m, model=_MockModel())
     names = set(a.strands_agent.tool_names)
@@ -23,6 +27,7 @@ def test_for_leafmap_registers_tools() -> None:
 
 
 def test_for_leafmap_accepts_provider_and_model_id() -> None:
+    """Verify that for leafmap accepts provider and model id."""
     m = MockLeafmap()
     a = for_leafmap(
         m,
@@ -35,6 +40,7 @@ def test_for_leafmap_accepts_provider_and_model_id() -> None:
 
 
 def test_factory_accepts_gemini_provider() -> None:
+    """Verify that factory accepts gemini provider."""
     m = MockLeafmap()
     a = for_leafmap(
         m,

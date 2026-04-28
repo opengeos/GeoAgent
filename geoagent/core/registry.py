@@ -37,6 +37,7 @@ class GeoToolRegistry:
         self._by_name[meta.name] = meta
 
     def get(self, tool_name: str) -> GeoToolMeta | None:
+        """Return metadata for a registered tool name."""
         return self._by_name.get(tool_name)
 
     def list_names(self) -> list[str]:

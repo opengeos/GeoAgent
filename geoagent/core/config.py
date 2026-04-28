@@ -11,6 +11,7 @@ ProviderName = Literal["bedrock", "openai", "anthropic", "gemini", "ollama"]
 
 
 def _default_provider_from_env() -> ProviderName:
+    """Infer the default provider from available environment variables."""
     if os.environ.get("OPENAI_API_KEY"):
         return "openai"
     if os.environ.get("ANTHROPIC_API_KEY"):

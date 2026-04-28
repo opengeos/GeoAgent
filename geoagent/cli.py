@@ -13,6 +13,7 @@ import subprocess
 
 
 def _run_solara_app() -> int:
+    """Launch the Solara UI application."""
     try:
         from geoagent.ui import PAGES_DIR
     except Exception as e:
@@ -28,6 +29,7 @@ def _run_solara_app() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the script entry point."""
     parser = argparse.ArgumentParser(
         prog="geoagent",
         description="GeoAgent command line interface",

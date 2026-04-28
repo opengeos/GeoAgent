@@ -177,7 +177,7 @@ def package_plugin(
                 files_added += 1
 
     print()
-    print(f"Package created successfully!")
+    print("Package created successfully!")
     print(f"  Files added: {files_added}")
     print(f"  Files excluded: {files_excluded}")
     print(f"  Output: {output_path}")
@@ -198,8 +198,6 @@ def verify_zip(zip_path: Path) -> None:
         for name in zipf.namelist():
             # Check for unwanted patterns
             basename = os.path.basename(name)
-            dirname = os.path.dirname(name)
-
             if "__pycache__" in name:
                 print(f"  WARNING: Found __pycache__: {name}")
                 has_issues = True
@@ -230,6 +228,7 @@ def verify_zip(zip_path: Path) -> None:
 
 
 def main():
+    """Run the script entry point."""
     parser = argparse.ArgumentParser(
         description="Package QGIS plugin for repository upload",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -289,7 +288,7 @@ def main():
         print()
         print("=" * 50)
         print("Plugin packaged successfully!")
-        print(f"Upload this file to the QGIS plugin repository:")
+        print("Upload this file to the QGIS plugin repository:")
         print(f"  {zip_path}")
         print("=" * 50)
 

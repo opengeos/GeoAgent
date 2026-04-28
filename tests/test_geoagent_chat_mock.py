@@ -14,10 +14,13 @@ from geoagent.testing import MockLeafmap, MockQGISIface, MockQGISProject
 
 
 class _MockModel:
+    """Provide a test double for MockModel."""
+
     stateful = False
 
 
 def test_chat_success_from_mocked_strands() -> None:
+    """Verify that chat success from mocked strands."""
     m = MockLeafmap()
     agent = for_leafmap(m, model=_MockModel())
 
@@ -40,6 +43,7 @@ def test_chat_success_from_mocked_strands() -> None:
 
 
 def test_chat_in_background_returns_and_invokes_callback() -> None:
+    """Verify that chat in background returns and invokes callback."""
     m = MockLeafmap()
     agent = for_leafmap(m, model=_MockModel())
 
@@ -56,6 +60,7 @@ def test_chat_in_background_returns_and_invokes_callback() -> None:
     box = {}
 
     def _on_result(resp):
+        """Handle result."""
         box["resp"] = resp
         done.set()
 
@@ -67,42 +72,63 @@ def test_chat_in_background_returns_and_invokes_callback() -> None:
 
 
 def test_qgis_chat_on_gui_thread_runs_worker_and_pumps_events(monkeypatch) -> None:
+    """Verify that qgis chat on gui thread runs worker and pumps events."""
     main_thread = threading.current_thread()
     processed = threading.Event()
     calls = {"process_events": 0}
 
     class _FakeThread:
+        """Provide a test double for FakeThread."""
+
         def __eq__(self, other: object) -> bool:
             return isinstance(other, _FakeThread)
 
     class _QThread:
+        """Provide a test double for QThread."""
+
         @staticmethod
         def currentThread():
+            """Return the current thread."""
             return _FakeThread()
 
     class _App:
+        """Provide a test double for App."""
+
         def thread(self):
+            """Return the associated thread."""
             return _FakeThread()
 
         def processEvents(self):
+            """Process events."""
             calls["process_events"] += 1
             processed.set()
 
     class _QApplication:
+        """Provide a test double for QApplication."""
+
         @staticmethod
         def instance():
+            """Return the singleton instance."""
             return _App()
 
     class _QObject:
+        """Provide a test double for QObject."""
+
         def moveToThread(self, _thread):
+            """Move to thread."""
             return None
 
     class _QMetaObject:
+        """Provide a test double for QMetaObject."""
+
         @staticmethod
         def invokeMethod(*_args, **_kwargs):
+            """Invoke method."""
             return True
 
     class _Qt:
+        """Provide a test double for Qt."""
+
         BlockingQueuedConnection = 0
 
     fake_qt_core = types.SimpleNamespace(
@@ -124,6 +150,7 @@ def test_qgis_chat_on_gui_thread_runs_worker_and_pumps_events(monkeypatch) -> No
     worker_thread: list[threading.Thread] = []
 
     def _strands(_query: str):
+        """Return the mocked Strands response."""
         worker_thread.append(threading.current_thread())
         deadline = time.time() + 2.0
         while not processed.is_set() and time.time() < deadline:

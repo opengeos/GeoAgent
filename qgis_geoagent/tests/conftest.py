@@ -71,6 +71,7 @@ class _QgsBlockingNetworkRequest:
 
 
 def _install_qgis_stub() -> None:
+    """Install a lightweight qgis module stub for plugin import tests."""
     qgis = types.ModuleType("qgis")
     qgis.__path__ = []
     sys.modules["qgis"] = qgis

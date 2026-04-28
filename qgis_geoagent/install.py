@@ -96,6 +96,7 @@ def remove_plugin(plugin_dir: Path, plugin_name: str = "open_geoagent") -> bool:
 
 
 def main():
+    """Run the script entry point."""
     parser = argparse.ArgumentParser(description="Install or remove OpenGeoAgent")
     parser.add_argument(
         "--remove",

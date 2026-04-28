@@ -158,6 +158,7 @@ def _safe_call(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
 
 
 def _layer_name(layer: Any) -> Optional[str]:
+    """Return a layer name from dict or object-style layer records."""
     if isinstance(layer, dict):
         name = layer.get("name") or layer.get("layer_name") or layer.get("id")
     else:
@@ -168,6 +169,7 @@ def _layer_name(layer: Any) -> Optional[str]:
 
 
 def _layer_attr(layer: Any, *keys: str, default: Any = None) -> Any:
+    """Return the first matching layer attribute or mapping key."""
     for key in keys:
         if isinstance(layer, dict) and key in layer:
             return layer[key]
@@ -178,6 +180,7 @@ def _layer_attr(layer: Any, *keys: str, default: Any = None) -> Any:
 
 
 def _layer_bounds(layer: Any) -> Optional[list[list[float]]]:
+    """Normalize layer bounds into southwest and northeast corners."""
     raw = _layer_attr(layer, "bounds", "bbox", "extent")
     if raw is None:
         return None
@@ -201,6 +204,7 @@ def _layer_bounds(layer: Any) -> Optional[list[list[float]]]:
 
 
 def _find_layer_entry(m: Any, name: str) -> Optional[Any]:
+    """Find a named layer entry on a map object."""
     for layer in getattr(m, "layers", None) or []:
         if _layer_name(layer) == name:
             return layer
@@ -208,6 +212,7 @@ def _find_layer_entry(m: Any, name: str) -> Optional[Any]:
 
 
 def _set_layer_attr(layer: Any, key: str, value: Any) -> bool:
+    """Set a layer attribute through mapping, setter, or attribute access."""
     if isinstance(layer, dict):
         layer[key] = value
         return True
@@ -223,6 +228,7 @@ def _set_layer_attr(layer: Any, key: str, value: Any) -> bool:
 
 
 def _layer_record(layer: Any) -> dict[str, Any]:
+    """Convert a layer entry into a serializable summary record."""
     name = _layer_name(layer) or "Unnamed"
     record = {
         "name": name,

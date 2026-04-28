@@ -10,6 +10,7 @@ DEFAULT_MODEL = "claude-sonnet-4-6"
 
 
 def main() -> None:
+    """Run the script entry point."""
     meta = {
         "kernelspec": {
             "display_name": "Python 3",

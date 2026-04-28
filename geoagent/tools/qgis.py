@@ -207,6 +207,7 @@ def _resolve_layer(project: Any, layer_name: str) -> Any:
 
 
 def _extent_payload(extent: Any) -> Any:
+    """Return a JSON-friendly representation of a QGIS extent."""
     if extent is None:
         return None
     if isinstance(extent, (list, tuple)) and len(extent) == 4:
@@ -221,6 +222,7 @@ def _extent_payload(extent: Any) -> Any:
 
 
 def _crs_payload(obj: Any) -> Optional[str]:
+    """Return a readable CRS identifier for a QGIS object."""
     if obj is None or not hasattr(obj, "crs"):
         return None
     try:
@@ -242,6 +244,7 @@ def _crs_payload(obj: Any) -> Optional[str]:
 
 
 def _call_int(obj: Any, method_name: str) -> Optional[int]:
+    """Call a no-argument method and coerce its result to an integer."""
     method = getattr(obj, method_name, None)
     if not callable(method):
         return None
@@ -252,6 +255,7 @@ def _call_int(obj: Any, method_name: str) -> Optional[int]:
 
 
 def _layer_visibility(project: Any, layer: Any) -> Optional[bool]:
+    """Return the layer tree visibility state for a layer."""
     try:
         root = project.layerTreeRoot()
         tree_layer = root.findLayer(layer.id())
@@ -268,6 +272,7 @@ def _layer_visibility(project: Any, layer: Any) -> Optional[bool]:
 
 
 def _layer_opacity(layer: Any) -> Optional[float]:
+    """Return layer opacity when the object exposes it."""
     value = getattr(layer, "opacity", None)
     if callable(value):
         try:
@@ -283,6 +288,7 @@ def _layer_opacity(layer: Any) -> Optional[float]:
 
 
 def _layer_metadata(layer: Any, project: Any | None = None) -> dict[str, Any]:
+    """Collect serializable metadata for a QGIS layer."""
     record: dict[str, Any] = {
         "id": str(layer.id()) if hasattr(layer, "id") else None,
         "name": layer.name() if hasattr(layer, "name") else str(layer),
@@ -321,9 +327,11 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         return []
 
     def _on_gui(func: Any) -> Any:
+        """Run a callable on the Qt GUI thread."""
         return run_on_qt_gui_thread(func)
 
     def _project() -> Any:
+        """Return the configured project or resolve it from the QGIS iface."""
         if project is not None:
             return project
         if hasattr(iface, "project"):
@@ -355,6 +363,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> list[dict[str, Any]]:
+            """Run the worker body."""
             proj = _project()
             return [_layer_metadata(layer, proj) for layer in proj.mapLayers().values()]
 
@@ -372,6 +381,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> dict[str, Any]:
+            """Run the worker body."""
             layer = iface.activeLayer()
             if layer is None:
                 return {"active_layer": None}
@@ -388,6 +398,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Return the QGIS project layer list and canvas camera state."""
 
         def _run() -> dict[str, Any]:
+            """Run the worker body."""
             proj = _project()
             canvas = iface.mapCanvas()
             active = iface.activeLayer()
@@ -425,6 +436,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             iface.mapCanvas().zoomIn()
             return "Zoomed in."
 
@@ -441,6 +453,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             iface.mapCanvas().zoomOut()
             return "Zoomed out."
 
@@ -460,6 +473,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             layer = _resolve_layer(_project(), layer_name)
             iface.setActiveLayer(layer)
             canvas = iface.mapCanvas()
@@ -525,6 +539,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             canvas = iface.mapCanvas()
             rect = _transform_bbox_to_canvas_crs(canvas, west, south, east, north, crs)
             canvas.setExtent(rect)
@@ -555,6 +570,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             canvas = iface.mapCanvas()
             point = _transform_point_to_canvas_crs(canvas, lon, lat, crs)
             if hasattr(canvas, "setCenter"):
@@ -594,6 +610,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Set the QGIS canvas map scale."""
 
         def _run() -> str:
+            """Run the worker body."""
             canvas = iface.mapCanvas()
             if hasattr(canvas, "zoomScale"):
                 canvas.zoomScale(float(scale))
@@ -627,6 +644,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             layer = iface.addVectorLayer(path_or_uri, name, provider)
             if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
                 return f"Failed to load vector layer from {path_or_uri!r}."
@@ -649,6 +667,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             layer = iface.addRasterLayer(path_or_uri, name)
             if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
                 return f"Failed to load raster layer from {path_or_uri!r}."
@@ -680,6 +699,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             parts = ["type=xyz", f"url={quote(url, safe='')}"]
             if zmin is not None:
                 parts.append(f"zmin={int(zmin)}")
@@ -729,6 +749,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             proj = _project()
             layers = proj.mapLayersByName(layer_name)
             if not layers:
@@ -757,6 +778,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             proj = _project()
             layer = _resolve_layer(proj, layer_name)
             # Try the layer-tree-based path first; fall back to a simple attribute.
@@ -780,6 +802,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Set a layer opacity from 0.0 (transparent) to 1.0 (opaque)."""
 
         def _run() -> str:
+            """Run the worker body."""
             value = min(1.0, max(0.0, float(opacity)))
             layer = _resolve_layer(_project(), layer_name)
             if hasattr(layer, "setOpacity"):
@@ -817,6 +840,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> list[dict[str, Any]]:
+            """Run the worker body."""
             layer = _resolve_layer(_project(), layer_name)
             out: list[dict[str, Any]] = []
             for field in layer.fields():
@@ -857,6 +881,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> list[dict[str, Any]]:
+            """Run the worker body."""
             if layer_name is None:
                 layer = iface.activeLayer()
                 if layer is None:
@@ -897,6 +922,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             layer = _resolve_layer(_project(), layer_name)
             if not hasattr(layer, "selectByExpression"):
                 return f"Layer {layer_name!r} does not support expression selection."
@@ -928,6 +954,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Clear selected features on one layer, or every project layer."""
 
         def _run() -> str:
+            """Run the worker body."""
             layers = (
                 [_resolve_layer(_project(), layer_name)]
                 if layer_name is not None
@@ -949,6 +976,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Zoom to the selected features on a layer or the active layer."""
 
         def _run() -> str:
+            """Run the worker body."""
             layer = (
                 iface.activeLayer()
                 if layer_name is None
@@ -979,6 +1007,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Return detailed metadata for a single project layer."""
 
         def _run() -> dict[str, Any]:
+            """Run the worker body."""
             layer = _resolve_layer(_project(), layer_name)
             summary = _layer_metadata(layer, _project())
             if hasattr(layer, "fields"):
@@ -1025,6 +1054,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> dict[str, Any]:
+            """Run the worker body."""
             try:
                 import processing  # type: ignore[import-not-found]
             except Exception as exc:  # pragma: no cover - QGIS-only path
@@ -1049,6 +1079,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             layer = _resolve_layer(_project(), layer_name)
             iface.setActiveLayer(layer)
             if hasattr(iface, "showAttributeTable"):
@@ -1068,6 +1099,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """
 
         def _run() -> str:
+            """Run the worker body."""
             iface.mapCanvas().refresh()
             return "Canvas refreshed."
 
@@ -1081,6 +1113,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """Save the current QGIS project, optionally to a new file path."""
 
         def _run() -> str:
+            """Run the worker body."""
             proj = _project()
             if path:
                 out = Path(path).expanduser().resolve()

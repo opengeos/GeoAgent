@@ -8,10 +8,12 @@ from geoagent.tools.anymap import anymap_tools
 
 
 def _by_name(m: MockAnymap) -> dict[str, object]:
+    """Index anymap tools by Strands tool name."""
     return {t.tool_name: t for t in anymap_tools(m)}
 
 
 def test_anymap_tool_surface_has_leafmap_parity() -> None:
+    """Verify that anymap tool surface has leafmap parity."""
     names = {t.tool_name for t in anymap_tools(MockAnymap())}
     expected = {
         "list_layers",
@@ -43,6 +45,7 @@ def test_anymap_tool_surface_has_leafmap_parity() -> None:
 
 
 def test_anymap_destructive_tools_require_confirmation() -> None:
+    """Verify that anymap destructive tools require confirmation."""
     tools = _by_name(MockAnymap())
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["clear_layers"]) is True
@@ -50,6 +53,7 @@ def test_anymap_destructive_tools_require_confirmation() -> None:
 
 
 def test_anymap_layer_controls_and_data_helpers() -> None:
+    """Verify that anymap layer controls and data helpers."""
     m = MockAnymap()
     tools = _by_name(m)
     tools["add_marker"](lat=35.96, lon=-83.92, name="Knoxville")

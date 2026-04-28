@@ -70,6 +70,8 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
     gui = app.thread()
 
     class _Invoker(QObject):
+        """Qt object used to invoke a callable on the GUI thread."""
+
         def __init__(self) -> None:
             super().__init__()
             self.value: Any = None
@@ -77,6 +79,7 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
 
         @pyqtSlot()
         def run(self) -> None:
+            """Run the worker body."""
             try:
                 self.value = func()
             except BaseException as exc:  # pragma: no cover - passthrough path
