@@ -78,14 +78,26 @@ def _earthdata_login(username: str | None = None, password: str | None = None) -
     """Authenticate with NASA Earthdata using explicit, env, or netrc credentials."""
     import earthaccess
 
-    username = (username or os.environ.get("EARTHDATA_USERNAME", "")).strip()
-    password = (password or os.environ.get("EARTHDATA_PASSWORD", "")).strip()
-    if username and password:
-        os.environ["EARTHDATA_USERNAME"] = username
-        os.environ["EARTHDATA_PASSWORD"] = password
-        auth = earthaccess.login(strategy="environment")
-        if getattr(auth, "authenticated", bool(auth)):
-            return
+    explicit_username = (username or "").strip()
+    explicit_password = (password or "").strip()
+    if explicit_username and explicit_password:
+        previous_username = os.environ.get("EARTHDATA_USERNAME")
+        previous_password = os.environ.get("EARTHDATA_PASSWORD")
+        try:
+            os.environ["EARTHDATA_USERNAME"] = explicit_username
+            os.environ["EARTHDATA_PASSWORD"] = explicit_password
+            auth = earthaccess.login(strategy="environment")
+            if getattr(auth, "authenticated", bool(auth)):
+                return
+        finally:
+            if previous_username is None:
+                os.environ.pop("EARTHDATA_USERNAME", None)
+            else:
+                os.environ["EARTHDATA_USERNAME"] = previous_username
+            if previous_password is None:
+                os.environ.pop("EARTHDATA_PASSWORD", None)
+            else:
+                os.environ["EARTHDATA_PASSWORD"] = previous_password
 
     for strategy in ("environment", "netrc"):
         try:
@@ -95,8 +107,8 @@ def _earthdata_login(username: str | None = None, password: str | None = None) -
         except Exception:
             continue
     raise RuntimeError(
-        "NASA Earthdata authentication failed. Configure credentials in the "
-        "NASA Earthdata plugin settings, environment, or ~/.netrc."
+        "NASA Earthdata authentication failed. Provide credentials explicitly, "
+        "set EARTHDATA_USERNAME and EARTHDATA_PASSWORD, or configure ~/.netrc."
     )
 
 

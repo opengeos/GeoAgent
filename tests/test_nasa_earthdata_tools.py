@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import io
 import sys
 import types
 
+import pytest
+
 from geoagent import for_nasa_earthdata
+from geoagent.tools import nasa_earthdata as nasa_earthdata_module
 from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.testing import MockQGISIface, MockQGISProject
 
@@ -105,3 +109,64 @@ def test_for_nasa_earthdata_chat_on_gui_thread_fails_closed(monkeypatch) -> None
     assert "NASA Earthdata chat should be launched from a worker thread" in str(
         resp.error_message
     )
+
+
+_FAKE_TSV = (
+    "ShortName\tEntryTitle\tSummary\tPlatform\tInstrument\n"
+    "MOD11A1\tMODIS Land Surface Temperature\tDaily LST product\tTerra\tMODIS\n"
+    "HLSL30\tHarmonized Landsat Sentinel-2 Landsat\tSurface reflectance\tLandsat\tOLI\n"
+    "GPM_3IMERGDF\tGPM IMERG Daily\tPrecipitation\tGPM\tIMERG\n"
+)
+
+
+def _patched_urlopen(monkeypatch, payload: str = _FAKE_TSV) -> None:
+    """Replace urlopen in the NASA Earthdata module with a fake TSV response."""
+
+    class _FakeResponse(io.BytesIO):
+        def __enter__(self):  # type: ignore[override]
+            return self
+
+        def __exit__(self, *exc) -> None:  # type: ignore[override]
+            self.close()
+
+    def _fake_urlopen(url, *args, **kwargs):
+        assert str(url).lower().startswith("https://")
+        return _FakeResponse(payload.encode("utf-8"))
+
+    monkeypatch.setattr(nasa_earthdata_module, "urlopen", _fake_urlopen)
+
+
+def test_search_earthdata_catalog_filters_and_max_results(monkeypatch) -> None:
+    """Verify catalog search filters rows and honors max_results."""
+    _patched_urlopen(monkeypatch)
+    tools = {tool.tool_name: tool for tool in earthdata_tools(object())}
+    search = tools["search_earthdata_catalog"]
+
+    result = search(
+        query="modis",
+        max_results=10,
+        catalog_url="https://example.com/catalog.tsv",
+    )
+    assert result["count"] == 1
+    assert result["datasets"][0]["ShortName"] == "MOD11A1"
+
+    capped = search(
+        query="",
+        max_results=2,
+        catalog_url="https://example.com/catalog.tsv",
+    )
+    assert capped["count"] == 3
+    assert capped["shown"] == 2
+    assert len(capped["datasets"]) == 2
+
+
+def test_load_catalog_rows_rejects_non_https(monkeypatch) -> None:
+    """Verify the catalog loader refuses non-HTTPS URLs."""
+
+    def _should_not_be_called(*_args, **_kwargs):
+        raise AssertionError("urlopen must not be invoked for non-HTTPS URLs")
+
+    monkeypatch.setattr(nasa_earthdata_module, "urlopen", _should_not_be_called)
+
+    with pytest.raises(ValueError, match="HTTPS"):
+        nasa_earthdata_module._load_catalog_rows("http://example.com/catalog.tsv")
