@@ -313,15 +313,18 @@ arguments.
 
 ## Fast Mode
 
-Pass `fast=True` to reduce the exposed tool surface for lower-latency map
-control:
+Pass `fast=True` to reduce the exposed tool surface and cap response tokens for
+lower-latency map control:
 
 ```python
 agent = for_leafmap(m, fast=True)
 ```
 
-Fast mode keeps common inspection and navigation tools while filtering out
-heavier or more specialized tools.
+Fast mode keeps common inspection, navigation, and basemap tools, filters out
+heavier or more specialized tools, and limits model responses to short
+post-tool replies. The cap is conservative enough for tool calls while avoiding
+very long responses. The model call still dominates latency for local models,
+so small prompts may not show a large timing difference on every provider.
 
 ## Examples
 

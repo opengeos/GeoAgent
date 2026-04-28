@@ -353,11 +353,8 @@ class ChatDockWidget(QDockWidget):
             _enum_value(QSizePolicy, "Policy", "Ignored"),
             _enum_value(QSizePolicy, "Policy", "Fixed"),
         )
+        self.sample_combo.currentTextChanged.connect(self._select_sample_prompt)
         sample_layout.addWidget(self.sample_combo, 1)
-
-        self.insert_sample_btn = QPushButton("Insert")
-        self.insert_sample_btn.clicked.connect(self._insert_sample_prompt)
-        sample_layout.addWidget(self.insert_sample_btn)
         layout.addLayout(sample_layout)
 
         self.transcript = QTextEdit()
@@ -457,9 +454,8 @@ class ChatDockWidget(QDockWidget):
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()
 
-    def _insert_sample_prompt(self):
+    def _select_sample_prompt(self, prompt):
         """Copy the selected sample prompt into the editor."""
-        prompt = self.sample_combo.currentText()
         if prompt and prompt != "Sample prompts...":
             self.prompt_input.setPlainText(prompt)
             self.prompt_input.setFocus()
