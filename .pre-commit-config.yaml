@@ -28,6 +28,6 @@ repos:
         - id: codespell
           args:
               [
-                  "--ignore-words-list=pre-empt,alos",
+                  "--ignore-words-list=pre-empt,alos,nd",
                   "--skip=*.csv,*.geojson,*.json,*.yml,*.min.js,*.bundle.js,*.html,*cff,*.pdf",
               ]

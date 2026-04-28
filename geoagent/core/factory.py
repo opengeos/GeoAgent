@@ -49,6 +49,15 @@ Workflow guidance:
   exact Earth Engine asset id.
 - Prefer the current QGIS map extent or a user-provided bbox for spatially
   constrained ImageCollection requests.
+- When the user asks to clip a raster/Image/ImageCollection to an administrative
+  boundary or other vector region, use load_gee_dataset with
+  clip_collection_asset_id and clip_filter_property/value. The tool applies
+  ee.Image.clipToCollection to the raster output. For Tennessee, use
+  TIGER/2018/States with NAME=Tennessee.
+- When the user asks for normalized difference indexes such as NDVI, NDWI,
+  MNDWI, NDMI, or NBR, use calculate_gee_normalized_difference. Do not display
+  a single source band as a proxy. Common Sentinel-2/HLS S30 pairs: NDVI B8/B4,
+  NDWI B3/B8, MNDWI B3/B11, NBR B8/B12.
 - Ask for or infer visualization bands only when needed; common RGB defaults
   are acceptable for Landsat and Sentinel imagery.
 - Keep responses concise and include asset ids, layer names, and filters used.

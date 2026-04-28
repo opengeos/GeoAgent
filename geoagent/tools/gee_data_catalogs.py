@@ -109,6 +109,33 @@ def _build_vis_params(
     return vis_params
 
 
+def _coerce_filter_value(value: str) -> Any:
+    """Convert simple string filter values to scalar Earth Engine values."""
+    text = str(value).strip()
+    if text.lower() == "true":
+        return True
+    if text.lower() == "false":
+        return False
+    try:
+        if "." not in text:
+            return int(text)
+        return float(text)
+    except ValueError:
+        return text
+
+
+def _default_index_palette(index_name: str) -> list[str]:
+    """Return a useful visualization palette for common normalized indexes."""
+    key = index_name.strip().upper()
+    if key in {"NDVI", "SAVI", "EVI"}:
+        return ["8c510a", "f6e8c3", "f5f5f5", "c7eae5", "01665e"]
+    if key in {"NDWI", "MNDWI", "NDMI"}:
+        return ["8c510a", "f7f7f7", "2166ac"]
+    if key in {"NBR", "NBR2"}:
+        return ["d7191c", "fdae61", "ffffbf", "a6d96a", "1a9641"]
+    return ["d73027", "f7f7f7", "1a9850"]
+
+
 def gee_data_catalogs_tools(
     iface: Any,
     plugin: Optional[Any] = None,
@@ -242,6 +269,9 @@ def gee_data_catalogs_tools(
         min_value: Optional[float] = None,
         max_value: Optional[float] = None,
         palette: Optional[str] = None,
+        clip_collection_asset_id: Optional[str] = None,
+        clip_filter_property: Optional[str] = None,
+        clip_filter_value: Optional[str] = None,
     ) -> dict[str, Any]:
         """Load a GEE Image, ImageCollection, or FeatureCollection into QGIS.
 
@@ -260,6 +290,13 @@ def gee_data_catalogs_tools(
             min_value: Optional visualization minimum.
             max_value: Optional visualization maximum.
             palette: Optional comma-separated colors or palette entries.
+            clip_collection_asset_id: Optional FeatureCollection asset id used
+                to clip raster outputs with ``ee.Image.clipToCollection``.
+                Example: TIGER/2018/States.
+            clip_filter_property: Optional property to filter the clipping
+                FeatureCollection before clipping. Example: NAME.
+            clip_filter_value: Optional value for ``clip_filter_property``.
+                Example: Tennessee.
         """
 
         def _run() -> dict[str, Any]:
@@ -279,6 +316,16 @@ def gee_data_catalogs_tools(
             resolved_type = asset_type or detect_asset_type(asset_id)
             name = layer_name or asset_id.split("/")[-1]
             parsed_bbox = _parse_bbox(bbox)
+            clip_collection = None
+            if clip_collection_asset_id:
+                clip_collection = ee.FeatureCollection(clip_collection_asset_id)
+                if clip_filter_property and clip_filter_value is not None:
+                    clip_collection = clip_collection.filter(
+                        ee.Filter.eq(
+                            clip_filter_property,
+                            _coerce_filter_value(clip_filter_value),
+                        )
+                    )
 
             if resolved_type == "ImageCollection":
                 collection = ee.ImageCollection(asset_id)
@@ -317,7 +364,10 @@ def gee_data_catalogs_tools(
                     palette=palette,
                 )
 
-            layer = add_ee_layer(ee_object, vis_params, name[:50])
+            if clip_collection is not None and resolved_type != "FeatureCollection":
+                ee_object = ee.Image(ee_object).clipToCollection(clip_collection)
+
+            add_ee_layer(ee_object, vis_params, name[:50])
             try:
                 iface.mapCanvas().refresh()
             except Exception:
@@ -328,6 +378,176 @@ def gee_data_catalogs_tools(
                 "asset_type": resolved_type,
                 "layer_name": name[:50],
                 "vis_params": vis_params,
+                "clip": (
+                    {
+                        "collection_asset_id": clip_collection_asset_id,
+                        "filter_property": clip_filter_property,
+                        "filter_value": clip_filter_value,
+                        "method": "ee.Image.clipToCollection",
+                    }
+                    if clip_collection_asset_id
+                    else None
+                ),
+            }
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="gee_data_catalogs",
+        name="calculate_gee_normalized_difference",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("gee_data_catalogs", "ee"),
+    )
+    def calculate_gee_normalized_difference(
+        asset_id: str,
+        positive_band: str,
+        negative_band: str,
+        index_name: str = "NDVI",
+        layer_name: Optional[str] = None,
+        asset_type: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        bbox: Optional[str] = None,
+        cloud_cover: Optional[int] = None,
+        cloud_property: Optional[str] = None,
+        reducer: str = "median",
+        min_value: float = -1.0,
+        max_value: float = 1.0,
+        palette: Optional[str] = None,
+        clip_collection_asset_id: Optional[str] = None,
+        clip_filter_property: Optional[str] = None,
+        clip_filter_value: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Calculate and load a normalized difference index image.
+
+        The index is computed server-side as
+        ``ee.Image.normalizedDifference([positive_band, negative_band])`` and
+        renamed to ``index_name`` before display.
+
+        Args:
+            asset_id: Earth Engine Image or ImageCollection asset id.
+            positive_band: Numerator-positive band. NDVI example: NIR band.
+            negative_band: Numerator-negative band. NDVI example: red band.
+            index_name: Output band/index name, such as NDVI, NDWI, MNDWI, NBR.
+            layer_name: Optional QGIS layer name.
+            asset_type: Optional explicit type: Image or ImageCollection.
+            start_date: Optional ImageCollection start date in YYYY-MM-DD.
+            end_date: Optional ImageCollection end date in YYYY-MM-DD.
+            bbox: Optional WGS84 west,south,east,north ImageCollection filter.
+            cloud_cover: Optional maximum cloud-cover value.
+            cloud_property: Optional cloud-cover property name.
+            reducer: ImageCollection reducer: mosaic, median, mean, min, max, first.
+            min_value: Visualization minimum. Defaults to -1.
+            max_value: Visualization maximum. Defaults to 1.
+            palette: Optional comma-separated colors. Defaults by index type.
+            clip_collection_asset_id: Optional FeatureCollection asset id used
+                to clip the index image with ``ee.Image.clipToCollection``.
+            clip_filter_property: Optional property to filter the clipping
+                FeatureCollection before clipping. Example: NAME.
+            clip_filter_value: Optional value for ``clip_filter_property``.
+                Example: Tennessee.
+
+        Common band examples:
+            Sentinel-2 or HLS S30 NDVI: positive_band=B8, negative_band=B4.
+            Landsat 8/9 NDVI: positive_band=SR_B5, negative_band=SR_B4.
+            Sentinel-2 NDWI: positive_band=B3, negative_band=B8.
+            Sentinel-2 MNDWI: positive_band=B3, negative_band=B11.
+            Sentinel-2 NBR: positive_band=B8, negative_band=B12.
+        """
+
+        def _run() -> dict[str, Any]:
+            import ee
+
+            from gee_data_catalogs.core.ee_utils import (
+                add_ee_layer,
+                detect_asset_type,
+                filter_image_collection,
+                initialize_ee,
+                is_ee_initialized,
+            )
+
+            if not is_ee_initialized():
+                initialize_ee(project=_project_id_from_settings())
+
+            resolved_type = asset_type or detect_asset_type(asset_id)
+            if resolved_type == "FeatureCollection":
+                raise ValueError(
+                    "Normalized difference indexes require an Image or ImageCollection."
+                )
+
+            parsed_bbox = _parse_bbox(bbox)
+            clip_collection = None
+            if clip_collection_asset_id:
+                clip_collection = ee.FeatureCollection(clip_collection_asset_id)
+                if clip_filter_property and clip_filter_value is not None:
+                    clip_collection = clip_collection.filter(
+                        ee.Filter.eq(
+                            clip_filter_property,
+                            _coerce_filter_value(clip_filter_value),
+                        )
+                    )
+
+            if resolved_type == "ImageCollection":
+                collection = ee.ImageCollection(asset_id)
+                if start_date or end_date or parsed_bbox or cloud_cover is not None:
+                    collection = filter_image_collection(
+                        collection,
+                        start_date=start_date,
+                        end_date=end_date,
+                        bbox=parsed_bbox,
+                        cloud_cover=cloud_cover,
+                        cloud_property=cloud_property or "CLOUDY_PIXEL_PERCENTAGE",
+                    )
+                method = reducer.lower().strip()
+                if method not in {"mosaic", "median", "mean", "min", "max", "first"}:
+                    method = "median"
+                source_image = getattr(collection, method)()
+                resolved_type = "ImageCollection"
+            else:
+                source_image = ee.Image(asset_id)
+                resolved_type = "Image"
+
+            output_name = index_name.strip() or "ND"
+            index_image = source_image.normalizedDifference(
+                [positive_band, negative_band]
+            ).rename(output_name)
+            if clip_collection is not None:
+                index_image = ee.Image(index_image).clipToCollection(clip_collection)
+
+            vis_params = _build_vis_params(
+                bands=output_name,
+                min_value=min_value,
+                max_value=max_value,
+                palette=palette or _default_index_palette(output_name),
+            )
+            name = layer_name or f"{asset_id.split('/')[-1]} {output_name}"
+            add_ee_layer(index_image, vis_params, name[:50])
+            try:
+                iface.mapCanvas().refresh()
+            except Exception:
+                pass
+            return {
+                "success": True,
+                "asset_id": asset_id,
+                "asset_type": resolved_type,
+                "layer_name": name[:50],
+                "index_name": output_name,
+                "formula": f"({positive_band} - {negative_band}) / "
+                f"({positive_band} + {negative_band})",
+                "bands": [positive_band, negative_band],
+                "reducer": reducer if resolved_type == "ImageCollection" else None,
+                "vis_params": vis_params,
+                "clip": (
+                    {
+                        "collection_asset_id": clip_collection_asset_id,
+                        "filter_property": clip_filter_property,
+                        "filter_value": clip_filter_value,
+                        "method": "ee.Image.clipToCollection",
+                    }
+                    if clip_collection_asset_id
+                    else None
+                ),
             }
 
         return _on_gui(_run)
@@ -395,6 +615,7 @@ def gee_data_catalogs_tools(
         summarize_gee_catalog,
         initialize_earth_engine,
         load_gee_dataset,
+        calculate_gee_normalized_difference,
         open_gee_catalog_panel,
         configure_gee_dataset_load,
     ]
