@@ -219,6 +219,12 @@ standard QGIS tool surface:
 The OPERA integration is implemented as native GeoAgent tools and does not wrap
 the NASA OPERA plugin's legacy `nasa_opera.ai.tools` registry.
 
+When adding OPERA capabilities, implement the reusable tool logic in
+`geoagent/tools/nasa_opera.py`. Keep the NASA OPERA QGIS plugin focused on UI,
+settings, provider selection, progress display, and compatibility aliases. The
+plugin consumes GeoAgent tool metadata automatically, so new GeoAgent OPERA
+tools are available to the plugin AI Assistant without duplicating tool logic.
+
 Use it from the QGIS Python console or from plugin code. For direct tool
 testing, use `submit_nasa_opera_search_task(...)`; this avoids LLM/provider
 initialization and reports progress in QGIS's message bar and Log Messages
