@@ -250,6 +250,41 @@ Document:
 - safety/confirmation behavior;
 - any limitations or package-version assumptions.
 
+## NASA OPERA Plugin Tools
+
+The NASA OPERA QGIS plugin uses GeoAgent as its tool provider. Add new OPERA
+capabilities to GeoAgent first, not to the plugin-local AI code.
+
+Use this split:
+
+- **GeoAgent**: reusable OPERA search, display, download, mosaic, analysis, and
+  QGIS-safe tool logic.
+- **NASA OPERA plugin**: dock widgets, settings, provider/model selection,
+  status text, dependency installation, and UI-specific behavior.
+- **Plugin compatibility aliases**: old tool names or plugin-only shims, when
+  needed, in the plugin's `nasa_opera/ai/tools.py`.
+
+Recommended workflow:
+
+1. Add the tool implementation in `geoagent/tools/nasa_opera.py` inside
+   `nasa_opera_tools(...)`.
+2. Decorate it with `@geo_tool(...)` and write clear typed parameters and
+   structured return values.
+3. Keep QGIS API calls inside the existing GUI-thread helper (`_on_gui(...)`).
+   Network, parsing, and file-preparation work should stay outside GUI calls
+   where possible.
+4. Add or update tests in `tests/test_nasa_opera_tools.py`. Use mocks; do not
+   require a live QGIS session or real Earthdata credentials for CI.
+5. Update `NASA_OPERA_SYSTEM_PROMPT` in `geoagent/core/factory.py` if the model
+   needs guidance about when to use the new tool.
+6. Update `docs/tools.md`, `README.md`, or `examples/nasa_opera_qgis.py` when
+   the tool is user-facing.
+7. Only change the NASA OPERA plugin repo when the feature needs UI controls,
+   settings, progress/status behavior, or an alias for backwards compatibility.
+
+Rule of thumb: if it is a capability, put it in GeoAgent; if it is QGIS plugin
+presentation or wiring, put it in the NASA OPERA plugin.
+
 ## Integration Quality Bar
 
 An integration is ready when:
