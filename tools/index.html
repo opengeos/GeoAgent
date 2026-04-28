@@ -937,6 +937,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -953,6 +971,47 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#leafmap-and-anymap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        leafmap and anymap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qgis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QGIS
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1014,6 +1073,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#leafmap-and-anymap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        leafmap and anymap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qgis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QGIS
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1042,6 +1131,26 @@
 <li>Optional stubs: <code>stac</code>, <code>geoai</code>, <code>earthengine</code>, <code>nasa_earthdata</code> (expand in future releases).</li>
 </ul>
 <p>Use <strong><code>@geo_tool</code></strong> (<a href="../decorators/"><code>geoagent.core.decorators</code></a>) so tools register Strands-compatible metadata for safety hooks.</p>
+<h2 id="leafmap-and-anymap">leafmap and anymap<a class="headerlink" href="#leafmap-and-anymap" title="Permanent link">&para;</a></h2>
+<p><code>for_leafmap(m)</code> and <code>for_anymap(m)</code> expose a shared map-control surface:</p>
+<ul>
+<li>Inspect state and layers: <code>get_map_state</code>, <code>list_layers</code>.</li>
+<li>Navigate: <code>set_center</code>, <code>fly_to</code>, <code>set_zoom</code>, <code>zoom_in</code>, <code>zoom_out</code>, <code>zoom_to_bounds</code>, <code>zoom_to_layer</code>.</li>
+<li>Manage layers: <code>add_layer</code>, <code>remove_layer</code>, <code>clear_layers</code>, <code>set_layer_visibility</code>, <code>set_layer_opacity</code>.</li>
+<li>Add data: <code>add_vector_data</code>, <code>add_geojson_data</code>, <code>add_raster_data</code>, <code>add_cog_layer</code>, <code>add_stac_layer</code>, <code>add_xyz_tile_layer</code>, <code>add_pmtiles_layer</code>, <code>add_marker</code>.</li>
+<li>Change basemaps and export maps: <code>change_basemap</code>, <code>save_map</code>.</li>
+</ul>
+<p>Layer lookup accepts exact names or a unique case-insensitive substring for operations such as <code>remove_layer</code>, <code>zoom_to_layer</code>, <code>set_layer_visibility</code>, and <code>set_layer_opacity</code>.</p>
+<h2 id="qgis">QGIS<a class="headerlink" href="#qgis" title="Permanent link">&para;</a></h2>
+<p><code>for_qgis(iface, project=None)</code> exposes QGIS-safe tools that execute through the Qt GUI-thread marshaller:</p>
+<ul>
+<li>Inspect project and layer state: <code>list_project_layers</code>, <code>get_active_layer</code>, <code>get_project_state</code>, <code>get_layer_summary</code>, <code>inspect_layer_fields</code>, <code>get_selected_features</code>.</li>
+<li>Navigate: <code>zoom_in</code>, <code>zoom_out</code>, <code>zoom_to_layer</code>, <code>zoom_to_extent</code>, <code>zoom_to_selected</code>, <code>set_center</code>, <code>set_scale</code>, <code>refresh_canvas</code>.</li>
+<li>Manage layers and data: <code>add_vector_layer</code>, <code>add_raster_layer</code>, <code>add_xyz_tile_layer</code>, <code>remove_layer</code>, <code>set_layer_visibility</code>, <code>set_layer_opacity</code>.</li>
+<li>Select and process: <code>select_features_by_expression</code>, <code>clear_selection</code>, <code>run_processing_algorithm</code>.</li>
+<li>Open UI / save: <code>open_attribute_table</code>, <code>save_project</code>.</li>
+</ul>
+<p>Destructive or persistent actions such as <code>remove_layer</code>, <code>clear_layers</code>, <code>save_map</code>, <code>save_project</code>, and <code>run_processing_algorithm</code> require confirmation through the GeoAgent safety hook.</p>
 
 
 
@@ -1064,7 +1173,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:53:57 UTC"><span class="timeago" datetime="2026-04-28T03:53:57+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:53:57 UTC">2026-04-28</span>
   </span>
 
     
