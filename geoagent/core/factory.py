@@ -19,6 +19,7 @@ from geoagent.tools.leafmap import leafmap_tools
 from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
+from geoagent.tools.whitebox import whitebox_tools
 
 NASA_EARTHDATA_SYSTEM_PROMPT = """\
 You are an AI assistant embedded in QGIS for the NASA Earthdata plugin.
@@ -82,6 +83,24 @@ Workflow guidance:
 - Keep responses concise and include asset ids, layer names, and filters used.
 """
 
+WHITEBOX_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS with access to WhiteboxTools.
+WhiteboxTools exposes hundreds of geospatial analysis commands through a
+routed tool interface.
+
+Workflow guidance:
+- Do not guess exact Whitebox command parameters. Search first when the user
+  describes an analysis task, then inspect the selected tool's parameter
+  metadata before running it.
+- Use search_whitebox_tools to find candidate commands, get_whitebox_tool_info
+  to inspect required parameters, then run_whitebox_tool to execute.
+- Use QGIS layer names as input values only when the layer is backed by a
+  local file. Otherwise ask the user to export the layer or provide a file.
+- Generated outputs are added back to QGIS when possible.
+- Keep responses concise and include the Whitebox tool name, output path, and
+  loaded layer names when available.
+"""
+
 
 def _filter_by_imports(tools: list[Any]) -> list[Any]:
     """Drop tools whose declared optional packages are unavailable."""
@@ -116,6 +135,7 @@ def assemble_tools(
     include_nasa_earthdata: bool = False,
     include_nasa_opera: bool = False,
     include_gee_data_catalogs: bool = False,
+    include_whitebox: bool = False,
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     fast: bool = False,
@@ -160,6 +180,12 @@ def assemble_tools(
         )
         register_all_tools(registry, gee_tools)
         collected.extend(gee_tools)
+    if include_whitebox:
+        whitebox_tool_list = _filter_by_imports(
+            whitebox_tools(context.qgis_iface, context.qgis_project)
+        )
+        register_all_tools(registry, whitebox_tool_list)
+        collected.extend(whitebox_tool_list)
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
@@ -475,6 +501,58 @@ def for_gee_data_catalogs(
     )
 
 
+def for_whitebox(
+    iface: Any,
+    project: Any = None,
+    *,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+) -> GeoAgent:
+    """Bind an agent to QGIS with WhiteboxTools analysis support.
+
+    The factory exposes a routed WhiteboxTools broker surface and, by default,
+    the general QGIS map/project tools used for inspection and navigation.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "whitebox",
+            "system_prompt": WHITEBOX_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_whitebox=True,
+        extra_tools=extra_tools,
+        fast=fast,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 __all__ = [
     "assemble_tools",
     "create_agent",
@@ -484,5 +562,6 @@ __all__ = [
     "for_nasa_earthdata",
     "for_nasa_opera",
     "for_qgis",
+    "for_whitebox",
     "register_all_tools",
 ]

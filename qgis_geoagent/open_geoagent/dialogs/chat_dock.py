@@ -46,6 +46,9 @@ SAMPLE_PROMPTS = [
     "Inspect the active vector layer fields and suggest useful styling or labeling options.",
     "Select features in the active layer where population is greater than 100000, then zoom to the selected features.",
     "Run a buffer around the active layer by 1000 meters and add the output to the project.",
+    "Find a WhiteboxTools command for calculating slope from the active DEM layer.",
+    "Run a WhiteboxTools hillshade analysis on a local DEM and add the result to QGIS.",
+    "Search WhiteboxTools for watershed or flow accumulation tools.",
     "Create a concise map QA checklist for this project before I export it.",
 ]
 
@@ -237,7 +240,7 @@ class ChatWorker(QThread):
         """Create a GeoAgent QGIS agent and execute one chat turn."""
         try:
             from geoagent import GeoAgentConfig
-            from geoagent import for_qgis
+            from geoagent import for_whitebox
 
             try:
                 from qgis.core import QgsProject
@@ -251,11 +254,12 @@ class ChatWorker(QThread):
                 model=self.model_id,
                 max_tokens=self.max_tokens,
             )
-            agent = for_qgis(
+            agent = for_whitebox(
                 self.iface,
                 project=project,
                 config=config,
                 fast=self.fast,
+                confirm=self._confirm_tool,
             )
             response = agent.chat(self.prompt)
 
@@ -280,6 +284,40 @@ class ChatWorker(QThread):
                     "elapsed": "",
                 }
             )
+
+    def _confirm_tool(self, request):
+        """Ask the QGIS user before running confirmation-required tools."""
+        from geoagent.tools._qt_marshal import run_on_qt_gui_thread
+
+        def _ask():
+            parent = None
+            try:
+                parent = self.iface.mainWindow()
+            except Exception:
+                pass
+
+            arg_lines = []
+            for key, value in request.args.items():
+                text = str(value)
+                if len(text) > 160:
+                    text = text[:157] + "..."
+                arg_lines.append(f"{key}: {text}")
+
+            details = "\n".join(arg_lines) if arg_lines else "No arguments"
+            message = (
+                f"GeoAgent wants to run:\n\n{request.tool_name}\n\n"
+                f"{details}\n\nAllow this action?"
+            )
+            reply = QMessageBox.question(
+                parent,
+                "Confirm GeoAgent Tool",
+                message,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            return reply == QMessageBox.StandardButton.Yes
+
+        return bool(run_on_qt_gui_thread(_ask))
 
 
 class ChatDockWidget(QDockWidget):
