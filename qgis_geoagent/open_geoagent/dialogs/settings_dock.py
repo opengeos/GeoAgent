@@ -225,6 +225,14 @@ class SettingsDockWidget(QDockWidget):
         self.ollama_host_input.setPlaceholderText("http://127.0.0.1:11434")
         credentials_form.addRow("Ollama host:", self.ollama_host_input)
 
+        self.litellm_key_input = QLineEdit()
+        self.litellm_key_input.setEchoMode(password_mode)
+        credentials_form.addRow("LiteLLM API key:", self.litellm_key_input)
+
+        self.litellm_base_url_input = QLineEdit()
+        self.litellm_base_url_input.setPlaceholderText("https://proxy.example.com")
+        credentials_form.addRow("LiteLLM base URL:", self.litellm_base_url_input)
+
         layout.addWidget(credentials_group)
 
         note = QLabel(
@@ -371,6 +379,12 @@ class SettingsDockWidget(QDockWidget):
         self.ollama_host_input.setText(
             self.settings.value(f"{SETTINGS_PREFIX}ollama_host", "", type=str)
         )
+        self.litellm_key_input.setText(
+            self.settings.value(f"{SETTINGS_PREFIX}litellm_api_key", "", type=str)
+        )
+        self.litellm_base_url_input.setText(
+            self.settings.value(f"{SETTINGS_PREFIX}litellm_base_url", "", type=str)
+        )
 
     def _save_settings(self):
         """Persist settings from the form fields."""
@@ -399,6 +413,13 @@ class SettingsDockWidget(QDockWidget):
         self.settings.setValue(
             f"{SETTINGS_PREFIX}ollama_host", self.ollama_host_input.text()
         )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}litellm_api_key", self.litellm_key_input.text()
+        )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}litellm_base_url",
+            self.litellm_base_url_input.text(),
+        )
         self.status_label.setText("Settings saved")
         self.status_label.setStyleSheet("color: green; font-size: 10px;")
         self.iface.messageBar().pushSuccess("OpenGeoAgent", "Settings saved.")
@@ -424,6 +445,8 @@ class SettingsDockWidget(QDockWidget):
             "gemini_api_key",
             "aws_region",
             "ollama_host",
+            "litellm_api_key",
+            "litellm_base_url",
         ]:
             self.settings.remove(f"{SETTINGS_PREFIX}{key}")
         self._load_settings()

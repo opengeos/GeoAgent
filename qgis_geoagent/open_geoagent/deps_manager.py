@@ -32,6 +32,7 @@ REQUIRED_PACKAGES = [
     ("anthropic", "anthropic>=0.40"),
     ("google.genai", "google-genai>=1.0"),
     ("ollama", "ollama>=0.3"),
+    ("litellm", "strands-agents[litellm]>=1.37"),
 ]
 
 CACHE_DIR = os.path.join(os.path.expanduser("~"), ".open_geoagent")

@@ -14,7 +14,8 @@ workflows.
 ## What GeoAgent Provides
 
 - A `GeoAgent` facade around a Strands `Agent`.
-- Provider configuration for OpenAI, Anthropic, Google Gemini, Bedrock, and Ollama.
+- Provider configuration for OpenAI, Anthropic, Google Gemini, Bedrock,
+  LiteLLM, and Ollama.
 - `@geo_tool` metadata for category, safety, fast-mode filtering, and optional
   dependency checks.
 - Factories for common runtime environments:
@@ -69,6 +70,7 @@ GeoAgent can infer a provider from environment variables:
 | OpenAI | `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
 | Anthropic | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` |
 | Google Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL` |
+| LiteLLM | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | Ollama | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL` |
 | Bedrock | AWS credentials and Bedrock model access, optional `BEDROCK_MODEL` |
 

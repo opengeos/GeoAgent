@@ -14,7 +14,7 @@ def Page():
 
         **Features:**
         - Natural language interface for geospatial data workflows
-        - Multi-LLM support (OpenAI, Anthropic, Google Gemini, Ollama)
+        - Multi-LLM support (OpenAI, Anthropic, Google Gemini, Ollama, LiteLLM)
         - Interactive MapLibre maps with layer accumulation
         - Dynamic catalog discovery across 134+ Planetary Computer collections
         - Code transparency showing generated Python at each step
