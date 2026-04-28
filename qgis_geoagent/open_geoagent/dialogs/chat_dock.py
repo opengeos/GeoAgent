@@ -36,6 +36,8 @@ DEFAULT_MODELS = {
     "litellm": "openai/gpt-5.5",
 }
 PROVIDERS = ["bedrock", "openai", "anthropic", "gemini", "ollama", "litellm"]
+MAX_CONTEXT_MESSAGES = 12
+MAX_CONTEXT_CHARS = 12000
 SAMPLE_PROMPTS = [
     "Summarize the current QGIS project layers, CRS, extents, and feature counts.",
     "Zoom to the active layer and describe what it contains.",
@@ -444,6 +446,7 @@ class ChatDockWidget(QDockWidget):
         model_id = self.model_input.text().strip()
         fast = self.fast_check.isChecked()
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
+        prompt_with_context = self._build_prompt_with_context(prompt)
 
         self._append_message("You", prompt, markdown=False)
         self.prompt_input.clear()
@@ -452,10 +455,44 @@ class ChatDockWidget(QDockWidget):
         self.send_btn.setEnabled(False)
 
         self._worker = ChatWorker(
-            self.iface, prompt, provider, model_id, fast, max_tokens, self
+            self.iface,
+            prompt_with_context,
+            provider,
+            model_id,
+            fast,
+            max_tokens,
+            self,
         )
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()
+
+    def _build_prompt_with_context(self, prompt):
+        """Include recent chat transcript so follow-up turns have context."""
+        if not self._messages:
+            return prompt
+
+        history_lines = []
+        for msg in self._messages[-MAX_CONTEXT_MESSAGES:]:
+            body = msg.get("body", "").strip()
+            if not body:
+                continue
+            role = "User" if msg.get("sender") == "You" else "Assistant"
+            history_lines.append(f"{role}: {body}")
+
+        if not history_lines:
+            return prompt
+
+        history = "\n\n".join(history_lines)
+        if len(history) > MAX_CONTEXT_CHARS:
+            history = history[-MAX_CONTEXT_CHARS:]
+            history = f"[Earlier history truncated]\n{history}"
+
+        return (
+            "Use the recent conversation history for context. The current user "
+            "request is the authoritative request to answer now.\n\n"
+            f"Recent conversation:\n{history}\n\n"
+            f"Current user request:\n{prompt}"
+        )
 
     def _select_sample_prompt(self, prompt):
         """Copy the selected sample prompt into the editor."""

@@ -14,6 +14,7 @@ from geoagent.core.registry import (
 from geoagent.core.safety import ConfirmCallback
 from geoagent.core.agent import GeoAgent
 from geoagent.tools.anymap import anymap_tools
+from geoagent.tools.gee_data_catalogs import gee_data_catalogs_tools
 from geoagent.tools.leafmap import leafmap_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
@@ -35,6 +36,31 @@ Workflow guidance:
 - For raster display, choose a specific data link from search results.
 - Keep responses concise and include result counts, date range, and relevant
   first-result identifiers when available.
+"""
+
+GEE_DATA_CATALOGS_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS for Google Earth Engine data catalogs.
+Use the GEE Data Catalogs tools to search official and community datasets,
+inspect metadata, initialize Earth Engine, configure plugin panels, and load
+Earth Engine layers into the current QGIS project.
+
+Workflow guidance:
+- Search the catalog before loading when the user names a topic rather than an
+  exact Earth Engine asset id.
+- Prefer the current QGIS map extent or a user-provided bbox for spatially
+  constrained ImageCollection requests.
+- When the user asks to clip a raster/Image/ImageCollection to an administrative
+  boundary or other vector region, use load_gee_dataset with
+  clip_collection_asset_id and clip_filter_property/value. The tool applies
+  ee.Image.clipToCollection to the raster output. For Tennessee, use
+  TIGER/2018/States with NAME=Tennessee.
+- When the user asks for normalized difference indexes such as NDVI, NDWI,
+  MNDWI, NDMI, or NBR, use calculate_gee_normalized_difference. Do not display
+  a single source band as a proxy. Common Sentinel-2/HLS S30 pairs: NDVI B8/B4,
+  NDWI B3/B8, MNDWI B3/B11, NBR B8/B12.
+- Ask for or infer visualization bands only when needed; common RGB defaults
+  are acceptable for Landsat and Sentinel imagery.
+- Keep responses concise and include asset ids, layer names, and filters used.
 """
 
 
@@ -69,6 +95,8 @@ def assemble_tools(
     include_anymap: bool = False,
     include_qgis: bool = False,
     include_nasa_opera: bool = False,
+    include_gee_data_catalogs: bool = False,
+    gee_data_catalogs_plugin: Any | None = None,
     fast: bool = False,
 ) -> tuple[list[Any], GeoToolRegistry]:
     """Collect tools for a context and build a metadata registry."""
@@ -92,6 +120,15 @@ def assemble_tools(
         )
         register_all_tools(registry, opera_tools)
         collected.extend(opera_tools)
+    if include_gee_data_catalogs:
+        gee_tools = _filter_by_imports(
+            gee_data_catalogs_tools(
+                context.qgis_iface,
+                plugin=gee_data_catalogs_plugin,
+            )
+        )
+        register_all_tools(registry, gee_tools)
+        collected.extend(gee_tools)
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
@@ -299,10 +336,65 @@ def for_nasa_opera(
     )
 
 
+def for_gee_data_catalogs(
+    iface: Any,
+    project: Any = None,
+    *,
+    plugin: Any | None = None,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+) -> GeoAgent:
+    """Bind an agent to the QGIS GEE Data Catalogs plugin runtime.
+
+    The factory exposes native GEE Data Catalogs tools and, by default, the
+    general QGIS map/project tools used for navigation and layer management.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "gee_data_catalogs",
+            "system_prompt": GEE_DATA_CATALOGS_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_gee_data_catalogs=True,
+        gee_data_catalogs_plugin=plugin,
+        extra_tools=extra_tools,
+        fast=fast,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 __all__ = [
     "assemble_tools",
     "create_agent",
     "for_anymap",
+    "for_gee_data_catalogs",
     "for_leafmap",
     "for_nasa_opera",
     "for_qgis",
