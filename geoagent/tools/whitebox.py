@@ -49,43 +49,64 @@ def _safe_stem(value: str, fallback: str = "whitebox_output") -> str:
 
 
 def _project_from_iface(iface: Any, project: Optional[Any]) -> Any:
-    """Return the configured project or resolve it from the QGIS iface."""
+    """Return the configured project or resolve it from the QGIS iface.
+
+    QGIS APIs (``iface.project()`` and ``QgsProject.instance()``) are not
+    thread-safe, so the lookup is marshalled onto the Qt GUI thread.
+    """
     if project is not None:
         return project
-    if hasattr(iface, "project"):
-        try:
-            proj = iface.project()
-            if proj is not None:
-                return proj
-        except Exception:
-            pass
-    try:
-        from qgis.core import QgsProject  # type: ignore[import-not-found]
 
-        return QgsProject.instance()
-    except Exception as exc:  # pragma: no cover - QGIS-only path
-        raise RuntimeError("QGIS is not available; cannot resolve QgsProject.") from exc
+    def _resolve() -> Any:
+        if hasattr(iface, "project"):
+            try:
+                proj = iface.project()
+                if proj is not None:
+                    return proj
+            except Exception:
+                pass
+        try:
+            from qgis.core import QgsProject  # type: ignore[import-not-found]
+
+            return QgsProject.instance()
+        except Exception as exc:  # pragma: no cover - QGIS-only path
+            raise RuntimeError(
+                "QGIS is not available; cannot resolve QgsProject."
+            ) from exc
+
+    return run_on_qt_gui_thread(_resolve)
 
 
 def _project_output_dir(project: Any) -> str:
-    """Choose a stable directory for generated Whitebox outputs."""
-    for attr in ("homePath", "absolutePath"):
-        method = getattr(project, attr, None)
-        if callable(method):
+    """Choose a stable directory for generated Whitebox outputs.
+
+    Project path getters (``homePath``, ``absolutePath``, ``fileName``) are
+    QGIS API calls and are marshalled onto the Qt GUI thread.
+    """
+
+    def _read_paths() -> str | None:
+        for attr in ("homePath", "absolutePath"):
+            method = getattr(project, attr, None)
+            if callable(method):
+                try:
+                    value = str(method()).strip()
+                    if value:
+                        return value
+                except Exception:
+                    pass
+        file_name = getattr(project, "fileName", None)
+        if callable(file_name):
             try:
-                value = str(method()).strip()
+                value = str(file_name()).strip()
                 if value:
-                    return value
+                    return str(Path(value).parent)
             except Exception:
                 pass
-    file_name = getattr(project, "fileName", None)
-    if callable(file_name):
-        try:
-            value = str(file_name()).strip()
-            if value:
-                return str(Path(value).parent)
-        except Exception:
-            pass
+        return None
+
+    resolved = run_on_qt_gui_thread(_read_paths)
+    if resolved:
+        return resolved
     out_dir = Path(tempfile.gettempdir()) / "geoagent_whitebox"
     out_dir.mkdir(parents=True, exist_ok=True)
     return str(out_dir)
