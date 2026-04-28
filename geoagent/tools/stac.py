@@ -1,48 +1,24 @@
-"""STAC search tool, re-exported with GeoAgent metadata.
+"""Optional STAC tools — stub until Phase 2 restores search/add workflows.
 
-This is a thin wrapper around the v0.x ``geoagent.core.tools.stac`` module
-that stamps :func:`geoagent.core.decorators.geo_tool` metadata onto the
-existing LangChain tools so they participate in the new registry, safety,
-and category-based filtering machinery.
-
-The underlying implementation (pystac-client + the catalog registry) is
-unchanged.
+STAC search/add helpers are deferred and will return in a later milestone.
+:func:`stac_tools` always returns ``[]`` regardless of whether
+``pystac-client`` is installed; the import probe is kept so the placeholder
+can be evolved into a real factory without changing the call site.
 """
 
 from __future__ import annotations
 
-from langchain_core.tools import BaseTool
-
-from geoagent.core.decorators import stamp_geo_meta
+from typing import Any
 
 
-def stac_tools() -> list[BaseTool]:
-    """Build the STAC tool set.
+def stac_tools() -> list[Any]:
+    """Return ``[]`` (placeholder until STAC tools are reintroduced).
 
-    Returns:
-        A list of LangChain ``BaseTool`` instances exposing ``search_stac``
-        and ``get_stac_collections``. Empty when ``pystac_client`` is
-        unavailable.
+    The empty list is intentional even when ``pystac_client`` imports
+    successfully; treat this factory as a stub. See module docstring.
     """
     try:
-        from geoagent.core.tools.stac import search_stac, get_stac_collections
+        import pystac_client  # noqa: F401
     except ImportError:
         return []
-
-    stamp_geo_meta(
-        search_stac,
-        category="data",
-        requires_confirmation=False,
-        requires_packages=["pystac_client"],
-    )
-    stamp_geo_meta(
-        get_stac_collections,
-        category="data",
-        requires_confirmation=False,
-        requires_packages=["pystac_client"],
-    )
-
-    return [search_stac, get_stac_collections]
-
-
-__all__ = ["stac_tools"]
+    return []

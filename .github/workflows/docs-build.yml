@@ -16,25 +16,15 @@ jobs:
               with:
                   python-version: "3.12"
 
-            - name: Install GDAL
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install --find-links=https://girder.github.io/large_image_wheels --no-cache GDAL pyproj
-            - name: Test GDAL installation
-              run: |
-                  python -c "from osgeo import gdal"
-                  gdalinfo --version
             - name: Install dependencies
               run: |
-                  pip install --no-cache-dir Cython
+                  python -m pip install --upgrade pip
                   pip install -r requirements.txt -r requirements_dev.txt
-                  pip install .
+                  pip install -e ".[dev]"
             - name: PKG-TEST
-              run: |
-                  pytest tests/ -v
+              run: pytest tests/ -v
             - name: Build docs
-              run: |
-                  mkdocs build
+              run: mkdocs build --strict
             - name: Deploy to Netlify
               uses: nwtgck/actions-netlify@v3.0
               with:
@@ -50,4 +40,3 @@ jobs:
                   NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
                   NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
               timeout-minutes: 10
-

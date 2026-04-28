@@ -1,7 +1,7 @@
 """GeoAgent CLI.
 
 Commands:
-  geoagent ui        Launch the Streamlit UI
+  geoagent ui        Launch the Solara UI
   geoagent --help    Show help
 """
 
@@ -12,14 +12,14 @@ import sys
 import subprocess
 
 
-def _run_streamlit_app() -> int:
+def _run_solara_app() -> int:
     try:
-        from geoagent.ui import APP_PATH
+        from geoagent.ui import PAGES_DIR
     except Exception as e:
         print(f"Failed to locate UI app: {e}")
         return 1
 
-    cmd = [sys.executable, "-m", "solara", "run", APP_PATH]
+    cmd = [sys.executable, "-m", "solara", "run", PAGES_DIR]
     try:
         return subprocess.call(cmd)
     except FileNotFoundError:
@@ -34,12 +34,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
-    subparsers.add_parser("ui", help="Launch the Streamlit UI")
+    subparsers.add_parser("ui", help="Launch the Solara UI")
 
     args = parser.parse_args(argv)
 
     if args.command == "ui":
-        return _run_streamlit_app()
+        return _run_solara_app()
 
     # No command: show help
     parser.print_help()

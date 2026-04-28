@@ -1,23 +1,8 @@
 # Tools
 
-GeoAgent provides LangChain-compatible tools that can be used independently or as part of the agent pipeline.
+Interactive adapters live under **`geoagent.tools`**:
 
-## STAC Search
+- `leafmap_tools`, `anymap_tools`, `qgis_tools` — bound to live map / QGIS instances.
+- Optional stubs: `stac`, `geoai`, `earthengine`, `nasa_earthdata` (expand in future releases).
 
-::: geoagent.core.tools.stac
-
-## DuckDB Spatial SQL
-
-::: geoagent.core.tools.duckdb_tool
-
-## Raster Analysis
-
-::: geoagent.core.tools.raster
-
-## Vector Operations
-
-::: geoagent.core.tools.vector
-
-## Visualization
-
-::: geoagent.core.tools.viz
+Use **`@geo_tool`** ([`geoagent.core.decorators`](decorators.md)) so tools register Strands-compatible metadata for safety hooks.
