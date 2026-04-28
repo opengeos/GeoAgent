@@ -53,5 +53,15 @@ def auto_approve_all(request: ConfirmRequest) -> bool:
 
 
 def build_interrupt_on(*args: Any, **kwargs: Any) -> dict[str, bool]:
-    """Deprecated compatibility shim; Strands uses hooks instead of interrupt_on."""
-    return {}
+    """Removed in 1.0; raise to surface accidental use of the deepagents shim.
+
+    Strands gates confirmation-required tools through
+    :class:`geoagent.core.confirmation_hook.ConfirmationHookProvider`, not via
+    a LangGraph-style ``interrupt_on`` mapping. Returning ``{}`` silently
+    would let downstream code believe nothing needs confirmation.
+    """
+    raise NotImplementedError(
+        "build_interrupt_on was removed in GeoAgent 1.0. Use "
+        "geoagent.core.confirmation_hook.ConfirmationHookProvider with a "
+        "ConfirmCallback to gate confirmation-required tools."
+    )

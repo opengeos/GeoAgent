@@ -32,14 +32,6 @@ def _filter_by_imports(tools: list[Any]) -> list[Any]:
     return out
 
 
-def _register_meta(registry: GeoToolRegistry, tools: Iterable[Any]) -> None:
-    for t in tools:
-        meta = getattr(t, "_geoagent_meta", None)
-        if meta is not None:
-            registry.register_tool(t, meta)
-
-
-# register_all_tools - implement in registry or here
 def register_all_tools(registry: GeoToolRegistry, tools: Iterable[Any]) -> None:
     """Populate registry from decorated tools."""
     for t in tools:
