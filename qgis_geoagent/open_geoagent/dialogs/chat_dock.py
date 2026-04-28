@@ -33,8 +33,9 @@ DEFAULT_MODELS = {
     "anthropic": "claude-sonnet-4-6",
     "gemini": "gemini-3.1-pro-preview",
     "ollama": "qwen3.5:4b",
+    "litellm": "openai/gpt-5.5",
 }
-PROVIDERS = ["bedrock", "openai", "anthropic", "gemini", "ollama"]
+PROVIDERS = ["bedrock", "openai", "anthropic", "gemini", "ollama", "litellm"]
 SAMPLE_PROMPTS = [
     "Summarize the current QGIS project layers, CRS, extents, and feature counts.",
     "Zoom to the active layer and describe what it contains.",
@@ -60,6 +61,8 @@ def _apply_environment_from_settings(settings):
         "gemini_api_key": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
         "aws_region": "AWS_REGION",
         "ollama_host": "OLLAMA_HOST",
+        "litellm_api_key": "LITELLM_API_KEY",
+        "litellm_base_url": "LITELLM_BASE_URL",
     }
     for key, env_names in env_map.items():
         value = _setting(settings, key, "").strip()

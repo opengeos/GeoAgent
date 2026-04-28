@@ -87,6 +87,23 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             max_tokens=cfg.max_tokens,
         )
 
+    if provider == "litellm":
+        from strands.models.litellm import LiteLLMModel
+
+        model_id = cfg.model or os.environ.get("LITELLM_MODEL", "openai/gpt-5.5")
+        client_args = dict(cfg.client_args)
+        api_key = os.environ.get("LITELLM_API_KEY")
+        if api_key and "api_key" not in client_args:
+            client_args["api_key"] = api_key
+        base_url = cfg.litellm_base_url or os.environ.get("LITELLM_BASE_URL")
+        if base_url and "base_url" not in client_args:
+            client_args["base_url"] = base_url
+        return LiteLLMModel(
+            client_args=client_args or None,
+            model_id=model_id,
+            params={"temperature": cfg.temperature, "max_tokens": cfg.max_tokens},
+        )
+
     raise ValueError(f"Unknown provider: {provider}")
 
 

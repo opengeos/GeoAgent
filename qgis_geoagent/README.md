@@ -15,8 +15,8 @@ GitHub update checker.
 - Dockable OpenGeoAgent chat panel with Ctrl+Enter sending
 - Up/Down prompt history while the prompt editor is focused
 - Built-in sample prompt picker for common QGIS workflows
-- Provider and model controls for Bedrock, OpenAI, Anthropic, Google Gemini, and Ollama
-- Settings panel for model defaults, API keys, Ollama host, and AWS region
+- Provider and model controls for Bedrock, OpenAI, Anthropic, Google Gemini, Ollama, and LiteLLM
+- Settings panel for model defaults, API keys, hosts, and AWS region
 - Dependency installer that installs `GeoAgent[providers]` into
   `~/.open_geoagent/`
 - QGIS 3.28+ and QGIS 4 compatible plugin structure
@@ -84,6 +84,7 @@ applied to the current QGIS process before each chat request:
 - Google Gemini: `GEMINI_API_KEY` or `GOOGLE_API_KEY`
 - Bedrock: `AWS_REGION` plus the normal AWS credential chain
 - Ollama: `OLLAMA_HOST`
+- LiteLLM: `LITELLM_API_KEY` and optional `LITELLM_BASE_URL`
 
 Default models:
 
@@ -94,6 +95,7 @@ Default models:
 | Anthropic | `claude-sonnet-4-6` |
 | Google Gemini | `gemini-3.1-pro-preview` |
 | Ollama | `qwen3.5:4b` |
+| LiteLLM | `openai/gpt-5.5` |
 
 ## Chat Workflow
 

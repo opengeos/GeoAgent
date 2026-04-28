@@ -275,7 +275,7 @@ LLM providers.</p>
 <h3>Features</h3>
 <ul>
 <li>Dockable chatbot panel for QGIS projects</li>
-<li>Provider and model selection for Bedrock, OpenAI, Anthropic, Google Gemini, and Ollama</li>
+<li>Provider and model selection for Bedrock, OpenAI, Anthropic, Google Gemini, Ollama, and LiteLLM</li>
 <li>Sample prompts, prompt history, and Ctrl+Enter prompt sending</li>
 <li>One-click dependency installer in an isolated virtual environment</li>
 <li>GitHub update checker and packaging scripts</li>

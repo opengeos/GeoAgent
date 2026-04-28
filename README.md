@@ -17,7 +17,8 @@ Many geospatial libraries need the same agent features:
 
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
-- support OpenAI, Anthropic, Google Gemini, Bedrock, and local Ollama models;
+- support OpenAI, Anthropic, Google Gemini, Bedrock, LiteLLM, and local
+  Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
@@ -58,6 +59,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[anthropic]` | Anthropic Claude model support through Strands. |
 | `GeoAgent[gemini]` | Google Gemini model support through Strands. |
 | `GeoAgent[ollama]` | Local Ollama model support. |
+| `GeoAgent[litellm]` | LiteLLM model support for many hosted and proxy providers. |
 | `GeoAgent[leafmap]` | leafmap live map integration. |
 | `GeoAgent[anymap]` | anymap live map integration. |
 | `GeoAgent[stac]` | STAC client dependencies. |
@@ -66,7 +68,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[geoai]` | geoai integration dependencies. |
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies. |
 | `GeoAgent[ui]` | Solara UI dependencies. |
-| `GeoAgent[providers]` | OpenAI, Anthropic, Gemini, and Ollama provider clients. |
+| `GeoAgent[providers]` | OpenAI, Anthropic, Gemini, Ollama, and LiteLLM provider clients. |
 | `GeoAgent[all]` | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
@@ -91,6 +93,7 @@ specified:
 | OpenAI | `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
 | Anthropic | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` |
 | Google Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL` |
+| LiteLLM | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | Ollama | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL` |
 | Bedrock | AWS credential chain and model access, optional `BEDROCK_MODEL` |
 

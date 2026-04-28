@@ -50,3 +50,16 @@ def test_factory_accepts_gemini_provider() -> None:
     )
     assert a.config.provider == "gemini"
     assert a.config.model == "gemini-3.1-pro-preview"
+
+
+def test_factory_accepts_litellm_provider() -> None:
+    """Verify that factory accepts LiteLLM provider."""
+    m = MockLeafmap()
+    a = for_leafmap(
+        m,
+        provider="litellm",
+        model_id="openai/gpt-5.5",
+        model=_MockModel(),
+    )
+    assert a.config.provider == "litellm"
+    assert a.config.model == "openai/gpt-5.5"

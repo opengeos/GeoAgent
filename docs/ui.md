@@ -23,7 +23,7 @@ solara run geoagent/ui/pages
 - **Persistent map** — layers accumulate across queries on the same interactive MapLibre map
 - **Native widget rendering** — full bidirectional map interaction (zoom, pan, click)
 - **Chat interface** — type natural language queries with real-time status updates
-- **Provider selection** — switch between OpenAI, Anthropic, Google Gemini, or Ollama
+- **Provider selection** — switch between OpenAI, Anthropic, Google Gemini, Ollama, or LiteLLM
 - **Generated code** — toggle code display for transparency
 
 ## Python API

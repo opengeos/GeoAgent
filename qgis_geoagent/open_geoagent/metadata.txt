@@ -12,7 +12,7 @@ about=OpenGeoAgent provides a dockable chatbot interface for QGIS that builds on
     Features:
     - Dockable chat panel for asking questions about the current QGIS project
     - QGIS-safe GeoAgent tools for layer inspection, map navigation, data loading, selection, processing, and project operations
-    - Provider and model controls for Bedrock, OpenAI, Anthropic, Google Gemini, and Ollama
+    - Provider and model controls for Bedrock, OpenAI, Anthropic, Google Gemini, Ollama, and LiteLLM
     - Sample prompts, prompt history with Up/Down, and Ctrl+Enter sending
     - Settings panel for API keys, hosts, model defaults, and dependency status
     - One-click dependency installer using uv with an isolated virtual environment
