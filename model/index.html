@@ -1314,16 +1314,18 @@
     <span class="p">)</span>
     <span class="n">provider</span><span class="p">:</span> <span class="n">ProviderName</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">provider</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.bedrock</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_BEDROCK_MODEL_ID</span><span class="p">,</span> <span class="n">BedrockModel</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.bedrock</span><span class="w"> </span><span class="kn">import</span> <span class="n">BedrockModel</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">DEFAULT_BEDROCK_MODEL_ID</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;BEDROCK_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;us.anthropic.claude-sonnet-4-6&quot;</span>
+        <span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">BedrockModel</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai&quot;</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-5.4-mini&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-5.5&quot;</span><span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
@@ -1343,13 +1345,33 @@
             <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">},</span>
         <span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;gemini&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeminiModel</span>
+
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;GEMINI_MODEL&quot;</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GOOGLE_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gemini-3.1-pro-preview&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GEMINI_API_KEY&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GOOGLE_API_KEY&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">api_key</span> <span class="ow">and</span> <span class="s2">&quot;api_key&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
+            <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="k">return</span> <span class="n">GeminiModel</span><span class="p">(</span>
+            <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span>
+                <span class="s2">&quot;max_output_tokens&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
     <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;ollama&quot;</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.ollama</span><span class="w"> </span><span class="kn">import</span> <span class="n">OllamaModel</span>
 
         <span class="n">host</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">ollama_host</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="s2">&quot;OLLAMA_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;http://127.0.0.1:11434&quot;</span>
         <span class="p">)</span>
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OLLAMA_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;llama3&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OLLAMA_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;llama3.1&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">OllamaModel</span><span class="p">(</span>
             <span class="n">host</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>

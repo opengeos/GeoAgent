@@ -1931,28 +1931,7 @@ MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")</div>
 <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.leafmap</span><span class="w"> </span><span class="kn">import</span> <span class="n">leafmap_tools</span>
 
 <span class="n">m</span> <span class="o">=</span> <span class="n">leafmap</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">83.92</span><span class="p">,</span> <span class="mf">35.96</span><span class="p">],</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="s2">"520px"</span><span class="p">)</span>
-
-<span class="n">vs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"view_state"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"view_state keys:"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">vs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"view_state:"</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">vs</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">vs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">GeoAgentConfig</span><span class="p">(</span>
-    <span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
-    <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="n">get_state</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">leafmap_tools</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">tool_name</span> <span class="o">==</span> <span class="s2">"get_map_state"</span><span class="p">)</span>
-<span class="n">st</span> <span class="o">=</span> <span class="n">get_state</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"get_map_state zoom / center:"</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zoom"</span><span class="p">),</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"center"</span><span class="p">))</span>
-
-<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Using the map state, what is the zoom level? One sentence."</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="n">m</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">import leafmap.maplibregl as leafmap
 from geoagent import for_leafmap
@@ -1960,28 +1939,7 @@ from geoagent.core.config import GeoAgentConfig
 from geoagent.tools.leafmap import leafmap_tools
 
 m = leafmap.Map(center=[-83.92, 35.96], zoom=9, height="520px")
-
-vs = getattr(m, "view_state", None)
-if isinstance(vs, dict):
-    print("view_state keys:", list(vs.keys()))
-else:
-    print("view_state:", type(vs).__name__ if vs is not None else None)
-
-cfg = GeoAgentConfig(
-    provider="anthropic",
-    model=MODEL,
-    temperature=0.0,
-    max_tokens=4096,
-)
-agent = for_leafmap(m, config=cfg, fast=True)
-
-get_state = next(t for t in leafmap_tools(m) if t.tool_name == "get_map_state")
-st = get_state()
-print("get_map_state zoom / center:", st.get("zoom"), st.get("center"))
-
-resp = agent.chat("Using the map state, what is the zoom level? One sentence.")
-print(resp.answer_text)
-print("tools:", resp.executed_tools)</div>
+m</div>
 </div>
 </div>
 </div>
@@ -2017,9 +1975,80 @@ print("tools:", resp.executed_tools)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">m</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">vs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"view_state"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"view_state keys:"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">vs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"view_state:"</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">vs</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">vs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">GeoAgentConfig</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
+    <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">get_state</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">leafmap_tools</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">tool_name</span> <span class="o">==</span> <span class="s2">"get_map_state"</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">get_state</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"get_map_state zoom / center:"</span><span class="p">,</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"zoom"</span><span class="p">),</span> <span class="n">st</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"center"</span><span class="p">))</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Using the map state, what is the zoom level? One sentence."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">m</div>
+<div class="clipboard-copy-txt" id="cell-4">vs = getattr(m, "view_state", None)
+if isinstance(vs, dict):
+    print("view_state keys:", list(vs.keys()))
+else:
+    print("view_state:", type(vs).__name__ if vs is not None else None)
+
+cfg = GeoAgentConfig(
+    provider="anthropic",
+    model=MODEL,
+    temperature=0.0,
+    max_tokens=4096,
+)
+agent = for_leafmap(m, config=cfg, fast=True)
+
+get_state = next(t for t in leafmap_tools(m) if t.tool_name == "get_map_state")
+st = get_state()
+print("get_map_state zoom / center:", st.get("zoom"), st.get("center"))
+
+resp = agent.chat("Using the map state, what is the zoom level? One sentence.")
+print(resp.answer_text)
+print("tools:", resp.executed_tools)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Fly to San Francisco"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-5">resp = agent.chat("Fly to San Francisco")
+print(resp.answer_text)
+print("tools:", resp.executed_tools)</div>
 </div>
 </div>
 </div>
@@ -2055,7 +2084,7 @@ print("tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 05:15:11 UTC"><span class="timeago" datetime="2026-04-28T05:15:11+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 05:15:11 UTC">2026-04-28</span>
   </span>
 
     
