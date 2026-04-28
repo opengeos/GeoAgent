@@ -42,6 +42,7 @@ geoagent = "geoagent.cli:main"
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.40"]
+gemini = ["strands-agents[gemini]>=1.37", "google-genai>=1.0"]
 ollama = ["ollama>=0.3"]
 bedrock = []
 leafmap = ["leafmap>=0.43"]
@@ -53,7 +54,7 @@ stac = ["pystac-client>=0.8", "planetary-computer>=1.0"]
 earthdata = ["earthaccess>=0.10"]
 ui = ["solara>=1.35"]
 qgis = []
-providers = ["GeoAgent[openai,anthropic,ollama]"]
+providers = ["GeoAgent[openai,anthropic,gemini,ollama]"]
 all = [
     "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,ui]",
 ]

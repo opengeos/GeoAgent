@@ -1,0 +1,44 @@
+[general]
+name=OpenGeoAgent
+qgisMinimumVersion=3.28
+qgisMaximumVersion=4.99
+description=GeoAgent-powered AI chatbot for QGIS projects.
+version=0.1.0
+author=Qiusheng Wu
+email=giswqs@gmail.com
+
+about=OpenGeoAgent provides a dockable chatbot interface for QGIS that builds on GeoAgent's QGIS tool surface.
+
+    Features:
+    - Dockable chat panel for asking questions about the current QGIS project
+    - QGIS-safe GeoAgent tools for layer inspection, map navigation, data loading, selection, processing, and project operations
+    - Provider and model controls for Bedrock, OpenAI, Anthropic, Google Gemini, and Ollama
+    - Sample prompts, prompt history with Up/Down, and Ctrl+Enter sending
+    - Settings panel for API keys, hosts, model defaults, and dependency status
+    - One-click dependency installer using uv with an isolated virtual environment
+    - GitHub update checker
+    - Local installation and packaging scripts
+
+    Requirements:
+    - GeoAgent and provider clients, installable from Settings > Dependencies
+
+tracker=https://github.com/opengeos/GeoAgent/issues
+repository=https://github.com/opengeos/GeoAgent
+
+hasProcessingProvider=no
+
+tags=ai, agent, qgis, geospatial, chatbot, geoagent, llm, gemini
+
+homepage=https://github.com/opengeos/GeoAgent
+category=Plugins
+icon=icons/icon.svg
+
+experimental=False
+deprecated=False
+
+changelog=
+    0.1.0 - Initial OpenGeoAgent plugin
+        - Added GeoAgent-backed QGIS chat dock
+        - Added provider/model settings and credential fields
+        - Added one-click dependency installer
+        - Added update checker and packaging scripts

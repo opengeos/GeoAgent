@@ -7,7 +7,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-ProviderName = Literal["bedrock", "openai", "anthropic", "ollama"]
+ProviderName = Literal["bedrock", "openai", "anthropic", "gemini", "ollama"]
 
 
 def _default_provider_from_env() -> ProviderName:
@@ -15,6 +15,8 @@ def _default_provider_from_env() -> ProviderName:
         return "openai"
     if os.environ.get("ANTHROPIC_API_KEY"):
         return "anthropic"
+    if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+        return "gemini"
     if os.environ.get("OLLAMA_HOST") or os.environ.get("USE_OLLAMA") == "1":
         return "ollama"
     return "bedrock"
@@ -25,7 +27,8 @@ class GeoAgentConfig(BaseModel):
 
     API keys and region defaults are read from the environment when not
     passed explicitly (``OPENAI_API_KEY``, ``ANTHROPIC_API_KEY``,
-    ``AWS_REGION`` / default AWS credential chain for Bedrock, etc.).
+    ``GEMINI_API_KEY`` / ``GOOGLE_API_KEY``, ``AWS_REGION`` / default
+    AWS credential chain for Bedrock, etc.).
 
     Attributes:
         provider: Model provider id.

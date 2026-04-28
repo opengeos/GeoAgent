@@ -19,4 +19,4 @@ cd GeoAgent
 pip install -e ".[dev]"
 ```
 
-Configure API keys via environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, AWS credentials for Bedrock, `OLLAMA_HOST`, etc.). See `GeoAgentConfig` in `geoagent.core.config`.
+Configure API keys via environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` or `GOOGLE_API_KEY`, AWS credentials for Bedrock, `OLLAMA_HOST`, etc.). See `GeoAgentConfig` in `geoagent.core.config`.
