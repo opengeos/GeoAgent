@@ -15,7 +15,27 @@ from geoagent.core.safety import ConfirmCallback
 from geoagent.core.agent import GeoAgent
 from geoagent.tools.anymap import anymap_tools
 from geoagent.tools.leafmap import leafmap_tools
+from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
+
+NASA_OPERA_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS for NASA OPERA satellite data.
+Use the OPERA tools to search, display, and summarize NASA OPERA products.
+
+Dataset guidance:
+- Water, flood, inundation: prefer OPERA_L3_DSWX-HLS_V1 or OPERA_L3_DSWX-S1_V1.
+- Deforestation, fire damage, vegetation loss, land disturbance: prefer
+  OPERA_L3_DIST-ALERT-HLS_V1 or OPERA_L3_DIST-ANN-HLS_V1.
+- SAR/radar/backscatter: prefer OPERA_L2_RTC-S1_V1.
+- Interferometry/phase workflows: prefer OPERA_L2_CSLC-S1_V1.
+
+Workflow guidance:
+- Search before displaying footprints or rasters.
+- If the user gives no location, use the current QGIS map extent.
+- For raster display, choose a specific data link from search results.
+- Keep responses concise and include result counts, date range, and relevant
+  first-result identifiers when available.
+"""
 
 
 def _filter_by_imports(tools: list[Any]) -> list[Any]:
@@ -48,6 +68,7 @@ def assemble_tools(
     include_leafmap: bool = False,
     include_anymap: bool = False,
     include_qgis: bool = False,
+    include_nasa_opera: bool = False,
     fast: bool = False,
 ) -> tuple[list[Any], GeoToolRegistry]:
     """Collect tools for a context and build a metadata registry."""
@@ -65,6 +86,12 @@ def assemble_tools(
         qt = _filter_by_imports(qgis_tools(context.qgis_iface, context.qgis_project))
         register_all_tools(registry, qt)
         collected.extend(qt)
+    if include_nasa_opera:
+        opera_tools = _filter_by_imports(
+            nasa_opera_tools(context.qgis_iface, context.qgis_project)
+        )
+        register_all_tools(registry, opera_tools)
+        collected.extend(opera_tools)
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
@@ -220,11 +247,64 @@ def for_qgis(
     )
 
 
+def for_nasa_opera(
+    iface: Any,
+    project: Any = None,
+    *,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+) -> GeoAgent:
+    """Bind an agent to the NASA OPERA QGIS plugin runtime.
+
+    The factory exposes native GeoAgent OPERA tools and, by default, the
+    general QGIS map/project tools used for navigation and layer management.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "nasa_opera",
+            "system_prompt": NASA_OPERA_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_nasa_opera=True,
+        extra_tools=extra_tools,
+        fast=fast,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 __all__ = [
     "assemble_tools",
     "create_agent",
     "for_anymap",
     "for_leafmap",
+    "for_nasa_opera",
     "for_qgis",
     "register_all_tools",
 ]

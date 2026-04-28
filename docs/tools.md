@@ -2,7 +2,7 @@
 
 Interactive adapters live under **`geoagent.tools`**:
 
-- `leafmap_tools`, `anymap_tools`, `qgis_tools` — bound to live map / QGIS instances.
+- `leafmap_tools`, `anymap_tools`, `qgis_tools`, `nasa_opera_tools` — bound to live map / QGIS instances.
 - Optional stubs: `stac`, `geoai`, `earthengine`, `nasa_earthdata` (expand in future releases).
 
 Use **`@geo_tool`** ([`geoagent.core.decorators`](decorators.md)) so tools register Strands-compatible metadata for safety hooks.
@@ -30,3 +30,35 @@ Layer lookup accepts exact names or a unique case-insensitive substring for oper
 - Open UI / save: `open_attribute_table`, `save_project`.
 
 Destructive or persistent actions such as `remove_layer`, `clear_layers`, `save_map`, `save_project`, and `run_processing_algorithm` require confirmation through the GeoAgent safety hook.
+
+## NASA OPERA
+
+`for_nasa_opera(iface, project=None)` exposes native GeoAgent tools for NASA OPERA plugin workflows:
+
+- Inspect OPERA products: `get_available_datasets`, `get_dataset_info`.
+- Search Earthdata granules: `search_opera_data`.
+- Display results in QGIS: `display_footprints`, `display_raster`, `create_mosaic`.
+
+This integration replaces the plugin-local `nasa_opera.ai.tools` registry instead of wrapping it.
+
+Example QGIS-console workflow. This direct-tool path avoids LLM/provider
+initialization and reports progress in QGIS's message bar and Log Messages
+panel:
+
+```python
+from geoagent.tools.nasa_opera import submit_nasa_opera_search_task
+
+task = submit_nasa_opera_search_task(
+    iface,
+    dataset="OPERA_L3_DSWX-HLS_V1",
+    bbox="-95.5,29.5,-95.0,30.0",
+    start_date="2024-01-01",
+    end_date="2024-01-31",
+    max_results=5,
+    display_footprints=True,
+)
+```
+
+Natural-language OPERA chat is intentionally disabled inside QGIS for now.
+Use direct tools or `submit_nasa_opera_search_task(...)` so QGIS task/thread
+ownership remains explicit.

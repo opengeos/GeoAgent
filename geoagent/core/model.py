@@ -79,7 +79,7 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
         host = cfg.ollama_host or os.environ.get(
             "OLLAMA_HOST", "http://127.0.0.1:11434"
         )
-        model_id = cfg.model or os.environ.get("OLLAMA_MODEL", "llama3.1")
+        model_id = cfg.model or os.environ.get("OLLAMA_MODEL", "qwen3.5:4b")
         return OllamaModel(
             host,
             model_id=model_id,

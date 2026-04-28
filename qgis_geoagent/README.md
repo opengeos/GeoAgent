@@ -93,7 +93,7 @@ Default models:
 | OpenAI | `gpt-5.5` |
 | Anthropic | `claude-sonnet-4-6` |
 | Google Gemini | `gemini-3.1-pro-preview` |
-| Ollama | `llama3.1` |
+| Ollama | `qwen3.5:4b` |
 
 ## Chat Workflow
 

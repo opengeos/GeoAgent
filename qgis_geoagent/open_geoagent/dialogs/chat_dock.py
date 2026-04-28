@@ -3,9 +3,10 @@
 import os
 import html
 import re
+import time
 import traceback
 
-from qgis.PyQt.QtCore import Qt, QSettings, QThread, pyqtSignal
+from qgis.PyQt.QtCore import Qt, QSettings, QThread, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QGuiApplication, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -31,7 +32,7 @@ DEFAULT_MODELS = {
     "openai": "gpt-5.5",
     "anthropic": "claude-sonnet-4-6",
     "gemini": "gemini-3.1-pro-preview",
-    "ollama": "llama3.1",
+    "ollama": "qwen3.5:4b",
 }
 PROVIDERS = ["bedrock", "openai", "anthropic", "gemini", "ollama"]
 SAMPLE_PROMPTS = [
@@ -288,6 +289,12 @@ class ChatDockWidget(QDockWidget):
         self._history_index = None
         self._messages = []
         self._last_assistant_markdown = ""
+        self._status_started_at = None
+        self._status_base_text = "Running"
+        self._status_frame = 0
+        self._status_timer = QTimer(self)
+        self._status_timer.setInterval(500)
+        self._status_timer.timeout.connect(self._update_running_status)
 
         self.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
@@ -440,8 +447,8 @@ class ChatDockWidget(QDockWidget):
 
         self._append_message("You", prompt, markdown=False)
         self.prompt_input.clear()
-        self.status_label.setText("Running...")
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
+        self._start_running_status("Running GeoAgent")
         self.send_btn.setEnabled(False)
 
         self._worker = ChatWorker(
@@ -490,6 +497,7 @@ class ChatDockWidget(QDockWidget):
 
     def _on_worker_finished(self, result):
         """Render the completed chat worker result."""
+        self._stop_running_status()
         if result.get("success"):
             answer = result.get("answer") or "(No text response.)"
             details = []
@@ -513,6 +521,41 @@ class ChatDockWidget(QDockWidget):
 
         self.send_btn.setEnabled(True)
         self._worker = None
+
+    def _start_running_status(self, base_text):
+        """Start or update the animated status text."""
+        self._status_base_text = base_text
+        if self._status_started_at is None:
+            self._status_started_at = time.monotonic()
+            self._status_frame = 0
+        if not self._status_timer.isActive():
+            self._status_timer.start()
+        self._update_running_status()
+
+    def _stop_running_status(self):
+        """Stop the animated status text."""
+        if self._status_timer.isActive():
+            self._status_timer.stop()
+        self._status_started_at = None
+        self._status_frame = 0
+
+    def _update_running_status(self):
+        """Refresh the animated status text."""
+        if self._status_started_at is None:
+            return
+        elapsed = int(time.monotonic() - self._status_started_at)
+        spinner = ("-", "\\", "|", "/")[self._status_frame % 4]
+        self._status_frame += 1
+        dots = "." * (self._status_frame % 4)
+        if elapsed >= 30:
+            suffix = "large QGIS operations can take a while"
+        elif elapsed >= 10:
+            suffix = "running tools and waiting for the model"
+        else:
+            suffix = "working"
+        self.status_label.setText(
+            f"{spinner} {self._status_base_text}{dots} {elapsed}s - {suffix}"
+        )
 
     def _append_message(self, sender, message, markdown=False):
         """Append a chat message and refresh the transcript."""
@@ -558,3 +601,20 @@ class ChatDockWidget(QDockWidget):
         self._last_assistant_markdown = ""
         self.copy_md_btn.setEnabled(False)
         self.transcript.clear()
+
+    def _shutdown_running_state(self):
+        """Stop the animated status timer when the dock is dismissed."""
+        try:
+            self._stop_running_status()
+        except Exception:
+            pass
+
+    def hideEvent(self, event):
+        """Stop the animated status timer when the dock is hidden."""
+        self._shutdown_running_state()
+        super().hideEvent(event)
+
+    def closeEvent(self, event):
+        """Stop the animated status timer when the dock is closed."""
+        self._shutdown_running_state()
+        super().closeEvent(event)
