@@ -53,7 +53,7 @@ def test_for_gee_data_catalogs_registers_catalog_and_qgis_tools() -> None:
     )
     names = set(agent.strands_agent.tool_names)
 
-    assert "search_gee_datasets" in names
-    assert "load_gee_dataset" in names
+    assert "open_gee_catalog_panel" in names
+    assert "configure_gee_dataset_load" in names
     assert "list_project_layers" in names
     assert agent.context.metadata["integration"] == "gee_data_catalogs"

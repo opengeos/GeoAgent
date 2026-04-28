@@ -111,20 +111,11 @@ def _build_vis_params(
 
 def gee_data_catalogs_tools(
     iface: Any,
-    project: Optional[Any] = None,
     plugin: Optional[Any] = None,
 ) -> list[Any]:
     """Return GeoAgent tools for the QGIS GEE Data Catalogs plugin."""
     if iface is None:
         return []
-
-    def _project() -> Any:
-        """Return the bound or singleton QGIS project."""
-        if project is not None:
-            return project
-        from qgis.core import QgsProject  # type: ignore[import-not-found]
-
-        return QgsProject.instance()
 
     def _ensure_plugin_catalog_dock() -> Any | None:
         """Return a live plugin catalog dock when a plugin instance was supplied."""
@@ -147,6 +138,7 @@ def gee_data_catalogs_tools(
         category="gee_data_catalogs",
         name="search_gee_datasets",
         available_in=("full", "fast"),
+        requires_packages=("gee_data_catalogs",),
     )
     def search_gee_datasets(
         query: str = "",
@@ -177,6 +169,7 @@ def gee_data_catalogs_tools(
         category="gee_data_catalogs",
         name="get_gee_dataset_info",
         available_in=("full", "fast"),
+        requires_packages=("gee_data_catalogs",),
     )
     def get_gee_dataset_info(
         asset_id: str,
@@ -196,6 +189,7 @@ def gee_data_catalogs_tools(
         category="gee_data_catalogs",
         name="summarize_gee_catalog",
         available_in=("full", "fast"),
+        requires_packages=("gee_data_catalogs",),
     )
     def summarize_gee_catalog(include_community: bool = True) -> dict[str, Any]:
         """Summarize dataset counts by catalog category."""
@@ -214,6 +208,7 @@ def gee_data_catalogs_tools(
         category="gee_data_catalogs",
         name="initialize_earth_engine",
         requires_confirmation=True,
+        requires_packages=("gee_data_catalogs",),
     )
     def initialize_earth_engine(project_id: Optional[str] = None) -> dict[str, Any]:
         """Initialize Earth Engine using the plugin utility and saved project id."""
@@ -231,6 +226,7 @@ def gee_data_catalogs_tools(
         name="load_gee_dataset",
         requires_confirmation=True,
         long_running=True,
+        requires_packages=("gee_data_catalogs", "ee"),
     )
     def load_gee_dataset(
         asset_id: str,

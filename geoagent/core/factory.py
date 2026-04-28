@@ -115,7 +115,6 @@ def assemble_tools(
         gee_tools = _filter_by_imports(
             gee_data_catalogs_tools(
                 context.qgis_iface,
-                context.qgis_project,
                 plugin=gee_data_catalogs_plugin,
             )
         )
