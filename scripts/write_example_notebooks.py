@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate docs/examples notebooks (GeoAgent 2.x + Anthropic)."""
+"""Generate docs/examples notebooks (GeoAgent 1.0 + Anthropic)."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def main() -> None:
         metadata=meta,
         cells=[
             new_markdown_cell(
-                "# GeoAgent 2.x — Anthropic (Claude)\n\n"
+                "# GeoAgent 1.0 — Anthropic (Claude)\n\n"
                 "- Set **`ANTHROPIC_API_KEY`** in your environment.\n"
                 "- Optionally set **`ANTHROPIC_MODEL`** "
                 f"(default: `{DEFAULT_MODEL}` — Claude Sonnet 4.6).\n"

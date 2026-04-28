@@ -1,4 +1,4 @@
-# GeoAgent 2.x
+# GeoAgent 1.0
 
 GeoAgent is a **centralized geospatial agent layer** for Python and QGIS, built on [Strands Agents](https://strandsagents.com/). It provides `@geo_tool` metadata, environment-specific factories (`for_leafmap`, `for_anymap`, `for_qgis`), and confirmation hooks for destructive operations.
 

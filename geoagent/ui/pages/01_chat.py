@@ -1,6 +1,6 @@
 """Solara chat page (minimal) — use the Python API for full control.
 
-The 2.x line uses Strands Agents. Install ``GeoAgent[ui,leafmap,openai]`` (or
+GeoAgent 1.0 uses Strands Agents. Install ``GeoAgent[ui,leafmap,openai]`` (or
 other provider extra), set API keys, then use :class:`geoagent.GeoAgent` in
 this page or in a notebook.
 """

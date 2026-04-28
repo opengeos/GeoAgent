@@ -2,7 +2,7 @@
 
 **GeoAgent** is a centralized AI agent layer for Open Geospatial Python stacks and QGIS plugins. Downstream packages (**geoai**, **leafmap**, **anymap**, **geemap**, QGIS GeoAI / GEE Catalogs / NASA Earthdata plugins, …) reuse one framework instead of each shipping duplicate orchestration code.
 
-Version **2.x** is built on **[Strands Agents](https://strandsagents.com/)** ([sdk-python](https://github.com/strands-agents/sdk-python)): one Python `Agent`, custom `@geo_tool` wrappers, multiple model providers, hooks for safety/confirmation, and direct tool calls via `agent.strands_agent.tool.<name>(...)`.
+Version **1.0** is built on **[Strands Agents](https://strandsagents.com/)** ([sdk-python](https://github.com/strands-agents/sdk-python)): one Python `Agent`, custom `@geo_tool` wrappers, multiple model providers, hooks for safety/confirmation, and direct tool calls via `agent.strands_agent.tool.<name>(...)`.
 
 ---
 

@@ -1,4 +1,4 @@
-"""GeoAgent — centralized geospatial agent layer (Strands Agents, 2.x)."""
+"""GeoAgent — centralized geospatial agent layer (Strands Agents, 1.0)."""
 
 __author__ = """Qiusheng Wu"""
 __email__ = "giswqs@gmail.com"
