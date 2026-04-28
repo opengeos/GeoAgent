@@ -40,6 +40,7 @@ def geo_tool(
     """
 
     def deco(fn: F) -> Any:
+        """Attach GeoAgent metadata to the decorated function."""
         kwargs: dict[str, Any] = {}
         if name is not None:
             kwargs["name"] = name

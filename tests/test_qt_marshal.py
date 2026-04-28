@@ -18,33 +18,52 @@ def test_run_on_qt_gui_thread_runs_inline_when_current_equals_gui(monkeypatch) -
     """
 
     class _FakeThread:
+        """Provide a test double for FakeThread."""
+
         def __eq__(self, other: object) -> bool:
             return isinstance(other, _FakeThread)
 
     class _QThread:
+        """Provide a test double for QThread."""
+
         @staticmethod
         def currentThread():
+            """Return the current thread."""
             return _FakeThread()
 
     class _App:
+        """Provide a test double for App."""
+
         def thread(self):
+            """Return the associated thread."""
             return _FakeThread()
 
     class _QApplication:
+        """Provide a test double for QApplication."""
+
         @staticmethod
         def instance():
+            """Return the singleton instance."""
             return _App()
 
     class _QObject:
+        """Provide a test double for QObject."""
+
         def moveToThread(self, _thread):
+            """Move to thread."""
             return None
 
     class _QMetaObject:
+        """Provide a test double for QMetaObject."""
+
         @staticmethod
         def invokeMethod(*_args, **_kwargs):
+            """Invoke method."""
             raise AssertionError("invokeMethod must not run on GUI thread")
 
     class _Qt:
+        """Provide a test double for Qt."""
+
         BlockingQueuedConnection = 0
 
     fake_qt_core = types.SimpleNamespace(

@@ -18,17 +18,22 @@ from geoagent.tools.qgis import qgis_tools
 
 
 def test_qgis_module_imports_without_qgis() -> None:
-    # The module is already imported; confirm `qgis` was not pulled in.
-    # (If it was, this test would still pass — we just want to ensure import
-    # didn't fail when the user's environment has no qgis package.)
+    """Verify the qgis tools module imports without the qgis package.
+
+    The module is already imported; confirm ``qgis`` was not pulled in.
+    (If it was, this test would still pass; we just want to ensure import
+    did not fail when the user's environment has no qgis package.)
+    """
     assert "geoagent.tools.qgis" in sys.modules
 
 
 def test_qgis_tools_returns_empty_for_none() -> None:
+    """Verify that qgis tools returns empty for none."""
     assert qgis_tools(None) == []
 
 
 def test_factory_returns_tools_for_iface() -> None:
+    """Verify that factory returns tools for iface."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = qgis_tools(iface, project)
@@ -64,6 +69,7 @@ def test_factory_returns_tools_for_iface() -> None:
 
 
 def test_remove_layer_and_run_processing_require_confirmation() -> None:
+    """Verify that remove layer and run processing require confirmation."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -75,6 +81,7 @@ def test_remove_layer_and_run_processing_require_confirmation() -> None:
 
 
 def test_add_vector_layer_invokes_iface() -> None:
+    """Verify that add vector layer invokes iface."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -87,6 +94,7 @@ def test_add_vector_layer_invokes_iface() -> None:
 
 
 def test_remove_layer_drops_from_project() -> None:
+    """Verify that remove layer drops from project."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     project.addMapLayer(MockQGISLayer("Buildings", "/tmp/b.shp"))
@@ -97,6 +105,7 @@ def test_remove_layer_drops_from_project() -> None:
 
 
 def test_zoom_in_invokes_canvas() -> None:
+    """Verify that zoom in invokes canvas."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -106,6 +115,7 @@ def test_zoom_in_invokes_canvas() -> None:
 
 
 def test_list_project_layers() -> None:
+    """Verify that list project layers."""
     project = MockQGISProject()
     project.addMapLayer(MockQGISLayer("A", "a.shp", "vector"))
     project.addMapLayer(MockQGISLayer("B", "b.tif", "raster"))
@@ -118,6 +128,7 @@ def test_list_project_layers() -> None:
 
 
 def test_get_active_layer_returns_none_when_unset() -> None:
+    """Verify that get active layer returns none when unset."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -126,6 +137,7 @@ def test_get_active_layer_returns_none_when_unset() -> None:
 
 
 def test_get_active_layer_returns_metadata() -> None:
+    """Verify that get active layer returns metadata."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     layer = MockQGISLayer("Active", "a.shp", "vector")
@@ -138,6 +150,7 @@ def test_get_active_layer_returns_metadata() -> None:
 
 
 def test_get_project_state_includes_canvas_and_layers() -> None:
+    """Verify that get project state includes canvas and layers."""
     project = MockQGISProject()
     project.addMapLayer(MockQGISLayer("A", "a.shp", "vector"))
     iface = MockQGISIface(project=project)
@@ -148,6 +161,7 @@ def test_get_project_state_includes_canvas_and_layers() -> None:
 
 
 def test_zoom_to_layer_resolves_layer() -> None:
+    """Verify that zoom to layer resolves layer."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     layer = MockQGISLayer("Target", "t.shp")
@@ -179,6 +193,8 @@ def test_zoom_to_layer_transforms_extent_when_layer_crs_differs(monkeypatch) -> 
     project.addMapLayer(layer)
 
     class _Crs:
+        """Provide a test double for Crs."""
+
         def __init__(self, name):
             self.name = name
 
@@ -193,7 +209,10 @@ def test_zoom_to_layer_transforms_extent_when_layer_crs_differs(monkeypatch) -> 
     layer.crs = lambda: layer_crs  # type: ignore[method-assign]
 
     class _MapSettings:
+        """Provide a test double for MapSettings."""
+
         def destinationCrs(self):
+            """Return the destination crs."""
             return canvas_crs
 
     canvas.mapSettings = lambda: _MapSettings()  # type: ignore[method-assign]
@@ -201,17 +220,23 @@ def test_zoom_to_layer_transforms_extent_when_layer_crs_differs(monkeypatch) -> 
     transformed_extent = (-12_835_000.0, 4_330_000.0, -12_801_000.0, 4_355_000.0)
 
     class _CoordTransform:
+        """Provide a test double for CoordTransform."""
+
         def __init__(self, src, dst, project_arg):
             assert src is layer_crs
             assert dst is canvas_crs
 
         def transformBoundingBox(self, extent):
+            """Transform bounding box."""
             assert extent == layer_extent
             return transformed_extent
 
     class _QgsProject:
+        """Provide a test double for QgsProject."""
+
         @staticmethod
         def instance():
+            """Return the singleton instance."""
             return object()
 
     fake_qgs_core = types.SimpleNamespace(
@@ -249,6 +274,8 @@ def test_zoom_to_extent_transforms_bbox_to_canvas_crs(monkeypatch) -> None:
     canvas = iface.mapCanvas()
 
     class _Crs:
+        """Provide a test double for Crs."""
+
         def __init__(self, authid):
             self.authid = authid
 
@@ -262,7 +289,10 @@ def test_zoom_to_extent_transforms_bbox_to_canvas_crs(monkeypatch) -> None:
     dst_crs = _Crs("EPSG:3857")
 
     class _MapSettings:
+        """Provide a test double for MapSettings."""
+
         def destinationCrs(self):
+            """Return the destination crs."""
             return dst_crs
 
     canvas.mapSettings = lambda: _MapSettings()  # type: ignore[method-assign]
@@ -273,20 +303,27 @@ def test_zoom_to_extent_transforms_bbox_to_canvas_crs(monkeypatch) -> None:
     # Use a simple 4-tuple as the QgsRectangle stand-in so MockQGISCanvas's
     # ``setExtent`` (which calls ``tuple(extent)``) can record it cleanly.
     def _Rect(w, s, e, n):
+        """Return a tuple that stands in for QgsRectangle."""
         return (w, s, e, n)
 
     class _CoordTransform:
+        """Provide a test double for CoordTransform."""
+
         def __init__(self, src, dst, project_arg):
             assert src == src_crs
             assert dst == dst_crs
 
         def transformBoundingBox(self, rect):
+            """Transform bounding box."""
             assert tuple(rect) == seattle_latlon
             return _Rect(*seattle_mercator)
 
     class _QgsProject:
+        """Provide a test double for QgsProject."""
+
         @staticmethod
         def instance():
+            """Return the singleton instance."""
             return object()
 
     fake_qgs_core = types.SimpleNamespace(
@@ -340,6 +377,7 @@ def test_zoom_to_layer_uses_setExtent_when_extent_available() -> None:
 
 
 def test_zoom_to_layer_raises_when_missing() -> None:
+    """Verify that zoom to layer raises when missing."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -348,6 +386,7 @@ def test_zoom_to_layer_raises_when_missing() -> None:
 
 
 def test_refresh_canvas_increments_counter() -> None:
+    """Verify that refresh canvas increments counter."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -357,6 +396,7 @@ def test_refresh_canvas_increments_counter() -> None:
 
 
 def test_set_center_and_scale_update_canvas() -> None:
+    """Verify that set center and scale update canvas."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -368,6 +408,7 @@ def test_set_center_and_scale_update_canvas() -> None:
 
 
 def test_add_xyz_tile_layer_uses_raster_fallback() -> None:
+    """Verify that add xyz tile layer uses raster fallback."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -380,6 +421,7 @@ def test_add_xyz_tile_layer_uses_raster_fallback() -> None:
 
 
 def test_layer_opacity_selection_and_summary() -> None:
+    """Verify that layer opacity selection and summary."""
     project = MockQGISProject()
     layer = MockQGISLayer(
         "Parcels",
@@ -412,6 +454,7 @@ def test_layer_opacity_selection_and_summary() -> None:
 
 
 def test_save_project_records_path(tmp_path) -> None:
+    """Verify that save project records path."""
     project = MockQGISProject()
     iface = MockQGISIface(project=project)
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -421,12 +464,14 @@ def test_save_project_records_path(tmp_path) -> None:
 
 
 def test_qgis_tools_route_calls_through_gui_marshal(monkeypatch) -> None:
+    """Verify that qgis tools route calls through gui marshal."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     calls: list[str] = []
 
     def _marshal(func):
+        """Run the function through the marshal hook."""
         calls.append("called")
         return func()
 

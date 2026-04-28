@@ -12,10 +12,12 @@ from geoagent.tools.leafmap import leafmap_tools
 
 
 def _by_name(m: MockLeafmap) -> dict[str, object]:
+    """Index leafmap tools by Strands tool name."""
     return {t.tool_name: t for t in leafmap_tools(m)}
 
 
 def test_factory_returns_full_tool_list() -> None:
+    """Verify that factory returns full tool list."""
     m = MockLeafmap()
     names = {t.tool_name for t in leafmap_tools(m)}
     expected = {
@@ -48,10 +50,12 @@ def test_factory_returns_full_tool_list() -> None:
 
 
 def test_factory_returns_empty_for_none() -> None:
+    """Verify that factory returns empty for none."""
     assert leafmap_tools(None) == []
 
 
 def test_remove_and_save_require_confirmation() -> None:
+    """Verify that remove and save require confirmation."""
     tools = _by_name(MockLeafmap())
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["clear_layers"]) is True
@@ -61,6 +65,7 @@ def test_remove_and_save_require_confirmation() -> None:
 
 
 def test_add_layer_mutates_map() -> None:
+    """Verify that add layer mutates map."""
     m = MockLeafmap()
     tools = _by_name(m)
     tools["add_layer"](
@@ -72,6 +77,7 @@ def test_add_layer_mutates_map() -> None:
 
 
 def test_remove_layer_mutates_map() -> None:
+    """Verify that remove layer mutates map."""
     m = MockLeafmap()
     tools = _by_name(m)
     tools["add_layer"](
@@ -85,6 +91,7 @@ def test_remove_layer_mutates_map() -> None:
 
 
 def test_layer_visibility_opacity_and_zoom_to_layer() -> None:
+    """Verify that layer visibility opacity and zoom to layer."""
     m = MockLeafmap()
     tools = _by_name(m)
     m.layers.append(
@@ -107,6 +114,7 @@ def test_layer_visibility_opacity_and_zoom_to_layer() -> None:
 
 
 def test_add_marker_and_geojson_data() -> None:
+    """Verify that add marker and geojson data."""
     m = MockLeafmap()
     tools = _by_name(m)
     tools["add_marker"](lat=35.96, lon=-83.92, popup="Knoxville")
@@ -119,6 +127,7 @@ def test_add_marker_and_geojson_data() -> None:
 
 
 def test_clear_layers_mutates_map() -> None:
+    """Verify that clear layers mutates map."""
     m = MockLeafmap()
     tools = _by_name(m)
     tools["add_marker"](lat=0, lon=0, name="Zero")
@@ -128,6 +137,7 @@ def test_clear_layers_mutates_map() -> None:
 
 
 def test_fast_mode_filters_tools() -> None:
+    """Verify that fast mode filters tools."""
     m = MockLeafmap()
     items = leafmap_tools(m)
     reg = GeoToolRegistry()
@@ -139,6 +149,7 @@ def test_fast_mode_filters_tools() -> None:
 
 
 def test_get_map_state_and_viewport() -> None:
+    """Verify that get map state and viewport."""
     m = MockLeafmap()
     tools = _by_name(m)
     tools["set_center"](lat=35.96, lon=-83.92, zoom=10)
@@ -152,6 +163,8 @@ def test_get_map_state_prefers_view_state_maplibre() -> None:
     """MapLibre leafmap stores camera in ``view_state``, not ipyleaflet center/zoom."""
 
     class MapLibreStub:
+        """Provide a test double for MapLibreStub."""
+
         def __init__(self) -> None:
             self.layers: list = []
             self._style = "dark-matter"
@@ -177,6 +190,8 @@ def test_get_map_state_falls_back_to_map_options_when_view_state_empty() -> None
     """MapLibre can expose empty view_state until frontend sync."""
 
     class MapLibreStub:
+        """Provide a test double for MapLibreStub."""
+
         def __init__(self) -> None:
             self.layers: list = []
             self._style = None
@@ -200,6 +215,7 @@ def test_get_map_state_falls_back_to_map_options_when_view_state_empty() -> None
 
 
 def test_save_map_writes(tmp_path: Path) -> None:
+    """Verify that save map writes."""
     m = MockLeafmap()
     tools = _by_name(m)
     out = tmp_path / "x.html"

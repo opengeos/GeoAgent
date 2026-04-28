@@ -24,6 +24,7 @@ from .chat_dock import DEFAULT_MODELS, PROVIDERS, SETTINGS_PREFIX
 
 
 def _enum_value(cls, enum_name, member_name):
+    """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
 
@@ -46,6 +47,7 @@ class SettingsDockWidget(QDockWidget):
         self._load_settings()
 
     def _setup_ui(self):
+        """Build the settings dock widgets and tabs."""
         main_widget = QWidget()
         self.setWidget(main_widget)
 
@@ -81,6 +83,7 @@ class SettingsDockWidget(QDockWidget):
         layout.addWidget(self.status_label)
 
     def _create_dependencies_tab(self):
+        """Create the dependency status and installer tab."""
         from ..deps_manager import REQUIRED_PACKAGES
 
         widget = QWidget()
@@ -162,6 +165,7 @@ class SettingsDockWidget(QDockWidget):
         return widget
 
     def _create_model_tab(self):
+        """Create the model provider and credential tab."""
         widget = QWidget()
         layout = QVBoxLayout(widget)
 
@@ -234,6 +238,7 @@ class SettingsDockWidget(QDockWidget):
         return widget
 
     def _refresh_dependency_status(self):
+        """Refresh dependency labels from the dependency checker."""
         from ..deps_manager import check_dependencies
 
         deps = check_dependencies()
@@ -270,6 +275,7 @@ class SettingsDockWidget(QDockWidget):
             self.install_deps_btn.setEnabled(True)
 
     def _install_dependencies(self):
+        """Start background dependency installation."""
         from ..deps_manager import DepsInstallWorker
 
         self.install_deps_btn.setEnabled(False)
@@ -287,10 +293,12 @@ class SettingsDockWidget(QDockWidget):
         self._deps_worker.start()
 
     def _on_deps_install_progress(self, percent, message):
+        """Handle deps install progress."""
         self.deps_progress_bar.setValue(percent)
         self.deps_progress_label.setText(message)
 
     def _on_deps_install_finished(self, success, message):
+        """Handle deps install finished."""
         self.deps_progress_bar.setVisible(False)
         self.deps_progress_label.setVisible(False)
         self.install_deps_btn.setText("Install Dependencies")
@@ -327,12 +335,15 @@ class SettingsDockWidget(QDockWidget):
         self._deps_worker = None
 
     def show_dependencies_tab(self):
+        """Switch the settings dock to the dependencies tab."""
         self.tab_widget.setCurrentIndex(0)
 
     def _on_provider_changed(self, provider):
+        """Update the model field when the provider changes."""
         self.model_input.setText(DEFAULT_MODELS.get(provider, ""))
 
     def _load_settings(self):
+        """Load persisted settings into the form fields."""
         provider = self.settings.value(f"{SETTINGS_PREFIX}provider", "openai", type=str)
         index = self.provider_combo.findText(provider)
         self.provider_combo.setCurrentIndex(index if index >= 0 else 1)
@@ -362,6 +373,7 @@ class SettingsDockWidget(QDockWidget):
         )
 
     def _save_settings(self):
+        """Persist settings from the form fields."""
         self.settings.setValue(
             f"{SETTINGS_PREFIX}provider", self.provider_combo.currentText()
         )
@@ -392,6 +404,7 @@ class SettingsDockWidget(QDockWidget):
         self.iface.messageBar().pushSuccess("OpenGeoAgent", "Settings saved.")
 
     def _reset_defaults(self):
+        """Reset saved model settings after user confirmation."""
         reply = QMessageBox.question(
             self,
             "Reset Settings",

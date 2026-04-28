@@ -9,6 +9,7 @@ from geoagent.tools.qgis import qgis_tools
 
 
 def test_qgis_tool_runs_on_calling_thread() -> None:
+    """Verify that qgis tool runs on calling thread."""
     iface = MockQGISIface()
     project = MockQGISProject()
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
@@ -17,6 +18,7 @@ def test_qgis_tool_runs_on_calling_thread() -> None:
     box: list[threading.Thread] = []
 
     def run() -> None:
+        """Run the worker body."""
         tools["zoom_in"]()
         box.append(threading.current_thread())
 

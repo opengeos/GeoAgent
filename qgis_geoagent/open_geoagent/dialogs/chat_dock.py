@@ -47,6 +47,7 @@ SAMPLE_PROMPTS = [
 
 
 def _setting(settings, key, default="", value_type=str):
+    """Read a plugin setting value."""
     return settings.value(f"{SETTINGS_PREFIX}{key}", default, type=value_type)
 
 
@@ -69,20 +70,24 @@ def _apply_environment_from_settings(settings):
 
 
 def _qt_value(enum_name, member_name):
+    """Return a Qt enum member across PyQt enum API variants."""
     container = getattr(Qt, enum_name, Qt)
     return getattr(container, member_name)
 
 
 def _enum_value(cls, enum_name, member_name):
+    """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
 
 
 def _plain_text_to_html(text):
+    """Convert plain text to basic HTML."""
     return html.escape(text).replace("\n", "<br>")
 
 
 def _inline_markdown_to_html(text):
+    """Convert inline Markdown spans to HTML."""
     text = html.escape(text)
     text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
@@ -100,6 +105,7 @@ def _markdown_to_basic_html(markdown):
     code_lines = []
 
     def close_lists():
+        """Close any open HTML list elements."""
         nonlocal in_ul, in_ol
         if in_ul:
             html_lines.append("</ul>")
@@ -180,6 +186,7 @@ class PromptTextEdit(QPlainTextEdit):
     next_requested = pyqtSignal()
 
     def keyPressEvent(self, event):
+        """Handle send and prompt-history keyboard shortcuts."""
         key = event.key()
         modifiers = event.modifiers()
         control = _qt_value("KeyboardModifier", "ControlModifier")
@@ -291,6 +298,7 @@ class ChatDockWidget(QDockWidget):
         self._load_settings()
 
     def _setup_ui(self):
+        """Build the chat dock widgets and signal connections."""
         main_widget = QWidget()
         self.setWidget(main_widget)
 
@@ -382,6 +390,7 @@ class ChatDockWidget(QDockWidget):
         layout.addWidget(self.status_label)
 
     def _load_settings(self):
+        """Load persisted model settings into the dock controls."""
         provider = _setting(self.settings, "provider", "openai")
         index = self.provider_combo.findText(provider)
         self.provider_combo.setCurrentIndex(index if index >= 0 else 1)
@@ -394,6 +403,7 @@ class ChatDockWidget(QDockWidget):
         self.fast_check.setChecked(_setting(self.settings, "fast_mode", False, bool))
 
     def _save_model_settings(self):
+        """Persist the selected provider, model, and fast-mode setting."""
         self.settings.setValue(
             f"{SETTINGS_PREFIX}provider", self.provider_combo.currentText()
         )
@@ -403,9 +413,11 @@ class ChatDockWidget(QDockWidget):
         )
 
     def _on_provider_changed(self, provider):
+        """Update the model field when the provider changes."""
         self.model_input.setText(DEFAULT_MODELS.get(provider, ""))
 
     def _send_prompt(self):
+        """Start a chat request for the current prompt."""
         prompt = self.prompt_input.toPlainText().strip()
         if not prompt:
             return
@@ -439,17 +451,20 @@ class ChatDockWidget(QDockWidget):
         self._worker.start()
 
     def _insert_sample_prompt(self):
+        """Copy the selected sample prompt into the editor."""
         prompt = self.sample_combo.currentText()
         if prompt and prompt != "Sample prompts...":
             self.prompt_input.setPlainText(prompt)
             self.prompt_input.setFocus()
 
     def _record_prompt(self, prompt):
+        """Store a submitted prompt in history."""
         if not self._prompt_history or self._prompt_history[-1] != prompt:
             self._prompt_history.append(prompt)
         self._history_index = None
 
     def _previous_prompt(self):
+        """Load the previous prompt from history."""
         if not self._prompt_history:
             return
         if self._history_index is None:
@@ -459,6 +474,7 @@ class ChatDockWidget(QDockWidget):
         self._set_prompt_from_history()
 
     def _next_prompt(self):
+        """Load the next prompt from history."""
         if not self._prompt_history:
             return
         if self._history_index is None:
@@ -468,10 +484,12 @@ class ChatDockWidget(QDockWidget):
         self._set_prompt_from_history()
 
     def _set_prompt_from_history(self):
+        """Set prompt from history."""
         self.prompt_input.setPlainText(self._prompt_history[self._history_index])
         self.prompt_input.setFocus()
 
     def _on_worker_finished(self, result):
+        """Render the completed chat worker result."""
         if result.get("success"):
             answer = result.get("answer") or "(No text response.)"
             details = []
@@ -497,6 +515,7 @@ class ChatDockWidget(QDockWidget):
         self._worker = None
 
     def _append_message(self, sender, message, markdown=False):
+        """Append a chat message and refresh the transcript."""
         body = message.strip()
         self._messages.append({"sender": sender, "body": body, "markdown": markdown})
         if markdown:
@@ -505,6 +524,7 @@ class ChatDockWidget(QDockWidget):
         self._render_transcript()
 
     def _render_transcript(self):
+        """Render the stored chat messages as HTML."""
         blocks = []
         for msg in self._messages:
             sender = html.escape(msg["sender"])
@@ -523,6 +543,7 @@ class ChatDockWidget(QDockWidget):
         self.transcript.moveCursor(end_cursor)
 
     def _copy_latest_markdown(self):
+        """Copy the latest assistant Markdown response to the clipboard."""
         if not self._last_assistant_markdown:
             return
         clipboard = QGuiApplication.clipboard()
@@ -532,6 +553,7 @@ class ChatDockWidget(QDockWidget):
             self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
     def _clear_transcript(self):
+        """Clear all rendered chat messages."""
         self._messages = []
         self._last_assistant_markdown = ""
         self.copy_md_btn.setEnabled(False)

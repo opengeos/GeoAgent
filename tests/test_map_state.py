@@ -6,6 +6,7 @@ from geoagent.tools._map_state import deep_plain, map_state_from_widget
 
 
 def test_deep_plain_sw_ne() -> None:
+    """Verify that deep plain sw ne."""
     d = {
         "center": {"lng": -1.0, "lat": 2.0},
         "bounds": {
@@ -18,7 +19,11 @@ def test_deep_plain_sw_ne() -> None:
 
 
 def test_map_state_from_view_state() -> None:
+    """Verify that map state from view state."""
+
     class M:
+        """Provide a test double for M."""
+
         layers = []
         _style = "x"
         view_state = {"zoom": 4, "center": {"lng": 0, "lat": 1}}

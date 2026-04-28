@@ -19,6 +19,7 @@ from geoagent.tools.qgis import qgis_tools
 
 
 def _filter_by_imports(tools: list[Any]) -> list[Any]:
+    """Drop tools whose declared optional packages are unavailable."""
     out: list[Any] = []
     for t in tools:
         meta = getattr(t, "_geoagent_meta", None)

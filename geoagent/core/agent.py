@@ -20,6 +20,7 @@ from geoagent.tools._qt_marshal import is_qt_gui_thread, process_qt_events
 
 
 def _result_to_text(result: Any) -> str:
+    """Extract response text from a Strands result object."""
     if result is None:
         return ""
     msg = getattr(result, "message", None)
@@ -69,6 +70,7 @@ class GeoAgent:
         self._rebuild_strands_agent()
 
     def _rebuild_strands_agent(self) -> None:
+        """Recreate the underlying Strands agent from current settings."""
         self._cancelled = []
         prompt = FAST_SYSTEM_PROMPT if self._fast else DEFAULT_SYSTEM_PROMPT
         hook = ConfirmationHookProvider(self._registry, self._confirm, self._cancelled)
@@ -84,6 +86,7 @@ class GeoAgent:
 
     @property
     def context(self) -> GeoAgentContext:
+        """GeoAgent runtime context."""
         return self._context
 
     @property
@@ -108,6 +111,7 @@ class GeoAgent:
 
     @property
     def config(self) -> GeoAgentConfig:
+        """GeoAgent model and runtime configuration."""
         return self._config
 
     def __getattr__(self, name: str) -> Any:
@@ -194,6 +198,7 @@ class GeoAgent:
         box: dict[str, Any] = {}
 
         def _worker() -> None:
+            """Execute chat work off the GUI thread."""
             try:
                 box["response"] = self._chat_impl(query)
             except BaseException as exc:  # pragma: no cover - defensive path
@@ -232,6 +237,7 @@ class GeoAgent:
         """
 
         def _worker() -> None:
+            """Execute chat work and dispatch callbacks."""
             try:
                 resp = self.chat(query, target_map=target_map)
                 if on_result is not None:

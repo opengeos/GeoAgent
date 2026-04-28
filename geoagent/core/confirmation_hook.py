@@ -27,9 +27,11 @@ class ConfirmationHookProvider(HookProvider):
     def register_hooks(
         self, registry: HookRegistry, **kwargs: Any
     ) -> None:  # noqa: ARG002
+        """Register confirmation callbacks with the Strands hook registry."""
         registry.add_callback(BeforeToolCallEvent, self._before_tool)
 
     def _resolve_meta(self, tool_name: str, selected: Any | None) -> GeoToolMeta | None:
+        """Resolve metadata from the selected tool or registry."""
         if selected is not None:
             attached: GeoToolMeta | None = getattr(selected, "_geoagent_meta", None)
             if attached is not None:
@@ -37,6 +39,7 @@ class ConfirmationHookProvider(HookProvider):
         return self._registry.get(tool_name)
 
     def _before_tool(self, event: BeforeToolCallEvent) -> None:
+        """Handle the pre-tool execution hook."""
         use = event.tool_use
         name = str(use.get("name", ""))
         selected = event.selected_tool

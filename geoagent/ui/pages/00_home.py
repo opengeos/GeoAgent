@@ -1,8 +1,11 @@
+"""Solara home page."""
+
 import solara
 
 
 @solara.component
 def Page():
+    """Render the Solara page."""
     with solara.Column(align="center"):
         markdown = """
         ## 🌍 GeoAgent

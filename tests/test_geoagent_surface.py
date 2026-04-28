@@ -7,6 +7,7 @@ from geoagent.testing import MockLeafmap
 
 
 def test_geoagent_exposes_tool_names_and_registry() -> None:
+    """Verify that geoagent exposes tool names and registry."""
     agent = for_leafmap(MockLeafmap())
     names = agent.tool_names
     assert "get_map_state" in names

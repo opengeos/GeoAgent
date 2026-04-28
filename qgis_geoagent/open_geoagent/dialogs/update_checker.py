@@ -117,6 +117,7 @@ class VersionCheckWorker(QThread):
         self._request = QgsBlockingNetworkRequest()
 
         def maybe_abort(_received, _total):
+            """Abort the network request if the worker was interrupted."""
             if self.isInterruptionRequested() and self._request is not None:
                 self._request.abort()
 
@@ -225,6 +226,7 @@ class DownloadWorker(QThread):
             except Exception as e:
                 # Restore backup if copy fails
                 def is_valid_plugin_dir(path):
+                    """Return whether a backup directory looks like the plugin."""
                     return os.path.exists(
                         os.path.join(path, "metadata.txt")
                     ) and os.path.exists(os.path.join(path, "open_geoagent.py"))
@@ -257,6 +259,7 @@ class DownloadWorker(QThread):
         self._request = QgsBlockingNetworkRequest()
 
         def on_progress(received, total):
+            """Emit download progress and abort when interrupted."""
             if self.isInterruptionRequested() and self._request is not None:
                 self._request.abort()
                 return
@@ -477,7 +480,8 @@ class UpdateCheckerDialog(QDialog):
         try:
             # Parse versions like "0.2.0" into tuples of integers
             def parse_version(v):
-                # Remove any non-numeric prefix/suffix and split by dots
+                """Parse a version string into comparable integer parts."""
+                # Remove any non-numeric prefix/suffix and split by dots.
                 parts = re.findall(r"\d+", v)
                 return tuple(int(p) for p in parts)
 
