@@ -17,7 +17,7 @@ Many geospatial libraries need the same agent features:
 
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
-- support OpenAI, Anthropic, Bedrock, and local Ollama models;
+- support OpenAI, Anthropic, Google Gemini, Bedrock, and local Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
@@ -55,6 +55,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | --- | --- |
 | `GeoAgent[openai]` | OpenAI model support through Strands. |
 | `GeoAgent[anthropic]` | Anthropic Claude model support through Strands. |
+| `GeoAgent[gemini]` | Google Gemini model support through Strands. |
 | `GeoAgent[ollama]` | Local Ollama model support. |
 | `GeoAgent[leafmap]` | leafmap live map integration. |
 | `GeoAgent[anymap]` | anymap live map integration. |
@@ -63,7 +64,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[geoai]` | geoai integration dependencies. |
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies. |
 | `GeoAgent[ui]` | Solara UI dependencies. |
-| `GeoAgent[providers]` | OpenAI, Anthropic, and Ollama provider clients. |
+| `GeoAgent[providers]` | OpenAI, Anthropic, Gemini, and Ollama provider clients. |
 | `GeoAgent[all]` | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
@@ -87,8 +88,9 @@ specified:
 | --- | --- |
 | OpenAI | `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
 | Anthropic | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` |
+| Google Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL` |
 | Ollama | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL` |
-| Bedrock | AWS credential chain and model access |
+| Bedrock | AWS credential chain and model access, optional `BEDROCK_MODEL` |
 
 You can also configure providers explicitly:
 
@@ -99,7 +101,7 @@ agent = for_leafmap(
     m,
     config=GeoAgentConfig(
         provider="openai",
-        model="gpt-5.4-mini",
+        model="gpt-5.5",
         temperature=0,
         max_tokens=4096,
     ),
@@ -109,7 +111,7 @@ agent = for_leafmap(
 Factories also accept `provider=` and `model_id=` shortcuts:
 
 ```python
-agent = for_leafmap(m, provider="anthropic", model_id="claude-sonnet-4-6")
+agent = for_leafmap(m, provider="gemini", model_id="gemini-3.1-pro-preview")
 ```
 
 ## Quickstart
@@ -119,7 +121,7 @@ Use GeoAgent directly when you do not need a map or package-specific toolset:
 ```python
 from geoagent import GeoAgent, GeoAgentConfig
 
-agent = GeoAgent(config=GeoAgentConfig(provider="openai", model="gpt-5.4-mini"))
+agent = GeoAgent(config=GeoAgentConfig(provider="openai", model="gpt-5.5"))
 resp = agent.chat("Explain STAC in two sentences.")
 print(resp.answer_text)
 ```

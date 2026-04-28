@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gear shape -->
+  <g fill="#607D8B" stroke="#455A64" stroke-width="2">
+    <path d="M32,8 L36,12 L36,18 L42,22 L48,20 L52,24 L50,30 L54,36 L52,40 L48,44 L42,42 L36,46 L36,52 L32,56 L28,52 L28,46 L22,42 L16,44 L12,40 L14,34 L10,28 L12,24 L16,20 L22,22 L28,18 L28,12 Z"/>
+  </g>
+  <!-- Center circle -->
+  <circle cx="32" cy="32" r="10" fill="white" stroke="#455A64" stroke-width="2"/>
+</svg>
+

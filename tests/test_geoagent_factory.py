@@ -32,3 +32,15 @@ def test_for_leafmap_accepts_provider_and_model_id() -> None:
     )
     assert a.config.provider == "anthropic"
     assert a.config.model == "claude-sonnet-4-6"
+
+
+def test_factory_accepts_gemini_provider() -> None:
+    m = MockLeafmap()
+    a = for_leafmap(
+        m,
+        provider="gemini",
+        model_id="gemini-3.1-pro-preview",
+        model=_MockModel(),
+    )
+    assert a.config.provider == "gemini"
+    assert a.config.model == "gemini-3.1-pro-preview"

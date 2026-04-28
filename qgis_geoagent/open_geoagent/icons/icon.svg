@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mapGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B8A5A"/>
+      <stop offset="1" stop-color="#1769AA"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="8" width="52" height="42" rx="6" fill="url(#mapGrad)" stroke="#0D3B66" stroke-width="2"/>
+  <path d="M14 39 L25 27 L34 34 L49 18" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="25" cy="27" r="4" fill="#FFD166"/>
+  <circle cx="49" cy="18" r="4" fill="#FFD166"/>
+  <path d="M20 56 H44" stroke="#0D3B66" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 50 V56" stroke="#0D3B66" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="47" cy="44" r="12" fill="#FFFFFF" stroke="#0D3B66" stroke-width="2"/>
+  <path d="M41 44 H53 M47 38 V50" stroke="#1769AA" stroke-width="3" stroke-linecap="round"/>
+</svg>
