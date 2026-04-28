@@ -660,6 +660,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#nasa-opera-plugin-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NASA OPERA Plugin Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#integration-quality-bar" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1365,6 +1376,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#nasa-opera-plugin-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NASA OPERA Plugin Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#integration-quality-bar" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1660,6 +1682,38 @@ packages.</p>
 <li>safety/confirmation behavior;</li>
 <li>any limitations or package-version assumptions.</li>
 </ul>
+<h2 id="nasa-opera-plugin-tools">NASA OPERA Plugin Tools<a class="headerlink" href="#nasa-opera-plugin-tools" title="Permanent link">&para;</a></h2>
+<p>The NASA OPERA QGIS plugin uses GeoAgent as its tool provider. Add new OPERA
+capabilities to GeoAgent first, not to the plugin-local AI code.</p>
+<p>Use this split:</p>
+<ul>
+<li><strong>GeoAgent</strong>: reusable OPERA search, display, download, mosaic, analysis, and
+  QGIS-safe tool logic.</li>
+<li><strong>NASA OPERA plugin</strong>: dock widgets, settings, provider/model selection,
+  status text, dependency installation, and UI-specific behavior.</li>
+<li><strong>Plugin compatibility aliases</strong>: old tool names or plugin-only shims, when
+  needed, in the plugin's <code>nasa_opera/ai/tools.py</code>.</li>
+</ul>
+<p>Recommended workflow:</p>
+<ol>
+<li>Add the tool implementation in <code>geoagent/tools/nasa_opera.py</code> inside
+   <code>nasa_opera_tools(...)</code>.</li>
+<li>Decorate it with <code>@geo_tool(...)</code> and write clear typed parameters and
+   structured return values.</li>
+<li>Keep QGIS API calls inside the existing GUI-thread helper (<code>_on_gui(...)</code>).
+   Network, parsing, and file-preparation work should stay outside GUI calls
+   where possible.</li>
+<li>Add or update tests in <code>tests/test_nasa_opera_tools.py</code>. Use mocks; do not
+   require a live QGIS session or real Earthdata credentials for CI.</li>
+<li>Update <code>NASA_OPERA_SYSTEM_PROMPT</code> in <code>geoagent/core/factory.py</code> if the model
+   needs guidance about when to use the new tool.</li>
+<li>Update <code>docs/tools.md</code>, <code>README.md</code>, or <code>examples/nasa_opera_qgis.py</code> when
+   the tool is user-facing.</li>
+<li>Only change the NASA OPERA plugin repo when the feature needs UI controls,
+   settings, progress/status behavior, or an alias for backwards compatibility.</li>
+</ol>
+<p>Rule of thumb: if it is a capability, put it in GeoAgent; if it is QGIS plugin
+presentation or wiring, put it in the NASA OPERA plugin.</p>
 <h2 id="integration-quality-bar">Integration Quality Bar<a class="headerlink" href="#integration-quality-bar" title="Permanent link">&para;</a></h2>
 <p>An integration is ready when:</p>
 <ul>
@@ -1715,7 +1769,7 @@ packages.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:53:57 UTC"><span class="timeago" datetime="2026-04-28T03:53:57+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:53:57 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 14:54:51 UTC"><span class="timeago" datetime="2026-04-28T14:54:51+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 14:54:51 UTC">2026-04-28</span>
   </span>
 
     
