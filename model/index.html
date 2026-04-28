@@ -1379,6 +1379,23 @@
             <span class="n">max_tokens</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;litellm&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.litellm</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiteLLMModel</span>
+
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LITELLM_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;openai/gpt-5.5&quot;</span><span class="p">)</span>
+        <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LITELLM_API_KEY&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">api_key</span> <span class="ow">and</span> <span class="s2">&quot;api_key&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
+            <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="n">base_url</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">litellm_base_url</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LITELLM_BASE_URL&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base_url</span> <span class="ow">and</span> <span class="s2">&quot;base_url&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
+            <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="k">return</span> <span class="n">LiteLLMModel</span><span class="p">(</span>
+            <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">},</span>
+        <span class="p">)</span>
+
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown provider: </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
         </details>
