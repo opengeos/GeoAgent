@@ -326,7 +326,7 @@ class MockQGISLayer:
         return len(self._selected)
 
     def featureCount(self) -> int:
-        """Return feature count."""
+        """Return selected feature count in this mock layer."""
         return len(self._selected)
 
     def selectByExpression(self, expression: str, behavior: Any = None) -> None:
@@ -362,7 +362,7 @@ class MockQGISLayer:
 
     @visible.setter
     def visible(self, value: bool) -> None:
-        """Return the layer visibility."""
+        """Set the layer visibility."""
         self._visible = bool(value)
 
     def opacity(self) -> float:

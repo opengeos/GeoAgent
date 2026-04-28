@@ -1,4 +1,4 @@
-"""Utilities for 00 home.."""
+"""Solara home page."""
 
 import solara
 

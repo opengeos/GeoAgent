@@ -18,10 +18,12 @@ from geoagent.tools.qgis import qgis_tools
 
 
 def test_qgis_module_imports_without_qgis() -> None:
-    # The module is already imported; confirm `qgis` was not pulled in.
-    # (If it was, this test would still pass — we just want to ensure import
-    # didn't fail when the user's environment has no qgis package.)
-    """Verify that qgis module imports without qgis."""
+    """Verify the qgis tools module imports without the qgis package.
+
+    The module is already imported; confirm ``qgis`` was not pulled in.
+    (If it was, this test would still pass; we just want to ensure import
+    did not fail when the user's environment has no qgis package.)
+    """
     assert "geoagent.tools.qgis" in sys.modules
 
 
