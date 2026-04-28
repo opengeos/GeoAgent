@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://geoagent.gishub.org/geoagent/">
       
       
-        <link rel="prev" href="../examples/custom_tools/">
+        <link rel="prev" href="../examples/qgis_agent/">
       
       
         <link rel="next" href="../factory/">
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#geoagent" class="md-skip">
+        <a href="#geoagent-facade" class="md-skip">
           Skip to content
         </a>
       
@@ -564,62 +564,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/stac_search/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Stac search
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/maplibre_viz/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Maplibre viz
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../examples/live_mapping/" class="md-nav__link">
         
   
@@ -648,126 +592,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/earth_science_queries/" class="md-nav__link">
+      <a href="../examples/qgis_agent/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Earth science queries
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/contextual_qa/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contextual qa
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/event_monitoring/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Event monitoring
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/hitl_confirm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Hitl confirm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/custom_tools/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Custom tools
+    Qgis agent
   
 
     
@@ -904,18 +736,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#geoagent.core.agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        agent
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="agent">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#geoagent.core.agent.GeoAgent" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -928,10 +748,54 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.agent.GeoAgent.analyze" class="md-nav__link">
+  <a href="#geoagent.core.agent.GeoAgent.strands_agent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        analyze()
+        strands_agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.tool_names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tool_names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.tool_registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tool_registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.__getattr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getattr__()
       
     </span>
   </a>
@@ -950,10 +814,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.agent.GeoAgent.search" class="md-nav__link">
+  <a href="#geoagent.core.agent.GeoAgent.chat_in_background" class="md-nav__link">
     <span class="md-ellipsis">
       
-        search()
+        chat_in_background()
       
     </span>
   </a>
@@ -961,18 +825,13 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.agent.GeoAgent.visualize" class="md-nav__link">
+  <a href="#geoagent.core.agent.GeoAgent.with_map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        visualize()
+        with_map()
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -1005,6 +864,34 @@
     
   
     Factory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
   
 
     
@@ -1165,34 +1052,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Subagents
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../prompts/" class="md-nav__link">
         
   
@@ -1201,62 +1060,6 @@
     
   
     System Prompts
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../llm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    LLM
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../catalogs/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catalogs
   
 
     
@@ -1360,18 +1163,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#geoagent.core.agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        agent
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="agent">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#geoagent.core.agent.GeoAgent" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1384,10 +1175,54 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.agent.GeoAgent.analyze" class="md-nav__link">
+  <a href="#geoagent.core.agent.GeoAgent.strands_agent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        analyze()
+        strands_agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.tool_names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tool_names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.tool_registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tool_registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.__getattr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getattr__()
       
     </span>
   </a>
@@ -1406,10 +1241,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.agent.GeoAgent.search" class="md-nav__link">
+  <a href="#geoagent.core.agent.GeoAgent.chat_in_background" class="md-nav__link">
     <span class="md-ellipsis">
       
-        search()
+        chat_in_background()
       
     </span>
   </a>
@@ -1417,18 +1252,13 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.agent.GeoAgent.visualize" class="md-nav__link">
+  <a href="#geoagent.core.agent.GeoAgent.with_map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        visualize()
+        with_map()
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -1460,505 +1290,235 @@
   
 
 
-<h1 id="geoagent">GeoAgent<a class="headerlink" href="#geoagent" title="Permanent link">&para;</a></h1>
-<p>The main <code>GeoAgent</code> class is the public facade over the deepagents-based runtime. It builds the agent graph, threads conversation state through a checkpointer, and bridges confirmation-required tool calls through a user-supplied callback.</p>
-
-
-  <div class="doc doc-object doc-module">
-
-
-
-<h3 id="geoagent.core.agent" class="doc doc-heading">
-        <code>geoagent.core.agent</code>
-
-
-
-<a href="#geoagent.core.agent" class="headerlink" title="Permanent link">&para;</a></h3>
-
-    <div class="doc doc-contents first">
-
-      <p>High-level :class:<code>GeoAgent</code> facade over the deepagents runtime.</p>
-<p>The legacy v0.x <code>GeoAgent</code> orchestrated a 4-agent LangGraph pipeline.
-Phase 2 replaces it with a thin wrapper around
-:func:<code>geoagent.core.factory.create_geo_agent</code>. The public API is
-preserved (<code>__init__</code> accepts <code>llm</code> / <code>provider</code> / <code>model</code> /
-<code>catalogs</code>; <code>chat()</code> returns a :class:<code>GeoAgentResponse</code> with the
-same field names) but the internals are entirely rebuilt on
-deepagents subagents.</p>
-<p>The facade also bridges deepagents' interrupt / resume mechanism to a
-user-supplied :class:<code>~geoagent.core.safety.ConfirmCallback</code>. When a
-confirmation-required tool fires, deepagents pauses the graph and
-returns a result with an <code>__interrupt__</code> key; :meth:<code>GeoAgent.chat</code>
-loops over that, calls the user's callback per pending tool, and
-resumes with <code>Command(resume={"decisions": [...]})</code> until the graph
-completes.</p>
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
+<h1 id="geoagent-facade">GeoAgent facade<a class="headerlink" href="#geoagent-facade" title="Permanent link">&para;</a></h1>
 
 
   <div class="doc doc-object doc-class">
 
 
 
-<h4 id="geoagent.core.agent.GeoAgent" class="doc doc-heading">
+<h3 id="geoagent.core.agent.GeoAgent" class="doc doc-heading">
         <code>
-GeoAgent        </code>
+geoagent.core.agent.GeoAgent        </code>
 
 
 
-<a href="#geoagent.core.agent.GeoAgent" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#geoagent.core.agent.GeoAgent" class="headerlink" title="Permanent link">&para;</a></h3>
 
-    <div class="doc doc-contents ">
+    <div class="doc doc-contents first">
 
-      <p>High-level facade over a deepagents-compiled GeoAgent runtime.</p>
-<p><code>GeoAgent</code> is the public, stable entry point for building a
-geospatial agent. It owns a single deepagents graph plus a unique
-LangGraph thread, wires confirmation-required tool calls through a
-user-supplied callback, and reconstructs the v0.x-style
-:class:<code>GeoAgentResponse</code> shape from the final graph state.</p>
-
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><code>llm</code></td>
-        <td><code>Any</code></td>
-        <td><p>A pre-built LangChain <code>BaseChatModel</code>. Mutually exclusive
-with <code>provider</code> / <code>model</code>.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>provider</code></td>
-        <td><code>Optional[str]</code></td>
-        <td><p>A provider name (<code>"openai"</code>, <code>"anthropic"</code>,
-<code>"google"</code>, <code>"ollama"</code>).</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>model</code></td>
-        <td><code>Optional[str]</code></td>
-        <td><p>A model name string. May be a deepagents-style
-<code>"provider:model"</code> shorthand when <code>provider</code> is omitted.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>catalogs</code></td>
-        <td><code>Optional[list]</code></td>
-        <td><p>Optional list of STAC catalog URLs to expose to the
-data subagent. Currently informational; the catalog registry
-in :mod:<code>geoagent.catalogs.registry</code> continues to drive
-STAC discovery.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>context</code></td>
-        <td><code>Optional[GeoAgentContext]</code></td>
-        <td><p>Pre-built :class:<code>GeoAgentContext</code>. When omitted, an
-empty context is created.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>tools</code></td>
-        <td><code>Optional[list]</code></td>
-        <td><p>Additional :class:<code>langchain_core.tools.BaseTool</code> objects
-to expose alongside the default subagent tools.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>confirm</code></td>
-        <td><code>Optional[ConfirmCallback]</code></td>
-        <td><p>Callback invoked before any confirmation-required tool
-executes. Defaults to
-:func:<code>geoagent.core.safety.auto_approve_safe_only</code> which
-rejects everything (so destructive tools never run silently).</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>checkpointer</code></td>
-        <td><code>Any</code></td>
-        <td><p>A LangGraph <code>Checkpointer</code>. <code>None</code> (the
-default) creates an in-memory <code>MemorySaver</code>. Pass
-<code>False</code> to opt out of checkpointing (HITL will be
-disabled).</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>thread_id</code></td>
-        <td><code>Optional[str]</code></td>
-        <td><p>Override the auto-generated LangGraph thread id.</p></td>
-        <td><code>None</code></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Examples:</strong></p>
-    <div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;Search Sentinel-2 for Knoxville in July 2024&quot;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">resp</span><span class="o">.</span><span class="n">success</span>
-<span class="kc">True</span>
-</code></pre></div>
-      <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code>GeoAgent</code> builds its deepagents graph at construction time.
-Subagents that bind to live runtime objects (mapping, qgis) are
-included only when the corresponding context attribute is set
-at that moment. Passing <code>target_map</code> to :meth:<code>chat</code> later
-rebuilds the graph so the mapping subagent can be added — but
-a brand-new :class:<code>langgraph.checkpoint.memory.MemorySaver</code>
-is created with it, so previous conversation state is reset.
-For long-lived sessions, prefer <code>geoagent.for_leafmap(m)</code> /
-<code>GeoAgent(context=GeoAgentContext(map_obj=m))</code> at start.</p>
-</div>
+      <p>Public facade: Strands agent + GeoAgent context, tools, and safety hooks.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level facade over a deepagents-compiled GeoAgent runtime.</span>
-
-<span class="sd">    ``GeoAgent`` is the public, stable entry point for building a</span>
-<span class="sd">    geospatial agent. It owns a single deepagents graph plus a unique</span>
-<span class="sd">    LangGraph thread, wires confirmation-required tool calls through a</span>
-<span class="sd">    user-supplied callback, and reconstructs the v0.x-style</span>
-<span class="sd">    :class:`GeoAgentResponse` shape from the final graph state.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        llm: A pre-built LangChain ``BaseChatModel``. Mutually exclusive</span>
-<span class="sd">            with ``provider`` / ``model``.</span>
-<span class="sd">        provider: A provider name (``&quot;openai&quot;``, ``&quot;anthropic&quot;``,</span>
-<span class="sd">            ``&quot;google&quot;``, ``&quot;ollama&quot;``).</span>
-<span class="sd">        model: A model name string. May be a deepagents-style</span>
-<span class="sd">            ``&quot;provider:model&quot;`` shorthand when ``provider`` is omitted.</span>
-<span class="sd">        catalogs: Optional list of STAC catalog URLs to expose to the</span>
-<span class="sd">            data subagent. Currently informational; the catalog registry</span>
-<span class="sd">            in :mod:`geoagent.catalogs.registry` continues to drive</span>
-<span class="sd">            STAC discovery.</span>
-<span class="sd">        context: Pre-built :class:`GeoAgentContext`. When omitted, an</span>
-<span class="sd">            empty context is created.</span>
-<span class="sd">        tools: Additional :class:`langchain_core.tools.BaseTool` objects</span>
-<span class="sd">            to expose alongside the default subagent tools.</span>
-<span class="sd">        confirm: Callback invoked before any confirmation-required tool</span>
-<span class="sd">            executes. Defaults to</span>
-<span class="sd">            :func:`geoagent.core.safety.auto_approve_safe_only` which</span>
-<span class="sd">            rejects everything (so destructive tools never run silently).</span>
-<span class="sd">        checkpointer: A LangGraph ``Checkpointer``. ``None`` (the</span>
-<span class="sd">            default) creates an in-memory ``MemorySaver``. Pass</span>
-<span class="sd">            ``False`` to opt out of checkpointing (HITL will be</span>
-<span class="sd">            disabled).</span>
-<span class="sd">        thread_id: Override the auto-generated LangGraph thread id.</span>
-
-<span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; from geoagent import GeoAgent</span>
-<span class="sd">        &gt;&gt;&gt; agent = GeoAgent(provider=&quot;openai&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; resp = agent.chat(&quot;Search Sentinel-2 for Knoxville in July 2024&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; resp.success</span>
-<span class="sd">        True</span>
-
-<span class="sd">    Note:</span>
-<span class="sd">        ``GeoAgent`` builds its deepagents graph at construction time.</span>
-<span class="sd">        Subagents that bind to live runtime objects (mapping, qgis) are</span>
-<span class="sd">        included only when the corresponding context attribute is set</span>
-<span class="sd">        at that moment. Passing ``target_map`` to :meth:`chat` later</span>
-<span class="sd">        rebuilds the graph so the mapping subagent can be added — but</span>
-<span class="sd">        a brand-new :class:`langgraph.checkpoint.memory.MemorySaver`</span>
-<span class="sd">        is created with it, so previous conversation state is reset.</span>
-<span class="sd">        For long-lived sessions, prefer ``geoagent.for_leafmap(m)`` /</span>
-<span class="sd">        ``GeoAgent(context=GeoAgentContext(map_obj=m))`` at start.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Public facade: Strands agent + GeoAgent context, tools, and safety hooks.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">llm</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">catalogs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoAgentContext</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">confirm</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfirmCallback</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">checkpointer</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">thread_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoAgentConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GeoToolRegistry</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">qgis_safe_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="n">GeoAgentContext</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">=</span> <span class="n">confirm</span> <span class="ow">or</span> <span class="n">auto_approve_safe_only</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_catalogs</span> <span class="o">=</span> <span class="n">catalogs</span> <span class="ow">or</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span> <span class="o">=</span> <span class="n">thread_id</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;geoagent-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="c1"># Remember the construction args so we can rebuild the graph</span>
-        <span class="c1"># when a chat() call changes the runtime context (e.g. a new</span>
-        <span class="c1"># target_map that needs the mapping subagent).</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_construction</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;llm&quot;</span><span class="p">:</span> <span class="n">llm</span><span class="p">,</span>
-            <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">,</span>
-            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
-            <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">_tools</span> <span class="ow">or</span> <span class="p">[]),</span>
-            <span class="s2">&quot;extra_tools&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tools</span> <span class="ow">or</span> <span class="p">[]),</span>
-            <span class="s2">&quot;checkpointer&quot;</span><span class="p">:</span> <span class="n">checkpointer</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tools_by_name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_build_graph</span><span class="p">()</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fast</span> <span class="o">=</span> <span class="n">fast</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="o">=</span> <span class="n">qgis_safe_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span> <span class="o">=</span> <span class="n">registry</span> <span class="ow">or</span> <span class="n">GeoToolRegistry</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tool_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tools</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span> <span class="o">=</span> <span class="n">confirm</span> <span class="ow">or</span> <span class="n">auto_approve_safe_only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span> <span class="ow">or</span> <span class="n">resolve_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_strands_agent</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;(Re)build the deepagents graph for the current context.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rebuild_strands_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="n">FAST_SYSTEM_PROMPT</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast</span> <span class="k">else</span> <span class="n">DEFAULT_SYSTEM_PROMPT</span>
+        <span class="n">hook</span> <span class="o">=</span> <span class="n">ConfirmationHookProvider</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">)</span>
 
-<span class="sd">        Called once at construction and again whenever :meth:`chat`</span>
-<span class="sd">        receives a ``target_map`` that differs from the current</span>
-<span class="sd">        context&#39;s ``map_obj``. The graph is rebuilt with a fresh</span>
-<span class="sd">        :class:`MemorySaver` (when none was supplied) so HITL</span>
-<span class="sd">        checkpoint state for the previous topology is dropped cleanly.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.agents.coordinator</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_subagents</span>
-
-        <span class="n">subagents</span> <span class="o">=</span> <span class="n">default_subagents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">)</span>
-        <span class="c1"># Cache base + subagent tools by name so the confirm callback</span>
-        <span class="c1"># gets full @geo_tool metadata (category, description) for</span>
-        <span class="c1"># tools that live inside subagents (mapping, qgis, geoai, ...).</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tools_by_name</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;tools&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;extra_tools&quot;</span><span class="p">]:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_tools_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
-        <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">subagents</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sub</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tools&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]:</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_tools_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">create_geo_agent</span><span class="p">(</span>
-            <span class="n">llm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;llm&quot;</span><span class="p">],</span>
-            <span class="n">provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;provider&quot;</span><span class="p">],</span>
-            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
-            <span class="n">tools</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;tools&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">extra_tools</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;extra_tools&quot;</span><span class="p">],</span>
-            <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">,</span>
-            <span class="n">subagents</span><span class="o">=</span><span class="n">subagents</span><span class="p">,</span>
-            <span class="n">checkpointer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_construction</span><span class="p">[</span><span class="s2">&quot;checkpointer&quot;</span><span class="p">],</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tool_list</span><span class="p">,</span>
+            <span class="n">system_prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span>
+            <span class="n">hooks</span><span class="o">=</span><span class="p">[</span><span class="n">hook</span><span class="p">],</span>
+            <span class="n">callback_handler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">tool_executor</span><span class="o">=</span><span class="n">SequentialToolExecutor</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="c1"># Public chat interface</span>
-    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentContext</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">strands_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying Strands :class:`~strands.agent.agent.Agent`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tool</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Direct Strands tool caller (``agent.tool.some_tool(...)``).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">tool</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tool_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Expose Strands tool names on GeoAgent for parity.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">tool_names</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tool_registry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolRegistry</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;GeoAgent metadata registry for tool inspection.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentConfig</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward unknown attributes to the underlying Strands agent.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GeoAgent&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new :class:`GeoAgent` bound to a map (rebuilds tools).&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
+
+        <span class="k">return</span> <span class="n">for_leafmap</span><span class="p">(</span>
+            <span class="n">m</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">,</span>
+            <span class="n">confirm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
+        <span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">status_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a natural-language query to the agent.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            query: The user&#39;s request.</span>
-<span class="sd">            target_map: Optional live map widget to bind for this call.</span>
-<span class="sd">                When supplied and different from the current context&#39;s</span>
-<span class="sd">                ``map_obj``, the deepagents graph is rebuilt so the</span>
-<span class="sd">                mapping subagent (with tools bound to the new widget)</span>
-<span class="sd">                is included. Note: rebuilding the graph also resets</span>
-<span class="sd">                conversation state. For stable long-running sessions,</span>
-<span class="sd">                pass ``map_obj`` via the :class:`GeoAgentContext` at</span>
-<span class="sd">                construction or use :func:`geoagent.for_leafmap`.</span>
-<span class="sd">            status_callback: Optional callable invoked with short status</span>
-<span class="sd">                strings as the agent progresses. Currently used only for</span>
-<span class="sd">                interrupt / resume notifications; tool-level streaming</span>
-<span class="sd">                will be added in Phase 3.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A :class:`GeoAgentResponse` populated from the deepagents</span>
-<span class="sd">            final state.</span>
-
-<span class="sd">            ``executed_tools`` is derived from the actual ``ToolMessage``</span>
-<span class="sd">            stream (i.e. tools whose body ran, including safe tools that</span>
-<span class="sd">            never required confirmation), with rejected confirmation</span>
-<span class="sd">            stubs filtered out by tool-call id.</span>
-
-<span class="sd">            ``cancelled_tools`` lists tool names the user rejected via</span>
-<span class="sd">            the confirm callback.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a single user turn and return a :class:`GeoAgentResponse`.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">with_overrides</span><span class="p">(</span><span class="n">map_obj</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_build_graph</span><span class="p">()</span>
-            <span class="c1"># New graph = new MemorySaver = stale thread; assign a fresh id.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;geoagent-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
-        <span class="n">collector</span> <span class="o">=</span> <span class="n">_ToolEventCollector</span><span class="p">()</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span><span class="p">},</span>
-            <span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">collector</span><span class="p">],</span>
-        <span class="p">}</span>
-        <span class="n">cancelled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">rejected_tool_call_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span>
-                <span class="p">{</span><span class="s2">&quot;messages&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">}]},</span>
-                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span>
+                <span class="n">target_map</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+                <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">,</span>
+                <span class="n">confirm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="c1"># Resume loop: while deepagents is paused on an interrupt,</span>
-            <span class="c1"># walk the user through the pending tool calls and resume</span>
-            <span class="c1"># with approve / reject decisions.</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">interrupts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_interrupts</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">interrupts</span><span class="p">:</span>
-                    <span class="k">break</span>
-                <span class="n">pending_tool_call_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tool_call_ids_for_interrupt</span><span class="p">(</span>
-                    <span class="n">result</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interrupts</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">decisions</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">req</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">interrupts</span><span class="p">):</span>
-                    <span class="n">tool_name</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">req</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action_name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
-                    <span class="n">args</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-                    <span class="n">confirm_req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_confirm_request</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">status_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">try</span><span class="p">:</span>
-                            <span class="n">status_callback</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;awaiting confirmation: </span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover - user code</span>
-                            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;status_callback raised&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="n">approved</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">(</span><span class="n">confirm_req</span><span class="p">))</span>
-                    <span class="k">if</span> <span class="n">approved</span><span class="p">:</span>
-                        <span class="n">decisions</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;approve&quot;</span><span class="p">})</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">decisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;reject&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;User cancelled.&quot;</span><span class="p">}</span>
-                        <span class="p">)</span>
-                        <span class="n">cancelled</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_tool_call_ids</span><span class="p">):</span>
-                            <span class="n">rejected_tool_call_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pending_tool_call_ids</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span>
-                    <span class="n">Command</span><span class="p">(</span><span class="n">resume</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;decisions&quot;</span><span class="p">:</span> <span class="n">decisions</span><span class="p">}),</span>
-                    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-            <span class="n">executed</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">completed</span>
-            <span class="k">return</span> <span class="n">_adapt_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">executed</span><span class="p">,</span> <span class="n">cancelled</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chat_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a single user turn on the current thread.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+            <span class="n">exec_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">,</span> <span class="s2">&quot;tool_metrics&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">answer</span> <span class="o">=</span> <span class="n">_result_to_text</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;stop_reason&quot;</span><span class="p">,</span> <span class="s2">&quot;end_turn&quot;</span><span class="p">))</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="n">stop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cancelled&quot;</span><span class="p">,</span> <span class="s2">&quot;guardrail_intervened&quot;</span><span class="p">)</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;stop_reason=</span><span class="si">{</span><span class="n">stop</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
+                <span class="n">answer_text</span><span class="o">=</span><span class="n">answer</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="n">success</span><span class="p">,</span>
+                <span class="n">error_message</span><span class="o">=</span><span class="n">err</span><span class="p">,</span>
+                <span class="n">execution_time</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
+                <span class="n">executed_tools</span><span class="o">=</span><span class="n">exec_names</span><span class="p">,</span>
+                <span class="n">cancelled_tools</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">),</span>
+                <span class="nb">map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">,</span>
+                <span class="n">raw</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;GeoAgent.chat failed&quot;</span><span class="p">)</span>
+            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
             <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
                 <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
                 <span class="n">execution_time</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
-                <span class="n">executed_tools</span><span class="o">=</span><span class="p">[],</span>
-                <span class="n">cancelled_tools</span><span class="o">=</span><span class="n">cancelled</span><span class="p">,</span>
+                <span class="n">cancelled_tools</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">),</span>
+                <span class="nb">map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="c1"># Convenience entry points (back-compat with v0.x)</span>
-    <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Search-only run: instructs the coordinator not to analyse or visualise.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Only search and report data. Do not analyse or visualise. Request: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run sync QGIS chat without starving the Qt event loop.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Analysis run: instructs the coordinator to skip map rendering.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Search and analyse the data. Do not render any maps. Request: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for :meth:`chat` — visualisation is the default behaviour.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
-
-    <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="c1"># Internals</span>
-    <span class="c1"># ------------------------------------------------------------------</span>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_interrupts</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pull pending action_requests from a deepagents invoke result.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            result: The dict returned by ``graph.invoke(...)`` (or by a</span>
-<span class="sd">                resume call). The ``__interrupt__`` key is present when</span>
-<span class="sd">                the graph paused on an interrupt; absent otherwise.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A list of ``{&quot;name&quot;: ..., &quot;args&quot;: ...}`` dicts, one per</span>
-<span class="sd">            pending tool call. Empty when the graph completed.</span>
+<span class="sd">        QGIS users often call ``resp = agent.chat(...)`` from the Python</span>
+<span class="sd">        console, which executes on the GUI thread. The model call needs to run</span>
+<span class="sd">        away from that thread, but QGIS tools still marshal back to it via</span>
+<span class="sd">        ``BlockingQueuedConnection``. Pumping Qt events while waiting lets those</span>
+<span class="sd">        marshalled tool calls run and keeps the application responsive.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">[]</span>
-        <span class="n">interrupts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;__interrupt__&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">interrupts</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[]</span>
-        <span class="n">first</span> <span class="o">=</span> <span class="n">interrupts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">[]</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action_requests&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+        <span class="n">box</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_tool_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_request</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a short human-readable description for a confirm prompt.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">box</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - defensive path</span>
+                <span class="n">box</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exc</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">done</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
 
-<span class="sd">        Prefers the cached tool&#39;s own ``description`` (set by</span>
-<span class="sd">        ``@geo_tool``); falls back to the deepagents-supplied</span>
-<span class="sd">        description in the action request payload.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">tool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">desc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">desc</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">desc</span>
-        <span class="k">return</span> <span class="n">action_request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span>
+            <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;GeoAgent-QGIS-chat&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_confirm_request</span><span class="p">(</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="n">process_qt_events</span><span class="p">()</span>
+            <span class="n">done</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+
+        <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">box</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chat_in_background</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-        <span class="n">action_request</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConfirmRequest</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a :class:`ConfirmRequest` enriched with tool metadata.</span>
+        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">on_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">on_error</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run ``chat`` on a worker thread and return immediately.</span>
 
-<span class="sd">        For tools registered with :func:`@geo_tool`, ``category`` and</span>
-<span class="sd">        the full GeoAgent metadata dict are pulled from the cached</span>
-<span class="sd">        tool&#39;s ``metadata[&quot;geo&quot;]``. Tools defined with the plain</span>
-<span class="sd">        LangChain ``@tool`` decorator return an empty metadata dict and</span>
-<span class="sd">        ``category=None``.</span>
+<span class="sd">        This is primarily for QGIS console usage where a synchronous ``chat()``</span>
+<span class="sd">        call blocks the GUI event loop during network/model latency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="n">get_geo_meta</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="k">if</span> <span class="n">tool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
-        <span class="k">return</span> <span class="n">ConfirmRequest</span><span class="p">(</span>
-            <span class="n">tool_name</span><span class="o">=</span><span class="n">tool_name</span><span class="p">,</span>
-            <span class="n">args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">args</span><span class="p">),</span>
-            <span class="n">description</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tool_description</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">action_request</span><span class="p">),</span>
-            <span class="n">category</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">),</span>
-            <span class="n">metadata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">meta</span><span class="p">),</span>
-        <span class="p">)</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_tool_call_ids_for_interrupt</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pull the most recent N tool-call ids from the message stream.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">on_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">on_result</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - defensive path</span>
+                <span class="k">if</span> <span class="n">on_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">on_error</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
 
-<span class="sd">        DeepAgents&#39; interrupt payload carries ``action_requests`` in the</span>
-<span class="sd">        same order as the AIMessage&#39;s ``tool_calls`` list. We zip those</span>
-<span class="sd">        positionally so a rejection can be associated with a specific</span>
-<span class="sd">        ``ToolMessage`` later (matching by ``tool_call_id``).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">[]</span>
-        <span class="n">messages</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;messages&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
-            <span class="n">tool_calls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s2">&quot;tool_calls&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">tool_calls</span><span class="p">:</span>
-                <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">tc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">tool_calls</span> <span class="k">if</span> <span class="n">tc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)]</span>
-                <span class="k">return</span> <span class="n">ids</span><span class="p">[</span><span class="o">-</span><span class="n">count</span><span class="p">:]</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="k">else</span> <span class="n">ids</span>
-        <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">thread</span>
 </code></pre></div>
         </details>
 
@@ -1973,29 +1533,123 @@ For long-lived sessions, prefer <code>geoagent.for_leafmap(m)</code> /
 
 
 
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="geoagent.core.agent.GeoAgent.strands_agent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">strands_agent</span><span class="p">:</span> <span class="n">Agent</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#geoagent.core.agent.GeoAgent.strands_agent" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>The underlying Strands :class:<code>~strands.agent.agent.Agent</code>.</p>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="geoagent.core.agent.GeoAgent.tool" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">tool</span><span class="p">:</span> <span class="n">Any</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#geoagent.core.agent.GeoAgent.tool" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Direct Strands tool caller (<code>agent.tool.some_tool(...)</code>).</p>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="geoagent.core.agent.GeoAgent.tool_names" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">tool_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#geoagent.core.agent.GeoAgent.tool_names" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Expose Strands tool names on GeoAgent for parity.</p>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="geoagent.core.agent.GeoAgent.tool_registry" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">tool_registry</span><span class="p">:</span> <span class="n">GeoToolRegistry</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#geoagent.core.agent.GeoAgent.tool_registry" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>GeoAgent metadata registry for tool inspection.</p>
+    </div>
+
+  </div>
+
+
+
+
 
 
   <div class="doc doc-object doc-method">
 
 
 
-<h5 id="geoagent.core.agent.GeoAgent.analyze" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span></code>
+<h4 id="geoagent.core.agent.GeoAgent.__getattr__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></code>
 
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
 
-<a href="#geoagent.core.agent.GeoAgent.analyze" class="headerlink" title="Permanent link">&para;</a></h5>
+<a href="#geoagent.core.agent.GeoAgent.__getattr__" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Analysis run: instructs the coordinator to skip map rendering.</p>
+      <p>Forward unknown attributes to the underlying Strands agent.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analysis run: instructs the coordinator to skip map rendering.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Search and analyse the data. Do not render any maps. Request: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="p">)</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward unknown attributes to the underlying Strands agent.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
@@ -2004,186 +1658,45 @@ For long-lived sessions, prefer <code>geoagent.for_leafmap(m)</code> /
 
 
 
+
   <div class="doc doc-object doc-method">
 
 
 
-<h5 id="geoagent.core.agent.GeoAgent.chat" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">status_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<h4 id="geoagent.core.agent.GeoAgent.chat" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
-<a href="#geoagent.core.agent.GeoAgent.chat" class="headerlink" title="Permanent link">&para;</a></h5>
+<a href="#geoagent.core.agent.GeoAgent.chat" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Send a natural-language query to the agent.</p>
+      <p>Run a single user turn and return a :class:<code>GeoAgentResponse</code>.</p>
 
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><code>query</code></td>
-        <td><code>str</code></td>
-        <td><p>The user's request.</p></td>
-        <td><em>required</em></td>
-      </tr>
-      <tr>
-        <td><code>target_map</code></td>
-        <td><code>Any</code></td>
-        <td><p>Optional live map widget to bind for this call.
-When supplied and different from the current context's
-<code>map_obj</code>, the deepagents graph is rebuilt so the
-mapping subagent (with tools bound to the new widget)
-is included. Note: rebuilding the graph also resets
-conversation state. For stable long-running sessions,
-pass <code>map_obj</code> via the :class:<code>GeoAgentContext</code> at
-construction or use :func:<code>geoagent.for_leafmap</code>.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>status_callback</code></td>
-        <td><code>Optional[Callable[[str], None]]</code></td>
-        <td><p>Optional callable invoked with short status
-strings as the agent progresses. Currently used only for
-interrupt / resume notifications; tool-level streaming
-will be added in Phase 3.</p></td>
-        <td><code>None</code></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>A </code></td>
-      <td><p>final state.</p>
-<p><code>executed_tools</code> is derived from the actual <code>ToolMessage</code>
-stream (i.e. tools whose body ran, including safe tools that
-never required confirmation), with rejected confirmation
-stubs filtered out by tool-call id.</p>
-<p><code>cancelled_tools</code> lists tool names the user rejected via
-the confirm callback.</p></td>
-    </tr>
-  </tbody>
-</table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">status_callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send a natural-language query to the agent.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        query: The user&#39;s request.</span>
-<span class="sd">        target_map: Optional live map widget to bind for this call.</span>
-<span class="sd">            When supplied and different from the current context&#39;s</span>
-<span class="sd">            ``map_obj``, the deepagents graph is rebuilt so the</span>
-<span class="sd">            mapping subagent (with tools bound to the new widget)</span>
-<span class="sd">            is included. Note: rebuilding the graph also resets</span>
-<span class="sd">            conversation state. For stable long-running sessions,</span>
-<span class="sd">            pass ``map_obj`` via the :class:`GeoAgentContext` at</span>
-<span class="sd">            construction or use :func:`geoagent.for_leafmap`.</span>
-<span class="sd">        status_callback: Optional callable invoked with short status</span>
-<span class="sd">            strings as the agent progresses. Currently used only for</span>
-<span class="sd">            interrupt / resume notifications; tool-level streaming</span>
-<span class="sd">            will be added in Phase 3.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        A :class:`GeoAgentResponse` populated from the deepagents</span>
-<span class="sd">        final state.</span>
-
-<span class="sd">        ``executed_tools`` is derived from the actual ``ToolMessage``</span>
-<span class="sd">        stream (i.e. tools whose body ran, including safe tools that</span>
-<span class="sd">        never required confirmation), with rejected confirmation</span>
-<span class="sd">        stubs filtered out by tool-call id.</span>
-
-<span class="sd">        ``cancelled_tools`` lists tool names the user rejected via</span>
-<span class="sd">        the confirm callback.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a single user turn and return a :class:`GeoAgentResponse`.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">with_overrides</span><span class="p">(</span><span class="n">map_obj</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_build_graph</span><span class="p">()</span>
-        <span class="c1"># New graph = new MemorySaver = stale thread; assign a fresh id.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;geoagent-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
-    <span class="n">collector</span> <span class="o">=</span> <span class="n">_ToolEventCollector</span><span class="p">()</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;thread_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread_id</span><span class="p">},</span>
-        <span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">collector</span><span class="p">],</span>
-    <span class="p">}</span>
-    <span class="n">cancelled</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">rejected_tool_call_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span>
+            <span class="n">target_map</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">,</span>
+            <span class="n">confirm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;messages&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">}]},</span>
-            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="c1"># Resume loop: while deepagents is paused on an interrupt,</span>
-        <span class="c1"># walk the user through the pending tool calls and resume</span>
-        <span class="c1"># with approve / reject decisions.</span>
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">interrupts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_interrupts</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">interrupts</span><span class="p">:</span>
-                <span class="k">break</span>
-            <span class="n">pending_tool_call_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tool_call_ids_for_interrupt</span><span class="p">(</span>
-                <span class="n">result</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interrupts</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">decisions</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">req</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">interrupts</span><span class="p">):</span>
-                <span class="n">tool_name</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">req</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action_name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
-                <span class="n">args</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;args&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-                <span class="n">confirm_req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_confirm_request</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">status_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="n">status_callback</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;awaiting confirmation: </span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover - user code</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;status_callback raised&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">approved</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">(</span><span class="n">confirm_req</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">approved</span><span class="p">:</span>
-                    <span class="n">decisions</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;approve&quot;</span><span class="p">})</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">decisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;reject&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;User cancelled.&quot;</span><span class="p">}</span>
-                    <span class="p">)</span>
-                    <span class="n">cancelled</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending_tool_call_ids</span><span class="p">):</span>
-                        <span class="n">rejected_tool_call_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pending_tool_call_ids</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span>
-                <span class="n">Command</span><span class="p">(</span><span class="n">resume</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;decisions&quot;</span><span class="p">:</span> <span class="n">decisions</span><span class="p">}),</span>
-                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-        <span class="n">executed</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">completed</span>
-        <span class="k">return</span> <span class="n">_adapt_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">executed</span><span class="p">,</span> <span class="n">cancelled</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;GeoAgent.chat failed&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
-            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
-            <span class="n">execution_time</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
-            <span class="n">executed_tools</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">cancelled_tools</span><span class="o">=</span><span class="n">cancelled</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">():</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
@@ -2196,67 +1709,86 @@ the confirm callback.</p></td>
 
 
 
-<h5 id="geoagent.core.agent.GeoAgent.search" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span></code>
+<h4 id="geoagent.core.agent.GeoAgent.chat_in_background" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">chat_in_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_error</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
-<a href="#geoagent.core.agent.GeoAgent.search" class="headerlink" title="Permanent link">&para;</a></h5>
+<a href="#geoagent.core.agent.GeoAgent.chat_in_background" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Search-only run: instructs the coordinator not to analyse or visualise.</p>
+      <p>Run <code>chat</code> on a worker thread and return immediately.</p>
+<p>This is primarily for QGIS console usage where a synchronous <code>chat()</code>
+call blocks the GUI event loop during network/model latency.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search-only run: instructs the coordinator not to analyse or visualise.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Only search and report data. Do not analyse or visualise. Request: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat_in_background</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_error</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run ``chat`` on a worker thread and return immediately.</span>
+
+<span class="sd">    This is primarily for QGIS console usage where a synchronous ``chat()``</span>
+<span class="sd">    call blocks the GUI event loop during network/model latency.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">on_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">on_result</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - defensive path</span>
+            <span class="k">if</span> <span class="n">on_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">on_error</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">thread</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h4 id="geoagent.core.agent.GeoAgent.with_map" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.agent.GeoAgent.with_map" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Return a new :class:<code>GeoAgent</code> bound to a map (rebuilds tools).</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/agent.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GeoAgent&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a new :class:`GeoAgent` bound to a map (rebuilds tools).&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
+
+    <span class="k">return</span> <span class="n">for_leafmap</span><span class="p">(</span>
+        <span class="n">m</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">,</span>
+        <span class="n">confirm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
 
   </div>
-
-
-
-  <div class="doc doc-object doc-method">
-
-
-
-<h5 id="geoagent.core.agent.GeoAgent.visualize" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-
-<a href="#geoagent.core.agent.GeoAgent.visualize" class="headerlink" title="Permanent link">&para;</a></h5>
-
-    <div class="doc doc-contents ">
-
-      <p>Alias for :meth:<code>chat</code> — visualisation is the default behaviour.</p>
-
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Alias for :meth:`chat` — visualisation is the default behaviour.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
-
-
-
-
-
-  </div>
-
-    </div>
-
-  </div>
-
-
 
 
 
@@ -2289,7 +1821,7 @@ the confirm callback.</p></td>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:03:34 UTC"><span class="timeago" datetime="2026-04-27T04:03:34+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:03:34 UTC">2026-04-27</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
   </span>
 
     

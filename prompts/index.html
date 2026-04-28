@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://geoagent.gishub.org/prompts/">
       
       
-        <link rel="prev" href="../agents/">
+        <link rel="prev" href="../safety/">
       
       
-        <link rel="next" href="../llm/">
+        <link rel="next" href="../tools/">
       
       
         
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#system-prompts" class="md-skip">
+        <a href="#prompts" class="md-skip">
           Skip to content
         </a>
       
@@ -564,62 +564,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/stac_search/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Stac search
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/maplibre_viz/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Maplibre viz
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../examples/live_mapping/" class="md-nav__link">
         
   
@@ -648,126 +592,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/earth_science_queries/" class="md-nav__link">
+      <a href="../examples/qgis_agent/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Earth science queries
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/contextual_qa/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contextual qa
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/event_monitoring/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Event monitoring
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/hitl_confirm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Hitl confirm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/custom_tools/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Custom tools
+    Qgis agent
   
 
     
@@ -880,6 +712,34 @@
     
   
     Factory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
   
 
     
@@ -1037,34 +897,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Subagents
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1142,62 +974,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../llm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    LLM
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../catalogs/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catalogs
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1326,8 +1102,7 @@
   
 
 
-<h1 id="system-prompts">System Prompts<a class="headerlink" href="#system-prompts" title="Permanent link">&para;</a></h1>
-<p>The system prompts that shape coordinator and subagent behaviour. Salvaged in Phase 2 from the deleted v0.x agent classes (planner, data_agent, analysis_agent, viz_agent, context_agent) and distilled into rule-oriented form for deepagents.</p>
+<h1 id="prompts">Prompts<a class="headerlink" href="#prompts" title="Permanent link">&para;</a></h1>
 
 
   <div class="doc doc-object doc-module">
@@ -1343,28 +1118,11 @@
 
     <div class="doc doc-contents first">
 
-      <p>System prompts for the GeoAgent coordinator and subagents.</p>
-<p>This module is the single source of truth for the prompt language that
-shapes deepagents subagent behaviour. Phase 2 expanded these from the
-Phase 1 scaffolds by salvaging the rules and routing heuristics from the
-deleted v0.x agent classes (planner, data_agent, analysis_agent,
-viz_agent, context_agent).</p>
-<p>The prompts here are deliberately rule-oriented: deepagents handles tool
-selection via the LLM, so each prompt's job is to constrain <em>when</em> a
-subagent should run, <em>which</em> tools it should reach for, and <em>which</em> tools
-it should avoid.</p>
+      <p>Short system prompts for low-latency tool use.</p>
 
 
 
   <div class="doc doc-children">
-
-
-
-
-
-
-
-
 
 
 
@@ -1405,7 +1163,7 @@ it should avoid.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:03:34 UTC"><span class="timeago" datetime="2026-04-27T04:03:34+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:03:34 UTC">2026-04-27</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
   </span>
 
     

@@ -564,62 +564,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/stac_search/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Stac search
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/maplibre_viz/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Maplibre viz
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../examples/live_mapping/" class="md-nav__link">
         
   
@@ -648,126 +592,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/earth_science_queries/" class="md-nav__link">
+      <a href="../examples/qgis_agent/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Earth science queries
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/contextual_qa/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Contextual qa
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/event_monitoring/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Event monitoring
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/hitl_confirm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Hitl confirm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/custom_tools/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Custom tools
+    Qgis agent
   
 
     
@@ -880,6 +712,34 @@
     
   
     Factory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model
   
 
     
@@ -1056,10 +916,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.all_tools" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolMeta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        all_tools()
+        GeoToolMeta
       
     </span>
   </a>
@@ -1067,10 +927,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.clear" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        clear()
+        GeoToolRegistry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoToolRegistry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.registry.GeoToolRegistry.get_all_tools_config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_all_tools_config()
       
     </span>
   </a>
@@ -1078,10 +950,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.get_tools" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.list_names" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_tools()
+        list_names()
       
     </span>
   </a>
@@ -1089,10 +961,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.is_available" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.needs_user_confirmation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        is_available()
+        needs_user_confirmation()
       
     </span>
   </a>
@@ -1100,7 +972,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.register" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.register" class="md-nav__link">
     <span class="md-ellipsis">
       
         register()
@@ -1111,10 +983,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.register_many" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.register_tool" class="md-nav__link">
     <span class="md-ellipsis">
       
-        register_many()
+        register_tool()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.registry.collect_tools_for_context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        collect_tools_for_context()
       
     </span>
   </a>
@@ -1122,10 +1010,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.unregister" class="md-nav__link">
+  <a href="#geoagent.core.registry.packages_available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        unregister()
+        packages_available()
       
     </span>
   </a>
@@ -1181,34 +1069,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Subagents
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../prompts/" class="md-nav__link">
         
   
@@ -1217,62 +1077,6 @@
     
   
     System Prompts
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../llm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    LLM
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../catalogs/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Catalogs
   
 
     
@@ -1388,10 +1192,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.all_tools" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolMeta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        all_tools()
+        GeoToolMeta
       
     </span>
   </a>
@@ -1399,10 +1203,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.clear" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        clear()
+        GeoToolRegistry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoToolRegistry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.registry.GeoToolRegistry.get_all_tools_config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_all_tools_config()
       
     </span>
   </a>
@@ -1410,10 +1226,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.get_tools" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.list_names" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_tools()
+        list_names()
       
     </span>
   </a>
@@ -1421,10 +1237,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.is_available" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.needs_user_confirmation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        is_available()
+        needs_user_confirmation()
       
     </span>
   </a>
@@ -1432,7 +1248,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.register" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.register" class="md-nav__link">
     <span class="md-ellipsis">
       
         register()
@@ -1443,10 +1259,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.register_many" class="md-nav__link">
+  <a href="#geoagent.core.registry.GeoToolRegistry.register_tool" class="md-nav__link">
     <span class="md-ellipsis">
       
-        register_many()
+        register_tool()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.registry.collect_tools_for_context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        collect_tools_for_context()
       
     </span>
   </a>
@@ -1454,10 +1286,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.registry.unregister" class="md-nav__link">
+  <a href="#geoagent.core.registry.packages_available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        unregister()
+        packages_available()
       
     </span>
   </a>
@@ -1509,27 +1341,7 @@
 
     <div class="doc doc-contents first">
 
-      <p>Capability-tagged tool registry.</p>
-<p>The registry is a process-wide singleton dict that lets downstream packages
-register :func:<code>geoagent.core.decorators.geo_tool</code>-decorated tools and lets
-the agent factory pick a subset of them at construction time. Tools whose
-<code>requires_packages</code> are not importable are silently filtered out so that
-<code>import geoagent.tools.qgis</code> works on a non-QGIS Python without raising.</p>
-<p>Typical usage in a downstream package's tool module::</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>from geoagent.core.registry import register
-from geoagent.core.decorators import geo_tool
-
-@register
-@geo_tool(category=&quot;data&quot;, requires_packages=(&quot;pystac_client&quot;,))
-def my_tool(...): ...
-</code></pre></div></td></tr></table></div>
-<p>The factory then calls :func:<code>get_tools</code> with category filters to assemble
-the active tool list for an agent.</p>
+      <p>GeoAgent tool metadata registry.</p>
 
 
 
@@ -1542,144 +1354,368 @@ the active tool list for an agent.</p>
 
 
 
-  <div class="doc doc-object doc-function">
+  <div class="doc doc-object doc-class">
 
 
 
-<h4 id="geoagent.core.registry.all_tools" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">all_tools</span><span class="p">()</span></code>
+<h4 id="geoagent.core.registry.GeoToolMeta" class="doc doc-heading">
+        <code>
+GeoToolMeta        </code>
 
 
-<a href="#geoagent.core.registry.all_tools" class="headerlink" title="Permanent link">&para;</a></h4>
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#geoagent.core.registry.GeoToolMeta" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Return every registered tool, regardless of availability.</p>
+      <p>Metadata for a registered Strands tool.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">all_tools</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseTool</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return every registered tool, regardless of availability.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_TOOLS</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+          <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeoToolMeta</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Metadata for a registered Strands tool.&quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;general&quot;</span>
+    <span class="n">requires_confirmation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">destructive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">long_running</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">available_in</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;full&quot;</span><span class="p">,)</span>
+    <span class="n">requires_packages</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 </code></pre></div>
         </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
     </div>
 
   </div>
 
 
 
-  <div class="doc doc-object doc-function">
+  <div class="doc doc-object doc-class">
 
 
 
-<h4 id="geoagent.core.registry.clear" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">clear</span><span class="p">()</span></code>
+<h4 id="geoagent.core.registry.GeoToolRegistry" class="doc doc-heading">
+        <code>
+GeoToolRegistry        </code>
 
 
-<a href="#geoagent.core.registry.clear" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<a href="#geoagent.core.registry.GeoToolRegistry" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Remove all registered tools. Primarily useful in tests.</p>
+      <p>Maps tool names to :class:<code>GeoToolMeta</code>.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove all registered tools. Primarily useful in tests.&quot;&quot;&quot;</span>
-    <span class="n">_TOOLS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+          <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GeoToolRegistry</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maps tool names to :class:`GeoToolMeta`.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">GeoToolMeta</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register metadata for a Strands decorated tool.&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool_obj</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">meta</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register metadata by explicit name.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolMeta</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return registered tool names.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_all_tools_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return tool metadata as serializable config records.</span>
+
+<span class="sd">        Mirrors the type of inspection users expect from Strands-facing</span>
+<span class="sd">        registries while preserving GeoAgent-specific metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_names</span><span class="p">():</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                    <span class="s2">&quot;requires_confirmation&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">requires_confirmation</span><span class="p">,</span>
+                    <span class="s2">&quot;destructive&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">destructive</span><span class="p">,</span>
+                    <span class="s2">&quot;long_running&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">long_running</span><span class="p">,</span>
+                    <span class="s2">&quot;available_in&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">available_in</span><span class="p">),</span>
+                    <span class="s2">&quot;requires_packages&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">requires_packages</span><span class="p">),</span>
+                    <span class="s2">&quot;extra&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">extra</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">needs_user_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the tool should go through the confirm callback.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">requires_confirmation</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">destructive</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">long_running</span><span class="p">)</span>
 </code></pre></div>
         </details>
-    </div>
-
-  </div>
 
 
 
-  <div class="doc doc-object doc-function">
+  <div class="doc doc-children">
 
 
 
-<h4 id="geoagent.core.registry.get_tools" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_tools</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">available_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
 
-<a href="#geoagent.core.registry.get_tools" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.registry.GeoToolRegistry.get_all_tools_config" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_all_tools_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.registry.GeoToolRegistry.get_all_tools_config" class="headerlink" title="Permanent link">&para;</a></h5>
 
     <div class="doc doc-contents ">
 
-      <p>Return registered tools filtered by category and availability.</p>
+      <p>Return tool metadata as serializable config records.</p>
+<p>Mirrors the type of inspection users expect from Strands-facing
+registries while preserving GeoAgent-specific metadata.</p>
 
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><code>categories</code></td>
-        <td><code>Optional[Iterable[str]]</code></td>
-        <td><p>If provided, only return tools whose <code>category</code> is in
-this iterable. <code>None</code> returns all categories.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>available_only</code></td>
-        <td><code>bool</code></td>
-        <td><p>If <code>True</code> (the default), drop tools whose
-<code>requires_packages</code> are not importable.</p></td>
-        <td><code>True</code></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>list[BaseTool]</code></td>
-      <td><p>A list of matching <code>BaseTool</code> instances, in insertion order.</p></td>
-    </tr>
-  </tbody>
-</table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tools</span><span class="p">(</span>
-    <span class="n">categories</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">available_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseTool</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return registered tools filtered by category and availability.</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_all_tools_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return tool metadata as serializable config records.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        categories: If provided, only return tools whose ``category`` is in</span>
-<span class="sd">            this iterable. ``None`` returns all categories.</span>
-<span class="sd">        available_only: If ``True`` (the default), drop tools whose</span>
-<span class="sd">            ``requires_packages`` are not importable.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        A list of matching ``BaseTool`` instances, in insertion order.</span>
+<span class="sd">    Mirrors the type of inspection users expect from Strands-facing</span>
+<span class="sd">    registries while preserving GeoAgent-specific metadata.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">cats</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span> <span class="k">if</span> <span class="n">categories</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseTool</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">_TOOLS</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="n">get_geo_meta</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cats</span><span class="p">:</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_names</span><span class="p">():</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                <span class="s2">&quot;requires_confirmation&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">requires_confirmation</span><span class="p">,</span>
+                <span class="s2">&quot;destructive&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">destructive</span><span class="p">,</span>
+                <span class="s2">&quot;long_running&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">long_running</span><span class="p">,</span>
+                <span class="s2">&quot;available_in&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">available_in</span><span class="p">),</span>
+                <span class="s2">&quot;requires_packages&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">requires_packages</span><span class="p">),</span>
+                <span class="s2">&quot;extra&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">extra</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.registry.GeoToolRegistry.list_names" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">list_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.registry.GeoToolRegistry.list_names" class="headerlink" title="Permanent link">&para;</a></h5>
+
+    <div class="doc doc-contents ">
+
+      <p>Return registered tool names.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return registered tool names.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.registry.GeoToolRegistry.needs_user_confirmation" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">needs_user_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.registry.GeoToolRegistry.needs_user_confirmation" class="headerlink" title="Permanent link">&para;</a></h5>
+
+    <div class="doc doc-contents ">
+
+      <p>Return True if the tool should go through the confirm callback.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">needs_user_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if the tool should go through the confirm callback.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">requires_confirmation</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">destructive</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">long_running</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.registry.GeoToolRegistry.register" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.registry.GeoToolRegistry.register" class="headerlink" title="Permanent link">&para;</a></h5>
+
+    <div class="doc doc-contents ">
+
+      <p>Register metadata by explicit name.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register metadata by explicit name.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h5 id="geoagent.core.registry.GeoToolRegistry.register_tool" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">register_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_obj</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.registry.GeoToolRegistry.register_tool" class="headerlink" title="Permanent link">&para;</a></h5>
+
+    <div class="doc doc-contents ">
+
+      <p>Register metadata for a Strands decorated tool.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register metadata for a Strands decorated tool.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool_obj</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_by_name</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">meta</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.core.registry.collect_tools_for_context" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">collect_tools_for_context</span><span class="p">(</span><span class="n">tool_objects</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fast</span><span class="p">,</span> <span class="n">registry</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.registry.collect_tools_for_context" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Filter tools for fast mode using metadata or :data:<code>FAST_TOOL_FALLBACK</code>.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">collect_tools_for_context</span><span class="p">(</span>
+    <span class="n">tool_objects</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">registry</span><span class="p">:</span> <span class="n">GeoToolRegistry</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter tools for fast mode using metadata or :data:`FAST_TOOL_FALLBACK`.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fast</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">tool_objects</span><span class="p">)</span>
+
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tool_objects</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">available_only</span><span class="p">:</span>
-            <span class="n">required</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;requires_packages&quot;</span><span class="p">,</span> <span class="p">[])</span>
-            <span class="k">if</span> <span class="n">required</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">_have</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span> <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">required</span><span class="p">):</span>
-                <span class="k">continue</span>
-        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;fast&quot;</span> <span class="ow">in</span> <span class="n">meta</span><span class="o">.</span><span class="n">available_in</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">FAST_TOOL_FALLBACK</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span>
 </code></pre></div>
         </details>
@@ -1693,176 +1729,26 @@ this iterable. <code>None</code> returns all categories.</p></td>
 
 
 
-<h4 id="geoagent.core.registry.is_available" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">is_available</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span></code>
+<h4 id="geoagent.core.registry.packages_available" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">packages_available</span><span class="p">(</span><span class="n">requires</span><span class="p">)</span></code>
 
 
-<a href="#geoagent.core.registry.is_available" class="headerlink" title="Permanent link">&para;</a></h4>
-
-    <div class="doc doc-contents ">
-
-      <p>Return whether <code>tool</code>'s required Python packages are importable.</p>
-
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_available</span><span class="p">(</span><span class="n">tool</span><span class="p">:</span> <span class="n">BaseTool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return whether ``tool``&#39;s required Python packages are importable.&quot;&quot;&quot;</span>
-    <span class="n">required</span> <span class="o">=</span> <span class="n">get_geo_meta</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;requires_packages&quot;</span><span class="p">,</span> <span class="p">[])</span>
-    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">_have</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span> <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">required</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
-
-
-
-  <div class="doc doc-object doc-function">
-
-
-
-<h4 id="geoagent.core.registry.register" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span></code>
-
-
-<a href="#geoagent.core.registry.register" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#geoagent.core.registry.packages_available" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Register a single tool in the global registry.</p>
-<p>Idempotent: re-registering a tool with the same name overwrites the
-previous entry. Returns the tool to support decorator-style usage.</p>
-
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><code>tool</code></td>
-        <td><code>BaseTool</code></td>
-        <td><p>A LangChain <code>BaseTool</code> (typically produced by
-:func:<code>geo_tool</code>).</p></td>
-        <td><em>required</em></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>BaseTool</code></td>
-      <td><p>The same tool, unchanged.</p></td>
-    </tr>
-  </tbody>
-</table>
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">tool</span><span class="p">:</span> <span class="n">BaseTool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a single tool in the global registry.</span>
-
-<span class="sd">    Idempotent: re-registering a tool with the same name overwrites the</span>
-<span class="sd">    previous entry. Returns the tool to support decorator-style usage.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        tool: A LangChain ``BaseTool`` (typically produced by</span>
-<span class="sd">            :func:`geo_tool`).</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The same tool, unchanged.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_TOOLS</span><span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tool</span>
-    <span class="k">return</span> <span class="n">tool</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
-
-
-
-  <div class="doc doc-object doc-function">
-
-
-
-<h4 id="geoagent.core.registry.register_many" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">register_many</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span></code>
-
-
-<a href="#geoagent.core.registry.register_many" class="headerlink" title="Permanent link">&para;</a></h4>
-
-    <div class="doc doc-contents ">
-
-      <p>Register an iterable of tools.</p>
-
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><code>tools</code></td>
-        <td><code>Iterable[BaseTool]</code></td>
-        <td><p>Tools to register.</p></td>
-        <td><em>required</em></td>
-      </tr>
-  </tbody>
-</table>
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_many</span><span class="p">(</span><span class="n">tools</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">BaseTool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register an iterable of tools.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        tools: Tools to register.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tools</span><span class="p">:</span>
-        <span class="n">register</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
-
-
-
-  <div class="doc doc-object doc-function">
-
-
-
-<h4 id="geoagent.core.registry.unregister" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">unregister</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></code>
-
-
-<a href="#geoagent.core.registry.unregister" class="headerlink" title="Permanent link">&para;</a></h4>
-
-    <div class="doc doc-contents ">
-
-      <p>Remove a tool from the registry by name. No-op if absent.</p>
+      <p>Return True if every named package is importable.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a tool from the registry by name. No-op if absent.&quot;&quot;&quot;</span>
-    <span class="n">_TOOLS</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">packages_available</span><span class="p">(</span><span class="n">requires</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if every named package is importable.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pkg</span> <span class="ow">in</span> <span class="n">requires</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">__import__</span><span class="p">(</span><span class="n">pkg</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
 </code></pre></div>
         </details>
     </div>

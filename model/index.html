@@ -12,13 +12,13 @@
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://geoagent.gishub.org/context/">
+        <link rel="canonical" href="https://geoagent.gishub.org/model/">
       
       
-        <link rel="prev" href="../model/">
+        <link rel="prev" href="../factory/">
       
       
-        <link rel="next" href="../result/">
+        <link rel="next" href="../context/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Context - GeoAgent</title>
+        <title>Model - GeoAgent</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#context" class="md-skip">
+        <a href="#model-providers" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Context
+              Model
             
           </span>
         </div>
@@ -729,34 +729,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../model/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Model
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -776,7 +748,7 @@
   <span class="md-ellipsis">
     
   
-    Context
+    Model
   
 
     
@@ -794,7 +766,7 @@
   <span class="md-ellipsis">
     
   
-    Context
+    Model
   
 
     
@@ -820,42 +792,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#geoagent.core.context" class="md-nav__link">
+  <a href="#geoagent.core.model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        context
+        model
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="context">
+    <nav class="md-nav" aria-label="model">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.context.GeoAgentContext" class="md-nav__link">
+  <a href="#geoagent.core.model.get_default_model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GeoAgentContext
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="GeoAgentContext">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#geoagent.core.context.GeoAgentContext.with_overrides" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        with_overrides()
+        get_default_model()
       
     </span>
   </a>
   
 </li>
         
-      </ul>
-    </nav>
+          <li class="md-nav__item">
+  <a href="#geoagent.core.model.get_llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_llm()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.model.resolve_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resolve_model()
+      
+    </span>
+  </a>
   
 </li>
         
@@ -868,6 +845,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1103,42 +1108,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#geoagent.core.context" class="md-nav__link">
+  <a href="#geoagent.core.model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        context
+        model
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="context">
+    <nav class="md-nav" aria-label="model">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#geoagent.core.context.GeoAgentContext" class="md-nav__link">
+  <a href="#geoagent.core.model.get_default_model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        GeoAgentContext
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="GeoAgentContext">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#geoagent.core.context.GeoAgentContext.with_overrides" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        with_overrides()
+        get_default_model()
       
     </span>
   </a>
   
 </li>
         
-      </ul>
-    </nav>
+          <li class="md-nav__item">
+  <a href="#geoagent.core.model.get_llm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_llm()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.model.resolve_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        resolve_model()
+      
+    </span>
+  </a>
   
 </li>
         
@@ -1170,24 +1180,23 @@
   
 
 
-<h1 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h1>
-<p><code>GeoAgentContext</code> carries the runtime state passed into every agent invocation: the live map widget, the QGIS interface and project, the working directory, and free-form user preferences.</p>
+<h1 id="model-providers">Model providers<a class="headerlink" href="#model-providers" title="Permanent link">&para;</a></h1>
 
 
   <div class="doc doc-object doc-module">
 
 
 
-<h3 id="geoagent.core.context" class="doc doc-heading">
-        <code>geoagent.core.context</code>
+<h3 id="geoagent.core.model" class="doc doc-heading">
+        <code>geoagent.core.model</code>
 
 
 
-<a href="#geoagent.core.context" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#geoagent.core.model" class="headerlink" title="Permanent link">&para;</a></h3>
 
     <div class="doc doc-contents first">
 
-      <p>Runtime context for GeoAgent tools and prompts.</p>
+      <p>Resolve Strands :class:<code>~strands.models.model.Model</code> instances from config.</p>
 
 
 
@@ -1199,170 +1208,161 @@
 
 
 
-  <div class="doc doc-object doc-class">
+
+  <div class="doc doc-object doc-function">
 
 
 
-<h4 id="geoagent.core.context.GeoAgentContext" class="doc doc-heading">
-        <code>
-GeoAgentContext        </code>
+<h4 id="geoagent.core.model.get_default_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_default_model</span><span class="p">()</span></code>
 
 
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#geoagent.core.context.GeoAgentContext" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#geoagent.core.model.get_default_model" class="headerlink" title="Permanent link">&para;</a></h4>
 
     <div class="doc doc-contents ">
 
-      <p>Scalar and handle fields for a GeoAgent run.</p>
-<p>Live objects (map widgets, QGIS iface) are normally captured via closure
-in tool factories; this dataclass holds references for prompts and tools
-that read context explicitly.</p>
+      <p>Default model using environment-derived provider selection.</p>
 
-<p><strong>Attributes:</strong></p>
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/model.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_default_model</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default model using environment-derived provider selection.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">resolve_model</span><span class="p">(</span><span class="n">GeoAgentConfig</span><span class="p">())</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.core.model.get_llm" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_llm</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.model.get_llm" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build a model (alias for :func:<code>resolve_model</code> with a fresh config).</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/model.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_llm</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a model (alias for :func:`resolve_model` with a fresh config).&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_default_model</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">resolve_model</span><span class="p">(</span><span class="n">GeoAgentConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.core.model.resolve_model" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">resolve_model</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.model.resolve_model" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Build a Strands model from :class:<code>GeoAgentConfig</code> or kwargs overrides.</p>
+
+<p><strong>Exceptions:</strong></p>
 <table>
   <thead>
     <tr>
-      <th>Name</th>
       <th>Type</th>
       <th>Description</th>
     </tr>
   </thead>
   <tbody>
       <tr>
-        <td><code>map_obj</code></td>
-        <td><code>Optional[Any]</code></td>
-        <td><p>leafmap.Map, anymap.Map, or similar.</p></td>
+        <td><code>ImportError</code></td>
+        <td><p>When optional provider client libraries are missing.</p></td>
       </tr>
       <tr>
-        <td><code>qgis_iface</code></td>
-        <td><code>Optional[Any]</code></td>
-        <td><p>QGIS <code>QgisInterface</code> when inside QGIS.</p></td>
-      </tr>
-      <tr>
-        <td><code>qgis_project</code></td>
-        <td><code>Optional[Any]</code></td>
-        <td><p>Optional <code>QgsProject</code> (tools may fall back to instance).</p></td>
-      </tr>
-      <tr>
-        <td><code>workdir</code></td>
-        <td><code>Path</code></td>
-        <td><p>Working directory for downloads and exports.</p></td>
-      </tr>
-      <tr>
-        <td><code>current_layer</code></td>
-        <td><code>Optional[str]</code></td>
-        <td><p>Optional layer name hint for follow-up commands.</p></td>
-      </tr>
-      <tr>
-        <td><code>user_preferences</code></td>
-        <td><code>dict[str, Any]</code></td>
-        <td><p>Free-form preferences for prompts/tools.</p></td>
-      </tr>
-      <tr>
-        <td><code>metadata</code></td>
-        <td><code>dict[str, Any]</code></td>
-        <td><p>Arbitrary JSON-serializable metadata for integrations.</p></td>
+        <td><code>ValueError</code></td>
+        <td><p>When configuration is inconsistent.</p></td>
       </tr>
   </tbody>
 </table>
         <details class="quote">
-          <summary>Source code in <code>geoagent/core/context.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">GeoAgentContext</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scalar and handle fields for a GeoAgent run.</span>
+          <summary>Source code in <code>geoagent/core/model.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_model</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">GeoAgentConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a Strands model from :class:`GeoAgentConfig` or kwargs overrides.</span>
 
-<span class="sd">    Live objects (map widgets, QGIS iface) are normally captured via closure</span>
-<span class="sd">    in tool factories; this dataclass holds references for prompts and tools</span>
-<span class="sd">    that read context explicitly.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        map_obj: leafmap.Map, anymap.Map, or similar.</span>
-<span class="sd">        qgis_iface: QGIS ``QgisInterface`` when inside QGIS.</span>
-<span class="sd">        qgis_project: Optional ``QgsProject`` (tools may fall back to instance).</span>
-<span class="sd">        workdir: Working directory for downloads and exports.</span>
-<span class="sd">        current_layer: Optional layer name hint for follow-up commands.</span>
-<span class="sd">        user_preferences: Free-form preferences for prompts/tools.</span>
-<span class="sd">        metadata: Arbitrary JSON-serializable metadata for integrations.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ImportError: When optional provider client libraries are missing.</span>
+<span class="sd">        ValueError: When configuration is inconsistent.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="n">overrides</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">GeoAgentConfig</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="n">ProviderName</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">provider</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.bedrock</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_BEDROCK_MODEL_ID</span><span class="p">,</span> <span class="n">BedrockModel</span>
 
-    <span class="n">map_obj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">qgis_iface</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">qgis_project</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">)</span>
-    <span class="n">current_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">user_preferences</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">DEFAULT_BEDROCK_MODEL_ID</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">BedrockModel</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GeoAgentContext&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy with selected fields replaced.&quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
 
-        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-        </details>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>
+        <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
+            <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">},</span>
+        <span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.anthropic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnthropicModel</span>
 
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ANTHROPIC_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">)</span>
+        <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AnthropicModel</span><span class="p">(</span>
+            <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">max_tokens</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">},</span>
+        <span class="p">)</span>
 
-  <div class="doc doc-children">
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;ollama&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.ollama</span><span class="w"> </span><span class="kn">import</span> <span class="n">OllamaModel</span>
 
+        <span class="n">host</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">ollama_host</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;OLLAMA_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;http://127.0.0.1:11434&quot;</span>
+        <span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OLLAMA_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;llama3&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">OllamaModel</span><span class="p">(</span>
+            <span class="n">host</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">temperature</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span>
+            <span class="n">max_tokens</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">,</span>
+        <span class="p">)</span>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <div class="doc doc-object doc-method">
-
-
-
-<h5 id="geoagent.core.context.GeoAgentContext.with_overrides" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">with_overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
-
-
-<a href="#geoagent.core.context.GeoAgentContext.with_overrides" class="headerlink" title="Permanent link">&para;</a></h5>
-
-    <div class="doc doc-contents ">
-
-      <p>Return a copy with selected fields replaced.</p>
-
-        <details class="quote">
-          <summary>Source code in <code>geoagent/core/context.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">with_overrides</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GeoAgentContext&quot;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a copy with selected fields replaced.&quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
-
-    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown provider: </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
 
   </div>
-
-
-
-
-
-  </div>
-
-    </div>
-
-  </div>
-
 
 
 
@@ -1396,7 +1396,7 @@ that read context explicitly.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:03:34 UTC"><span class="timeago" datetime="2026-04-27T04:03:34+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:03:34 UTC">2026-04-27</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
   </span>
 
     
@@ -1406,7 +1406,7 @@ that read context explicitly.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 27, 2026 04:03:34 UTC"><span class="timeago" datetime="2026-04-27T04:03:34+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 27, 2026 04:03:34 UTC">2026-04-27</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
   </span>
 
     
