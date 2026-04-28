@@ -820,6 +820,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoagent.core.factory.for_nasa_opera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for_nasa_opera()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoagent.core.factory.for_qgis" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1197,6 +1208,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoagent.core.factory.for_nasa_opera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for_nasa_opera()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoagent.core.factory.for_qgis" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1276,12 +1298,13 @@
 
 
 
+
   <div class="doc doc-object doc-function">
 
 
 
 <h4 id="geoagent.core.factory.assemble_tools" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">assemble_tools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_anymap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">assemble_tools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_anymap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.factory.assemble_tools" class="headerlink" title="Permanent link">&para;</a></h4>
@@ -1299,6 +1322,7 @@
     <span class="n">include_leafmap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_anymap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">include_nasa_opera</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">GeoToolRegistry</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect tools for a context and build a metadata registry.&quot;&quot;&quot;</span>
@@ -1316,6 +1340,12 @@
         <span class="n">qt</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span><span class="n">qgis_tools</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">qgis_iface</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">qgis_project</span><span class="p">))</span>
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">qt</span><span class="p">)</span>
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">qt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_nasa_opera</span><span class="p">:</span>
+        <span class="n">opera_tools</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span>
+            <span class="n">nasa_opera_tools</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">qgis_iface</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">qgis_project</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">opera_tools</span><span class="p">)</span>
+        <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">opera_tools</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">extra_tools</span><span class="p">:</span>
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">extra_tools</span><span class="p">)</span>
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_tools</span><span class="p">)</span>
@@ -1495,6 +1525,82 @@
         <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">confirm</span><span class="o">=</span><span class="n">confirm</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.core.factory.for_nasa_opera" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">for_nasa_opera</span><span class="p">(</span><span class="n">iface</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">confirm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.factory.for_nasa_opera" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Bind an agent to the NASA OPERA QGIS plugin runtime.</p>
+<p>The factory exposes native GeoAgent OPERA tools and, by default, the
+general QGIS map/project tools used for navigation and layer management.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/factory.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">for_nasa_opera</span><span class="p">(</span>
+    <span class="n">iface</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">GeoAgentConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the NASA OPERA QGIS plugin runtime.</span>
+
+<span class="sd">    The factory exposes native GeoAgent OPERA tools and, by default, the</span>
+<span class="sd">    general QGIS map/project tools used for navigation and layer management.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
+        <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
+        <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">NASA_OPERA_SYSTEM_PROMPT</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
+        <span class="n">include_qgis</span><span class="o">=</span><span class="n">include_qgis</span><span class="p">,</span>
+        <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
+        <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+        <span class="n">registry</span><span class="o">=</span><span class="n">registry</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+        <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+        <span class="n">confirm</span><span class="o">=</span><span class="n">confirm</span><span class="p">,</span>
+        <span class="n">qgis_safe_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div>
         </details>

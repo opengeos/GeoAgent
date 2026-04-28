@@ -1009,6 +1009,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nasa-opera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NASA OPERA
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1101,6 +1112,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#nasa-opera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NASA OPERA
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1127,7 +1149,7 @@
 <h1 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h1>
 <p>Interactive adapters live under <strong><code>geoagent.tools</code></strong>:</p>
 <ul>
-<li><code>leafmap_tools</code>, <code>anymap_tools</code>, <code>qgis_tools</code> — bound to live map / QGIS instances.</li>
+<li><code>leafmap_tools</code>, <code>anymap_tools</code>, <code>qgis_tools</code>, <code>nasa_opera_tools</code> — bound to live map / QGIS instances.</li>
 <li>Optional stubs: <code>stac</code>, <code>geoai</code>, <code>earthengine</code>, <code>nasa_earthdata</code> (expand in future releases).</li>
 </ul>
 <p>Use <strong><code>@geo_tool</code></strong> (<a href="../decorators/"><code>geoagent.core.decorators</code></a>) so tools register Strands-compatible metadata for safety hooks.</p>
@@ -1151,6 +1173,42 @@
 <li>Open UI / save: <code>open_attribute_table</code>, <code>save_project</code>.</li>
 </ul>
 <p>Destructive or persistent actions such as <code>remove_layer</code>, <code>clear_layers</code>, <code>save_map</code>, <code>save_project</code>, and <code>run_processing_algorithm</code> require confirmation through the GeoAgent safety hook.</p>
+<h2 id="nasa-opera">NASA OPERA<a class="headerlink" href="#nasa-opera" title="Permanent link">&para;</a></h2>
+<p><code>for_nasa_opera(iface, project=None)</code> exposes native GeoAgent tools for NASA OPERA plugin workflows:</p>
+<ul>
+<li>Inspect OPERA products: <code>get_available_datasets</code>, <code>get_dataset_info</code>.</li>
+<li>Search Earthdata granules: <code>search_opera_data</code>.</li>
+<li>Display results in QGIS: <code>display_footprints</code>, <code>display_raster</code>, <code>create_mosaic</code>.</li>
+</ul>
+<p>This integration replaces the plugin-local <code>nasa_opera.ai.tools</code> registry instead of wrapping it.</p>
+<p>Example QGIS-console workflow. This direct-tool path avoids LLM/provider
+initialization and reports progress in QGIS's message bar and Log Messages
+panel:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.tools.nasa_opera</span><span class="w"> </span><span class="kn">import</span> <span class="n">submit_nasa_opera_search_task</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">submit_nasa_opera_search_task</span><span class="p">(</span>
+    <span class="n">iface</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;OPERA_L3_DSWX-HLS_V1&quot;</span><span class="p">,</span>
+    <span class="n">bbox</span><span class="o">=</span><span class="s2">&quot;-95.5,29.5,-95.0,30.0&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2024-01-31&quot;</span><span class="p">,</span>
+    <span class="n">max_results</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">display_footprints</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>Natural-language OPERA chat is intentionally disabled inside QGIS for now.
+Use direct tools or <code>submit_nasa_opera_search_task(...)</code> so QGIS task/thread
+ownership remains explicit.</p>
 
 
 
@@ -1173,7 +1231,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:53:57 UTC"><span class="timeago" datetime="2026-04-28T03:53:57+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:53:57 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 14:52:02 UTC"><span class="timeago" datetime="2026-04-28T14:52:02+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 14:52:02 UTC">2026-04-28</span>
   </span>
 
     
