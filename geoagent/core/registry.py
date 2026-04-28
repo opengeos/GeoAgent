@@ -98,6 +98,7 @@ FAST_TOOL_FALLBACK: frozenset[str] = frozenset(
         "refresh_canvas",
         "zoom_to_extent",
         "set_scale",
+        "add_xyz_tile_layer",
     }
 )
 
