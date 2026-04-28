@@ -157,6 +157,91 @@ def _safe_call(obj: Any, names: list[str], *args: Any, **kwargs: Any) -> Any:
     )
 
 
+def _layer_name(layer: Any) -> Optional[str]:
+    if isinstance(layer, dict):
+        name = layer.get("name") or layer.get("layer_name") or layer.get("id")
+    else:
+        name = getattr(layer, "name", None) or getattr(layer, "layer_name", None)
+        if callable(name):
+            name = name()
+    return str(name) if name else None
+
+
+def _layer_attr(layer: Any, *keys: str, default: Any = None) -> Any:
+    for key in keys:
+        if isinstance(layer, dict) and key in layer:
+            return layer[key]
+        value = getattr(layer, key, None)
+        if value is not None:
+            return value() if callable(value) else value
+    return default
+
+
+def _layer_bounds(layer: Any) -> Optional[list[list[float]]]:
+    raw = _layer_attr(layer, "bounds", "bbox", "extent")
+    if raw is None:
+        return None
+    if isinstance(raw, dict):
+        if "bbox" in raw:
+            raw = raw["bbox"]
+        elif all(k in raw for k in ("west", "south", "east", "north")):
+            raw = [raw["west"], raw["south"], raw["east"], raw["north"]]
+        elif "_sw" in raw and "_ne" in raw:
+            sw = raw["_sw"]
+            ne = raw["_ne"]
+            if isinstance(sw, dict) and isinstance(ne, dict):
+                return [[sw["lng"], sw["lat"]], [ne["lng"], ne["lat"]]]
+    if isinstance(raw, (list, tuple)):
+        if len(raw) == 4 and all(isinstance(v, (int, float)) for v in raw):
+            west, south, east, north = raw
+            return [[float(west), float(south)], [float(east), float(north)]]
+        if len(raw) == 2:
+            return [list(raw[0]), list(raw[1])]  # type: ignore[index]
+    return None
+
+
+def _find_layer_entry(m: Any, name: str) -> Optional[Any]:
+    for layer in getattr(m, "layers", None) or []:
+        if _layer_name(layer) == name:
+            return layer
+    return None
+
+
+def _set_layer_attr(layer: Any, key: str, value: Any) -> bool:
+    if isinstance(layer, dict):
+        layer[key] = value
+        return True
+    setter = getattr(layer, f"set{key[:1].upper()}{key[1:]}", None)
+    if callable(setter):
+        setter(value)
+        return True
+    try:
+        setattr(layer, key, value)
+        return True
+    except Exception:
+        return False
+
+
+def _layer_record(layer: Any) -> dict[str, Any]:
+    name = _layer_name(layer) or "Unnamed"
+    record = {
+        "name": name,
+        "type": str(_layer_attr(layer, "type", default=type(layer).__name__)),
+    }
+    for key, aliases in {
+        "visible": ("visible", "visibility", "shown"),
+        "opacity": ("opacity",),
+        "source": ("source", "data", "url"),
+    }.items():
+        value = _layer_attr(layer, *aliases)
+        if value is not None:
+            record[key] = value
+    bounds = _layer_bounds(layer)
+    if bounds is not None:
+        record["bounds"] = bounds
+    return record
+
+
 def leafmap_tools(m: Any) -> list[Any]:
     """Build the leafmap tool set bound to a live map instance.
 
@@ -178,26 +263,13 @@ def leafmap_tools(m: Any) -> list[Any]:
         """List the layers currently on the map.
 
         Returns:
-            A list of dicts ``{"name": ..., "type": ...}`` for each layer.
+            A list of layer metadata dictionaries. Each record includes
+            at least ``name`` and ``type`` and may include ``source``,
+            ``visible``, ``opacity``, and ``bounds`` when the map exposes
+            them.
         """
         layers = getattr(m, "layers", None) or []
-        out: list[dict[str, Any]] = []
-        for layer in layers:
-            if isinstance(layer, dict):
-                out.append(
-                    {
-                        "name": layer.get("name", "Unnamed"),
-                        "type": layer.get("type", "unknown"),
-                    }
-                )
-            else:
-                out.append(
-                    {
-                        "name": getattr(layer, "name", str(layer)),
-                        "type": type(layer).__name__,
-                    }
-                )
-        return out
+        return [_layer_record(layer) for layer in layers]
 
     @geo_tool(
         category="map",
@@ -294,6 +366,81 @@ def leafmap_tools(m: Any) -> list[Any]:
 
     @geo_tool(
         category="map",
+        requires_confirmation=True,
+    )
+    def clear_layers() -> str:
+        """Remove all layers currently tracked by the map.
+
+        Returns:
+            A status string with the number of removed layers.
+        """
+        names = _layer_names(m)
+        if hasattr(m, "clear_layers"):
+            m.clear_layers()
+        elif hasattr(m, "layers") and isinstance(m.layers, list):
+            m.layers = []
+        elif hasattr(m, "remove_layer"):
+            for layer_name in names:
+                m.remove_layer(layer_name)
+        else:
+            return "No supported layer-clearing method is available."
+        return f"Cleared {len(names)} layer(s)."
+
+    @geo_tool(
+        category="map",
+    )
+    def set_layer_visibility(name: str, visible: bool) -> str:
+        """Show or hide a map layer by name or unique substring.
+
+        Args:
+            name: Layer name, or a unique case-insensitive substring.
+            visible: ``True`` to show the layer, ``False`` to hide it.
+
+        Returns:
+            A status string.
+        """
+        resolved, candidates = _resolve_layer_name(m, name)
+        if resolved is None and len(candidates) > 1:
+            return f"Layer {name!r} is ambiguous; matched: {', '.join(candidates)}."
+        target = resolved or name
+        if hasattr(m, "set_layer_visibility"):
+            changed = m.set_layer_visibility(target, bool(visible))
+            if changed in (None, True):
+                return f"Layer {target!r} visibility set to {visible}."
+        layer = _find_layer_entry(m, target)
+        if layer is not None and _set_layer_attr(layer, "visible", bool(visible)):
+            return f"Layer {target!r} visibility set to {visible}."
+        return f"Layer {name!r} not found."
+
+    @geo_tool(
+        category="map",
+    )
+    def set_layer_opacity(name: str, opacity: float) -> str:
+        """Set a layer opacity from 0.0 (transparent) to 1.0 (opaque).
+
+        Args:
+            name: Layer name, or a unique case-insensitive substring.
+            opacity: Desired opacity. Values outside 0..1 are clamped.
+
+        Returns:
+            A status string.
+        """
+        value = min(1.0, max(0.0, float(opacity)))
+        resolved, candidates = _resolve_layer_name(m, name)
+        if resolved is None and len(candidates) > 1:
+            return f"Layer {name!r} is ambiguous; matched: {', '.join(candidates)}."
+        target = resolved or name
+        if hasattr(m, "set_layer_opacity"):
+            changed = m.set_layer_opacity(target, value)
+            if changed in (None, True):
+                return f"Layer {target!r} opacity set to {value}."
+        layer = _find_layer_entry(m, target)
+        if layer is not None and _set_layer_attr(layer, "opacity", value):
+            return f"Layer {target!r} opacity set to {value}."
+        return f"Layer {name!r} not found."
+
+    @geo_tool(
+        category="map",
     )
     def set_center(lat: float, lon: float, zoom: Optional[int] = None) -> str:
         """Centre the map on a coordinate.
@@ -308,6 +455,28 @@ def leafmap_tools(m: Any) -> list[Any]:
         """
         _safe_call(m, ["set_center"], lon, lat, zoom)
         return f"Centred on ({lat}, {lon})" + (
+            f" at zoom {zoom}." if zoom is not None else "."
+        )
+
+    @geo_tool(
+        category="map",
+    )
+    def fly_to(lat: float, lon: float, zoom: Optional[int] = None) -> str:
+        """Animate or move the map to a coordinate when supported.
+
+        Args:
+            lat: Latitude in WGS84.
+            lon: Longitude in WGS84.
+            zoom: Optional target zoom.
+
+        Returns:
+            A status string.
+        """
+        try:
+            _safe_call(m, ["fly_to"], lon, lat, zoom)
+        except AttributeError:
+            _safe_call(m, ["set_center"], lon, lat, zoom)
+        return f"Moved to ({lat}, {lon})" + (
             f" at zoom {zoom}." if zoom is not None else "."
         )
 
@@ -391,6 +560,31 @@ def leafmap_tools(m: Any) -> list[Any]:
     @geo_tool(
         category="map",
     )
+    def zoom_to_layer(name: str) -> str:
+        """Zoom to a layer's recorded bounds, if available.
+
+        Args:
+            name: Layer name, or a unique case-insensitive substring.
+
+        Returns:
+            A status string.
+        """
+        resolved, candidates = _resolve_layer_name(m, name)
+        if resolved is None and len(candidates) > 1:
+            return f"Layer {name!r} is ambiguous; matched: {', '.join(candidates)}."
+        target = resolved or name
+        layer = _find_layer_entry(m, target)
+        if layer is None:
+            return f"Layer {name!r} not found."
+        bounds = _layer_bounds(layer)
+        if bounds is None:
+            return f"Layer {target!r} has no recorded bounds."
+        _safe_call(m, ["fit_bounds", "zoom_to_bounds"], bounds)
+        return f"Zoomed to layer {target!r}."
+
+    @geo_tool(
+        category="map",
+    )
     def change_basemap(basemap: str) -> str:
         """Change the basemap style.
 
@@ -430,6 +624,87 @@ def leafmap_tools(m: Any) -> list[Any]:
             style=style or {},
         )
         return f"Added vector layer {name!r}."
+
+    @geo_tool(
+        category="map",
+    )
+    def add_geojson_data(
+        data: dict[str, Any],
+        name: str,
+        style: Optional[dict[str, Any]] = None,
+    ) -> str:
+        """Add an in-memory GeoJSON FeatureCollection or geometry.
+
+        Args:
+            data: GeoJSON dictionary.
+            name: Display name.
+            style: Optional style dict.
+
+        Returns:
+            A status string.
+        """
+        _safe_call(
+            m,
+            ["add_geojson", "add_vector"],
+            data,
+            layer_name=name,
+            style=style or {},
+        )
+        return f"Added GeoJSON layer {name!r}."
+
+    @geo_tool(
+        category="map",
+    )
+    def add_marker(
+        lat: float,
+        lon: float,
+        popup: Optional[str] = None,
+        tooltip: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> str:
+        """Add a point marker to the map.
+
+        Args:
+            lat: Marker latitude.
+            lon: Marker longitude.
+            popup: Optional popup text.
+            tooltip: Optional hover tooltip.
+            name: Optional layer/display name.
+
+        Returns:
+            A status string.
+        """
+        marker_name = name or popup or f"Marker ({lat}, {lon})"
+        if hasattr(m, "add_marker"):
+            m.add_marker(
+                location=(lat, lon),
+                popup=popup,
+                tooltip=tooltip,
+                name=marker_name,
+            )
+        elif hasattr(m, "add_layer"):
+            m.add_layer(
+                {
+                    "type": "marker",
+                    "name": marker_name,
+                    "location": [lat, lon],
+                    "popup": popup,
+                    "tooltip": tooltip,
+                }
+            )
+        elif hasattr(m, "layers") and isinstance(m.layers, list):
+            m.layers.append(
+                {
+                    "type": "marker",
+                    "name": marker_name,
+                    "location": [lat, lon],
+                    "popup": popup,
+                    "tooltip": tooltip,
+                }
+            )
+        else:
+            raise AttributeError(f"{type(m).__name__} cannot add marker layers.")
+        return f"Added marker {marker_name!r} at ({lat}, {lon})."
 
     @geo_tool(
         category="map",
@@ -659,13 +934,20 @@ def leafmap_tools(m: Any) -> list[Any]:
         list_layers,
         add_layer,
         remove_layer,
+        clear_layers,
+        set_layer_visibility,
+        set_layer_opacity,
         set_center,
+        fly_to,
         set_zoom,
         zoom_in,
         zoom_out,
         zoom_to_bounds,
+        zoom_to_layer,
         change_basemap,
         add_vector_data,
+        add_geojson_data,
+        add_marker,
         add_raster_data,
         add_stac_layer,
         add_cog_layer,

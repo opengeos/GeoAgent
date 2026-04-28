@@ -52,7 +52,7 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
     Outside Qt/QGIS (tests, CI), this degrades to a direct call.
     """
     try:
-        from qgis.PyQt.QtCore import QMetaObject, QObject, QThread, Qt, pyqtSlot  # type: ignore[import-not-found]
+        from qgis.PyQt.QtCore import QMetaObject, QObject, Qt, pyqtSlot  # type: ignore[import-not-found]
         from qgis.PyQt.QtWidgets import QApplication  # type: ignore[import-not-found]
     except Exception:
         return func()

@@ -7,7 +7,7 @@ from geoagent import GeoAgent, for_leafmap, GeoAgentConfig
 agent = GeoAgent()
 
 # Explicit config
-agent = GeoAgent(config=GeoAgentConfig(provider="openai", model="gpt-4o-mini"))
+agent = GeoAgent(config=GeoAgentConfig(provider="openai", model="gpt-5.4-mini"))
 
 # Bound to a live map
 agent = for_leafmap(m)

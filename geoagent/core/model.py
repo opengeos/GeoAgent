@@ -31,7 +31,7 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
     if provider == "openai":
         from strands.models.openai import OpenAIModel
 
-        model_id = cfg.model or os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+        model_id = cfg.model or os.environ.get("OPENAI_MODEL", "gpt-5.4-mini")
         client_args = dict(cfg.client_args)
         return OpenAIModel(
             client_args=client_args or None,

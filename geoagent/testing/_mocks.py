@@ -50,6 +50,9 @@ class MockLeafmap:
     def fit_bounds(self, bounds: list[list[float]]) -> None:
         self._bounds = bounds
 
+    def fly_to(self, lon: float, lat: float, zoom: Optional[int] = None) -> None:
+        self.set_center(lon, lat, zoom)
+
     def get_center(self) -> list[float]:
         return list(self.center)
 
@@ -137,6 +140,25 @@ class MockLeafmap:
             }
         )
 
+    def add_marker(
+        self,
+        location: tuple[float, float] | list[float],
+        popup: str | None = None,
+        tooltip: str | None = None,
+        name: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        self.layers.append(
+            {
+                "type": "marker",
+                "location": list(location),
+                "popup": popup,
+                "tooltip": tooltip,
+                "name": name or f"Marker {len(self.layers) + 1}",
+                **kwargs,
+            }
+        )
+
     def add_stac_layer(
         self,
         collection: str,
@@ -160,6 +182,23 @@ class MockLeafmap:
         before = len(self.layers)
         self.layers = [layer for layer in self.layers if layer.get("name") != name]
         return len(self.layers) != before
+
+    def clear_layers(self) -> None:
+        self.layers = []
+
+    def set_layer_visibility(self, name: str, visible: bool) -> bool:
+        for layer in self.layers:
+            if layer.get("name") == name:
+                layer["visible"] = bool(visible)
+                return True
+        return False
+
+    def set_layer_opacity(self, name: str, opacity: float) -> bool:
+        for layer in self.layers:
+            if layer.get("name") == name:
+                layer["opacity"] = float(opacity)
+                return True
+        return False
 
     # ----- annotations / IO -----
     def add_title(self, title: str) -> None:
@@ -223,6 +262,7 @@ class MockQGISLayer:
         self._selected: list[dict[str, Any]] = []
         self._visible = True
         self._extent = tuple(extent) if extent else None
+        self._opacity = 1.0
 
     def name(self) -> str:
         return self.layer_name
@@ -253,6 +293,29 @@ class MockQGISLayer:
     def selectedFeatures(self) -> list[dict[str, Any]]:
         return list(self._selected)
 
+    def selectedFeatureCount(self) -> int:
+        return len(self._selected)
+
+    def featureCount(self) -> int:
+        return len(self._selected)
+
+    def selectByExpression(self, expression: str, behavior: Any = None) -> None:
+        self._selected = [{"id": 1, "expression": expression, "behavior": behavior}]
+
+    def removeSelection(self) -> None:
+        self._selected = []
+
+    def boundingBoxOfSelected(self) -> Optional[tuple[float, float, float, float]]:
+        if not self._selected:
+            return None
+        return self._extent
+
+    def geometryType(self) -> str:
+        return "unknown"
+
+    def crs(self) -> Any:
+        return None
+
     def id(self) -> str:
         return self.layer_name
 
@@ -263,6 +326,12 @@ class MockQGISLayer:
     @visible.setter
     def visible(self, value: bool) -> None:
         self._visible = bool(value)
+
+    def opacity(self) -> float:
+        return self._opacity
+
+    def setOpacity(self, opacity: float) -> None:
+        self._opacity = float(opacity)
 
 
 class MockQGISCanvas:
@@ -294,6 +363,25 @@ class MockQGISCanvas:
     def setExtent(self, extent: tuple[float, float, float, float]) -> None:
         self.extent_value = tuple(extent)  # type: ignore[assignment]
 
+    def setCenter(self, point: Any) -> None:
+        try:
+            x = point.x()
+            y = point.y()
+        except Exception:
+            x, y = point
+        west, south, east, north = self.extent_value
+        width = east - west
+        height = north - south
+        self.extent_value = (
+            float(x) - width / 2,
+            float(y) - height / 2,
+            float(x) + width / 2,
+            float(y) + height / 2,
+        )
+
+    def zoomScale(self, scale: float) -> None:
+        self.scale_value = float(scale)
+
     def extent(self) -> tuple[float, float, float, float]:
         return self.extent_value
 
@@ -317,6 +405,7 @@ class MockQGISProject:
 
     def __init__(self) -> None:
         self._layers: dict[str, MockQGISLayer] = {}
+        self.saved_path: Optional[str] = None
 
     def addMapLayer(self, layer: MockQGISLayer) -> MockQGISLayer:
         self._layers[layer.name()] = layer
@@ -333,6 +422,10 @@ class MockQGISProject:
 
     def mapLayersByName(self, name: str) -> list[MockQGISLayer]:
         return [layer for layer in self._layers.values() if layer.name() == name]
+
+    def write(self, path: str | None = None) -> bool:
+        self.saved_path = path or ""
+        return True
 
     @classmethod
     def instance(cls) -> "MockQGISProject":

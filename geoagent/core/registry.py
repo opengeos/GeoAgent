@@ -82,14 +82,21 @@ FAST_TOOL_FALLBACK: frozenset[str] = frozenset(
         "zoom_out",
         "set_zoom",
         "set_center",
+        "fly_to",
         "change_basemap",
+        "set_layer_visibility",
+        "set_layer_opacity",
+        "zoom_to_layer",
         # qgis (safe navigation / inspection)
         "list_project_layers",
         "get_active_layer",
+        "get_project_state",
         "zoom_to_layer",
         "inspect_layer_fields",
+        "get_layer_summary",
         "refresh_canvas",
         "zoom_to_extent",
+        "set_scale",
     }
 )
 

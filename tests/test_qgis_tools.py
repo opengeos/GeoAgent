@@ -36,19 +36,29 @@ def test_factory_returns_tools_for_iface() -> None:
     expected = {
         "list_project_layers",
         "get_active_layer",
+        "get_project_state",
         "zoom_in",
         "zoom_out",
         "zoom_to_layer",
         "zoom_to_extent",
+        "set_center",
+        "set_scale",
         "add_vector_layer",
         "add_raster_layer",
+        "add_xyz_tile_layer",
         "remove_layer",
         "set_layer_visibility",
+        "set_layer_opacity",
         "inspect_layer_fields",
         "get_selected_features",
+        "select_features_by_expression",
+        "clear_selection",
+        "zoom_to_selected",
+        "get_layer_summary",
         "run_processing_algorithm",
         "open_attribute_table",
         "refresh_canvas",
+        "save_project",
     }
     assert expected.issubset(names)
 
@@ -59,6 +69,7 @@ def test_remove_layer_and_run_processing_require_confirmation() -> None:
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["run_processing_algorithm"]) is True
+    assert needs_confirmation(tools["save_project"]) is True
     assert needs_confirmation(tools["zoom_in"]) is False
     assert needs_confirmation(tools["list_project_layers"]) is False
 
@@ -103,6 +114,7 @@ def test_list_project_layers() -> None:
     layers = tools["list_project_layers"]()
     names = {layer["name"] for layer in layers}
     assert names == {"A", "B"}
+    assert all("id" in layer for layer in layers)
 
 
 def test_get_active_layer_returns_none_when_unset() -> None:
@@ -123,6 +135,16 @@ def test_get_active_layer_returns_metadata() -> None:
     out = tools["get_active_layer"]()
     assert out["name"] == "Active"
     assert out["source"] == "a.shp"
+
+
+def test_get_project_state_includes_canvas_and_layers() -> None:
+    project = MockQGISProject()
+    project.addMapLayer(MockQGISLayer("A", "a.shp", "vector"))
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    state = tools["get_project_state"]()
+    assert state["canvas"]["extent"] == [-180.0, -90.0, 180.0, 90.0]
+    assert state["layers"][0]["name"] == "A"
 
 
 def test_zoom_to_layer_resolves_layer() -> None:
@@ -332,6 +354,70 @@ def test_refresh_canvas_increments_counter() -> None:
     before = iface.mapCanvas().refresh_count
     tools["refresh_canvas"]()
     assert iface.mapCanvas().refresh_count == before + 1
+
+
+def test_set_center_and_scale_update_canvas() -> None:
+    iface = MockQGISIface()
+    project = MockQGISProject()
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    tools["set_center"](lat=10, lon=20, scale=500)
+    assert iface.mapCanvas().scale_value == 500
+    assert iface.mapCanvas().refresh_count == 1
+    tools["set_scale"](scale=250)
+    assert iface.mapCanvas().scale_value == 250
+
+
+def test_add_xyz_tile_layer_uses_raster_fallback() -> None:
+    project = MockQGISProject()
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    out = tools["add_xyz_tile_layer"](
+        url="https://example.com/{z}/{x}/{y}.png",
+        name="Tiles",
+    )
+    assert "Added XYZ" in out
+    assert "Tiles" in project.mapLayers()
+
+
+def test_layer_opacity_selection_and_summary() -> None:
+    project = MockQGISProject()
+    layer = MockQGISLayer(
+        "Parcels",
+        "parcels.gpkg",
+        fields=[{"name": "owner", "type": "string"}],
+        extent=(-84, 35, -83, 36),
+    )
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project=project)
+    iface.setActiveLayer(layer)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    tools["set_layer_opacity"](layer_name="Parcels", opacity=0.4)
+    assert layer.opacity() == 0.4
+
+    tools["select_features_by_expression"](
+        layer_name="Parcels",
+        expression='"owner" IS NOT NULL',
+    )
+    assert layer.selectedFeatureCount() == 1
+
+    tools["zoom_to_selected"]()
+    assert iface.mapCanvas().extent() == (-84, 35, -83, 36)
+
+    summary = tools["get_layer_summary"](layer_name="Parcels")
+    assert summary["fields"] == [{"name": "owner", "type": "string"}]
+
+    tools["clear_selection"](layer_name="Parcels")
+    assert layer.selectedFeatureCount() == 0
+
+
+def test_save_project_records_path(tmp_path) -> None:
+    project = MockQGISProject()
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    out = tools["save_project"](path=str(tmp_path / "project.qgz"))
+    assert out.endswith("project.qgz")
+    assert project.saved_path == out
 
 
 def test_qgis_tools_route_calls_through_gui_marshal(monkeypatch) -> None:

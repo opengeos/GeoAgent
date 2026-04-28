@@ -17,7 +17,9 @@ Typical usage from inside a QGIS plugin's Python console::
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import quote
 
 from geoagent.core.decorators import geo_tool
 from geoagent.tools._qt_marshal import run_on_qt_gui_thread
@@ -146,6 +148,45 @@ def _transform_bbox_to_canvas_crs(
         return rect
 
 
+def _transform_point_to_canvas_crs(
+    canvas: Any,
+    lon: float,
+    lat: float,
+    src_crs: str,
+) -> Any:
+    """Re-project a WGS84-like point into the canvas CRS when QGIS exists."""
+    try:
+        from qgis.core import (  # type: ignore[import-not-found]
+            QgsCoordinateReferenceSystem,
+            QgsCoordinateTransform,
+            QgsPointXY,
+            QgsProject,
+        )
+    except ImportError:
+        return (lon, lat)
+
+    point = QgsPointXY(lon, lat)
+    if not hasattr(canvas, "mapSettings"):
+        return point
+    try:
+        src = QgsCoordinateReferenceSystem(src_crs)
+        dst = canvas.mapSettings().destinationCrs()
+    except Exception:
+        return point
+    if dst is None:
+        return point
+    try:
+        if src == dst:
+            return point
+    except Exception:
+        pass
+    try:
+        transform = QgsCoordinateTransform(src, dst, QgsProject.instance())
+        return transform.transform(point)
+    except Exception:
+        return point
+
+
 def _resolve_layer(project: Any, layer_name: str) -> Any:
     """Resolve a layer by name from a project.
 
@@ -163,6 +204,102 @@ def _resolve_layer(project: Any, layer_name: str) -> Any:
     if not layers:
         raise LookupError(f"No layer named {layer_name!r} in the project.")
     return layers[0]
+
+
+def _extent_payload(extent: Any) -> Any:
+    if extent is None:
+        return None
+    if isinstance(extent, (list, tuple)) and len(extent) == 4:
+        return [float(v) for v in extent]
+    accessors = ("xMinimum", "yMinimum", "xMaximum", "yMaximum")
+    if all(hasattr(extent, name) for name in accessors):
+        try:
+            return [float(getattr(extent, name)()) for name in accessors]
+        except Exception:
+            pass
+    return str(extent)
+
+
+def _crs_payload(obj: Any) -> Optional[str]:
+    if obj is None or not hasattr(obj, "crs"):
+        return None
+    try:
+        crs = obj.crs()
+    except Exception:
+        return None
+    if crs is None:
+        return None
+    for attr in ("authid", "description"):
+        value = getattr(crs, attr, None)
+        if callable(value):
+            try:
+                result = value()
+                if result:
+                    return str(result)
+            except Exception:
+                pass
+    return str(crs)
+
+
+def _call_int(obj: Any, method_name: str) -> Optional[int]:
+    method = getattr(obj, method_name, None)
+    if not callable(method):
+        return None
+    try:
+        return int(method())
+    except Exception:
+        return None
+
+
+def _layer_visibility(project: Any, layer: Any) -> Optional[bool]:
+    try:
+        root = project.layerTreeRoot()
+        tree_layer = root.findLayer(layer.id())
+        return bool(tree_layer.isVisible())
+    except Exception:
+        pass
+    value = getattr(layer, "visible", None)
+    if value is not None:
+        try:
+            return bool(value() if callable(value) else value)
+        except Exception:
+            return None
+    return None
+
+
+def _layer_opacity(layer: Any) -> Optional[float]:
+    value = getattr(layer, "opacity", None)
+    if callable(value):
+        try:
+            return float(value())
+        except Exception:
+            return None
+    if value is not None:
+        try:
+            return float(value)
+        except Exception:
+            return None
+    return None
+
+
+def _layer_metadata(layer: Any, project: Any | None = None) -> dict[str, Any]:
+    record: dict[str, Any] = {
+        "id": str(layer.id()) if hasattr(layer, "id") else None,
+        "name": layer.name() if hasattr(layer, "name") else str(layer),
+        "type": str(layer.type()) if hasattr(layer, "type") else type(layer).__name__,
+        "source": layer.source() if hasattr(layer, "source") else None,
+        "crs": _crs_payload(layer),
+        "extent": _extent_payload(layer.extent() if hasattr(layer, "extent") else None),
+        "feature_count": _call_int(layer, "featureCount"),
+        "selected_count": _call_int(layer, "selectedFeatureCount"),
+        "geometry_type": (
+            str(layer.geometryType()) if hasattr(layer, "geometryType") else None
+        ),
+        "opacity": _layer_opacity(layer),
+    }
+    if project is not None:
+        record["visible"] = _layer_visibility(project, layer)
+    return {k: v for k, v in record.items() if v is not None}
 
 
 def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
@@ -212,20 +349,14 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         """List all layers in the active QGIS project.
 
         Returns:
-            A list of dicts ``{"name": ..., "type": ..., "source": ...}``.
+            A list of layer metadata dictionaries including name, type,
+            source, CRS, extent, feature counts, visibility, and opacity
+            when QGIS exposes those values.
         """
 
         def _run() -> list[dict[str, Any]]:
-            out: list[dict[str, Any]] = []
-            for layer in _project().mapLayers().values():
-                out.append(
-                    {
-                        "name": layer.name(),
-                        "type": str(layer.type()),
-                        "source": layer.source(),
-                    }
-                )
-            return out
+            proj = _project()
+            return [_layer_metadata(layer, proj) for layer in proj.mapLayers().values()]
 
         return _on_gui(_run)
 
@@ -245,9 +376,40 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             if layer is None:
                 return {"active_layer": None}
             return {
-                "name": layer.name(),
-                "type": str(layer.type()),
-                "source": layer.source(),
+                **_layer_metadata(layer, _project()),
+            }
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def get_project_state() -> dict[str, Any]:
+        """Return the QGIS project layer list and canvas camera state."""
+
+        def _run() -> dict[str, Any]:
+            proj = _project()
+            canvas = iface.mapCanvas()
+            active = iface.activeLayer()
+            destination_crs = None
+            try:
+                destination_crs = canvas.mapSettings().destinationCrs().authid()
+            except Exception:
+                pass
+            return {
+                "layers": [
+                    _layer_metadata(layer, proj) for layer in proj.mapLayers().values()
+                ],
+                "active_layer": (
+                    _layer_metadata(active, proj) if active is not None else None
+                ),
+                "canvas": {
+                    "extent": _extent_payload(
+                        canvas.extent() if hasattr(canvas, "extent") else None
+                    ),
+                    "scale": canvas.scale() if hasattr(canvas, "scale") else None,
+                    "destination_crs": destination_crs,
+                },
             }
 
         return _on_gui(_run)
@@ -374,6 +536,80 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
     @geo_tool(
         category="qgis",
     )
+    def set_center(
+        lat: float,
+        lon: float,
+        scale: Optional[float] = None,
+        crs: str = "EPSG:4326",
+    ) -> str:
+        """Center the QGIS canvas on a coordinate.
+
+        Args:
+            lat: Latitude in ``crs``.
+            lon: Longitude in ``crs``.
+            scale: Optional map scale denominator to apply after centering.
+            crs: Coordinate reference system for ``lat``/``lon``.
+
+        Returns:
+            A status string.
+        """
+
+        def _run() -> str:
+            canvas = iface.mapCanvas()
+            point = _transform_point_to_canvas_crs(canvas, lon, lat, crs)
+            if hasattr(canvas, "setCenter"):
+                canvas.setCenter(point)
+            elif hasattr(canvas, "setExtent") and hasattr(canvas, "extent"):
+                west, south, east, north = canvas.extent()
+                width = east - west
+                height = north - south
+                try:
+                    x = point.x()
+                    y = point.y()
+                except Exception:
+                    x, y = point
+                canvas.setExtent(
+                    (
+                        x - width / 2,
+                        y - height / 2,
+                        x + width / 2,
+                        y + height / 2,
+                    )
+                )
+            if scale is not None:
+                if hasattr(canvas, "zoomScale"):
+                    canvas.zoomScale(float(scale))
+                elif hasattr(canvas, "setScale"):
+                    canvas.setScale(float(scale))
+            if hasattr(canvas, "refresh"):
+                canvas.refresh()
+            return f"Centred canvas on ({lat}, {lon}) ({crs})."
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def set_scale(scale: float) -> str:
+        """Set the QGIS canvas map scale."""
+
+        def _run() -> str:
+            canvas = iface.mapCanvas()
+            if hasattr(canvas, "zoomScale"):
+                canvas.zoomScale(float(scale))
+            elif hasattr(canvas, "setScale"):
+                canvas.setScale(float(scale))
+            else:
+                return "Canvas does not expose a scale setter."
+            if hasattr(canvas, "refresh"):
+                canvas.refresh()
+            return f"Canvas scale set to 1:{scale}."
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
     def add_vector_layer(
         path_or_uri: str,
         name: str,
@@ -417,6 +653,64 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
                 return f"Failed to load raster layer from {path_or_uri!r}."
             return f"Added raster layer {name!r}."
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def add_xyz_tile_layer(
+        url: str,
+        name: str,
+        zmin: Optional[int] = None,
+        zmax: Optional[int] = None,
+        attribution: Optional[str] = None,
+    ) -> str:
+        """Add an XYZ tile service as a QGIS raster layer.
+
+        Args:
+            url: XYZ URL template, e.g. ``https://.../{z}/{x}/{y}.png``.
+            name: Display name.
+            zmin: Optional minimum zoom.
+            zmax: Optional maximum zoom.
+            attribution: Optional provider attribution.
+
+        Returns:
+            A status string.
+        """
+
+        def _run() -> str:
+            parts = ["type=xyz", f"url={quote(url, safe='')}"]
+            if zmin is not None:
+                parts.append(f"zmin={int(zmin)}")
+            if zmax is not None:
+                parts.append(f"zmax={int(zmax)}")
+            if attribution:
+                parts.append(f"referer={quote(attribution, safe='')}")
+            uri = "&".join(parts)
+
+            layer: Any | None = None
+            try:
+                from qgis.core import QgsRasterLayer  # type: ignore[import-not-found]
+
+                candidate = QgsRasterLayer(uri, name, "wms")
+                if candidate is not None and (
+                    not hasattr(candidate, "isValid") or candidate.isValid()
+                ):
+                    _project().addMapLayer(candidate)
+                    layer = candidate
+            except ImportError:
+                pass
+
+            if layer is None:
+                try:
+                    layer = iface.addRasterLayer(uri, name, "wms")
+                except TypeError:
+                    layer = iface.addRasterLayer(uri, name)
+
+            if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
+                return f"Failed to load XYZ tile layer from {url!r}."
+            return f"Added XYZ tile layer {name!r}."
 
         return _on_gui(_run)
 
@@ -467,7 +761,8 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             layer = _resolve_layer(proj, layer_name)
             # Try the layer-tree-based path first; fall back to a simple attribute.
             try:
-                tree_layer = proj.layerTreeRoot().findLayer(layer.id())  # type: ignore[attr-defined]
+                root = proj.layerTreeRoot()
+                tree_layer = root.findLayer(layer.id())
                 tree_layer.setItemVisibilityChecked(bool(visible))
             except Exception:
                 try:
@@ -475,6 +770,36 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
                 except Exception as exc:
                     return f"Could not set visibility on {layer_name!r}: {exc}"
             return f"Layer {layer_name!r} visibility set to {visible}."
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def set_layer_opacity(layer_name: str, opacity: float) -> str:
+        """Set a layer opacity from 0.0 (transparent) to 1.0 (opaque)."""
+
+        def _run() -> str:
+            value = min(1.0, max(0.0, float(opacity)))
+            layer = _resolve_layer(_project(), layer_name)
+            if hasattr(layer, "setOpacity"):
+                layer.setOpacity(value)
+            elif hasattr(layer, "renderer") and layer.renderer() is not None:
+                renderer = layer.renderer()
+                if hasattr(renderer, "setOpacity"):
+                    renderer.setOpacity(value)
+                else:
+                    return f"Layer {layer_name!r} does not expose opacity controls."
+            else:
+                try:
+                    layer.opacity = value
+                except Exception:
+                    return f"Layer {layer_name!r} does not expose opacity controls."
+            if hasattr(layer, "triggerRepaint"):
+                layer.triggerRepaint()
+            if hasattr(iface.mapCanvas(), "refresh"):
+                iface.mapCanvas().refresh()
+            return f"Layer {layer_name!r} opacity set to {value}."
 
         return _on_gui(_run)
 
@@ -553,6 +878,137 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
 
     @geo_tool(
         category="qgis",
+    )
+    def select_features_by_expression(
+        layer_name: str,
+        expression: str,
+        behavior: str = "set",
+    ) -> str:
+        """Select features in a vector layer using a QGIS expression.
+
+        Args:
+            layer_name: Display name of the layer.
+            expression: QGIS expression, e.g. ``"population" > 10000``.
+            behavior: ``"set"``, ``"add"``, ``"remove"``, or
+                ``"intersect"``.
+
+        Returns:
+            A status string with the selected feature count when available.
+        """
+
+        def _run() -> str:
+            layer = _resolve_layer(_project(), layer_name)
+            if not hasattr(layer, "selectByExpression"):
+                return f"Layer {layer_name!r} does not support expression selection."
+            try:
+                from qgis.core import QgsVectorLayer  # type: ignore[import-not-found]
+
+                behavior_map = {
+                    "set": getattr(QgsVectorLayer, "SetSelection", 0),
+                    "add": getattr(QgsVectorLayer, "AddToSelection", 1),
+                    "remove": getattr(QgsVectorLayer, "RemoveFromSelection", 3),
+                    "intersect": getattr(QgsVectorLayer, "IntersectSelection", 2),
+                }
+            except Exception:
+                behavior_map = {"set": 0, "add": 1, "intersect": 2, "remove": 3}
+            mode = behavior_map.get(behavior.lower())
+            if mode is None:
+                return f"Unknown selection behavior {behavior!r}."
+            layer.selectByExpression(expression, mode)
+            count = _call_int(layer, "selectedFeatureCount")
+            suffix = f" ({count} selected)." if count is not None else "."
+            return f"Selected features on {layer_name!r}{suffix}"
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def clear_selection(layer_name: Optional[str] = None) -> str:
+        """Clear selected features on one layer, or every project layer."""
+
+        def _run() -> str:
+            layers = (
+                [_resolve_layer(_project(), layer_name)]
+                if layer_name is not None
+                else list(_project().mapLayers().values())
+            )
+            cleared = 0
+            for layer in layers:
+                if hasattr(layer, "removeSelection"):
+                    layer.removeSelection()
+                    cleared += 1
+            return f"Cleared selection on {cleared} layer(s)."
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def zoom_to_selected(layer_name: Optional[str] = None) -> str:
+        """Zoom to the selected features on a layer or the active layer."""
+
+        def _run() -> str:
+            layer = (
+                iface.activeLayer()
+                if layer_name is None
+                else _resolve_layer(_project(), layer_name)
+            )
+            if layer is None:
+                return "No active layer."
+            if not hasattr(layer, "boundingBoxOfSelected"):
+                return (
+                    f"Layer {layer.name()!r} does not expose selected-feature bounds."
+                )
+            extent = layer.boundingBoxOfSelected()
+            if extent is None:
+                return f"Layer {layer.name()!r} has no selected feature bounds."
+            canvas = iface.mapCanvas()
+            extent = _transform_extent_to_canvas_crs(layer, canvas, extent)
+            canvas.setExtent(extent)
+            if hasattr(canvas, "refresh"):
+                canvas.refresh()
+            return f"Zoomed to selected features on {layer.name()!r}."
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
+    def get_layer_summary(layer_name: str) -> dict[str, Any]:
+        """Return detailed metadata for a single project layer."""
+
+        def _run() -> dict[str, Any]:
+            layer = _resolve_layer(_project(), layer_name)
+            summary = _layer_metadata(layer, _project())
+            if hasattr(layer, "fields"):
+                fields: list[dict[str, Any]] = []
+                for field in layer.fields():
+                    if isinstance(field, dict):
+                        fields.append(
+                            {
+                                "name": field.get("name", ""),
+                                "type": field.get("type", ""),
+                            }
+                        )
+                    else:
+                        fields.append(
+                            {
+                                "name": getattr(field, "name", lambda: "")(),
+                                "type": str(
+                                    getattr(
+                                        field, "typeName", lambda: type(field).__name__
+                                    )()
+                                ),
+                            }
+                        )
+                summary["fields"] = fields
+            return summary
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
         requires_confirmation=True,
     )
     def run_processing_algorithm(
@@ -617,22 +1073,59 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
 
         return _on_gui(_run)
 
+    @geo_tool(
+        category="qgis",
+        requires_confirmation=True,
+    )
+    def save_project(path: Optional[str] = None) -> str:
+        """Save the current QGIS project, optionally to a new file path."""
+
+        def _run() -> str:
+            proj = _project()
+            if path:
+                out = Path(path).expanduser().resolve()
+                if hasattr(proj, "write"):
+                    ok = proj.write(str(out))
+                else:
+                    return "Project object does not expose write()."
+                if ok is False:
+                    return f"Failed to save project to {str(out)!r}."
+                return str(out)
+            if hasattr(proj, "write"):
+                ok = proj.write()
+                if ok is False:
+                    return "Failed to save project."
+                return "Project saved."
+            return "Project object does not expose write()."
+
+        return _on_gui(_run)
+
     return [
         list_project_layers,
         get_active_layer,
+        get_project_state,
         zoom_in,
         zoom_out,
         zoom_to_layer,
         zoom_to_extent,
+        set_center,
+        set_scale,
         add_vector_layer,
         add_raster_layer,
+        add_xyz_tile_layer,
         remove_layer,
         set_layer_visibility,
+        set_layer_opacity,
         inspect_layer_fields,
         get_selected_features,
+        select_features_by_expression,
+        clear_selection,
+        zoom_to_selected,
+        get_layer_summary,
         run_processing_algorithm,
         open_attribute_table,
         refresh_canvas,
+        save_project,
     ]
 
 

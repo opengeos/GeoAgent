@@ -22,13 +22,20 @@ def test_factory_returns_full_tool_list() -> None:
         "list_layers",
         "add_layer",
         "remove_layer",
+        "clear_layers",
+        "set_layer_visibility",
+        "set_layer_opacity",
         "set_center",
+        "fly_to",
         "set_zoom",
         "zoom_in",
         "zoom_out",
         "zoom_to_bounds",
+        "zoom_to_layer",
         "change_basemap",
         "add_vector_data",
+        "add_geojson_data",
+        "add_marker",
         "add_raster_data",
         "add_stac_layer",
         "add_cog_layer",
@@ -47,6 +54,7 @@ def test_factory_returns_empty_for_none() -> None:
 def test_remove_and_save_require_confirmation() -> None:
     tools = _by_name(MockLeafmap())
     assert needs_confirmation(tools["remove_layer"]) is True
+    assert needs_confirmation(tools["clear_layers"]) is True
     assert needs_confirmation(tools["save_map"]) is True
     assert needs_confirmation(tools["list_layers"]) is False
     assert needs_confirmation(tools["zoom_in"]) is False
@@ -74,6 +82,49 @@ def test_remove_layer_mutates_map() -> None:
     assert len(m.layers) == 1
     tools["remove_layer"](name="Buildings")
     assert len(m.layers) == 0
+
+
+def test_layer_visibility_opacity_and_zoom_to_layer() -> None:
+    m = MockLeafmap()
+    tools = _by_name(m)
+    m.layers.append(
+        {
+            "name": "Sentinel-2 Knoxville",
+            "type": "raster",
+            "bounds": [-84.1, 35.8, -83.7, 36.1],
+        }
+    )
+    tools["set_layer_visibility"](name="sentinel", visible=False)
+    tools["set_layer_opacity"](name="sentinel", opacity=0.35)
+    tools["zoom_to_layer"](name="sentinel")
+
+    assert m.layers[0]["visible"] is False
+    assert m.layers[0]["opacity"] == 0.35
+    assert m.get_bounds() == [[-84.1, 35.8], [-83.7, 36.1]]
+    layer = tools["list_layers"]()[0]
+    assert layer["visible"] is False
+    assert layer["opacity"] == 0.35
+
+
+def test_add_marker_and_geojson_data() -> None:
+    m = MockLeafmap()
+    tools = _by_name(m)
+    tools["add_marker"](lat=35.96, lon=-83.92, popup="Knoxville")
+    tools["add_geojson_data"](
+        data={"type": "FeatureCollection", "features": []},
+        name="Empty GeoJSON",
+    )
+    assert any(layer["type"] == "marker" for layer in m.layers)
+    assert any(layer["name"] == "Empty GeoJSON" for layer in m.layers)
+
+
+def test_clear_layers_mutates_map() -> None:
+    m = MockLeafmap()
+    tools = _by_name(m)
+    tools["add_marker"](lat=0, lon=0, name="Zero")
+    assert m.layers
+    tools["clear_layers"]()
+    assert m.layers == []
 
 
 def test_fast_mode_filters_tools() -> None:
