@@ -21,7 +21,13 @@ from geoagent.core.safety import (
     auto_approve_safe_only,
     build_interrupt_on,
 )
-from geoagent.core.factory import create_agent, for_anymap, for_leafmap, for_qgis
+from geoagent.core.factory import (
+    create_agent,
+    for_anymap,
+    for_leafmap,
+    for_nasa_opera,
+    for_qgis,
+)
 from geoagent.core.agent import GeoAgent
 from geoagent.core.registry import GeoToolMeta, GeoToolRegistry
 
@@ -36,6 +42,7 @@ __all__ = [
     "create_agent",
     "for_anymap",
     "for_leafmap",
+    "for_nasa_opera",
     "for_qgis",
     "geo_tool",
     "get_geo_meta",

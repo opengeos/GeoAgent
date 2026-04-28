@@ -52,7 +52,7 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
     Outside Qt/QGIS (tests, CI), this degrades to a direct call.
     """
     try:
-        from qgis.PyQt.QtCore import QMetaObject, QObject, Qt, pyqtSlot  # type: ignore[import-not-found]
+        from qgis.PyQt.QtCore import QMetaObject, QObject, Qt, QThread, pyqtSlot  # type: ignore[import-not-found]
         from qgis.PyQt.QtWidgets import QApplication  # type: ignore[import-not-found]
     except Exception:
         return func()
@@ -67,6 +67,7 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
     if is_qt_gui_thread():
         return func()
 
+    source_thread = QThread.currentThread()
     gui = app.thread()
 
     class _Invoker(QObject):
@@ -84,6 +85,15 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
                 self.value = func()
             except BaseException as exc:  # pragma: no cover - passthrough path
                 self.error = exc
+            finally:
+                # The object was created in the caller thread and moved to the
+                # GUI thread for invocation. Move it back before Python drops
+                # the wrapper, otherwise Qt may destroy a GUI-affine QObject
+                # from the worker thread and crash QGIS.
+                try:
+                    self.moveToThread(source_thread)
+                except Exception:
+                    pass
 
     invoker = _Invoker()
     invoker.moveToThread(gui)
@@ -95,8 +105,8 @@ def run_on_qt_gui_thread(func: Callable[[], T]) -> T:
         "run",
         blocking,
     )
-    if not ok:
-        return func()
+    if ok is False:
+        raise RuntimeError("Failed to marshal QGIS API call to the Qt GUI thread.")
     if invoker.error is not None:
         raise invoker.error
     return invoker.value

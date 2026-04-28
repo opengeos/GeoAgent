@@ -38,6 +38,7 @@ own agent framework.
 | `for_leafmap` | Factory that binds tools to a `leafmap.Map`-compatible object. |
 | `for_anymap` | Factory that binds tools to an `anymap.Map`-compatible object. |
 | `for_qgis` | Factory that binds tools to `qgis.utils.iface` and an optional `QgsProject`. |
+| `for_nasa_opera` | Factory that binds NASA OPERA search/display tools plus QGIS tools. |
 | `create_agent` | Factory for custom tools or package-specific integrations. |
 
 ## Installation
@@ -61,6 +62,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[anymap]` | anymap live map integration. |
 | `GeoAgent[stac]` | STAC client dependencies. |
 | `GeoAgent[earthdata]` | NASA Earthdata dependencies. |
+| `GeoAgent[nasa-opera]` | NASA OPERA search dependencies. |
 | `GeoAgent[geoai]` | geoai integration dependencies. |
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies. |
 | `GeoAgent[ui]` | Solara UI dependencies. |
@@ -205,6 +207,43 @@ marshaller:
 QGIS chat uses a sequential tool executor and GUI-thread marshalling so map
 canvas and layer-tree calls are routed safely.
 
+### NASA OPERA
+
+`for_nasa_opera(iface, project=None)` exposes NASA OPERA product tools and the
+standard QGIS tool surface:
+
+- inspect OPERA products: `get_available_datasets`, `get_dataset_info`;
+- search Earthdata granules: `search_opera_data`;
+- display results: `display_footprints`, `display_raster`, `create_mosaic`.
+
+The OPERA integration is implemented as native GeoAgent tools and does not wrap
+the NASA OPERA plugin's legacy `nasa_opera.ai.tools` registry.
+
+Use it from the QGIS Python console or from plugin code. For direct tool
+testing, use `submit_nasa_opera_search_task(...)`; this avoids LLM/provider
+initialization and reports progress in QGIS's message bar and Log Messages
+panel:
+
+```python
+from geoagent.tools.nasa_opera import submit_nasa_opera_search_task
+
+task = submit_nasa_opera_search_task(
+    iface,
+    dataset="OPERA_L3_DSWX-HLS_V1",
+    bbox="-95.5,29.5,-95.0,30.0",
+    start_date="2024-01-01",
+    end_date="2024-01-31",
+    max_results=5,
+    display_footprints=True,
+)
+```
+
+For a longer QGIS-console script, see `examples/nasa_opera_qgis.py`.
+
+Natural-language OPERA chat is intentionally disabled inside QGIS for now.
+Use direct tools or `submit_nasa_opera_search_task(...)` so QGIS task/thread
+ownership remains explicit.
+
 ## Direct Tool Calls
 
 Every GeoAgent exposes the underlying Strands tool caller. This is useful for
@@ -285,6 +324,7 @@ Runnable notebooks live under `docs/examples/`:
 - `docs/examples/intro.ipynb` — basic GeoAgent usage.
 - `docs/examples/live_mapping.ipynb` — live map workflow.
 - `docs/examples/qgis_agent.ipynb` — QGIS-oriented workflow using mocks.
+- `examples/nasa_opera_qgis.py` — NASA OPERA workflow for QGIS.
 
 Prompt ideas:
 
@@ -293,6 +333,7 @@ Prompt ideas:
 - "Show the QGIS project state and summarize each layer."
 - "Select parcels where population is greater than 10000."
 - "Add a STAC layer and set its opacity to 0.6."
+- "Search for January 2024 OPERA surface water near Houston and display the footprints."
 
 ## Development
 

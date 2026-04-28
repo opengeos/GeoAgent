@@ -73,6 +73,9 @@ class GeoAgent:
         """Recreate the underlying Strands agent from current settings."""
         self._cancelled = []
         prompt = FAST_SYSTEM_PROMPT if self._fast else DEFAULT_SYSTEM_PROMPT
+        extra_prompt = self._context.metadata.get("system_prompt")
+        if extra_prompt:
+            prompt = f"{prompt}\n\n{extra_prompt}"
         hook = ConfirmationHookProvider(self._registry, self._confirm, self._cancelled)
 
         self._strands = Agent(
@@ -147,6 +150,22 @@ class GeoAgent:
                 confirm=self._confirm,
             )
             return other.chat(query)
+
+        if (
+            self._context.metadata.get("integration") == "nasa_opera"
+            and self._qgis_safe_mode
+            and is_qt_gui_thread()
+        ):
+            return GeoAgentResponse(
+                success=False,
+                error_message=(
+                    "NASA OPERA chat should be launched from a worker thread inside "
+                    "QGIS. Use the NASA OPERA AI Assistant panel or "
+                    "geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "
+                    "for direct QGIS-console workflows."
+                ),
+                map=self._context.map_obj,
+            )
 
         if self._qgis_safe_mode and is_qt_gui_thread():
             return self._chat_on_qgis_gui_thread(query)
