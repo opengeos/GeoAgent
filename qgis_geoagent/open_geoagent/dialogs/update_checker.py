@@ -3,6 +3,12 @@ Update Checker Dialog for OpenGeoAgent
 
 This dialog provides functionality to check for updates from GitHub
 and download/install the latest version of the plugin.
+
+Network requests go through ``QgsBlockingNetworkRequest`` so QGIS proxy,
+authentication, and SSL settings are honored. Long-running workers stop
+cooperatively via ``QThread.requestInterruption()`` checked at progress
+boundaries, so the plugin directory is never left half-written by an
+abrupt ``QThread.terminate()``.
 """
 
 import os
@@ -10,10 +16,10 @@ import re
 import shutil
 import tempfile
 import zipfile
-from urllib.request import urlopen, urlretrieve
-from urllib.error import URLError, HTTPError
 
-from qgis.PyQt.QtCore import Qt, QThread, pyqtSignal
+from qgis.core import QgsBlockingNetworkRequest
+from qgis.PyQt.QtCore import Qt, QThread, QUrl, pyqtSignal
+from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -28,8 +34,8 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.PyQt.QtGui import QFont
 
-# GitHub URLs for the plugin
-# TODO: Update these values for your plugin
+# GitHub URLs for the plugin: kept pinned to the canonical upstream so
+# end-user installs always check the same source.
 GITHUB_REPO = "opengeos/GeoAgent"
 GITHUB_BRANCH = "main"
 PLUGIN_PATH = "qgis_geoagent/open_geoagent"
@@ -38,10 +44,10 @@ ZIP_URL = f"https://github.com/{GITHUB_REPO}/archive/refs/heads/{GITHUB_BRANCH}.
 
 
 def _require_https(url: str) -> str:
-    """Reject any non-https URL before passing it to urlopen/urlretrieve.
+    """Reject any non-https URL before issuing a network request.
 
     Defense-in-depth so the URL constants above can never be edited later
-    to point at file:// or http:// without this guard tripping first.
+    to point at ``file://`` or ``http://`` without this guard tripping first.
 
     Args:
         url: The URL to validate.
@@ -57,19 +63,27 @@ def _require_https(url: str) -> str:
     return url
 
 
+class _NetworkCancelled(Exception):
+    """Raised when a worker's blocking request is aborted by interruption."""
+
+
 class VersionCheckWorker(QThread):
     """Worker thread for checking the latest version from GitHub."""
 
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._request = None
+
     def run(self):
         """Fetch the latest metadata from GitHub."""
         try:
-            with urlopen(
-                _require_https(METADATA_URL), timeout=15
-            ) as response:  # nosec B310
-                content = response.read().decode("utf-8")
+            content = self._fetch_text(_require_https(METADATA_URL))
+
+            if self.isInterruptionRequested():
+                return
 
             # Parse version from metadata
             version_match = re.search(r"^version=(.+)$", content, re.MULTILINE)
@@ -93,12 +107,37 @@ class VersionCheckWorker(QThread):
                 {"version": latest_version, "changelog": changelog, "metadata": content}
             )
 
-        except HTTPError as e:
-            self.error.emit(f"HTTP Error: {e.code} - {e.reason}")
-        except URLError as e:
-            self.error.emit(f"URL Error: {e.reason}")
+        except _NetworkCancelled:
+            return
         except Exception as e:
             self.error.emit(f"Error checking for updates: {str(e)}")
+
+    def _fetch_text(self, url: str) -> str:
+        """Fetch a small text resource via QGIS network manager."""
+        self._request = QgsBlockingNetworkRequest()
+
+        def maybe_abort(_received, _total):
+            if self.isInterruptionRequested() and self._request is not None:
+                self._request.abort()
+
+        self._request.downloadProgress.connect(maybe_abort)
+
+        err = self._request.get(QNetworkRequest(QUrl(url)))
+
+        if self.isInterruptionRequested():
+            raise _NetworkCancelled()
+
+        if err != QgsBlockingNetworkRequest.NoError:
+            raise RuntimeError(self._request.errorMessage() or "Network error")
+
+        reply = self._request.reply()
+        return bytes(reply.content()).decode("utf-8")
+
+    def request_cancel(self):
+        """Ask the worker to stop and abort any in-flight request."""
+        self.requestInterruption()
+        if self._request is not None:
+            self._request.abort()
 
 
 class DownloadWorker(QThread):
@@ -108,9 +147,10 @@ class DownloadWorker(QThread):
     error = pyqtSignal(str)
     progress = pyqtSignal(int, str)
 
-    def __init__(self, plugin_dir):
-        super().__init__()
+    def __init__(self, plugin_dir, parent=None):
+        super().__init__(parent)
         self.plugin_dir = plugin_dir
+        self._request = None
 
     def run(self):
         """Download and install the latest plugin version."""
@@ -122,14 +162,10 @@ class DownloadWorker(QThread):
 
             # Download the zip file
             self.progress.emit(10, "Downloading plugin from GitHub...")
+            self._download_zip(_require_https(ZIP_URL), zip_path)
 
-            def reporthook(block_num, block_size, total_size):
-                if total_size > 0:
-                    downloaded = block_num * block_size
-                    percent = min(int((downloaded / total_size) * 50), 50)
-                    self.progress.emit(10 + percent, "Downloading...")
-
-            urlretrieve(_require_https(ZIP_URL), zip_path, reporthook)  # nosec B310
+            if self._cancelled():
+                return
 
             self.progress.emit(60, "Extracting files...")
 
@@ -146,6 +182,9 @@ class DownloadWorker(QThread):
                         )
                 zip_ref.extractall(extract_dir)
 
+            if self._cancelled():
+                return
+
             self.progress.emit(70, "Locating plugin files...")
 
             # Find the plugin directory in the extracted files
@@ -158,6 +197,9 @@ class DownloadWorker(QThread):
 
             if not extracted_plugin_dir:
                 self.error.emit("Could not find plugin files in downloaded archive")
+                return
+
+            if self._cancelled():
                 return
 
             self.progress.emit(80, "Installing update...")
@@ -198,10 +240,8 @@ class DownloadWorker(QThread):
                     )
                 raise e
 
-        except HTTPError as e:
-            self.error.emit(f"HTTP Error downloading: {e.code} - {e.reason}")
-        except URLError as e:
-            self.error.emit(f"URL Error downloading: {e.reason}")
+        except _NetworkCancelled:
+            return
         except Exception as e:
             self.error.emit(f"Error installing update: {str(e)}")
         finally:
@@ -211,6 +251,44 @@ class DownloadWorker(QThread):
                     shutil.rmtree(temp_dir)
                 except OSError:
                     pass
+
+    def _download_zip(self, url: str, dest_path: str) -> None:
+        """Download a binary resource via QGIS network manager."""
+        self._request = QgsBlockingNetworkRequest()
+
+        def on_progress(received, total):
+            if self.isInterruptionRequested() and self._request is not None:
+                self._request.abort()
+                return
+            if total > 0:
+                percent = min(int((received / total) * 50), 50)
+                self.progress.emit(10 + percent, "Downloading...")
+
+        self._request.downloadProgress.connect(on_progress)
+
+        err = self._request.get(QNetworkRequest(QUrl(url)))
+
+        if self.isInterruptionRequested():
+            raise _NetworkCancelled()
+
+        if err != QgsBlockingNetworkRequest.NoError:
+            raise RuntimeError(
+                self._request.errorMessage() or "Network error during download"
+            )
+
+        reply = self._request.reply()
+        with open(dest_path, "wb") as f:
+            f.write(bytes(reply.content()))
+
+    def _cancelled(self) -> bool:
+        """Return True when interruption has been requested."""
+        return self.isInterruptionRequested()
+
+    def request_cancel(self):
+        """Ask the worker to stop and abort any in-flight request."""
+        self.requestInterruption()
+        if self._request is not None:
+            self._request.abort()
 
 
 class UpdateCheckerDialog(QDialog):
@@ -495,9 +573,10 @@ class UpdateCheckerDialog(QDialog):
 
     def closeEvent(self, event):
         """Handle dialog close event."""
-        # Stop any running workers
+        # Stop any running workers cooperatively so partially-written
+        # plugin files cannot be left on disk.
         if self.check_worker and self.check_worker.isRunning():
-            self.check_worker.terminate()
+            self.check_worker.request_cancel()
             self.check_worker.wait()
 
         if self.download_worker and self.download_worker.isRunning():
@@ -511,7 +590,7 @@ class UpdateCheckerDialog(QDialog):
             if reply != QMessageBox.StandardButton.Yes:
                 event.ignore()
                 return
-            self.download_worker.terminate()
+            self.download_worker.request_cancel()
             self.download_worker.wait()
 
         event.accept()

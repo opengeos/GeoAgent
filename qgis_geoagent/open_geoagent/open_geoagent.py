@@ -125,7 +125,8 @@ class OpenGeoAgent:
         if self.toolbar:
             for action in self.actions:
                 self.toolbar.removeAction(action)
-            del self.toolbar
+            self.iface.mainWindow().removeToolBar(self.toolbar)
+            self.toolbar.deleteLater()
             self.toolbar = None
 
         if self.menu:
