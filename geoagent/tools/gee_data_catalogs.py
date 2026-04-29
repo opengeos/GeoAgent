@@ -7,7 +7,12 @@ Python environments.
 
 from __future__ import annotations
 
+import ast
+import contextlib
+import io
 import os
+import sys
+import types
 from typing import Any, Optional
 from urllib.parse import quote
 
@@ -246,6 +251,522 @@ def _opera_dswx_render_image(
 def _format_python_snippet_value(value: Any) -> str:
     """Return a compact Python literal for snippet generation."""
     return repr(value)
+
+
+_ALLOWED_GEE_SNIPPET_IMPORTS = {"ee", "geemap"}
+_FORBIDDEN_GEE_SNIPPET_NAMES = {
+    "__builtins__",
+    "__import__",
+    "breakpoint",
+    "compile",
+    "delattr",
+    "dir",
+    "eval",
+    "exec",
+    "getattr",
+    "globals",
+    "help",
+    "input",
+    "locals",
+    "open",
+    "setattr",
+    "vars",
+}
+_FORBIDDEN_GEE_SNIPPET_ROOTS = {
+    "builtins",
+    "http",
+    "importlib",
+    "marshal",
+    "os",
+    "pathlib",
+    "pickle",
+    "requests",
+    "shutil",
+    "socket",
+    "subprocess",
+    "sys",
+    "urllib",
+}
+_FORBIDDEN_GEE_SNIPPET_ATTRIBUTES = {
+    "computeValue",
+    "getInfo",
+    "reduceRegion",
+    "reduceRegions",
+}
+_FORBIDDEN_GEE_SNIPPET_NODES = (
+    ast.AsyncFor,
+    ast.AsyncFunctionDef,
+    ast.AsyncWith,
+    ast.Await,
+    ast.ClassDef,
+    ast.Delete,
+    ast.FunctionDef,
+    ast.Global,
+    ast.Nonlocal,
+    ast.Raise,
+    ast.Try,
+    ast.With,
+)
+
+
+def _attribute_root(node: ast.AST) -> str | None:
+    """Return the leftmost name in an attribute expression."""
+    current = node
+    while isinstance(current, ast.Attribute):
+        current = current.value
+    if isinstance(current, ast.Name):
+        return current.id
+    return None
+
+
+def _validate_gee_python_snippet(code: str) -> None:
+    """Reject generated snippets outside the constrained EE layer surface."""
+    try:
+        tree = ast.parse(code, mode="exec")
+    except SyntaxError as exc:
+        raise ValueError(f"Invalid Python snippet: {exc}") from exc
+
+    for node in ast.walk(tree):
+        if isinstance(node, _FORBIDDEN_GEE_SNIPPET_NODES):
+            raise ValueError(
+                f"Unsupported Python construct in generated snippet: "
+                f"{type(node).__name__}"
+            )
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root = alias.name.split(".", 1)[0]
+                if root not in _ALLOWED_GEE_SNIPPET_IMPORTS:
+                    raise ValueError(
+                        f"Import is not allowed in generated Earth Engine "
+                        f"snippets: {alias.name}"
+                    )
+        if isinstance(node, ast.ImportFrom):
+            module = (node.module or "").split(".", 1)[0]
+            if module not in _ALLOWED_GEE_SNIPPET_IMPORTS:
+                raise ValueError(
+                    f"Import is not allowed in generated Earth Engine snippets: "
+                    f"from {node.module or ''}"
+                )
+        if isinstance(node, ast.Name):
+            if node.id.startswith("__") or node.id in _FORBIDDEN_GEE_SNIPPET_NAMES:
+                raise ValueError(
+                    f"Name is not allowed in generated Earth Engine snippets: "
+                    f"{node.id}"
+                )
+            if node.id in _FORBIDDEN_GEE_SNIPPET_ROOTS:
+                raise ValueError(
+                    f"Module is not allowed in generated Earth Engine snippets: "
+                    f"{node.id}"
+                )
+        if isinstance(node, ast.Attribute):
+            if node.attr.startswith("__"):
+                raise ValueError(
+                    "Dunder attributes are not allowed in generated Earth "
+                    "Engine snippets."
+                )
+            if node.attr in _FORBIDDEN_GEE_SNIPPET_ATTRIBUTES:
+                raise ValueError(
+                    f"{node.attr} is not allowed in generated Earth Engine "
+                    "layer snippets. Use a dedicated analysis/statistics tool "
+                    "for scalar Earth Engine results."
+                )
+            root = _attribute_root(node)
+            if root in _FORBIDDEN_GEE_SNIPPET_ROOTS:
+                raise ValueError(
+                    f"Module is not allowed in generated Earth Engine snippets: "
+                    f"{root}"
+                )
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name) and func.id in _FORBIDDEN_GEE_SNIPPET_NAMES:
+                raise ValueError(
+                    f"Call is not allowed in generated Earth Engine snippets: "
+                    f"{func.id}"
+                )
+            root = _attribute_root(func)
+            if root in _FORBIDDEN_GEE_SNIPPET_ROOTS:
+                raise ValueError(
+                    f"Call is not allowed in generated Earth Engine snippets: "
+                    f"{root}"
+                )
+
+
+def _safe_builtins_for_gee_snippet(
+    ee_module: Any, geemap_module: Any
+) -> dict[str, Any]:
+    """Return a minimal builtins dict for generated EE snippets."""
+
+    def _safe_import(
+        name: str,
+        globals: dict[str, Any] | None = None,  # noqa: A002
+        locals: dict[str, Any] | None = None,  # noqa: A002
+        fromlist: tuple[str, ...] = (),
+        level: int = 0,
+    ) -> Any:
+        if level != 0:
+            raise ImportError("Relative imports are not allowed in EE snippets.")
+        root = name.split(".", 1)[0]
+        if root == "ee":
+            return ee_module
+        if root == "geemap":
+            return geemap_module
+        raise ImportError(f"Import is not allowed in EE snippets: {name}")
+
+    return {
+        "__import__": _safe_import,
+        "abs": abs,
+        "all": all,
+        "any": any,
+        "bool": bool,
+        "dict": dict,
+        "enumerate": enumerate,
+        "float": float,
+        "int": int,
+        "len": len,
+        "list": list,
+        "max": max,
+        "min": min,
+        "print": print,
+        "range": range,
+        "repr": repr,
+        "round": round,
+        "set": set,
+        "sorted": sorted,
+        "str": str,
+        "sum": sum,
+        "tuple": tuple,
+        "zip": zip,
+    }
+
+
+def _loaded_gee_layer_records() -> list[dict[str, Any]]:
+    """Return compact metadata for registered plugin Earth Engine layers."""
+    from gee_data_catalogs.core.ee_utils import get_ee_layers
+
+    records: list[dict[str, Any]] = []
+    for name, payload in get_ee_layers().items():
+        ee_object = payload[0] if isinstance(payload, tuple) and payload else payload
+        vis_params = (
+            payload[1] if isinstance(payload, tuple) and len(payload) > 1 else {}
+        )
+        type_name = type(ee_object).__name__
+        records.append(
+            {
+                "name": str(name),
+                "object_type": type_name,
+                "vis_params": vis_params or {},
+            }
+        )
+    return records
+
+
+def _get_loaded_gee_object(layer_name: str) -> Any:
+    """Return a registered Earth Engine object by exact or case-insensitive name."""
+    from gee_data_catalogs.core.ee_utils import get_ee_layers
+
+    layers = get_ee_layers()
+    if layer_name in layers:
+        payload = layers[layer_name]
+        return payload[0] if isinstance(payload, tuple) else payload
+
+    requested = layer_name.strip().lower()
+    matches = [
+        (name, payload)
+        for name, payload in layers.items()
+        if str(name).strip().lower() == requested
+    ]
+    if not matches:
+        matches = [
+            (name, payload)
+            for name, payload in layers.items()
+            if requested and requested in str(name).strip().lower()
+        ]
+    if not matches:
+        available = ", ".join(str(name) for name in layers) or "(none)"
+        raise KeyError(
+            f"Earth Engine layer not found: {layer_name}. Available layers: {available}"
+        )
+    if len(matches) > 1:
+        names = ", ".join(str(name) for name, _payload in matches)
+        raise KeyError(f"Earth Engine layer name is ambiguous: {layer_name}. {names}")
+    payload = matches[0][1]
+    return payload[0] if isinstance(payload, tuple) else payload
+
+
+@contextlib.contextmanager
+def _temporary_ee_deadline(timeout_seconds: int | float):
+    """Temporarily set the Earth Engine API deadline when supported."""
+    try:
+        import ee
+
+        data = getattr(ee, "data", None)
+        set_deadline = getattr(data, "setDeadline", None)
+        get_deadline = getattr(data, "getDeadline", None)
+        old_deadline = get_deadline() if callable(get_deadline) else None
+        has_old_deadline = callable(get_deadline)
+        if callable(set_deadline):
+            set_deadline(max(1, int(float(timeout_seconds) * 1000)))
+        try:
+            yield
+        finally:
+            if callable(set_deadline) and has_old_deadline:
+                set_deadline(old_deadline)
+    except ImportError:
+        yield
+
+
+def _build_ee_statistics_reducer(
+    statistics: str | list[str] | None,
+) -> tuple[Any, list[str]]:
+    """Build a combined Earth Engine reducer for requested statistics."""
+    import ee
+
+    requested = _parse_list(statistics) or ["mean"]
+    aliases = {
+        "average": "mean",
+        "avg": "mean",
+        "std": "stdDev",
+        "stdev": "stdDev",
+        "stddev": "stdDev",
+    }
+    supported = {
+        "mean",
+        "min",
+        "max",
+        "median",
+        "stdDev",
+        "sum",
+        "count",
+    }
+    normalized: list[str] = []
+    for item in requested:
+        key = aliases.get(str(item).strip().lower(), str(item).strip())
+        if key not in supported:
+            raise ValueError(
+                f"Unsupported statistic: {item}. Supported statistics: "
+                f"{', '.join(sorted(supported))}"
+            )
+        normalized.append(key)
+
+    reducer = None
+    for stat in normalized:
+        reducer_fn = getattr(ee.Reducer, stat)
+        next_reducer = reducer_fn()
+        if reducer is None:
+            reducer = next_reducer
+        else:
+            reducer = reducer.combine(reducer2=next_reducer, sharedInputs=True)
+    return reducer, normalized
+
+
+def _calculate_gee_layer_statistics_impl(
+    *,
+    layer_name: str,
+    band: str | None,
+    statistics: str | list[str] | None,
+    scale: int | float,
+    max_pixels: int | float,
+    best_effort: bool,
+    tile_scale: int | float,
+    timeout_seconds: int | float,
+    region_collection_asset_id: str | None,
+    region_filter_property: str | None,
+    region_filter_value: str | None,
+) -> dict[str, Any]:
+    """Calculate bounded Earth Engine statistics for a registered image layer."""
+    import ee
+
+    source = _get_loaded_gee_object(layer_name)
+    image = ee.Image(source)
+    if band:
+        image = image.select(str(band).strip())
+
+    region = None
+    region_info = None
+    if region_collection_asset_id:
+        fc = ee.FeatureCollection(region_collection_asset_id)
+        if region_filter_property and region_filter_value is not None:
+            fc = fc.filter(
+                ee.Filter.eq(
+                    region_filter_property,
+                    _coerce_filter_value(region_filter_value),
+                )
+            )
+        region = fc.geometry()
+        region_info = {
+            "collection_asset_id": region_collection_asset_id,
+            "filter_property": region_filter_property,
+            "filter_value": region_filter_value,
+        }
+    else:
+        region = image.geometry()
+
+    reducer, normalized_statistics = _build_ee_statistics_reducer(statistics)
+    scale_value = float(scale)
+    max_pixels_value = int(float(max_pixels))
+    tile_scale_value = float(tile_scale)
+
+    reduction = image.reduceRegion(
+        reducer=reducer,
+        geometry=region,
+        scale=scale_value,
+        maxPixels=max_pixels_value,
+        bestEffort=bool(best_effort),
+        tileScale=tile_scale_value,
+    )
+    with _temporary_ee_deadline(timeout_seconds):
+        values = reduction.getInfo()
+
+    if not isinstance(values, dict):
+        values = {"value": values}
+
+    numeric_values = [
+        value for value in values.values() if isinstance(value, (int, float))
+    ]
+    return {
+        "success": True,
+        "layer_name": layer_name,
+        "band": band,
+        "statistics": normalized_statistics,
+        "values": values,
+        "mean": (
+            numeric_values[0]
+            if normalized_statistics == ["mean"] and numeric_values
+            else None
+        ),
+        "scale": scale_value,
+        "max_pixels": max_pixels_value,
+        "best_effort": bool(best_effort),
+        "tile_scale": tile_scale_value,
+        "timeout_seconds": float(timeout_seconds),
+        "region": region_info,
+        "approximate": bool(best_effort),
+    }
+
+
+def _run_gee_python_snippet_impl(
+    *,
+    iface: Any,
+    code: str,
+) -> dict[str, Any]:
+    """Execute a constrained EE/geemap snippet and add requested layers."""
+    import ee
+
+    _validate_gee_python_snippet(code)
+
+    layers_added: list[dict[str, Any]] = []
+
+    def _add_layer(
+        ee_object: Any,
+        vis_params: dict[str, Any] | None = None,
+        name: str = "Earth Engine Layer",
+        shown: bool = True,  # noqa: ARG001 - retained for geemap compatibility
+        opacity: float = 1.0,  # noqa: ARG001 - retained for geemap compatibility
+    ) -> Any:
+        display_name = str(name or "Earth Engine Layer")[:50]
+        layer = _add_ee_layer_nonblocking(
+            iface=iface,
+            ee_object=ee_object,
+            vis_params=vis_params or {},
+            name=display_name,
+        )
+        _validate_added_layer(layer, display_name)
+        layers_added.append(
+            {
+                "name": display_name,
+                "vis_params": vis_params or {},
+                "object_type": type(ee_object).__name__,
+            }
+        )
+        return layer
+
+    class QGISMap:
+        """Small geemap.Map-compatible adapter for generated snippets."""
+
+        def add_layer(
+            self,
+            ee_object: Any,
+            vis_params: dict[str, Any] | None = None,
+            name: str = "Earth Engine Layer",
+            shown: bool = True,
+            opacity: float = 1.0,
+        ) -> Any:
+            return _add_layer(ee_object, vis_params, name, shown, opacity)
+
+        def addLayer(
+            self,
+            ee_object: Any,
+            vis_params: dict[str, Any] | None = None,
+            name: str = "Earth Engine Layer",
+            shown: bool = True,
+            opacity: float = 1.0,
+        ) -> Any:
+            return self.add_layer(ee_object, vis_params, name, shown, opacity)
+
+        def add_ee_layer(
+            self,
+            ee_object: Any,
+            vis_params: dict[str, Any] | None = None,
+            name: str = "Earth Engine Layer",
+            shown: bool = True,
+            opacity: float = 1.0,
+        ) -> Any:
+            return self.add_layer(ee_object, vis_params, name, shown, opacity)
+
+    geemap_module = types.ModuleType("geemap")
+    geemap_module.Map = QGISMap
+    original_geemap = sys.modules.get("geemap")
+    sys.modules["geemap"] = geemap_module
+
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    namespace: dict[str, Any] = {
+        "__builtins__": _safe_builtins_for_gee_snippet(ee, geemap_module),
+        "Map": QGISMap,
+        "add_layer": _add_layer,
+        "ee": ee,
+        "geemap": geemap_module,
+        "get_ee_layer": _get_loaded_gee_object,
+        "list_ee_layers": _loaded_gee_layer_records,
+        "m": QGISMap(),
+    }
+
+    try:
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            exec(
+                compile(code, "<generated_gee_snippet>", "exec"), namespace
+            )  # nosec B102
+    finally:
+        if original_geemap is not None:
+            sys.modules["geemap"] = original_geemap
+        else:
+            sys.modules.pop("geemap", None)
+
+    if not layers_added:
+        return {
+            "success": False,
+            "error": (
+                "The generated Earth Engine snippet ran but did not add a layer. "
+                "Call m.add_layer(...), m.addLayer(...), or add_layer(...)."
+            ),
+            "layers_added": [],
+            "stdout": stdout.getvalue(),
+            "stderr": stderr.getvalue(),
+            "earth_engine_python_snippet": code,
+        }
+
+    try:
+        _on_gui(lambda: iface.mapCanvas().refresh())
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "layers_added": layers_added,
+        "stdout": stdout.getvalue(),
+        "stderr": stderr.getvalue(),
+        "earth_engine_python_snippet": code,
+    }
 
 
 def _build_load_gee_dataset_snippet(
@@ -1312,6 +1833,134 @@ def gee_data_catalogs_tools(
 
     @geo_tool(
         category="gee_data_catalogs",
+        name="list_loaded_gee_layers",
+        available_in=("full", "fast"),
+        requires_packages=("gee_data_catalogs",),
+    )
+    def list_loaded_gee_layers() -> dict[str, Any]:
+        """List currently registered Earth Engine layers in the QGIS project."""
+        layers = _loaded_gee_layer_records()
+        return {"count": len(layers), "layers": layers}
+
+    @geo_tool(
+        category="gee_data_catalogs",
+        name="run_gee_python_snippet",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("gee_data_catalogs", "ee"),
+    )
+    def run_gee_python_snippet(
+        code: str,
+        description: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Run a constrained Earth Engine Python snippet and add QGIS layers.
+
+        Use this when the user asks for an Earth Engine operation that is not
+        covered by a dedicated GeoAgent tool. The snippet may use ``ee`` and a
+        small geemap-compatible map surface: ``m.add_layer(...)``,
+        ``m.addLayer(...)``, ``add_layer(...)``, ``get_ee_layer(name)``, and
+        ``list_ee_layers()``. It must add at least one layer.
+
+        Args:
+            code: Short Earth Engine Python snippet to run.
+            description: Optional plain-language summary for confirmation.
+        """
+        if not code or not code.strip():
+            return {
+                "success": False,
+                "error": "No Earth Engine Python snippet was provided.",
+                "earth_engine_python_snippet": code or "",
+            }
+
+        try:
+            result = _run_gee_python_snippet_impl(iface=iface, code=code.strip())
+        except Exception as exc:
+            return {
+                "success": False,
+                "error": str(exc),
+                "description": description,
+                "earth_engine_python_snippet": code.strip(),
+            }
+        result["description"] = description
+        return result
+
+    @geo_tool(
+        category="gee_data_catalogs",
+        name="calculate_gee_layer_statistics",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("gee_data_catalogs", "ee"),
+    )
+    def calculate_gee_layer_statistics(
+        layer_name: str,
+        band: Optional[str] = None,
+        statistics: Optional[str] = "mean",
+        scale: float = 1000.0,
+        max_pixels: float = 100000000,
+        best_effort: bool = True,
+        tile_scale: float = 4.0,
+        timeout_seconds: float = 60.0,
+        region_collection_asset_id: Optional[str] = None,
+        region_filter_property: Optional[str] = None,
+        region_filter_value: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Calculate bounded server-side statistics for a loaded EE image layer.
+
+        Use this for scalar questions such as mean elevation, min/max slope, or
+        summary statistics of a registered Earth Engine raster. Defaults are
+        intentionally coarse and best-effort so large regions such as the
+        continental United States return instead of blocking QGIS indefinitely.
+
+        Args:
+            layer_name: Registered Earth Engine layer name to analyze.
+            band: Optional band to select before reducing.
+            statistics: Comma-separated statistics: mean, min, max, median,
+                stdDev, sum, count.
+            scale: Reduction scale in meters. Defaults to 1000 m for large
+                area responsiveness.
+            max_pixels: Earth Engine maxPixels value.
+            best_effort: Whether Earth Engine may coarsen scale to fit limits.
+            tile_scale: Earth Engine reduceRegion tileScale.
+            timeout_seconds: Request deadline for the blocking EE evaluation.
+            region_collection_asset_id: Optional FeatureCollection region. If
+                omitted, the loaded image geometry/mask is used.
+            region_filter_property: Optional filter property for the region FC.
+            region_filter_value: Optional filter value for the region FC.
+        """
+        try:
+            return _calculate_gee_layer_statistics_impl(
+                layer_name=layer_name,
+                band=band,
+                statistics=statistics,
+                scale=scale,
+                max_pixels=max_pixels,
+                best_effort=best_effort,
+                tile_scale=tile_scale,
+                timeout_seconds=timeout_seconds,
+                region_collection_asset_id=region_collection_asset_id,
+                region_filter_property=region_filter_property,
+                region_filter_value=region_filter_value,
+            )
+        except Exception as exc:
+            return {
+                "success": False,
+                "error": str(exc),
+                "layer_name": layer_name,
+                "band": band,
+                "statistics": statistics,
+                "scale": scale,
+                "max_pixels": max_pixels,
+                "best_effort": best_effort,
+                "tile_scale": tile_scale,
+                "timeout_seconds": timeout_seconds,
+                "hint": (
+                    "For large regions, retry with a coarser scale such as "
+                    "2000 or 5000 meters, or provide a smaller region."
+                ),
+            }
+
+    @geo_tool(
+        category="gee_data_catalogs",
         name="open_gee_catalog_panel",
         available_in=("full", "fast"),
     )
@@ -1374,6 +2023,9 @@ def gee_data_catalogs_tools(
         initialize_earth_engine,
         load_gee_dataset,
         calculate_gee_normalized_difference,
+        list_loaded_gee_layers,
+        run_gee_python_snippet,
+        calculate_gee_layer_statistics,
         open_gee_catalog_panel,
         configure_gee_dataset_load,
     ]

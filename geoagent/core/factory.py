@@ -82,6 +82,19 @@ Workflow guidance:
   MNDWI, NDMI, or NBR, use calculate_gee_normalized_difference. Do not display
   a single source band as a proxy. Common Sentinel-2/HLS S30 pairs: NDVI B8/B4,
   NDWI B3/B8, MNDWI B3/B11, NBR B8/B12.
+- When the user asks for an Earth Engine operation that has no dedicated
+  GeoAgent tool, write a short Earth Engine Python snippet and run it with
+  run_gee_python_snippet. Prefer official Earth Engine API functions such as
+  ee.Terrain.hillshade for DEM hillshade. Do not say a task is impossible only
+  because no named GeoAgent tool exists.
+- When the user asks for scalar raster statistics such as mean elevation,
+  min/max, count, or summary values from a loaded Earth Engine layer, use
+  calculate_gee_layer_statistics. Do not use run_gee_python_snippet with
+  reduceRegion/getInfo for those requests. For large regions, use the default
+  coarse best-effort scale and report that the result is approximate.
+- When the user refers to an existing Earth Engine layer, call
+  list_loaded_gee_layers and reuse it with get_ee_layer(name) inside
+  run_gee_python_snippet instead of reloading data when possible.
 - For ImageCollections, call the selected aggregation a composite method.
   ``mosaic`` is valid, but it is an ImageCollection method, not an ee.Reducer.
 - For OPERA DSWx water maps, use OPERA/DSWX/L3_V1/HLS by default. Use

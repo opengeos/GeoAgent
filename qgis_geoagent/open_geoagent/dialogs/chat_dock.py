@@ -399,6 +399,21 @@ class ChatWorker(QThread):
             )
             response = agent.chat(self.prompt)
 
+            if self.isInterruptionRequested():
+                self.finished.emit(
+                    {
+                        "success": False,
+                        "answer": "",
+                        "error": "",
+                        "tools": ", ".join(response.executed_tools or []),
+                        "tool_calls": response.tool_calls or [],
+                        "cancelled": ", ".join(response.cancelled_tools or []),
+                        "elapsed": f"{response.execution_time:.2f}s",
+                        "cancelled_by_user": True,
+                    }
+                )
+                return
+
             self.finished.emit(
                 {
                     "success": bool(response.success),
@@ -408,6 +423,7 @@ class ChatWorker(QThread):
                     "tool_calls": response.tool_calls or [],
                     "cancelled": ", ".join(response.cancelled_tools or []),
                     "elapsed": f"{response.execution_time:.2f}s",
+                    "cancelled_by_user": False,
                 }
             )
         except Exception as exc:
@@ -419,11 +435,14 @@ class ChatWorker(QThread):
                     "tools": "",
                     "cancelled": "",
                     "elapsed": "",
+                    "cancelled_by_user": self.isInterruptionRequested(),
                 }
             )
 
     def _confirm_tool(self, request):
         """Ask the QGIS user before running confirmation-required tools."""
+        if self.isInterruptionRequested():
+            return False
         if self.auto_approve_tools:
             return True
 
@@ -572,6 +591,11 @@ class ChatDockWidget(QDockWidget):
         self.send_btn.clicked.connect(self._send_prompt)
         primary_button_layout.addWidget(self.send_btn)
 
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.setEnabled(False)
+        self.cancel_btn.clicked.connect(self._cancel_running_task)
+        primary_button_layout.addWidget(self.cancel_btn)
+
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.clicked.connect(self._clear_transcript)
         primary_button_layout.addWidget(self.clear_btn)
@@ -673,6 +697,7 @@ class ChatDockWidget(QDockWidget):
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
         self._start_running_status("Running GeoAgent")
         self.send_btn.setEnabled(False)
+        self.cancel_btn.setEnabled(True)
 
         self._worker = ChatWorker(
             self.iface,
@@ -755,7 +780,11 @@ class ChatDockWidget(QDockWidget):
     def _on_worker_finished(self, result):
         """Render the completed chat worker result."""
         self._stop_running_status()
-        if result.get("success"):
+        if result.get("cancelled_by_user"):
+            self._append_message("OpenGeoAgent", "Cancelled by user.", markdown=False)
+            self.status_label.setText("Cancelled")
+            self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+        elif result.get("success"):
             answer = result.get("answer") or "(No text response.)"
             details = []
             tool_inputs = _format_tool_calls(result.get("tool_calls") or [])
@@ -780,7 +809,21 @@ class ChatDockWidget(QDockWidget):
             self.status_label.setStyleSheet("color: red; font-size: 10px;")
 
         self.send_btn.setEnabled(True)
+        self.cancel_btn.setEnabled(False)
         self._worker = None
+
+    def _cancel_running_task(self):
+        """Request cancellation of the in-flight chat worker."""
+        worker = self._worker
+        if worker is None:
+            return
+        worker.requestInterruption()
+        self.cancel_btn.setEnabled(False)
+        self.status_label.setText(
+            "Cancellation requested. Waiting for current call to stop."
+        )
+        self.status_label.setStyleSheet("color: #EF6C00; font-size: 10px;")
+        self._start_running_status("Cancelling GeoAgent")
 
     def _start_running_status(self, base_text):
         """Start or update the animated status text."""

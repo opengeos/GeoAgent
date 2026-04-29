@@ -58,12 +58,19 @@ def test_gee_data_catalogs_tools_expose_catalog_surface() -> None:
     assert "initialize_earth_engine" in tools
     assert "load_gee_dataset" in tools
     assert "calculate_gee_normalized_difference" in tools
+    assert "list_loaded_gee_layers" in tools
+    assert "run_gee_python_snippet" in tools
+    assert "calculate_gee_layer_statistics" in tools
     assert "open_gee_catalog_panel" in tools
     assert "configure_gee_dataset_load" in tools
 
 
-def test_for_gee_data_catalogs_registers_catalog_and_qgis_tools() -> None:
+def test_for_gee_data_catalogs_registers_catalog_and_qgis_tools(monkeypatch) -> None:
     """Verify the GEE factory combines catalog and QGIS tool surfaces."""
+    import geoagent.core.factory as factory
+
+    monkeypatch.setattr(factory, "packages_available", lambda _packages: True)
+
     agent = for_gee_data_catalogs(
         MockQGISIface(),
         MockQGISProject(),
@@ -73,8 +80,22 @@ def test_for_gee_data_catalogs_registers_catalog_and_qgis_tools() -> None:
 
     assert "open_gee_catalog_panel" in names
     assert "configure_gee_dataset_load" in names
+    assert "list_loaded_gee_layers" in names
+    assert "run_gee_python_snippet" in names
+    assert "calculate_gee_layer_statistics" in names
     assert "list_project_layers" in names
     assert agent.context.metadata["integration"] == "gee_data_catalogs"
+
+
+def test_gee_data_catalogs_prompt_mentions_generated_ee_snippets() -> None:
+    """Verify the integration prompt tells the model to use EE snippets."""
+    from geoagent.core.factory import GEE_DATA_CATALOGS_SYSTEM_PROMPT
+
+    assert "run_gee_python_snippet" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "ee.Terrain.hillshade" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "list_loaded_gee_layers" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "calculate_gee_layer_statistics" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "reduceRegion/getInfo" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
 
 
 def test_load_gee_dataset_clips_raster_to_feature_collection(monkeypatch) -> None:
@@ -676,3 +697,275 @@ def test_calculate_gee_normalized_difference_loads_index(monkeypatch) -> None:
     assert captured["vis"]["min"] == -1.0
     assert captured["vis"]["max"] == 1.0
     assert iface.canvas.refreshed is True
+
+
+def test_list_loaded_gee_layers_reports_registry(monkeypatch) -> None:
+    """Verify the helper exposes registered EE layer metadata."""
+
+    class _FakeImage:
+        pass
+
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+    ee_utils.get_ee_layers = lambda: {
+        "SRTM DEM": (_FakeImage(), {"min": 0, "max": 4000})
+    }
+
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(object())}
+    result = tools["list_loaded_gee_layers"].__wrapped__()
+
+    assert result["count"] == 1
+    assert result["layers"][0]["name"] == "SRTM DEM"
+    assert result["layers"][0]["object_type"] == "_FakeImage"
+    assert result["layers"][0]["vis_params"] == {"min": 0, "max": 4000}
+
+
+def test_calculate_gee_layer_statistics_reduces_registered_dem(monkeypatch) -> None:
+    """Verify scalar statistics use bounded reduceRegion settings."""
+
+    class _FakeDictionary:
+        def __init__(self, values):
+            self.values = values
+
+        def getInfo(self):
+            return self.values
+
+    class _FakeImage:
+        def __init__(self) -> None:
+            self.selected_band = None
+
+        def select(self, band: str):
+            self.selected_band = band
+            return self
+
+        def geometry(self):
+            return "image-geometry"
+
+        def reduceRegion(self, **kwargs):
+            captured["reduce_region"] = kwargs
+            return _FakeDictionary({"elevation": 853.25})
+
+    class _FakeReducer:
+        @staticmethod
+        def mean():
+            return "mean-reducer"
+
+    dem = _FakeImage()
+    captured = {}
+
+    ee_module = ModuleType("ee")
+    ee_module.Image = lambda value: value
+    ee_module.Reducer = _FakeReducer
+
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+    ee_utils.get_ee_layers = lambda: {"NASADEM elevation clipped to US": (dem, {})}
+
+    monkeypatch.setitem(sys.modules, "ee", ee_module)
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(object())}
+    result = tools["calculate_gee_layer_statistics"].__wrapped__(
+        "NASADEM elevation clipped to US",
+        band="elevation",
+    )
+
+    assert result["success"] is True
+    assert result["values"] == {"elevation": 853.25}
+    assert result["mean"] == 853.25
+    assert result["approximate"] is True
+    assert result["scale"] == 1000.0
+    assert result["best_effort"] is True
+    assert dem.selected_band == "elevation"
+    assert captured["reduce_region"] == {
+        "reducer": "mean-reducer",
+        "geometry": "image-geometry",
+        "scale": 1000.0,
+        "maxPixels": 100000000,
+        "bestEffort": True,
+        "tileScale": 4.0,
+    }
+
+
+def test_run_gee_python_snippet_hillshade_from_registered_layer(
+    monkeypatch,
+) -> None:
+    """Verify generated snippets can use ee.Terrain.hillshade and add layers."""
+
+    class _Canvas:
+        def __init__(self) -> None:
+            self.refreshed = False
+
+        def refresh(self) -> None:
+            self.refreshed = True
+
+    class _Iface:
+        def __init__(self) -> None:
+            self.canvas = _Canvas()
+
+        def mapCanvas(self) -> _Canvas:
+            return self.canvas
+
+    class _FakeImage:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+    class _FakeTerrain:
+        @staticmethod
+        def hillshade(image):
+            return _FakeImage(f"hillshade:{image.name}")
+
+    class _FakeLayer:
+        def isValid(self):
+            return True
+
+    dem = _FakeImage("srtm")
+    captured = {}
+
+    ee_module = ModuleType("ee")
+    ee_module.Terrain = _FakeTerrain
+
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+    ee_utils.get_ee_layers = lambda: {"SRTM DEM clipped to United States": (dem, {})}
+
+    def _add_ee_layer(obj, vis, name):
+        captured.update({"object": obj, "vis": vis, "name": name})
+        return _FakeLayer()
+
+    ee_utils.add_ee_layer = _add_ee_layer
+
+    monkeypatch.setitem(sys.modules, "ee", ee_module)
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+
+    code = """
+import ee
+import geemap
+
+dem = get_ee_layer('SRTM DEM clipped to United States')
+hillshade = ee.Terrain.hillshade(dem)
+m = geemap.Map()
+m.add_layer(hillshade, {'min': 0, 'max': 255}, 'SRTM Hillshade')
+"""
+    iface = _Iface()
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
+    result = tools["run_gee_python_snippet"].__wrapped__(
+        code,
+        description="Create a true hillshade from the existing DEM.",
+    )
+
+    assert result["success"] is True
+    assert result["layers_added"] == [
+        {
+            "name": "SRTM Hillshade",
+            "vis_params": {"min": 0, "max": 255},
+            "object_type": "_FakeImage",
+        }
+    ]
+    assert captured["object"].name == "hillshade:srtm"
+    assert captured["vis"] == {"min": 0, "max": 255}
+    assert captured["name"] == "SRTM Hillshade"
+    assert "ee.Terrain.hillshade(dem)" in result["earth_engine_python_snippet"]
+    assert result["description"] == "Create a true hillshade from the existing DEM."
+    assert iface.canvas.refreshed is True
+
+
+def test_run_gee_python_snippet_supports_direct_add_layer(
+    monkeypatch,
+) -> None:
+    """Verify generated snippets can use the top-level add_layer helper."""
+
+    class _Canvas:
+        def refresh(self) -> None:
+            pass
+
+    class _Iface:
+        def mapCanvas(self) -> _Canvas:
+            return _Canvas()
+
+    class _FakeLayer:
+        def isValid(self):
+            return True
+
+    ee_module = ModuleType("ee")
+    ee_module.Image = lambda asset_id: ("image", asset_id)
+
+    captured = {}
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+    ee_utils.get_ee_layers = lambda: {}
+
+    def _add_ee_layer(obj, vis, name):
+        captured.update({"object": obj, "vis": vis, "name": name})
+        return _FakeLayer()
+
+    ee_utils.add_ee_layer = _add_ee_layer
+
+    monkeypatch.setitem(sys.modules, "ee", ee_module)
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+
+    code = "image = ee.Image('USGS/SRTMGL1_003')\nadd_layer(image, {}, 'SRTM')"
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(_Iface())}
+    result = tools["run_gee_python_snippet"].__wrapped__(code)
+
+    assert result["success"] is True
+    assert captured["object"] == ("image", "USGS/SRTMGL1_003")
+    assert captured["name"] == "SRTM"
+    assert result["layers_added"][0]["name"] == "SRTM"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "open('/tmp/out.txt', 'w')",
+        "import os\nos.remove('/tmp/out.txt')",
+        "import subprocess\nsubprocess.run(['echo', 'x'])",
+        "eval('1 + 1')",
+        "__import__('os')",
+        "image.reduceRegion(reducer=ee.Reducer.mean()).getInfo()",
+    ],
+)
+def test_run_gee_python_snippet_rejects_unsafe_code(monkeypatch, code: str) -> None:
+    """Verify unsafe generated snippets are rejected before execution."""
+
+    ee_module = ModuleType("ee")
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+    ee_utils.get_ee_layers = lambda: {}
+
+    monkeypatch.setitem(sys.modules, "ee", ee_module)
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(object())}
+    result = tools["run_gee_python_snippet"].__wrapped__(code)
+
+    assert result["success"] is False
+    assert "not allowed" in result["error"]
+    assert result["earth_engine_python_snippet"] == code
