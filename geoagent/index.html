@@ -1531,7 +1531,7 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
             <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
                 <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">error_message</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+                <span class="n">error_message</span><span class="o">=</span><span class="n">_format_chat_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
                 <span class="n">execution_time</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
                 <span class="n">cancelled_tools</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">),</span>
                 <span class="nb">map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">,</span>
