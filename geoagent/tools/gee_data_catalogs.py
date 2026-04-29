@@ -205,8 +205,6 @@ def _opera_dswx_band_alias(bands: str | list[str] | None) -> str:
         "BWTR": "BWTR_Binary_water",
         "BINARY_WATER": "BWTR_Binary_water",
         "BWTR_Binary_water": "BWTR_Binary_water",
-        "CONF": "CONF_Confidence",
-        "CONF_Confidence": "CONF_Confidence",
     }
     return aliases.get(first, first)
 
@@ -283,10 +281,22 @@ def _build_load_gee_dataset_snippet(
 
     if resolved_type == "ImageCollection":
         lines.append("collection = ee.ImageCollection(asset_id)")
-        if start_date or end_date:
+        if start_date and end_date:
             lines.append(
                 "collection = collection.filterDate("
                 f"{_format_python_snippet_value(start_date)}, "
+                f"{_format_python_snippet_value(end_date)}"
+                ")"
+            )
+        elif start_date:
+            lines.append(
+                "collection = collection.filterDate("
+                f"{_format_python_snippet_value(start_date)}"
+                ")"
+            )
+        elif end_date:
+            lines.append(
+                "collection = collection.filterDate("
                 f"{_format_python_snippet_value(end_date)}"
                 ")"
             )
@@ -299,6 +309,11 @@ def _build_load_gee_dataset_snippet(
         if _is_opera_dswx(asset_id):
             band = rendered_band or _opera_dswx_band_alias(bands)
             reducer_name = "mode" if method == "mode" else "max"
+            if band == "BWTR_Binary_water":
+                class_values = [0, 1, 252, 253, 254]
+            else:
+                class_values = [0, 1, 2, 252, 253, 254]
+            to_values = list(range(len(class_values)))
             lines.extend(
                 [
                     f"band = {_format_python_snippet_value(band)}",
@@ -308,8 +323,8 @@ def _build_load_gee_dataset_snippet(
                     "    )",
                     ")",
                     f"image = masked.reduce(ee.Reducer.{reducer_name}()).rename(band)",
-                    "class_values = [0, 1, 2, 252, 253, 254]",
-                    "to_values = [0, 1, 2, 3, 4, 5]",
+                    f"class_values = {_format_python_snippet_value(class_values)}",
+                    f"to_values = {_format_python_snippet_value(to_values)}",
                     "image = image.select(band).remap(class_values, to_values)",
                     "image = image.updateMask(image.neq(0))  # make non-water transparent",
                 ]
@@ -388,10 +403,22 @@ def _build_normalized_difference_snippet(
     ]
     if resolved_type == "ImageCollection":
         lines.append("collection = ee.ImageCollection(asset_id)")
-        if start_date or end_date:
+        if start_date and end_date:
             lines.append(
                 "collection = collection.filterDate("
                 f"{_format_python_snippet_value(start_date)}, "
+                f"{_format_python_snippet_value(end_date)}"
+                ")"
+            )
+        elif start_date:
+            lines.append(
+                "collection = collection.filterDate("
+                f"{_format_python_snippet_value(start_date)}"
+                ")"
+            )
+        elif end_date:
+            lines.append(
+                "collection = collection.filterDate("
                 f"{_format_python_snippet_value(end_date)}"
                 ")"
             )
@@ -1052,7 +1079,7 @@ def gee_data_catalogs_tools(
                         "vis_params": vis_params,
                     }
             try:
-                iface.mapCanvas().refresh()
+                _on_gui(lambda: iface.mapCanvas().refresh())
             except Exception:
                 pass
             return {
@@ -1247,7 +1274,7 @@ def gee_data_catalogs_tools(
                 bbox=parsed_bbox,
             )
             try:
-                iface.mapCanvas().refresh()
+                _on_gui(lambda: iface.mapCanvas().refresh())
             except Exception:
                 pass
             return {
