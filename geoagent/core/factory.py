@@ -67,8 +67,12 @@ Earth Engine layers into the current QGIS project.
 Workflow guidance:
 - Search the catalog before loading when the user names a topic rather than an
   exact Earth Engine asset id.
-- Prefer the current QGIS map extent or a user-provided bbox for spatially
-  constrained ImageCollection requests.
+- Only pass bbox to load_gee_dataset when the current user request explicitly
+  asks for a region/place/current map extent or provides bbox coordinates. Do
+  not reuse a previous conversation location for a new dataset request unless
+  the current request says "same area", "there", or otherwise clearly refers
+  to that prior location. If the user asks for a global layer, or gives no
+  location, omit bbox.
 - When the user asks to clip a raster/Image/ImageCollection to an administrative
   boundary or other vector region, use load_gee_dataset with
   clip_collection_asset_id and clip_filter_property/value. The tool applies
@@ -78,9 +82,22 @@ Workflow guidance:
   MNDWI, NDMI, or NBR, use calculate_gee_normalized_difference. Do not display
   a single source band as a proxy. Common Sentinel-2/HLS S30 pairs: NDVI B8/B4,
   NDWI B3/B8, MNDWI B3/B11, NBR B8/B12.
+- For ImageCollections, call the selected aggregation a composite method.
+  ``mosaic`` is valid, but it is an ImageCollection method, not an ee.Reducer.
+- For OPERA DSWx water maps, use OPERA/DSWX/L3_V1/HLS by default. Use
+  OPERA/DSWX/L3_V1/S1 only when the user explicitly asks for Sentinel-1 or S1.
+  Use WTR_Water_classification or BWTR_Binary_water band names. The tool masks
+  invalid classes, defaults HLS composites to mode and S1 composites to max,
+  and remaps class values for QGIS rendering.
+- Do not report that Earth Engine returned an empty collection or no bands
+  unless load_gee_dataset returns success=false with diagnostics proving that
+  specific condition. If layer insertion or tile generation fails, report that
+  actual error instead.
 - Ask for or infer visualization bands only when needed; common RGB defaults
   are acceptable for Landsat and Sentinel imagery.
 - Keep responses concise and include asset ids, layer names, and filters used.
+- If load_gee_dataset returns a bbox field, include the bbox coordinates in the
+  response in west,south,east,north order.
 """
 
 WHITEBOX_SYSTEM_PROMPT = """\
