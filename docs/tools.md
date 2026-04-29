@@ -2,7 +2,7 @@
 
 Interactive adapters live under **`geoagent.tools`**:
 
-- `leafmap_tools`, `anymap_tools`, `qgis_tools`, `nasa_opera_tools` — bound to live map / QGIS instances.
+- `leafmap_tools`, `anymap_tools`, `qgis_tools`, `nasa_opera_tools`, `whitebox_tools` — bound to live map / QGIS instances.
 - Optional stubs: `stac`, `geoai`, `earthengine`, `nasa_earthdata` (expand in future releases).
 
 Use **`@geo_tool`** ([`geoagent.core.decorators`](decorators.md)) so tools register Strands-compatible metadata for safety hooks.
@@ -30,6 +30,19 @@ Layer lookup accepts exact names or a unique case-insensitive substring for oper
 - Open UI / save: `open_attribute_table`, `save_project`.
 
 Destructive or persistent actions such as `remove_layer`, `clear_layers`, `save_map`, `save_project`, and `run_processing_algorithm` require confirmation through the GeoAgent safety hook.
+
+## WhiteboxTools
+
+`for_whitebox(iface, project=None)` exposes WhiteboxTools through a routed
+broker surface rather than registering hundreds of individual tools:
+
+- Discover tools: `summarize_whitebox_tools`, `search_whitebox_tools`.
+- Inspect parameters: `get_whitebox_tool_info`.
+- Execute analysis: `run_whitebox_tool`.
+
+The executor is confirmation-required and long-running. It accepts file paths
+or file-backed QGIS layer names, creates missing required output paths when
+possible, and loads generated raster/vector outputs back into QGIS.
 
 ## NASA OPERA
 

@@ -54,11 +54,12 @@ earthengine = ["earthengine-api>=1.0", "geemap"]
 stac = ["pystac-client>=0.8", "planetary-computer>=1.0"]
 earthdata = ["earthaccess>=0.10"]
 nasa-opera = ["earthaccess>=0.10"]
+whitebox = ["whitebox>=2.3.6"]
 ui = ["solara>=1.35"]
 qgis = []
 providers = ["GeoAgent[openai,anthropic,gemini,ollama,litellm]"]
 all = [
-    "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,nasa-opera,ui]",
+    "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,nasa-opera,whitebox,ui]",
 ]
 dev = [
     "pytest>=8.0",

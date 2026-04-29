@@ -29,6 +29,7 @@ from geoagent.core.factory import (
     for_nasa_earthdata,
     for_nasa_opera,
     for_qgis,
+    for_whitebox,
 )
 from geoagent.core.agent import GeoAgent
 from geoagent.core.registry import GeoToolMeta, GeoToolRegistry
@@ -48,6 +49,7 @@ __all__ = [
     "for_nasa_earthdata",
     "for_nasa_opera",
     "for_qgis",
+    "for_whitebox",
     "geo_tool",
     "get_geo_meta",
     "stamp_geo_meta",

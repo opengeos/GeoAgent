@@ -28,6 +28,7 @@ from qgis.PyQt.QtCore import QThread, pyqtSignal
 # Required packages: (import_name, pip_install_name)
 REQUIRED_PACKAGES = [
     ("geoagent", "GeoAgent[providers]>=1.0.0"),
+    ("whitebox", "whitebox>=2.3.6"),
     ("openai", "openai>=1.0"),
     ("anthropic", "anthropic>=0.40"),
     ("google.genai", "google-genai>=1.0"),

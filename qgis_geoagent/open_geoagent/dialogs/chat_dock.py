@@ -46,6 +46,9 @@ SAMPLE_PROMPTS = [
     "Inspect the active vector layer fields and suggest useful styling or labeling options.",
     "Select features in the active layer where population is greater than 100000, then zoom to the selected features.",
     "Run a buffer around the active layer by 1000 meters and add the output to the project.",
+    "Find a WhiteboxTools command for calculating slope from the active DEM layer.",
+    "Run a WhiteboxTools hillshade analysis on a local DEM and add the result to QGIS.",
+    "Search WhiteboxTools for watershed or flow accumulation tools.",
     "Create a concise map QA checklist for this project before I export it.",
 ]
 
@@ -223,7 +226,15 @@ class ChatWorker(QThread):
     finished = pyqtSignal(dict)
 
     def __init__(
-        self, iface, prompt, provider, model_id, fast, max_tokens, parent=None
+        self,
+        iface,
+        prompt,
+        provider,
+        model_id,
+        fast,
+        max_tokens,
+        auto_approve_tools=False,
+        parent=None,
     ):
         super().__init__(parent)
         self.iface = iface
@@ -232,12 +243,13 @@ class ChatWorker(QThread):
         self.model_id = model_id or None
         self.fast = fast
         self.max_tokens = max_tokens
+        self.auto_approve_tools = bool(auto_approve_tools)
 
     def run(self):
         """Create a GeoAgent QGIS agent and execute one chat turn."""
         try:
             from geoagent import GeoAgentConfig
-            from geoagent import for_qgis
+            from geoagent import for_whitebox
 
             try:
                 from qgis.core import QgsProject
@@ -251,11 +263,12 @@ class ChatWorker(QThread):
                 model=self.model_id,
                 max_tokens=self.max_tokens,
             )
-            agent = for_qgis(
+            agent = for_whitebox(
                 self.iface,
                 project=project,
                 config=config,
                 fast=self.fast,
+                confirm=self._confirm_tool,
             )
             response = agent.chat(self.prompt)
 
@@ -280,6 +293,43 @@ class ChatWorker(QThread):
                     "elapsed": "",
                 }
             )
+
+    def _confirm_tool(self, request):
+        """Ask the QGIS user before running confirmation-required tools."""
+        if self.auto_approve_tools:
+            return True
+
+        from geoagent.tools._qt_marshal import run_on_qt_gui_thread
+
+        def _ask():
+            parent = None
+            try:
+                parent = self.iface.mainWindow()
+            except Exception:
+                pass
+
+            arg_lines = []
+            for key, value in request.args.items():
+                text = str(value)
+                if len(text) > 160:
+                    text = text[:157] + "..."
+                arg_lines.append(f"{key}: {text}")
+
+            details = "\n".join(arg_lines) if arg_lines else "No arguments"
+            message = (
+                f"GeoAgent wants to run:\n\n{request.tool_name}\n\n"
+                f"{details}\n\nAllow this action?"
+            )
+            reply = QMessageBox.question(
+                parent,
+                "Confirm GeoAgent Tool",
+                message,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            return reply == QMessageBox.StandardButton.Yes
+
+        return bool(run_on_qt_gui_thread(_ask))
 
 
 class ChatDockWidget(QDockWidget):
@@ -338,7 +388,15 @@ class ChatDockWidget(QDockWidget):
         model_layout.addRow("Model:", self.model_input)
 
         self.fast_check = QCheckBox("Fast mode")
-        model_layout.addRow("", self.fast_check)
+        self.auto_approve_tools_check = QCheckBox("Auto approve running tools")
+        self.auto_approve_tools_check.setToolTip(
+            "Run confirmation-required tools without prompting for this session."
+        )
+        mode_layout = QHBoxLayout()
+        mode_layout.addWidget(self.fast_check)
+        mode_layout.addWidget(self.auto_approve_tools_check)
+        mode_layout.addStretch(1)
+        model_layout.addRow("", mode_layout)
 
         layout.addWidget(model_group)
 
@@ -410,6 +468,9 @@ class ChatDockWidget(QDockWidget):
         self.model_input.setText(model)
 
         self.fast_check.setChecked(_setting(self.settings, "fast_mode", False, bool))
+        self.auto_approve_tools_check.setChecked(
+            _setting(self.settings, "auto_approve_tools", False, bool)
+        )
 
     def _save_model_settings(self):
         """Persist the selected provider, model, and fast-mode setting."""
@@ -419,6 +480,10 @@ class ChatDockWidget(QDockWidget):
         self.settings.setValue(f"{SETTINGS_PREFIX}model", self.model_input.text())
         self.settings.setValue(
             f"{SETTINGS_PREFIX}fast_mode", self.fast_check.isChecked()
+        )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}auto_approve_tools",
+            self.auto_approve_tools_check.isChecked(),
         )
 
     def _on_provider_changed(self, provider):
@@ -445,6 +510,7 @@ class ChatDockWidget(QDockWidget):
         provider = self.provider_combo.currentText()
         model_id = self.model_input.text().strip()
         fast = self.fast_check.isChecked()
+        auto_approve_tools = self.auto_approve_tools_check.isChecked()
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
         prompt_with_context = self._build_prompt_with_context(prompt)
 
@@ -461,6 +527,7 @@ class ChatDockWidget(QDockWidget):
             model_id,
             fast,
             max_tokens,
+            auto_approve_tools,
             self,
         )
         self._worker.finished.connect(self._on_worker_finished)

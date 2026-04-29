@@ -61,6 +61,7 @@ def test_factory_returns_tools_for_iface() -> None:
         "zoom_to_selected",
         "get_layer_summary",
         "run_processing_algorithm",
+        "buffer_active_layer",
         "open_attribute_table",
         "refresh_canvas",
         "save_project",
@@ -75,6 +76,7 @@ def test_remove_layer_and_run_processing_require_confirmation() -> None:
     tools = {t.tool_name: t for t in qgis_tools(iface, project)}
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["run_processing_algorithm"]) is True
+    assert needs_confirmation(tools["buffer_active_layer"]) is True
     assert needs_confirmation(tools["save_project"]) is True
     assert needs_confirmation(tools["zoom_in"]) is False
     assert needs_confirmation(tools["list_project_layers"]) is False
@@ -418,6 +420,44 @@ def test_add_xyz_tile_layer_uses_raster_fallback() -> None:
     )
     assert "Added XYZ" in out
     assert "Tiles" in project.mapLayers()
+
+
+def test_buffer_active_layer_runs_processing_and_loads_output(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify the active-layer buffer convenience tool wraps Processing."""
+    import types
+
+    project = MockQGISProject()
+    iface = MockQGISIface(project=project)
+    layer = MockQGISLayer("Roads", "/tmp/roads.gpkg", "vector")
+    project.addMapLayer(layer)
+    iface.setActiveLayer(layer)
+
+    output_path = tmp_path / "roads_buffer.gpkg"
+    captured = {}
+
+    def _run(algorithm_id, parameters):
+        captured["algorithm_id"] = algorithm_id
+        captured["parameters"] = dict(parameters)
+        output_path.write_text("buffer", encoding="utf-8")
+        return {"OUTPUT": str(output_path)}
+
+    monkeypatch.setitem(sys.modules, "processing", types.SimpleNamespace(run=_run))
+
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+    result = tools["buffer_active_layer"].__wrapped__(
+        distance_meters=1000,
+        output_layer_name="Road buffer",
+        output_path=str(output_path),
+    )
+
+    assert captured["algorithm_id"] == "native:buffer"
+    assert captured["parameters"]["INPUT"] is layer
+    assert captured["parameters"]["DISTANCE"] == 1000.0
+    assert result["success"] is True
+    assert result["output"] == str(output_path)
+    assert "Road buffer" in project.mapLayers()
 
 
 def test_layer_opacity_selection_and_summary() -> None:

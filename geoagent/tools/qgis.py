@@ -17,6 +17,7 @@ Typical usage from inside a QGIS plugin's Python console::
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import quote
@@ -204,6 +205,50 @@ def _resolve_layer(project: Any, layer_name: str) -> Any:
     if not layers:
         raise LookupError(f"No layer named {layer_name!r} in the project.")
     return layers[0]
+
+
+def _safe_stem(value: str, fallback: str = "qgis_output") -> str:
+    """Return a filesystem-safe output stem."""
+    import re
+
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", value).strip("._-")
+    return cleaned or fallback
+
+
+def _project_output_dir(project: Any) -> str:
+    """Choose a stable writable directory for generated QGIS outputs."""
+    for attr in ("homePath", "absolutePath"):
+        method = getattr(project, attr, None)
+        if callable(method):
+            try:
+                value = str(method()).strip()
+                if value:
+                    return value
+            except Exception:
+                pass
+    file_name = getattr(project, "fileName", None)
+    if callable(file_name):
+        try:
+            value = str(file_name()).strip()
+            if value:
+                return str(Path(value).parent)
+        except Exception:
+            pass
+    out_dir = Path(tempfile.gettempdir()) / "geoagent_qgis"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return str(out_dir)
+
+
+def _default_processing_output_path(project: Any, layer_name: str, suffix: str) -> str:
+    """Create a non-conflicting path for a generated Processing output."""
+    out_dir = Path(_project_output_dir(project))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    candidate = out_dir / f"{_safe_stem(layer_name)}{suffix}"
+    index = 2
+    while candidate.exists():
+        candidate = out_dir / f"{_safe_stem(layer_name)}_{index}{suffix}"
+        index += 1
+    return str(candidate)
 
 
 def _extent_payload(extent: Any) -> Any:
@@ -1067,6 +1112,93 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
 
     @geo_tool(
         category="qgis",
+        requires_confirmation=True,
+        long_running=True,
+    )
+    def buffer_active_layer(
+        distance_meters: float,
+        output_layer_name: Optional[str] = None,
+        output_path: Optional[str] = None,
+        segments: int = 8,
+        dissolve: bool = False,
+    ) -> dict[str, Any]:
+        """Buffer the active vector layer and add the result to the project.
+
+        Args:
+            distance_meters: Buffer distance. QGIS Processing interprets this
+                in the active layer's CRS units; projected CRS layers commonly
+                use metres.
+            output_layer_name: Optional display name for the output layer.
+            output_path: Optional output file path. When omitted, GeoAgent
+                writes a GeoPackage into the project directory or temp dir.
+            segments: Number of segments used to approximate quarter circles.
+            dissolve: Whether to dissolve buffered features.
+
+        Returns:
+            A compact dict describing the Processing result and loaded layer.
+        """
+
+        def _run() -> dict[str, Any]:
+            """Run the worker body."""
+            try:
+                import processing  # type: ignore[import-not-found]
+            except Exception as exc:  # pragma: no cover - QGIS-only path
+                raise RuntimeError(
+                    "QGIS Processing framework is not available."
+                ) from exc
+
+            layer = iface.activeLayer()
+            if layer is None:
+                return {"success": False, "reason": "No active layer."}
+
+            name = output_layer_name or f"{layer.name()} buffer {distance_meters:g}m"
+            target_path = output_path or _default_processing_output_path(
+                _project(),
+                name,
+                ".gpkg",
+            )
+            params = {
+                "INPUT": layer,
+                "DISTANCE": float(distance_meters),
+                "SEGMENTS": int(segments),
+                "END_CAP_STYLE": 0,
+                "JOIN_STYLE": 0,
+                "MITER_LIMIT": 2,
+                "DISSOLVE": bool(dissolve),
+                "OUTPUT": target_path,
+            }
+            result = processing.run("native:buffer", params)
+            output = (
+                result.get("OUTPUT", target_path)
+                if isinstance(result, dict)
+                else target_path
+            )
+            added = None
+            if output:
+                added = iface.addVectorLayer(str(output), name, "ogr")
+            success = added is not None and (
+                not hasattr(added, "isValid") or added.isValid()
+            )
+            if hasattr(iface.mapCanvas(), "refresh"):
+                iface.mapCanvas().refresh()
+            return {
+                "success": bool(success),
+                "algorithm_id": "native:buffer",
+                "input_layer": layer.name(),
+                "distance_meters": float(distance_meters),
+                "output": str(output) if output else None,
+                "layer_name": name if success else None,
+                "processing_result": (
+                    {key: str(value) for key, value in result.items()}
+                    if isinstance(result, dict)
+                    else {}
+                ),
+            }
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
     )
     def open_attribute_table(layer_name: str) -> str:
         """Open the attribute table for a layer.
@@ -1156,6 +1288,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         zoom_to_selected,
         get_layer_summary,
         run_processing_algorithm,
+        buffer_active_layer,
         open_attribute_table,
         refresh_canvas,
         save_project,
