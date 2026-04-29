@@ -593,6 +593,11 @@ class ChatDockWidget(QDockWidget):
 
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.setEnabled(False)
+        self.cancel_btn.setToolTip(
+            "Stops GeoAgent at the next checkpoint. The in-flight model "
+            "request and any tool already running cannot be aborted "
+            "mid-call; cancellation takes effect between steps."
+        )
         self.cancel_btn.clicked.connect(self._cancel_running_task)
         primary_button_layout.addWidget(self.cancel_btn)
 
@@ -820,7 +825,8 @@ class ChatDockWidget(QDockWidget):
         worker.requestInterruption()
         self.cancel_btn.setEnabled(False)
         self.status_label.setText(
-            "Cancellation requested. Waiting for current call to stop."
+            "Cancellation requested. Waiting for the current model "
+            "call or tool to finish before stopping."
         )
         self.status_label.setStyleSheet("color: #EF6C00; font-size: 10px;")
         self._start_running_status("Cancelling GeoAgent")

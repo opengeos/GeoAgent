@@ -11,7 +11,6 @@ import ast
 import contextlib
 import io
 import os
-import sys
 import types
 from typing import Any, Optional
 from urllib.parse import quote
@@ -300,11 +299,13 @@ _FORBIDDEN_GEE_SNIPPET_NODES = (
     ast.Await,
     ast.ClassDef,
     ast.Delete,
+    ast.For,
     ast.FunctionDef,
     ast.Global,
     ast.Nonlocal,
     ast.Raise,
     ast.Try,
+    ast.While,
     ast.With,
 )
 
@@ -715,8 +716,6 @@ def _run_gee_python_snippet_impl(
 
     geemap_module = types.ModuleType("geemap")
     geemap_module.Map = QGISMap
-    original_geemap = sys.modules.get("geemap")
-    sys.modules["geemap"] = geemap_module
 
     stdout = io.StringIO()
     stderr = io.StringIO()
@@ -731,16 +730,8 @@ def _run_gee_python_snippet_impl(
         "m": QGISMap(),
     }
 
-    try:
-        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            exec(
-                compile(code, "<generated_gee_snippet>", "exec"), namespace
-            )  # nosec B102
-    finally:
-        if original_geemap is not None:
-            sys.modules["geemap"] = original_geemap
-        else:
-            sys.modules.pop("geemap", None)
+    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+        exec(compile(code, "<generated_gee_snippet>", "exec"), namespace)  # nosec B102
 
     if not layers_added:
         return {
