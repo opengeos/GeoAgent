@@ -21,20 +21,23 @@ from typing import Any
 
 SETTINGS_PREFIX = "OpenGeoAgent/"
 OPENAI_CODEX_AUTHORIZATION_URL = "https://auth.openai.com/oauth/authorize"
-OPENAI_CODEX_TOKEN_URL = "https://auth.openai.com/oauth/token"
+# Public OAuth endpoint URL, not a credential.
+OPENAI_CODEX_TOKEN_URL = "https://auth.openai.com/oauth/token"  # nosec B105
 OPENAI_CODEX_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
 OPENAI_CODEX_SCOPE = "openid profile email offline_access"
 OPENAI_CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"
 OPENAI_CODEX_CALLBACK_PORT = 1455
 OPENAI_CODEX_CALLBACK_PATH = "/auth/callback"
-OPENAI_CODEX_AUTH_EXTRA_PARAMS = {
+# OAuth authorize-request flag values below are protocol parameters, not credentials.
+OPENAI_CODEX_AUTH_EXTRA_PARAMS = {  # nosec B105
     "id_token_add_organizations": "true",
     "codex_cli_simplified_flow": "true",
     "originator": "pi",
 }
 AUTHCFG_KEY = "openai_oauth_authcfg"
 EXPIRES_AT_KEY = "openai_oauth_expires_at"
-TOKEN_TYPE_KEY = "openai_oauth_token_type"
+# QSettings key name (where the token type is stored), not a credential.
+TOKEN_TYPE_KEY = "openai_oauth_token_type"  # nosec B105
 REFRESH_SKEW_SECONDS = 300
 
 OAUTH_CONFIG_KEYS = (

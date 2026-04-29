@@ -108,3 +108,4 @@ ENV/
 CLAUDE.md
 .firecrawl/
 .codex
+*.zip

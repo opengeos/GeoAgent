@@ -1,5 +1,17 @@
 # GeoAgent
 
+[![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/opengeos/GeoAgent/blob/main)
+[![notebook-link](https://img.shields.io/badge/notebook-link-e2d610?logo=jupyter&logoColor=white)](https://notebook.link/github/opengeos/GeoAgent/tree/main/lab/?path=docs%2Fnotebooks%2F00_key_features.ipynb)
+[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/opengeos/leafmap/HEAD)
+[![image](https://img.shields.io/pypi/v/GeoAgent.svg)](https://pypi.python.org/pypi/GeoAgent)
+[![image](https://static.pepy.tech/badge/GeoAgent)](https://pepy.tech/project/GeoAgent)
+[![Conda Recipe](https://img.shields.io/badge/recipe-GeoAgent-green.svg)](https://github.com/conda-forge/GeoAgent-feedstock)
+[![image](https://img.shields.io/conda/vn/conda-forge/GeoAgent.svg)](https://anaconda.org/conda-forge/GeoAgent)
+[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/GeoAgent.svg)](https://anaconda.org/conda-forge/GeoAgent)
+[![image](https://github.com/opengeos/leafmap/workflows/docs/badge.svg)](https://leafmap.org)
+[![image](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![image](https://img.shields.io/badge/YouTube-Channel-red)](https://youtube.com/@giswqs)
+
 GeoAgent is a **centralized geospatial agent layer** for Python mapping
 libraries, data-analysis packages, and QGIS plugins. It is built on
 [Strands Agents](https://strandsagents.com/) and adds geospatial context,
