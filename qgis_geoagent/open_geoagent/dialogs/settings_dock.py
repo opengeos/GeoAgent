@@ -385,20 +385,35 @@ class SettingsDockWidget(QDockWidget):
         self.max_tokens_spin.setValue(
             self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
         )
-        self.openai_key_input.setText(self._credential_value("openai_api_key"))
-        self.anthropic_key_input.setText(self._credential_value("anthropic_api_key"))
-        self.gemini_key_input.setText(self._credential_value("gemini_api_key"))
-        self.aws_region_input.setText(self._credential_value("aws_region"))
-        self.ollama_host_input.setText(self._credential_value("ollama_host"))
-        self.litellm_key_input.setText(self._credential_value("litellm_api_key"))
-        self.litellm_base_url_input.setText(self._credential_value("litellm_base_url"))
+
+        self._credential_inputs = (
+            ("openai_api_key", self.openai_key_input),
+            ("anthropic_api_key", self.anthropic_key_input),
+            ("gemini_api_key", self.gemini_key_input),
+            ("aws_region", self.aws_region_input),
+            ("ollama_host", self.ollama_host_input),
+            ("litellm_api_key", self.litellm_key_input),
+            ("litellm_base_url", self.litellm_base_url_input),
+        )
+        self._env_sourced_credentials = {}
+        for key, widget in self._credential_inputs:
+            value, from_env = self._credential_value(key)
+            widget.setText(value)
+            if from_env:
+                self._env_sourced_credentials[key] = value
 
     def _credential_value(self, key):
-        """Return a saved credential value, falling back to environment vars."""
+        """Return ``(value, from_env)`` for a credential field.
+
+        Looks up ``key`` in QSettings first; if no saved value exists, falls
+        back to the configured environment variables. ``from_env`` is True
+        only when the returned value originated from the environment.
+        """
         saved = self.settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str)
         if str(saved).strip():
-            return str(saved)
-        return _env_fallback(*ENV_FALLBACKS.get(key, ()))
+            return str(saved), False
+        fallback = _env_fallback(*ENV_FALLBACKS.get(key, ()))
+        return fallback, bool(fallback)
 
     def _save_settings(self):
         """Persist settings from the form fields."""
@@ -412,28 +427,15 @@ class SettingsDockWidget(QDockWidget):
         self.settings.setValue(
             f"{SETTINGS_PREFIX}max_tokens", self.max_tokens_spin.value()
         )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}openai_api_key", self.openai_key_input.text()
-        )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}anthropic_api_key", self.anthropic_key_input.text()
-        )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}gemini_api_key", self.gemini_key_input.text()
-        )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}aws_region", self.aws_region_input.text()
-        )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}ollama_host", self.ollama_host_input.text()
-        )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}litellm_api_key", self.litellm_key_input.text()
-        )
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}litellm_base_url",
-            self.litellm_base_url_input.text(),
-        )
+        for key, widget in getattr(self, "_credential_inputs", ()):
+            current = widget.text()
+            env_value = self._env_sourced_credentials.get(key)
+            if env_value is not None and current == env_value:
+                # Field was pre-filled from an environment variable and the
+                # user did not change it; skip persisting the env-sourced
+                # secret to QSettings.
+                continue
+            self.settings.setValue(f"{SETTINGS_PREFIX}{key}", current)
         self.status_label.setText("Settings saved")
         self.status_label.setStyleSheet("color: green; font-size: 10px;")
         self.iface.messageBar().pushSuccess("OpenGeoAgent", "Settings saved.")
