@@ -40,13 +40,13 @@ DEFAULT_MODELS = {
     "litellm": "openai/gpt-5.5",
 }
 PROVIDERS = [
+    "anthropic",
     "bedrock",
+    "gemini",
+    "litellm",
+    "ollama",
     "openai",
     "openai-codex",
-    "anthropic",
-    "gemini",
-    "ollama",
-    "litellm",
 ]
 MAX_CONTEXT_MESSAGES = 12
 MAX_CONTEXT_CHARS = 12000
