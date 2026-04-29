@@ -99,6 +99,7 @@ class GeoAgent:
         self._registry = registry or GeoToolRegistry()
         self._tool_list = list(tools or [])
         self._cancelled: list[str] = []
+        self._tool_calls: list[dict[str, Any]] = []
         self._confirm = confirm or auto_approve_safe_only
         self._model = model or resolve_model(self._config)
         self._rebuild_strands_agent()
@@ -110,7 +111,12 @@ class GeoAgent:
         extra_prompt = self._context.metadata.get("system_prompt")
         if extra_prompt:
             prompt = f"{prompt}\n\n{extra_prompt}"
-        hook = ConfirmationHookProvider(self._registry, self._confirm, self._cancelled)
+        hook = ConfirmationHookProvider(
+            self._registry,
+            self._confirm,
+            self._cancelled,
+            self._tool_calls,
+        )
 
         self._strands = Agent(
             model=self._model,
@@ -221,6 +227,7 @@ class GeoAgent:
     def _chat_impl(self, query: str) -> GeoAgentResponse:
         """Run a single user turn on the current thread."""
         self._cancelled.clear()
+        self._tool_calls.clear()
         t0 = time.time()
         try:
             result = self._strands(query)
@@ -236,6 +243,7 @@ class GeoAgent:
                 error_message=err,
                 execution_time=elapsed,
                 executed_tools=exec_names,
+                tool_calls=list(self._tool_calls),
                 cancelled_tools=list(self._cancelled),
                 map=self._context.map_obj,
                 raw=result,
@@ -246,6 +254,7 @@ class GeoAgent:
                 success=False,
                 error_message=_format_chat_exception(exc),
                 execution_time=elapsed,
+                tool_calls=list(self._tool_calls),
                 cancelled_tools=list(self._cancelled),
                 map=self._context.map_obj,
             )

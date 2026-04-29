@@ -312,6 +312,27 @@ def _coerce_cli_value(value: Any) -> str:
     return str(value)
 
 
+def _blank_to_none(value: Any) -> Any:
+    """Normalize model-supplied blank optional values to ``None``."""
+    if isinstance(value, str) and not value.strip():
+        return None
+    return value
+
+
+def _optional_nonzero_float(value: Any) -> float | None:
+    """Return a float only when an optional numeric value is meaningful."""
+    value = _blank_to_none(value)
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number == 0:
+        return None
+    return number
+
+
 def _format_arg(flag: str, value: Any) -> str | None:
     """Format a WhiteboxTools CLI argument."""
     if isinstance(value, bool):
@@ -671,7 +692,7 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         layer_name: Optional[str] = None,
         output_path: Optional[str] = None,
         output_layer_name: Optional[str] = None,
-        method: str = "breach_depressions",
+        method: str = "fill_depressions",
         max_depth: Optional[float] = None,
         max_length: Optional[float] = None,
         flat_increment: Optional[float] = None,
@@ -680,7 +701,12 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         add_outputs_to_qgis: bool = True,
         verbose: bool = False,
     ) -> dict[str, Any]:
-        """Resolve sinks/depressions in a DEM layer and load the raster output.
+        """Fill sinks/depressions in a DEM layer and load the raster output.
+
+        The default method is ``fill_depressions``, which is the appropriate
+        preprocessing step for flow direction and flow accumulation workflows.
+        Use ``breach_depressions`` only when the user explicitly asks to breach
+        or carve depressions.
 
         Args:
             layer_name: QGIS DEM layer name. When omitted, uses the active
@@ -688,8 +714,9 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             output_path: Optional raster output path.
             output_layer_name: Optional display name for the output layer.
             method: Whitebox method. Supported values are
-                ``breach_depressions`` (default), ``fill_depressions``, and
-                ``fill_depressions_wang_and_liu``.
+                ``fill_depressions`` (default),
+                ``fill_depressions_wang_and_liu``, and
+                ``breach_depressions``.
             max_depth: Optional maximum breach/fill depth in z units.
             max_length: Optional maximum breach channel length in grid cells.
             flat_increment: Optional elevation increment for flat areas.
@@ -706,6 +733,7 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             "breach": "breach_depressions",
             "breach_depressions": "breach_depressions",
             "fill": "fill_depressions",
+            "fill_sinks": "fill_depressions",
             "fill_depressions": "fill_depressions",
             "wang_and_liu": "fill_depressions_wang_and_liu",
             "fill_depressions_wang_and_liu": "fill_depressions_wang_and_liu",
@@ -717,6 +745,9 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
                 "'fill_depressions', or 'fill_depressions_wang_and_liu'."
             )
 
+        layer_name = _blank_to_none(layer_name)
+        output_path = _blank_to_none(output_path)
+        output_layer_name = _blank_to_none(output_layer_name)
         selected_layer = layer_name or _active_layer_name(iface)
         name = output_layer_name or f"{selected_layer} filled sinks"
         params: dict[str, Any] = {
@@ -725,17 +756,20 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         }
         if output_path is None:
             params.pop("output")
-        if max_depth is not None:
-            params["max_depth"] = float(max_depth)
-        if flat_increment is not None:
-            params["flat_increment"] = float(flat_increment)
+        max_depth_value = _optional_nonzero_float(max_depth)
+        flat_increment_value = _optional_nonzero_float(flat_increment)
+        max_length_value = _optional_nonzero_float(max_length)
+        if max_depth_value is not None:
+            params["max_depth"] = max_depth_value
+        if flat_increment_value is not None:
+            params["flat_increment"] = flat_increment_value
         if tool_name == "breach_depressions":
-            if max_length is not None:
-                params["max_length"] = float(max_length)
-            if fill_pits is not None:
-                params["fill_pits"] = bool(fill_pits)
-        elif fix_flats is not None:
-            params["fix_flats"] = bool(fix_flats)
+            if max_length_value is not None:
+                params["max_length"] = max_length_value
+            if bool(fill_pits):
+                params["fill_pits"] = True
+        elif bool(fix_flats):
+            params["fix_flats"] = True
 
         return run_whitebox_tool.__wrapped__(
             tool_name,

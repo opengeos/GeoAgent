@@ -41,6 +41,39 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             params={"temperature": cfg.temperature, "max_tokens": cfg.max_tokens},
         )
 
+    if provider == "openai-codex":
+        from strands.models.openai_responses import OpenAIResponsesModel
+
+        model_id = cfg.model or os.environ.get("OPENAI_CODEX_MODEL", "gpt-5.5")
+        client_args = dict(cfg.client_args)
+        api_key = client_args.get("api_key") or os.environ.get(
+            "OPENAI_CODEX_ACCESS_TOKEN"
+        )
+        base_url = (
+            client_args.get("base_url")
+            or cfg.openai_codex_base_url
+            or os.environ.get("OPENAI_CODEX_BASE_URL")
+            or "https://chatgpt.com/backend-api/codex"
+        )
+        account_id = os.environ.get("OPENAI_CODEX_ACCOUNT_ID", "").strip()
+        if not api_key:
+            raise ValueError(
+                "OpenAI Codex provider requires a ChatGPT OAuth access token. "
+                "Login from OpenGeoAgent settings or set OPENAI_CODEX_ACCESS_TOKEN."
+            )
+        client_args["api_key"] = api_key
+        client_args["base_url"] = base_url
+        default_headers = dict(client_args.get("default_headers") or {})
+        default_headers.setdefault("User-Agent", "codex-cli")
+        if account_id:
+            default_headers["ChatGPT-Account-Id"] = account_id
+        client_args["default_headers"] = default_headers
+        return OpenAIResponsesModel(
+            client_args=client_args,
+            model_id=model_id,
+            params={},
+        )
+
     if provider == "anthropic":
         from strands.models.anthropic import AnthropicModel
 

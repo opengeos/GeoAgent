@@ -2,6 +2,7 @@
 
 import os
 import html
+import json
 import re
 import time
 import traceback
@@ -27,15 +28,25 @@ from qgis.PyQt.QtWidgets import (
 )
 
 SETTINGS_PREFIX = "OpenGeoAgent/"
+DEFAULT_PROVIDER = "openai-codex"
 DEFAULT_MODELS = {
     "bedrock": "us.anthropic.claude-sonnet-4-6",
     "openai": "gpt-5.5",
+    "openai-codex": "gpt-5.5",
     "anthropic": "claude-sonnet-4-6",
     "gemini": "gemini-3.1-pro-preview",
     "ollama": "qwen3.5:4b",
     "litellm": "openai/gpt-5.5",
 }
-PROVIDERS = ["bedrock", "openai", "anthropic", "gemini", "ollama", "litellm"]
+PROVIDERS = [
+    "bedrock",
+    "openai",
+    "openai-codex",
+    "anthropic",
+    "gemini",
+    "ollama",
+    "litellm",
+]
 MAX_CONTEXT_MESSAGES = 12
 MAX_CONTEXT_CHARS = 12000
 SAMPLE_PROMPTS = [
@@ -51,6 +62,11 @@ SAMPLE_PROMPTS = [
     "Search WhiteboxTools for watershed or flow accumulation tools.",
     "Create a concise map QA checklist for this project before I export it.",
 ]
+
+
+def _default_model_for_provider(provider):
+    """Return the UI default model id for a provider."""
+    return DEFAULT_MODELS.get(provider, "")
 
 
 def _setting(settings, key, default="", value_type=str):
@@ -187,6 +203,100 @@ def _markdown_to_basic_html(markdown):
     return "\n".join(html_lines)
 
 
+def _format_tool_value(value, max_length=220):
+    """Format a tool argument value for compact display."""
+    if isinstance(value, str):
+        text = value
+    else:
+        try:
+            text = json.dumps(value, sort_keys=True)
+        except TypeError:
+            text = str(value)
+    text = text.replace("\n", " ").strip()
+    if len(text) > max_length:
+        return text[: max_length - 3] + "..."
+    return text
+
+
+def _tool_call_label_and_args(name, args):
+    """Return a display label plus args for a recorded tool call."""
+    display_args = dict(args)
+    routed_tool = str(display_args.pop("tool_name", "") or "").strip()
+    if name == "run_whitebox_tool" and routed_tool:
+        parameters = display_args.pop("parameters", None)
+        if isinstance(parameters, dict):
+            display_args.update(parameters)
+        return f"{name} -> {routed_tool}", display_args
+    if name == "get_whitebox_tool_info" and routed_tool:
+        return f"{name} -> {routed_tool}", display_args
+    return name, display_args
+
+
+def _clean_tool_display_args(args):
+    """Drop no-op optional values that make repeated calls look different."""
+    cleaned = {}
+    default_values = {
+        "add_outputs_to_qgis": True,
+        "category": "",
+        "fill_pits": False,
+        "fix_flats": False,
+        "flat_increment": 0,
+        "layer_name": "",
+        "max_depth": 0,
+        "max_length": 0,
+        "max_procs": None,
+        "output_path": "",
+        "verbose": False,
+    }
+    for key, value in args.items():
+        if key in default_values and value == default_values[key]:
+            continue
+        if value is None or value == "":
+            continue
+        cleaned[key] = value
+    return cleaned
+
+
+def _format_tool_calls(tool_calls):
+    """Return Markdown lines describing tool input parameters."""
+    if not tool_calls:
+        return ""
+    lines = ["Tool inputs:"]
+    grouped = []
+    index_by_signature = {}
+    for call in tool_calls:
+        if not isinstance(call, dict):
+            continue
+        name = str(call.get("name") or "").strip()
+        args = call.get("args") if isinstance(call.get("args"), dict) else {}
+        if not name:
+            continue
+        label, args = _tool_call_label_and_args(name, args)
+        args = _clean_tool_display_args(args)
+        try:
+            args_key = json.dumps(args, sort_keys=True, default=str)
+        except TypeError:
+            args_key = str(sorted(args.items()))
+        signature = (label, args_key)
+        if signature in index_by_signature:
+            grouped[index_by_signature[signature]][2] += 1
+        else:
+            index_by_signature[signature] = len(grouped)
+            grouped.append([label, args, 1])
+
+    for label, args, count in grouped:
+        suffix = f" (repeated {count} times)" if count > 1 else ""
+        if args:
+            params = ", ".join(
+                f"`{key}={_format_tool_value(value)}`"
+                for key, value in sorted(args.items())
+            )
+            lines.append(f"- **`{label}`**{suffix}: {params}")
+        else:
+            lines.append(f"- **`{label}`**{suffix}")
+    return "\n".join(lines) if len(lines) > 1 else ""
+
+
 class PromptTextEdit(QPlainTextEdit):
     """Prompt editor with chat-friendly keyboard shortcuts."""
 
@@ -278,6 +388,7 @@ class ChatWorker(QThread):
                     "answer": response.answer_text or "",
                     "error": response.error_message or "",
                     "tools": ", ".join(response.executed_tools or []),
+                    "tool_calls": response.tool_calls or [],
                     "cancelled": ", ".join(response.cancelled_tools or []),
                     "elapsed": f"{response.execution_time:.2f}s",
                 }
@@ -458,13 +569,15 @@ class ChatDockWidget(QDockWidget):
 
     def _load_settings(self):
         """Load persisted model settings into the dock controls."""
-        provider = _setting(self.settings, "provider", "openai")
+        provider = _setting(self.settings, "provider", DEFAULT_PROVIDER)
         index = self.provider_combo.findText(provider)
-        self.provider_combo.setCurrentIndex(index if index >= 0 else 1)
+        if index < 0:
+            index = self.provider_combo.findText(DEFAULT_PROVIDER)
+        self.provider_combo.setCurrentIndex(index if index >= 0 else 0)
 
         model = _setting(self.settings, "model", "")
         if not model:
-            model = DEFAULT_MODELS.get(self.provider_combo.currentText(), "")
+            model = _default_model_for_provider(self.provider_combo.currentText())
         self.model_input.setText(model)
 
         self.fast_check.setChecked(_setting(self.settings, "fast_mode", False, bool))
@@ -474,10 +587,12 @@ class ChatDockWidget(QDockWidget):
 
     def _save_model_settings(self):
         """Persist the selected provider, model, and fast-mode setting."""
-        self.settings.setValue(
-            f"{SETTINGS_PREFIX}provider", self.provider_combo.currentText()
-        )
-        self.settings.setValue(f"{SETTINGS_PREFIX}model", self.model_input.text())
+        provider = self.provider_combo.currentText()
+        model = self.model_input.text().strip() or _default_model_for_provider(provider)
+        if model and not self.model_input.text().strip():
+            self.model_input.setText(model)
+        self.settings.setValue(f"{SETTINGS_PREFIX}provider", provider)
+        self.settings.setValue(f"{SETTINGS_PREFIX}model", model)
         self.settings.setValue(
             f"{SETTINGS_PREFIX}fast_mode", self.fast_check.isChecked()
         )
@@ -488,7 +603,7 @@ class ChatDockWidget(QDockWidget):
 
     def _on_provider_changed(self, provider):
         """Update the model field when the provider changes."""
-        self.model_input.setText(DEFAULT_MODELS.get(provider, ""))
+        self.model_input.setText(_default_model_for_provider(provider))
 
     def _send_prompt(self):
         """Start a chat request for the current prompt."""
@@ -503,12 +618,31 @@ class ChatDockWidget(QDockWidget):
             )
             return
 
-        self._save_model_settings()
-        self._record_prompt(prompt)
-        _apply_environment_from_settings(self.settings)
-
         provider = self.provider_combo.currentText()
-        model_id = self.model_input.text().strip()
+        self._save_model_settings()
+        _apply_environment_from_settings(self.settings)
+        if provider == "openai-codex":
+            try:
+                from ..oauth import ensure_openai_oauth_environment
+
+                ensure_openai_oauth_environment(
+                    self.settings,
+                    codex=True,
+                )
+            except Exception as exc:
+                QMessageBox.critical(
+                    self,
+                    "OpenGeoAgent",
+                    f"OpenAI OAuth is not ready:\n\n{exc}",
+                )
+                return
+
+        self._record_prompt(prompt)
+        model_id = self.model_input.text().strip() or _default_model_for_provider(
+            provider
+        )
+        if model_id and not self.model_input.text().strip():
+            self.model_input.setText(model_id)
         fast = self.fast_check.isChecked()
         auto_approve_tools = self.auto_approve_tools_check.isChecked()
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
@@ -604,6 +738,9 @@ class ChatDockWidget(QDockWidget):
         if result.get("success"):
             answer = result.get("answer") or "(No text response.)"
             details = []
+            tool_inputs = _format_tool_calls(result.get("tool_calls") or [])
+            if tool_inputs:
+                details.append(tool_inputs)
             if result.get("tools"):
                 details.append(f"Tools: {result['tools']}")
             if result.get("elapsed"):

@@ -317,7 +317,7 @@ def test_run_whitebox_flow_accumulation_uses_active_layer(
 
 
 def test_run_whitebox_fill_sinks_uses_active_layer(monkeypatch, tmp_path) -> None:
-    """Verify the sink-filling convenience tool uses the active DEM."""
+    """Verify sink-filling defaults to fill_depressions on the active DEM."""
     input_path = tmp_path / "dem.tif"
     output_path = tmp_path / "dem_filled.tif"
     input_path.write_text("dem", encoding="utf-8")
@@ -331,7 +331,7 @@ def test_run_whitebox_fill_sinks_uses_active_layer(monkeypatch, tmp_path) -> Non
             self.verbose = True
 
         def tool_parameters(self, tool_name):
-            assert tool_name == "breach_depressions"
+            assert tool_name == "fill_depressions"
             return json.dumps(
                 {
                     "parameters": [
@@ -348,14 +348,14 @@ def test_run_whitebox_fill_sinks_uses_active_layer(monkeypatch, tmp_path) -> Non
                             "optional": False,
                         },
                         {
-                            "name": "Maximum Breach Depth (z units)",
+                            "name": "Maximum Depression Depth (z units)",
                             "flags": ["--max_depth"],
                             "parameter_type": "Float",
                             "optional": True,
                         },
                         {
-                            "name": "Fill single-cell pits?",
-                            "flags": ["--fill_pits"],
+                            "name": "Fix flats?",
+                            "flags": ["--fix_flats"],
                             "parameter_type": "Boolean",
                             "optional": True,
                         },
@@ -384,15 +384,15 @@ def test_run_whitebox_fill_sinks_uses_active_layer(monkeypatch, tmp_path) -> Non
         output_path=str(output_path),
         output_layer_name="DEM Filled",
         max_depth=10,
-        fill_pits=True,
+        fix_flats=True,
     )
 
-    assert captured["tool_name"] == "breach_depressions"
+    assert captured["tool_name"] == "fill_depressions"
     assert captured["args"] == [
         f"--dem={input_path}",
         f"--output={output_path}",
         "--max_depth=10.0",
-        "--fill_pits",
+        "--fix_flats",
     ]
     assert result["success"] is True
     assert result["layers_added"] == [
@@ -403,6 +403,169 @@ def test_run_whitebox_fill_sinks_uses_active_layer(monkeypatch, tmp_path) -> Non
         }
     ]
     assert "DEM Filled" in project.mapLayers()
+
+
+def test_run_whitebox_fill_sinks_can_explicitly_breach(monkeypatch, tmp_path) -> None:
+    """Verify breaching remains available only when explicitly requested."""
+    input_path = tmp_path / "dem.tif"
+    output_path = tmp_path / "dem_breached.tif"
+    input_path.write_text("dem", encoding="utf-8")
+
+    captured = {}
+
+    class _FakeWBT:
+        verbose = True
+
+        def __init__(self):
+            self.verbose = True
+
+        def tool_parameters(self, tool_name):
+            assert tool_name == "breach_depressions"
+            return json.dumps(
+                {
+                    "parameters": [
+                        {
+                            "name": "Input DEM File",
+                            "flags": ["-i", "--dem"],
+                            "parameter_type": {"ExistingFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Output File",
+                            "flags": ["-o", "--output"],
+                            "parameter_type": {"NewFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Maximum Breach Channel Length",
+                            "flags": ["--max_length"],
+                            "parameter_type": "Float",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Fill single-cell pits?",
+                            "flags": ["--fill_pits"],
+                            "parameter_type": "Boolean",
+                            "optional": True,
+                        },
+                    ]
+                }
+            )
+
+        def run_tool(self, tool_name, args, callback=None):
+            captured["tool_name"] = tool_name
+            captured["args"] = args
+            output_path.write_text("breached", encoding="utf-8")
+            return 0
+
+    whitebox_module = ModuleType("whitebox")
+    whitebox_module.WhiteboxTools = _FakeWBT
+    monkeypatch.setitem(sys.modules, "whitebox", whitebox_module)
+
+    project = MockQGISProject()
+    layer = MockQGISLayer("DEM layer", str(input_path), "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project)
+    iface.setActiveLayer(layer)
+    tools = {tool.tool_name: tool for tool in whitebox_tools(iface, project)}
+
+    result = tools["run_whitebox_fill_sinks"].__wrapped__(
+        method="breach_depressions",
+        output_path=str(output_path),
+        output_layer_name="DEM Breached",
+        max_length=50,
+        fill_pits=True,
+    )
+
+    assert captured["tool_name"] == "breach_depressions"
+    assert captured["args"] == [
+        f"--dem={input_path}",
+        f"--output={output_path}",
+        "--max_length=50.0",
+        "--fill_pits",
+    ]
+    assert result["success"] is True
+    assert "DEM Breached" in project.mapLayers()
+
+
+def test_run_whitebox_fill_sinks_ignores_model_supplied_noop_defaults(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify empty strings, false flags, and zero limits are not passed."""
+    input_path = tmp_path / "dem.tif"
+    output_path = tmp_path / "dem_filled.tif"
+    input_path.write_text("dem", encoding="utf-8")
+
+    captured = {}
+
+    class _FakeWBT:
+        verbose = True
+
+        def __init__(self):
+            self.verbose = True
+
+        def tool_parameters(self, tool_name):
+            assert tool_name == "fill_depressions_wang_and_liu"
+            return json.dumps(
+                {
+                    "parameters": [
+                        {
+                            "name": "Input DEM File",
+                            "flags": ["-i", "--dem"],
+                            "parameter_type": {"ExistingFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Output File",
+                            "flags": ["-o", "--output"],
+                            "parameter_type": {"NewFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Fix flats?",
+                            "flags": ["--fix_flats"],
+                            "parameter_type": "Boolean",
+                            "optional": True,
+                        },
+                    ]
+                }
+            )
+
+        def run_tool(self, tool_name, args, callback=None):
+            captured["tool_name"] = tool_name
+            captured["args"] = args
+            output_path.write_text("filled", encoding="utf-8")
+            return 0
+
+    whitebox_module = ModuleType("whitebox")
+    whitebox_module.WhiteboxTools = _FakeWBT
+    monkeypatch.setitem(sys.modules, "whitebox", whitebox_module)
+
+    project = MockQGISProject()
+    layer = MockQGISLayer("DEM layer", str(input_path), "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project)
+    iface.setActiveLayer(layer)
+    tools = {tool.tool_name: tool for tool in whitebox_tools(iface, project)}
+
+    result = tools["run_whitebox_fill_sinks"].__wrapped__(
+        layer_name="",
+        output_path=str(output_path),
+        output_layer_name="",
+        method="fill_depressions_wang_and_liu",
+        max_depth=0,
+        max_length=0,
+        flat_increment=0,
+        fill_pits=False,
+        fix_flats=False,
+    )
+
+    assert captured["tool_name"] == "fill_depressions_wang_and_liu"
+    assert captured["args"] == [
+        f"--dem={input_path}",
+        f"--output={output_path}",
+    ]
+    assert result["success"] is True
 
 
 def test_run_whitebox_color_shaded_relief_uses_active_layer(

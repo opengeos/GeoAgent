@@ -96,8 +96,14 @@ Workflow guidance:
   to inspect required parameters, then run_whitebox_tool to execute.
 - For active DEM flow accumulation requests, prefer
   run_whitebox_flow_accumulation.
-- For active DEM sink/depression filling or breaching requests, prefer
-  run_whitebox_fill_sinks.
+- For active DEM sink/depression filling requests, prefer
+  run_whitebox_fill_sinks with method="fill_depressions"; this is the default
+  and is preferred before flow direction or flow accumulation.
+- Use run_whitebox_fill_sinks with method="breach_depressions" only when the
+  user explicitly asks to breach, carve, or channel depressions.
+- Run each long-running Whitebox command at most once per user request unless
+  the tool returns an error. Do not repeat an identical tool call after it has
+  already produced an output.
 - For active DEM color shaded relief requests, prefer
   run_whitebox_color_shaded_relief.
 - For active vector layer buffer requests, prefer buffer_active_layer.

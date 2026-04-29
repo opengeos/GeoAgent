@@ -88,3 +88,36 @@ def test_unconfirmed_tool_skips_callback() -> None:
     assert event.cancel_tool is False
     assert cancelled == []
     assert calls == []
+
+
+def test_hook_records_tool_call_inputs_before_confirmation_check() -> None:
+    """Verify hook records all tool inputs, including non-confirmed tools."""
+    meta = GeoToolMeta(name="run_whitebox_flow_accumulation")
+    registry = GeoToolRegistry()
+    registry.register(meta)
+    cancelled: list[str] = []
+    calls: list[dict] = []
+    hook = ConfirmationHookProvider(
+        registry,
+        lambda req: True,
+        cancelled,
+        calls,
+    )
+    event = _event(
+        "run_whitebox_flow_accumulation",
+        {"input_layer": "dem_filled", "output_layer_name": "flow_acc"},
+    )
+
+    hook._before_tool(event)  # noqa: SLF001
+
+    assert event.cancel_tool is False
+    assert cancelled == []
+    assert calls == [
+        {
+            "name": "run_whitebox_flow_accumulation",
+            "args": {
+                "input_layer": "dem_filled",
+                "output_layer_name": "flow_acc",
+            },
+        }
+    ]
