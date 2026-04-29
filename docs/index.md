@@ -68,6 +68,7 @@ GeoAgent can infer a provider from environment variables:
 | Provider | Environment |
 | --- | --- |
 | OpenAI | `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
+| ChatGPT/Codex OAuth | `OPENAI_CODEX_ACCESS_TOKEN`, optional `OPENAI_CODEX_MODEL` |
 | Anthropic | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` |
 | Google Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL` |
 | LiteLLM | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |

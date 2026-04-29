@@ -87,6 +87,7 @@ FAST_TOOL_FALLBACK: frozenset[str] = frozenset(
         "change_basemap",
         "set_layer_visibility",
         "set_layer_opacity",
+        "set_layer_symbology",
         "zoom_to_layer",
         # qgis (safe navigation / inspection)
         "list_project_layers",

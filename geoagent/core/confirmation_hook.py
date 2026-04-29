@@ -19,10 +19,12 @@ class ConfirmationHookProvider(HookProvider):
         registry: GeoToolRegistry,
         confirm: ConfirmCallback,
         cancelled: list[str],
+        tool_calls: list[dict[str, Any]] | None = None,
     ) -> None:
         self._registry = registry
         self._confirm = confirm
         self._cancelled = cancelled
+        self._tool_calls = tool_calls
 
     def register_hooks(
         self, registry: HookRegistry, **kwargs: Any
@@ -42,13 +44,15 @@ class ConfirmationHookProvider(HookProvider):
         """Handle the pre-tool execution hook."""
         use = event.tool_use
         name = str(use.get("name", ""))
+        inp = use.get("input")
+        args = inp if isinstance(inp, dict) else {}
+        if self._tool_calls is not None:
+            self._tool_calls.append({"name": name, "args": dict(args)})
+
         selected = event.selected_tool
         meta = self._resolve_meta(name, selected)
         if meta is None or not self._registry.needs_user_confirmation(meta):
             return
-
-        inp = use.get("input")
-        args = inp if isinstance(inp, dict) else {}
 
         description = ""
         if selected is not None:

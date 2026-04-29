@@ -17,7 +17,7 @@ Many geospatial libraries need the same agent features:
 
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
-- support OpenAI, Anthropic, Google Gemini, Bedrock, LiteLLM, and local
+- support OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Bedrock, LiteLLM, and local
   Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
@@ -91,11 +91,15 @@ specified:
 | Provider | Environment |
 | --- | --- |
 | OpenAI | `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
+| ChatGPT/Codex OAuth | `OPENAI_CODEX_ACCESS_TOKEN`, optional `OPENAI_CODEX_MODEL` |
 | Anthropic | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` |
 | Google Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL` |
 | LiteLLM | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | Ollama | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL` |
 | Bedrock | AWS credential chain and model access, optional `BEDROCK_MODEL` |
+
+ChatGPT/Codex OAuth uses the Codex browser login flow and the Codex Responses
+backend.
 
 You can also configure providers explicitly:
 

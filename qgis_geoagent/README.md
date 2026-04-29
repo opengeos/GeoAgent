@@ -15,7 +15,7 @@ GitHub update checker.
 - Dockable OpenGeoAgent chat panel with Ctrl+Enter sending
 - Up/Down prompt history while the prompt editor is focused
 - Built-in sample prompt picker for common QGIS workflows
-- Provider and model controls for Bedrock, OpenAI, Anthropic, Google Gemini, Ollama, and LiteLLM
+- Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, and LiteLLM
 - Settings panel for model defaults, API keys, hosts, and AWS region
 - Dependency installer that installs `GeoAgent[providers]` into
   `~/.open_geoagent/`
@@ -80,6 +80,8 @@ provider and model. API keys and host settings are stored in QGIS settings and
 applied to the current QGIS process before each chat request:
 
 - OpenAI: `OPENAI_API_KEY`
+- ChatGPT/Codex OAuth: choose `openai-codex` and click **Login with ChatGPT**
+  in the Model tab. Headless use can set `OPENAI_CODEX_ACCESS_TOKEN`.
 - Anthropic: `ANTHROPIC_API_KEY`
 - Google Gemini: `GEMINI_API_KEY` or `GOOGLE_API_KEY`
 - Bedrock: `AWS_REGION` plus the normal AWS credential chain
@@ -92,6 +94,7 @@ Default models:
 | --- | --- |
 | Bedrock | `us.anthropic.claude-sonnet-4-6` |
 | OpenAI | `gpt-5.5` |
+| ChatGPT/Codex OAuth | `gpt-5.5` |
 | Anthropic | `claude-sonnet-4-6` |
 | Google Gemini | `gemini-3.1-pro-preview` |
 | Ollama | `qwen3.5:4b` |

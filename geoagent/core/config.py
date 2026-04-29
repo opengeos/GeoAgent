@@ -10,17 +10,22 @@ from pydantic import BaseModel, ConfigDict, Field
 ProviderName = Literal[
     "bedrock",
     "openai",
+    "openai-codex",
     "anthropic",
     "gemini",
     "ollama",
     "litellm",
 ]
 
+DEFAULT_PROVIDER: ProviderName = "openai-codex"
+
 
 def _default_provider_from_env() -> ProviderName:
     """Infer the default provider from available environment variables."""
     if os.environ.get("OPENAI_API_KEY"):
         return "openai"
+    if os.environ.get("OPENAI_CODEX_ACCESS_TOKEN"):
+        return "openai-codex"
     if os.environ.get("ANTHROPIC_API_KEY"):
         return "anthropic"
     if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
@@ -33,7 +38,7 @@ def _default_provider_from_env() -> ProviderName:
         return "litellm"
     if os.environ.get("OLLAMA_HOST") or os.environ.get("USE_OLLAMA") == "1":
         return "ollama"
-    return "bedrock"
+    return DEFAULT_PROVIDER
 
 
 class GeoAgentConfig(BaseModel):
@@ -41,6 +46,7 @@ class GeoAgentConfig(BaseModel):
 
     API keys and region defaults are read from the environment when not
     passed explicitly (``OPENAI_API_KEY``, ``ANTHROPIC_API_KEY``,
+    ``OPENAI_CODEX_ACCESS_TOKEN``,
     ``GEMINI_API_KEY`` / ``GOOGLE_API_KEY``, ``LITELLM_API_KEY``,
     ``AWS_REGION`` / default AWS credential chain for Bedrock, etc.).
 
@@ -50,6 +56,7 @@ class GeoAgentConfig(BaseModel):
         temperature: Sampling temperature.
         max_tokens: Maximum tokens in the model response.
         ollama_host: Ollama server base URL (e.g. ``http://127.0.0.1:11434``).
+        openai_codex_base_url: ChatGPT/Codex backend base URL.
         litellm_base_url: Optional LiteLLM proxy or OpenAI-compatible base URL.
     """
 
@@ -61,6 +68,10 @@ class GeoAgentConfig(BaseModel):
     max_tokens: int = 4096
     ollama_host: Optional[str] = Field(
         default=None, description="Ollama base URL, e.g. http://127.0.0.1:11434"
+    )
+    openai_codex_base_url: Optional[str] = Field(
+        default=None,
+        description="ChatGPT/Codex backend base URL.",
     )
     litellm_base_url: Optional[str] = Field(
         default=None,

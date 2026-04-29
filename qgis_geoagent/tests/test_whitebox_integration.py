@@ -31,6 +31,7 @@ def test_chat_worker_uses_whitebox_factory(monkeypatch) -> None:
         answer_text = "ok"
         error_message = ""
         executed_tools: list = []
+        tool_calls: list = []
         cancelled_tools: list = []
         execution_time = 0.0
 

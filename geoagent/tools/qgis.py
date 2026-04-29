@@ -26,6 +26,66 @@ from geoagent.core.decorators import geo_tool
 from geoagent.tools._qt_marshal import run_on_qt_gui_thread
 
 
+def _qcolor(value: Any) -> Any:
+    """Return a QColor-like object for real QGIS, or the raw value in tests."""
+    if value is None:
+        return None
+    if not str(value).strip():
+        return None
+    try:
+        from qgis.PyQt.QtGui import QColor  # type: ignore[import-not-found]
+    except Exception:
+        return value
+
+    if isinstance(value, (list, tuple)):
+        channels = [int(float(channel)) for channel in value]
+        color = QColor(*channels)
+    else:
+        text = str(value).strip()
+        if "," in text and not text.startswith("#"):
+            channels = [int(float(part.strip())) for part in text.split(",")]
+            color = QColor(*channels)
+        else:
+            color = QColor(text)
+    if hasattr(color, "isValid") and not color.isValid():
+        raise ValueError(f"Invalid color value: {value!r}")
+    return color
+
+
+def _set_symbol_layer_attr(
+    symbol_layer: Any, names: tuple[str, ...], value: Any
+) -> bool:
+    """Set the first available symbol-layer setter."""
+    for name in names:
+        method = getattr(symbol_layer, name, None)
+        if callable(method):
+            method(value)
+            return True
+    return False
+
+
+def _set_symbol_width(symbol: Any, width: float) -> bool:
+    """Set line/stroke width on a QGIS symbol when supported."""
+    for obj in (symbol, getattr(symbol, "symbolLayer", lambda *_: None)(0)):
+        if obj is None:
+            continue
+        if _set_symbol_layer_attr(obj, ("setWidth", "setStrokeWidth"), width):
+            return True
+    return False
+
+
+def _set_symbol_outline_color(symbol: Any, color: Any) -> bool:
+    """Set an outline/stroke color when the symbol layer supports it."""
+    symbol_layer = getattr(symbol, "symbolLayer", lambda *_: None)(0)
+    if symbol_layer is None:
+        return False
+    return _set_symbol_layer_attr(
+        symbol_layer,
+        ("setStrokeColor", "setBorderColor", "setOutlineColor"),
+        color,
+    )
+
+
 def _transform_extent_to_canvas_crs(layer: Any, canvas: Any, extent: Any) -> Any:
     """Re-project a layer's extent into the canvas / project CRS.
 
@@ -874,6 +934,99 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
     @geo_tool(
         category="qgis",
     )
+    def set_layer_symbology(
+        layer_name: str,
+        color: Optional[str] = None,
+        line_width: Optional[float] = None,
+        fill_color: Optional[str] = None,
+        outline_color: Optional[str] = None,
+        opacity: Optional[float] = None,
+    ) -> dict[str, Any]:
+        """Change simple layer symbology such as color and line width.
+
+        Args:
+            layer_name: Display name of the target QGIS layer.
+            color: Main symbol color, e.g. ``"blue"`` or ``"#0066ff"``.
+            line_width: Line or outline width in QGIS symbol units.
+            fill_color: Polygon fill color. When omitted, ``color`` is used.
+            outline_color: Polygon outline/stroke color.
+            opacity: Optional layer opacity from 0.0 to 1.0.
+
+        Returns:
+            A dict describing the applied style changes.
+        """
+
+        def _run() -> dict[str, Any]:
+            """Run the worker body."""
+            layer = _resolve_layer(_project(), layer_name)
+            applied: dict[str, Any] = {"layer_name": layer_name}
+
+            main_color = _qcolor(color)
+            fill = _qcolor(fill_color) or main_color
+            outline = _qcolor(outline_color)
+
+            try:
+                renderer = layer.renderer() if hasattr(layer, "renderer") else None
+            except Exception:
+                renderer = None
+            symbol = (
+                renderer.symbol()
+                if renderer is not None and hasattr(renderer, "symbol")
+                else None
+            )
+            if symbol is not None:
+                if fill is not None and hasattr(symbol, "setColor"):
+                    symbol.setColor(fill)
+                    applied["color"] = str(color or fill_color)
+                if outline is not None and _set_symbol_outline_color(symbol, outline):
+                    applied["outline_color"] = str(outline_color)
+                if line_width is not None:
+                    width = max(0.0, float(line_width))
+                    if _set_symbol_width(symbol, width):
+                        applied["line_width"] = width
+            else:
+                style = getattr(layer, "symbology", None)
+                if not isinstance(style, dict):
+                    style = {}
+                    try:
+                        layer.symbology = style
+                    except Exception:
+                        pass
+                if fill is not None:
+                    style["color"] = str(color or fill_color)
+                    applied["color"] = str(color or fill_color)
+                if outline is not None:
+                    style["outline_color"] = str(outline_color)
+                    applied["outline_color"] = str(outline_color)
+                if line_width is not None:
+                    style["line_width"] = max(0.0, float(line_width))
+                    applied["line_width"] = style["line_width"]
+
+            if opacity is not None:
+                value = min(1.0, max(0.0, float(opacity)))
+                if hasattr(layer, "setOpacity"):
+                    layer.setOpacity(value)
+                    applied["opacity"] = value
+                elif renderer is not None and hasattr(renderer, "setOpacity"):
+                    renderer.setOpacity(value)
+                    applied["opacity"] = value
+
+            if hasattr(layer, "triggerRepaint"):
+                layer.triggerRepaint()
+            canvas = iface.mapCanvas()
+            if hasattr(canvas, "refresh"):
+                canvas.refresh()
+            if len(applied) == 1:
+                applied["message"] = "No supported symbology changes were applied."
+            else:
+                applied["message"] = f"Updated symbology for layer {layer_name!r}."
+            return applied
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+    )
     def inspect_layer_fields(layer_name: str) -> list[dict[str, Any]]:
         """List fields and types for a vector layer.
 
@@ -1281,6 +1434,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         remove_layer,
         set_layer_visibility,
         set_layer_opacity,
+        set_layer_symbology,
         inspect_layer_fields,
         get_selected_features,
         select_features_by_expression,
