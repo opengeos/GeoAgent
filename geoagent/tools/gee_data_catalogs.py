@@ -769,6 +769,9 @@ def _build_load_gee_dataset_snippet(
     bbox: list[float] | None,
     cloud_cover: int | None,
     cloud_property: str | None,
+    bounds_collection_asset_id: str | None,
+    bounds_filter_property: str | None,
+    bounds_filter_value: str | None,
     method: str | None,
     bands: str | list[str] | None,
     min_value: float | None,
@@ -812,7 +815,20 @@ def _build_load_gee_dataset_snippet(
                 f"{_format_python_snippet_value(end_date)}"
                 ")"
             )
-        if bbox is not None:
+        if bounds_collection_asset_id:
+            lines.append(
+                "bounds_fc = ee.FeatureCollection("
+                f"{_format_python_snippet_value(bounds_collection_asset_id)})"
+            )
+            if bounds_filter_property and bounds_filter_value is not None:
+                lines.append(
+                    "bounds_fc = bounds_fc.filter(ee.Filter.eq("
+                    f"{_format_python_snippet_value(bounds_filter_property)}, "
+                    f"{_format_python_snippet_value(_coerce_filter_value(bounds_filter_value))}"
+                    "))"
+                )
+            lines.append("collection = collection.filterBounds(bounds_fc)")
+        elif bbox is not None:
             lines.append(f"bbox = {_format_python_snippet_value(bbox)}")
             lines.append(
                 "collection = collection.filterBounds(ee.Geometry.Rectangle(bbox))"
@@ -894,6 +910,9 @@ def _build_normalized_difference_snippet(
     bbox: list[float] | None,
     cloud_cover: int | None,
     cloud_property: str | None,
+    bounds_collection_asset_id: str | None,
+    bounds_filter_property: str | None,
+    bounds_filter_value: str | None,
     method: str | None,
     positive_band: str,
     negative_band: str,
@@ -934,7 +953,20 @@ def _build_normalized_difference_snippet(
                 f"{_format_python_snippet_value(end_date)}"
                 ")"
             )
-        if bbox is not None:
+        if bounds_collection_asset_id:
+            lines.append(
+                "bounds_fc = ee.FeatureCollection("
+                f"{_format_python_snippet_value(bounds_collection_asset_id)})"
+            )
+            if bounds_filter_property and bounds_filter_value is not None:
+                lines.append(
+                    "bounds_fc = bounds_fc.filter(ee.Filter.eq("
+                    f"{_format_python_snippet_value(bounds_filter_property)}, "
+                    f"{_format_python_snippet_value(_coerce_filter_value(bounds_filter_value))}"
+                    "))"
+                )
+            lines.append("collection = collection.filterBounds(bounds_fc)")
+        elif bbox is not None:
             lines.append(f"bbox = {_format_python_snippet_value(bbox)}")
             lines.append(
                 "collection = collection.filterBounds(ee.Geometry.Rectangle(bbox))"
@@ -1356,6 +1388,9 @@ def gee_data_catalogs_tools(
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         bbox: Optional[str] = None,
+        bounds_collection_asset_id: Optional[str] = None,
+        bounds_filter_property: Optional[str] = None,
+        bounds_filter_value: Optional[str] = None,
         cloud_cover: Optional[int] = None,
         cloud_property: Optional[str] = None,
         reducer: str = "mosaic",
@@ -1377,7 +1412,21 @@ def gee_data_catalogs_tools(
                 FeatureCollection. When omitted, the plugin detects the type.
             start_date: Optional ImageCollection start date in YYYY-MM-DD.
             end_date: Optional ImageCollection end date in YYYY-MM-DD.
-            bbox: Optional WGS84 west,south,east,north filter.
+            bbox: Optional WGS84 west,south,east,north region filter. For
+                ImageCollections, this uses ``filterBounds`` when no
+                ``bounds_collection_asset_id`` is provided. When a bounds
+                FeatureCollection is provided, bbox is still used to zoom QGIS
+                after loading if it is already known.
+            bounds_collection_asset_id: Optional FeatureCollection asset id
+                used with ImageCollection ``filterBounds`` for regional
+                display. Prefer this over bbox coordinates when a specific
+                FeatureCollection exists for the requested region.
+                Example: TIGER/2018/States.
+            bounds_filter_property: Optional property to filter the bounds
+                FeatureCollection before calling ``filterBounds``. Example:
+                NAME.
+            bounds_filter_value: Optional value for ``bounds_filter_property``.
+                Example: Tennessee.
             cloud_cover: Optional maximum cloud-cover value.
             cloud_property: Optional cloud-cover property name.
             reducer: ImageCollection compositing method: mosaic, median, mean,
@@ -1389,6 +1438,11 @@ def gee_data_catalogs_tools(
             palette: Optional comma-separated colors or palette entries.
             clip_collection_asset_id: Optional FeatureCollection asset id used
                 to clip raster outputs with ``ee.Image.clipToCollection``.
+                Clipping is computationally intensive; only use this when the
+                user specifically asks to clip, crop, or mask data to the
+                region. For ordinary regional display, use
+                ``bounds_collection_asset_id`` when a specific
+                FeatureCollection exists, otherwise use ``bbox``.
                 Example: TIGER/2018/States.
             clip_filter_property: Optional property to filter the clipping
                 FeatureCollection before clipping. Example: NAME.
@@ -1415,8 +1469,18 @@ def gee_data_catalogs_tools(
             resolved_type = asset_type or detect_asset_type(asset_id)
             name = layer_name or asset_id.split("/")[-1]
             parsed_bbox = _parse_bbox(bbox)
+            bounds_collection = None
             clip_collection = None
             diagnostics: dict[str, Any] = {}
+            if bounds_collection_asset_id:
+                bounds_collection = ee.FeatureCollection(bounds_collection_asset_id)
+                if bounds_filter_property and bounds_filter_value is not None:
+                    bounds_collection = bounds_collection.filter(
+                        ee.Filter.eq(
+                            bounds_filter_property,
+                            _coerce_filter_value(bounds_filter_value),
+                        )
+                    )
             if clip_collection_asset_id:
                 clip_collection = ee.FeatureCollection(clip_collection_asset_id)
                 if clip_filter_property and clip_filter_value is not None:
@@ -1432,6 +1496,17 @@ def gee_data_catalogs_tools(
                 is_dswx = _is_opera_dswx(asset_id)
                 if parsed_bbox is not None:
                     diagnostics["bbox"] = parsed_bbox
+                if bounds_collection_asset_id:
+                    diagnostics["bounds"] = {
+                        "collection_asset_id": bounds_collection_asset_id,
+                        "filter_property": bounds_filter_property,
+                        "filter_value": (
+                            _coerce_filter_value(bounds_filter_value)
+                            if bounds_filter_value is not None
+                            else None
+                        ),
+                        "method": "ImageCollection.filterBounds",
+                    }
                 if is_dswx and cloud_cover is not None:
                     diagnostics["ignored_cloud_cover"] = cloud_cover
                     diagnostics["cloud_filter_reason"] = (
@@ -1443,19 +1518,28 @@ def gee_data_catalogs_tools(
                     diagnostics["filtering"] = "direct_dswx_filterDate_filterBounds"
                     if start_date or end_date:
                         collection = collection.filterDate(start_date, end_date)
-                    if parsed_bbox is not None:
+                    if bounds_collection is not None:
+                        collection = collection.filterBounds(bounds_collection)
+                    elif parsed_bbox is not None:
                         collection = collection.filterBounds(
                             ee.Geometry.Rectangle(parsed_bbox)
                         )
-                elif start_date or end_date or parsed_bbox or cloud_cover is not None:
+                elif (
+                    start_date
+                    or end_date
+                    or (parsed_bbox and bounds_collection is None)
+                    or cloud_cover is not None
+                ):
                     collection = filter_image_collection(
                         collection,
                         start_date=start_date,
                         end_date=end_date,
-                        bbox=parsed_bbox,
+                        bbox=None if bounds_collection is not None else parsed_bbox,
                         cloud_cover=cloud_cover,
                         cloud_property=cloud_property or "CLOUDY_PIXEL_PERCENTAGE",
                     )
+                if bounds_collection is not None and not is_dswx:
+                    collection = collection.filterBounds(bounds_collection)
                 if diagnose:
                     diagnostics["first_image_bands"] = _first_image_band_names(
                         collection
@@ -1506,6 +1590,20 @@ def gee_data_catalogs_tools(
                 if resolved_type == "ImageCollection" and parsed_bbox
                 else None
             )
+            bounds_filter = (
+                {
+                    "collection_asset_id": bounds_collection_asset_id,
+                    "filter_property": bounds_filter_property,
+                    "filter_value": (
+                        _coerce_filter_value(bounds_filter_value)
+                        if bounds_filter_value is not None
+                        else None
+                    ),
+                    "method": "ImageCollection.filterBounds",
+                }
+                if (resolved_type == "ImageCollection" and bounds_collection_asset_id)
+                else None
+            )
             if clip_collection is not None and resolved_type != "FeatureCollection":
                 ee_object = ee.Image(ee_object).clipToCollection(clip_collection)
 
@@ -1523,6 +1621,9 @@ def gee_data_catalogs_tools(
                 bbox=parsed_bbox,
                 cloud_cover=None if _is_opera_dswx(asset_id) else cloud_cover,
                 cloud_property=cloud_property,
+                bounds_collection_asset_id=bounds_collection_asset_id,
+                bounds_filter_property=bounds_filter_property,
+                bounds_filter_value=bounds_filter_value,
                 method=method if resolved_type == "ImageCollection" else None,
                 bands=bands,
                 min_value=min_value,
@@ -1560,7 +1661,7 @@ def gee_data_catalogs_tools(
                 zoom_result = _zoom_to_layer_area(
                     iface=iface,
                     layer=layer,
-                    bbox=parsed_bbox,
+                    bbox=bbox_filter,
                 )
             except Exception as exc:
                 try:
@@ -1580,6 +1681,7 @@ def gee_data_catalogs_tools(
                         "failure_stage": "qgis_layer_add",
                         "diagnostics": diagnostics,
                         "bbox": bbox_filter,
+                        "bounds": bounds_filter,
                         "earth_engine_python_snippet": earth_engine_python_snippet,
                         "composite_method": (
                             method if resolved_type == "ImageCollection" else None
@@ -1608,6 +1710,7 @@ def gee_data_catalogs_tools(
                 "rendered_band": rendered_band,
                 "diagnostics": diagnostics,
                 "bbox": bbox_filter,
+                "bounds": bounds_filter,
                 "zoom": zoom_result,
                 "earth_engine_python_snippet": earth_engine_python_snippet,
                 "vis_params": vis_params,
@@ -1642,6 +1745,9 @@ def gee_data_catalogs_tools(
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         bbox: Optional[str] = None,
+        bounds_collection_asset_id: Optional[str] = None,
+        bounds_filter_property: Optional[str] = None,
+        bounds_filter_value: Optional[str] = None,
         cloud_cover: Optional[int] = None,
         cloud_property: Optional[str] = None,
         reducer: str = "median",
@@ -1667,7 +1773,21 @@ def gee_data_catalogs_tools(
             asset_type: Optional explicit type: Image or ImageCollection.
             start_date: Optional ImageCollection start date in YYYY-MM-DD.
             end_date: Optional ImageCollection end date in YYYY-MM-DD.
-            bbox: Optional WGS84 west,south,east,north ImageCollection filter.
+            bbox: Optional WGS84 west,south,east,north ImageCollection
+                ``filterBounds`` region filter used when no
+                ``bounds_collection_asset_id`` is provided. When a bounds
+                FeatureCollection is provided, bbox is still used to zoom QGIS
+                after loading if it is already known.
+            bounds_collection_asset_id: Optional FeatureCollection asset id
+                used with ImageCollection ``filterBounds`` for regional index
+                display. Prefer this over bbox coordinates when a specific
+                FeatureCollection exists for the requested region.
+                Example: TIGER/2018/States.
+            bounds_filter_property: Optional property to filter the bounds
+                FeatureCollection before calling ``filterBounds``. Example:
+                NAME.
+            bounds_filter_value: Optional value for ``bounds_filter_property``.
+                Example: Tennessee.
             cloud_cover: Optional maximum cloud-cover value.
             cloud_property: Optional cloud-cover property name.
             reducer: ImageCollection compositing method: mosaic, median, mean,
@@ -1678,6 +1798,11 @@ def gee_data_catalogs_tools(
             palette: Optional comma-separated colors. Defaults by index type.
             clip_collection_asset_id: Optional FeatureCollection asset id used
                 to clip the index image with ``ee.Image.clipToCollection``.
+                Clipping is computationally intensive; only use this when the
+                user specifically asks to clip, crop, or mask data to the
+                region. For ordinary regional display, use
+                ``bounds_collection_asset_id`` when a specific
+                FeatureCollection exists, otherwise use ``bbox``.
             clip_filter_property: Optional property to filter the clipping
                 FeatureCollection before clipping. Example: NAME.
             clip_filter_value: Optional value for ``clip_filter_property``.
@@ -1711,7 +1836,17 @@ def gee_data_catalogs_tools(
                 )
 
             parsed_bbox = _parse_bbox(bbox)
+            bounds_collection = None
             clip_collection = None
+            if bounds_collection_asset_id:
+                bounds_collection = ee.FeatureCollection(bounds_collection_asset_id)
+                if bounds_filter_property and bounds_filter_value is not None:
+                    bounds_collection = bounds_collection.filter(
+                        ee.Filter.eq(
+                            bounds_filter_property,
+                            _coerce_filter_value(bounds_filter_value),
+                        )
+                    )
             if clip_collection_asset_id:
                 clip_collection = ee.FeatureCollection(clip_collection_asset_id)
                 if clip_filter_property and clip_filter_value is not None:
@@ -1724,15 +1859,22 @@ def gee_data_catalogs_tools(
 
             if resolved_type == "ImageCollection":
                 collection = ee.ImageCollection(asset_id)
-                if start_date or end_date or parsed_bbox or cloud_cover is not None:
+                if (
+                    start_date
+                    or end_date
+                    or (parsed_bbox and bounds_collection is None)
+                    or cloud_cover is not None
+                ):
                     collection = filter_image_collection(
                         collection,
                         start_date=start_date,
                         end_date=end_date,
-                        bbox=parsed_bbox,
+                        bbox=None if bounds_collection is not None else parsed_bbox,
                         cloud_cover=cloud_cover,
                         cloud_property=cloud_property or "CLOUDY_PIXEL_PERCENTAGE",
                     )
+                if bounds_collection is not None:
+                    collection = collection.filterBounds(bounds_collection)
                 method = _normalize_composite_method(reducer, default="median")
                 source_image = _composite_image_collection(collection, method)
                 resolved_type = "ImageCollection"
@@ -1763,6 +1905,9 @@ def gee_data_catalogs_tools(
                 bbox=parsed_bbox,
                 cloud_cover=cloud_cover,
                 cloud_property=cloud_property,
+                bounds_collection_asset_id=bounds_collection_asset_id,
+                bounds_filter_property=bounds_filter_property,
+                bounds_filter_value=bounds_filter_value,
                 method=method if resolved_type == "ImageCollection" else None,
                 positive_band=positive_band,
                 negative_band=negative_band,
@@ -1806,6 +1951,23 @@ def gee_data_catalogs_tools(
                 ),
                 "vis_params": vis_params,
                 "bbox": parsed_bbox,
+                "bounds": (
+                    {
+                        "collection_asset_id": bounds_collection_asset_id,
+                        "filter_property": bounds_filter_property,
+                        "filter_value": (
+                            _coerce_filter_value(bounds_filter_value)
+                            if bounds_filter_value is not None
+                            else None
+                        ),
+                        "method": "ImageCollection.filterBounds",
+                    }
+                    if (
+                        resolved_type == "ImageCollection"
+                        and bounds_collection_asset_id
+                    )
+                    else None
+                ),
                 "zoom": zoom_result,
                 "earth_engine_python_snippet": earth_engine_python_snippet,
                 "clip": (

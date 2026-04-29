@@ -96,6 +96,10 @@ def test_gee_data_catalogs_prompt_mentions_generated_ee_snippets() -> None:
     assert "list_loaded_gee_layers" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "calculate_gee_layer_statistics" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "reduceRegion/getInfo" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "filterBounds" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "computationally intensive" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "specifically asks to clip" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "bounds_collection_asset_id" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
 
 
 def test_load_gee_dataset_clips_raster_to_feature_collection(monkeypatch) -> None:
@@ -410,6 +414,129 @@ def test_load_gee_dataset_filters_explicit_image_collection_bbox(
     assert "m.add_layer(image, vis_params" in result["earth_engine_python_snippet"]
     assert iface.canvas.extent == (-84.0, 35.0, -83.0, 36.0)
     assert result["diagnostics"]["bbox"] == [-84.0, 35.0, -83.0, 36.0]
+
+
+def test_load_gee_dataset_prefers_feature_collection_filter_bounds(
+    monkeypatch,
+) -> None:
+    """Verify regional display can filterBounds with a FeatureCollection."""
+
+    class _Canvas:
+        def __init__(self) -> None:
+            self.extent = None
+
+        def setExtent(self, extent) -> None:
+            self.extent = extent
+
+        def refresh(self) -> None:
+            pass
+
+    class _Iface:
+        def __init__(self) -> None:
+            self.canvas = _Canvas()
+
+        def mapCanvas(self) -> _Canvas:
+            return self.canvas
+
+    class _FakeFeatureCollection:
+        def __init__(self, asset_id: str) -> None:
+            self.asset_id = asset_id
+            self.filters = []
+
+        def filter(self, filter_obj):
+            self.filters.append(filter_obj)
+            return self
+
+    class _FakeImage:
+        def __init__(self, collection) -> None:
+            self.collection = collection
+
+    class _FakeImageCollection:
+        def __init__(self, asset_id: str) -> None:
+            self.asset_id = asset_id
+            self.bounds_filter = None
+
+        def filterBounds(self, geometry):
+            self.bounds_filter = geometry
+            return self
+
+        def mosaic(self):
+            return _FakeImage(self)
+
+    class _FakeFilter:
+        @staticmethod
+        def eq(prop: str, value: object):
+            return ("eq", prop, value)
+
+    class _FakeLayer:
+        def isValid(self):
+            return True
+
+    ee_module = ModuleType("ee")
+    ee_module.Filter = _FakeFilter
+    ee_module.FeatureCollection = _FakeFeatureCollection
+    ee_module.ImageCollection = _FakeImageCollection
+
+    captured = {}
+
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+
+    def _add_ee_layer(obj, vis, name):
+        captured.update({"object": obj, "vis": vis, "name": name})
+        return _FakeLayer()
+
+    def _filter_image_collection(collection, **kwargs):
+        raise AssertionError("FeatureCollection filterBounds should not use bbox")
+
+    ee_utils.add_ee_layer = _add_ee_layer
+    ee_utils.detect_asset_type = lambda asset_id: "ImageCollection"
+    ee_utils.filter_image_collection = _filter_image_collection
+    ee_utils.initialize_ee = lambda project=None: None
+    ee_utils.is_ee_initialized = lambda: True
+
+    monkeypatch.setitem(sys.modules, "ee", ee_module)
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
+
+    iface = _Iface()
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
+    result = tools["load_gee_dataset"].__wrapped__(
+        "TEST/IMAGE_COLLECTION",
+        reducer="mosaic",
+        bbox="-84,35,-83,36",
+        bounds_collection_asset_id="TIGER/2018/States",
+        bounds_filter_property="NAME",
+        bounds_filter_value="Tennessee",
+    )
+
+    bounds_fc = captured["object"].collection.bounds_filter
+    snippet = result["earth_engine_python_snippet"]
+    assert result["success"] is True
+    assert result["bounds"] == {
+        "collection_asset_id": "TIGER/2018/States",
+        "filter_property": "NAME",
+        "filter_value": "Tennessee",
+        "method": "ImageCollection.filterBounds",
+    }
+    assert result["bbox"] == [-84.0, 35.0, -83.0, 36.0]
+    assert bounds_fc.asset_id == "TIGER/2018/States"
+    assert bounds_fc.filters == [("eq", "NAME", "Tennessee")]
+    assert "bounds_fc = ee.FeatureCollection('TIGER/2018/States')" in snippet
+    assert "collection = collection.filterBounds(bounds_fc)" in snippet
+    assert "ee.Geometry.Rectangle(bbox)" not in snippet
+    assert "clipToCollection" not in snippet
+    assert result["zoom"] == {
+        "success": True,
+        "target": "bbox",
+        "bbox": [-84.0, 35.0, -83.0, 36.0],
+    }
+    assert iface.canvas.extent == (-84.0, 35.0, -83.0, 36.0)
 
 
 def test_load_gee_dataset_renders_opera_dswx_hls_with_valid_band_and_mode(

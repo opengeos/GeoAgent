@@ -72,12 +72,25 @@ Workflow guidance:
   not reuse a previous conversation location for a new dataset request unless
   the current request says "same area", "there", or otherwise clearly refers
   to that prior location. If the user asks for a global layer, or gives no
-  location, omit bbox.
-- When the user asks to clip a raster/Image/ImageCollection to an administrative
-  boundary or other vector region, use load_gee_dataset with
-  clip_collection_asset_id and clip_filter_property/value. The tool applies
-  ee.Image.clipToCollection to the raster output. For Tennessee, use
-  TIGER/2018/States with NAME=Tennessee.
+  location, omit bbox. For ImageCollections, regional display should use
+  filterBounds. When a specific FeatureCollection exists for the requested
+  region, prefer load_gee_dataset bounds_collection_asset_id and
+  bounds_filter_property/value over bbox coordinates; for example, use
+  TIGER/2018/States with NAME=Tennessee for Tennessee. Use bbox only when no
+  appropriate FeatureCollection is known, the user provides exact bbox
+  coordinates, or the bbox is already known and should be used only to zoom
+  QGIS to the requested region after loading. If you have both a
+  FeatureCollection filter and an already-known bbox for the same region, pass
+  both; the tool will use the FeatureCollection for filterBounds and the bbox
+  for QGIS zoom. Do not compute a bbox from the FeatureCollection geometry.
+- Earth Engine clip operations are computationally intensive. Do not use
+  ee.Image.clip or ee.Image.clipToCollection just because the user asks to show
+  data for a region; use filterBounds through bounds_collection_asset_id or
+  bbox instead. Only when the user specifically asks to clip, crop, or mask the
+  raster/Image/ImageCollection to an administrative boundary or other vector
+  region, use load_gee_dataset with clip_collection_asset_id and
+  clip_filter_property/value. The tool applies ee.Image.clipToCollection to the
+  raster output.
 - When the user asks for normalized difference indexes such as NDVI, NDWI,
   MNDWI, NDMI, or NBR, use calculate_gee_normalized_difference. Do not display
   a single source band as a proxy. Common Sentinel-2/HLS S30 pairs: NDVI B8/B4,
