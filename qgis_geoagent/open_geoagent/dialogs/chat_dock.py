@@ -77,13 +77,17 @@ def _setting(settings, key, default="", value_type=str):
 
 def _apply_environment_from_settings(settings):
     """Apply provider credentials from QSettings to the current QGIS process."""
+    # Mapping of QSettings key names to environment variable names. The strings
+    # are identifiers, not credentials; the actual values are read from QSettings
+    # at runtime. ``# pragma: allowlist secret`` silences detect-secrets keyword
+    # heuristics on lines that contain "api_key" / "API_KEY".
     env_map = {
-        "openai_api_key": "OPENAI_API_KEY",
-        "anthropic_api_key": "ANTHROPIC_API_KEY",
+        "openai_api_key": "OPENAI_API_KEY",  # pragma: allowlist secret
+        "anthropic_api_key": "ANTHROPIC_API_KEY",  # pragma: allowlist secret
         "gemini_api_key": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
         "aws_region": "AWS_REGION",
         "ollama_host": "OLLAMA_HOST",
-        "litellm_api_key": "LITELLM_API_KEY",
+        "litellm_api_key": "LITELLM_API_KEY",  # pragma: allowlist secret
         "litellm_base_url": "LITELLM_BASE_URL",
     }
     for key, env_names in env_map.items():
