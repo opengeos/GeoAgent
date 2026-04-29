@@ -61,6 +61,7 @@ def test_chat_worker_uses_whitebox_factory(monkeypatch) -> None:
         model_id="claude-x",
         fast=False,
         max_tokens=1024,
+        auto_approve_tools=True,
     )
 
     emitted: dict[str, Any] = {}
@@ -72,5 +73,6 @@ def test_chat_worker_uses_whitebox_factory(monkeypatch) -> None:
     assert captured["prompt"] == "hello"
     assert captured["kwargs"]["fast"] is False
     assert "confirm" in captured["kwargs"]
+    assert captured["kwargs"]["confirm"](types.SimpleNamespace(args={})) is True
     assert emitted["payload"]["success"] is True
     assert any("WhiteboxTools" in prompt for prompt in SAMPLE_PROMPTS)

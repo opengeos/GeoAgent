@@ -94,6 +94,13 @@ Workflow guidance:
   metadata before running it.
 - Use search_whitebox_tools to find candidate commands, get_whitebox_tool_info
   to inspect required parameters, then run_whitebox_tool to execute.
+- For active DEM flow accumulation requests, prefer
+  run_whitebox_flow_accumulation.
+- For active DEM sink/depression filling or breaching requests, prefer
+  run_whitebox_fill_sinks.
+- For active DEM color shaded relief requests, prefer
+  run_whitebox_color_shaded_relief.
+- For active vector layer buffer requests, prefer buffer_active_layer.
 - Use QGIS layer names as input values only when the layer is backed by a
   local file. Otherwise ask the user to export the layer or provide a file.
 - Generated outputs are added back to QGIS when possible.

@@ -200,7 +200,17 @@ def _load_tool_parameters(wbt: Any, tool_name: str) -> dict[str, Any]:
     if isinstance(text, dict):
         payload = text
     else:
-        payload = json.loads(str(text))
+        raw = str(text)
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            preview = raw[:240] if raw else "<empty response>"
+            raise ValueError(
+                "WhiteboxTools returned invalid parameter metadata JSON for "
+                f"{tool_name!r}. Try searching the tool again, verify the tool "
+                "name, or update/reinstall WhiteboxTools. "
+                f"Metadata preview: {preview}"
+            ) from exc
     params = payload.get("parameters", [])
     if not isinstance(params, list):
         params = []
@@ -248,6 +258,20 @@ def _layer_source_from_name(project: Any, layer_name: str) -> str | None:
             "Export the layer to a file or provide a file path for WhiteboxTools."
         )
     return None
+
+
+def _active_layer_name(iface: Any) -> str:
+    """Return the active QGIS layer name."""
+
+    def _read_active_layer_name() -> str:
+        layer = iface.activeLayer()
+        if layer is None:
+            raise ValueError("No active QGIS layer is selected.")
+        if hasattr(layer, "name"):
+            return str(layer.name())
+        return str(layer)
+
+    return run_on_qt_gui_thread(_read_active_layer_name)
 
 
 def _resolve_existing_file(value: Any, project: Any) -> str:
@@ -589,11 +613,215 @@ def whitebox_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             "messages": messages[-40:],
         }
 
+    @geo_tool(
+        category="whitebox",
+        name="run_whitebox_flow_accumulation",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("whitebox",),
+    )
+    def run_whitebox_flow_accumulation(
+        layer_name: Optional[str] = None,
+        output_path: Optional[str] = None,
+        output_layer_name: Optional[str] = None,
+        tool_name: str = "d8_flow_accumulation",
+        add_outputs_to_qgis: bool = True,
+        verbose: bool = False,
+    ) -> dict[str, Any]:
+        """Run D8 flow accumulation on a DEM layer and load the raster output.
+
+        Args:
+            layer_name: QGIS DEM layer name. When omitted, uses the active
+                layer.
+            output_path: Optional raster output path.
+            output_layer_name: Optional display name for the output layer.
+            tool_name: Whitebox flow accumulation tool. Defaults to
+                ``d8_flow_accumulation``.
+            add_outputs_to_qgis: Whether to add the generated raster to QGIS.
+            verbose: Whether WhiteboxTools should emit verbose progress.
+
+        Returns:
+            A compact dict with the Whitebox return code, output path, and
+            QGIS load status.
+        """
+        selected_layer = layer_name or _active_layer_name(iface)
+        name = output_layer_name or f"{selected_layer} flow accumulation"
+        params: dict[str, Any] = {
+            "input": selected_layer,
+            "output": output_path,
+        }
+        if output_path is None:
+            params.pop("output")
+        return run_whitebox_tool.__wrapped__(
+            tool_name,
+            params,
+            add_outputs_to_qgis=add_outputs_to_qgis,
+            output_layer_name=name,
+            verbose=verbose,
+        )
+
+    @geo_tool(
+        category="whitebox",
+        name="run_whitebox_fill_sinks",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("whitebox",),
+    )
+    def run_whitebox_fill_sinks(
+        layer_name: Optional[str] = None,
+        output_path: Optional[str] = None,
+        output_layer_name: Optional[str] = None,
+        method: str = "breach_depressions",
+        max_depth: Optional[float] = None,
+        max_length: Optional[float] = None,
+        flat_increment: Optional[float] = None,
+        fill_pits: Optional[bool] = None,
+        fix_flats: Optional[bool] = None,
+        add_outputs_to_qgis: bool = True,
+        verbose: bool = False,
+    ) -> dict[str, Any]:
+        """Resolve sinks/depressions in a DEM layer and load the raster output.
+
+        Args:
+            layer_name: QGIS DEM layer name. When omitted, uses the active
+                layer.
+            output_path: Optional raster output path.
+            output_layer_name: Optional display name for the output layer.
+            method: Whitebox method. Supported values are
+                ``breach_depressions`` (default), ``fill_depressions``, and
+                ``fill_depressions_wang_and_liu``.
+            max_depth: Optional maximum breach/fill depth in z units.
+            max_length: Optional maximum breach channel length in grid cells.
+            flat_increment: Optional elevation increment for flat areas.
+            fill_pits: Optional single-cell pit filling flag for breaching.
+            fix_flats: Optional flat-area gradient flag for fill methods.
+            add_outputs_to_qgis: Whether to add the generated raster to QGIS.
+            verbose: Whether WhiteboxTools should emit verbose progress.
+
+        Returns:
+            A compact dict with the Whitebox return code, output path, and
+            QGIS load status.
+        """
+        aliases = {
+            "breach": "breach_depressions",
+            "breach_depressions": "breach_depressions",
+            "fill": "fill_depressions",
+            "fill_depressions": "fill_depressions",
+            "wang_and_liu": "fill_depressions_wang_and_liu",
+            "fill_depressions_wang_and_liu": "fill_depressions_wang_and_liu",
+        }
+        tool_name = aliases.get(str(method).strip().lower())
+        if tool_name is None:
+            raise ValueError(
+                "Unknown sink-filling method. Use 'breach_depressions', "
+                "'fill_depressions', or 'fill_depressions_wang_and_liu'."
+            )
+
+        selected_layer = layer_name or _active_layer_name(iface)
+        name = output_layer_name or f"{selected_layer} filled sinks"
+        params: dict[str, Any] = {
+            "dem": selected_layer,
+            "output": output_path,
+        }
+        if output_path is None:
+            params.pop("output")
+        if max_depth is not None:
+            params["max_depth"] = float(max_depth)
+        if flat_increment is not None:
+            params["flat_increment"] = float(flat_increment)
+        if tool_name == "breach_depressions":
+            if max_length is not None:
+                params["max_length"] = float(max_length)
+            if fill_pits is not None:
+                params["fill_pits"] = bool(fill_pits)
+        elif fix_flats is not None:
+            params["fix_flats"] = bool(fix_flats)
+
+        return run_whitebox_tool.__wrapped__(
+            tool_name,
+            params,
+            add_outputs_to_qgis=add_outputs_to_qgis,
+            output_layer_name=name,
+            verbose=verbose,
+        )
+
+    @geo_tool(
+        category="whitebox",
+        name="run_whitebox_color_shaded_relief",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("whitebox",),
+    )
+    def run_whitebox_color_shaded_relief(
+        layer_name: Optional[str] = None,
+        output_path: Optional[str] = None,
+        output_layer_name: Optional[str] = None,
+        palette: str = "atlas",
+        altitude: float = 45.0,
+        hillshade_weight: float = 0.5,
+        brightness: float = 0.5,
+        atmospheric: float = 0.0,
+        reverse_palette: bool = False,
+        zfactor: Optional[float] = None,
+        full_mode: bool = False,
+        add_outputs_to_qgis: bool = True,
+        verbose: bool = False,
+    ) -> dict[str, Any]:
+        """Create color shaded relief from a DEM layer and load the raster.
+
+        Args:
+            layer_name: QGIS DEM layer name. When omitted, uses the active
+                layer.
+            output_path: Optional raster output path.
+            output_layer_name: Optional display name for the output layer.
+            palette: Whitebox palette name, e.g. ``atlas`` or ``viridis``.
+            altitude: Illumination source altitude in degrees.
+            hillshade_weight: Weight given to hillshade relative to relief.
+            brightness: Brightness factor from 0.0 to 1.0.
+            atmospheric: Atmospheric effects weight from 0.0 to 1.0.
+            reverse_palette: Whether to reverse the palette.
+            zfactor: Optional vertical unit conversion factor.
+            full_mode: Whether to use full 360-degree hillshade mode.
+            add_outputs_to_qgis: Whether to add the generated raster to QGIS.
+            verbose: Whether WhiteboxTools should emit verbose progress.
+
+        Returns:
+            A compact dict with the Whitebox return code, output path, and
+            QGIS load status.
+        """
+        selected_layer = layer_name or _active_layer_name(iface)
+        name = output_layer_name or f"{selected_layer} color shaded relief"
+        params: dict[str, Any] = {
+            "dem": selected_layer,
+            "output": output_path,
+            "altitude": float(altitude),
+            "hs_weight": float(hillshade_weight),
+            "brightness": float(brightness),
+            "atmospheric": float(atmospheric),
+            "palette": palette,
+            "reverse": bool(reverse_palette),
+            "full_mode": bool(full_mode),
+        }
+        if output_path is None:
+            params.pop("output")
+        if zfactor is not None:
+            params["zfactor"] = float(zfactor)
+        return run_whitebox_tool.__wrapped__(
+            "hypsometrically_tinted_hillshade",
+            params,
+            add_outputs_to_qgis=add_outputs_to_qgis,
+            output_layer_name=name,
+            verbose=verbose,
+        )
+
     return [
         summarize_whitebox_tools,
         search_whitebox_tools,
         get_whitebox_tool_info,
         run_whitebox_tool,
+        run_whitebox_flow_accumulation,
+        run_whitebox_fill_sinks,
+        run_whitebox_color_shaded_relief,
     ]
 
 

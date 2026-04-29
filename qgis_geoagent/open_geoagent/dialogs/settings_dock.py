@@ -1,5 +1,7 @@
 """Settings and dependency management for OpenGeoAgent."""
 
+import os
+
 from qgis.PyQt.QtCore import Qt, QSettings, QTimer
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -22,11 +24,30 @@ from qgis.PyQt.QtGui import QFont
 
 from .chat_dock import DEFAULT_MODELS, PROVIDERS, SETTINGS_PREFIX
 
+ENV_FALLBACKS = {
+    "openai_api_key": ("OPENAI_API_KEY",),
+    "anthropic_api_key": ("ANTHROPIC_API_KEY",),
+    "gemini_api_key": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    "aws_region": ("AWS_REGION", "AWS_DEFAULT_REGION"),
+    "ollama_host": ("OLLAMA_HOST",),
+    "litellm_api_key": ("LITELLM_API_KEY",),
+    "litellm_base_url": ("LITELLM_BASE_URL",),
+}
+
 
 def _enum_value(cls, enum_name, member_name):
     """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
+
+
+def _env_fallback(*env_names):
+    """Return the first non-empty environment value from ``env_names``."""
+    for env_name in env_names:
+        value = os.environ.get(env_name, "").strip()
+        if value:
+            return value
+    return ""
 
 
 class SettingsDockWidget(QDockWidget):
@@ -364,27 +385,20 @@ class SettingsDockWidget(QDockWidget):
         self.max_tokens_spin.setValue(
             self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
         )
-        self.openai_key_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}openai_api_key", "", type=str)
-        )
-        self.anthropic_key_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}anthropic_api_key", "", type=str)
-        )
-        self.gemini_key_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}gemini_api_key", "", type=str)
-        )
-        self.aws_region_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}aws_region", "", type=str)
-        )
-        self.ollama_host_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}ollama_host", "", type=str)
-        )
-        self.litellm_key_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}litellm_api_key", "", type=str)
-        )
-        self.litellm_base_url_input.setText(
-            self.settings.value(f"{SETTINGS_PREFIX}litellm_base_url", "", type=str)
-        )
+        self.openai_key_input.setText(self._credential_value("openai_api_key"))
+        self.anthropic_key_input.setText(self._credential_value("anthropic_api_key"))
+        self.gemini_key_input.setText(self._credential_value("gemini_api_key"))
+        self.aws_region_input.setText(self._credential_value("aws_region"))
+        self.ollama_host_input.setText(self._credential_value("ollama_host"))
+        self.litellm_key_input.setText(self._credential_value("litellm_api_key"))
+        self.litellm_base_url_input.setText(self._credential_value("litellm_base_url"))
+
+    def _credential_value(self, key):
+        """Return a saved credential value, falling back to environment vars."""
+        saved = self.settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str)
+        if str(saved).strip():
+            return str(saved)
+        return _env_fallback(*ENV_FALLBACKS.get(key, ()))
 
     def _save_settings(self):
         """Persist settings from the form fields."""

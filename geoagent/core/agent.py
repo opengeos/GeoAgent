@@ -36,6 +36,38 @@ def _result_to_text(result: Any) -> str:
     return s
 
 
+def _looks_like_json_parse_failure(exc: Exception) -> bool:
+    """Return True when an exception is a malformed JSON/tool-call response."""
+    text = f"{type(exc).__name__}: {exc}".lower()
+    markers = (
+        "failed to parse json",
+        "jsondecodeerror",
+        "unexpected end of json input",
+        "expecting value",
+        "unterminated string",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _format_chat_exception(exc: Exception) -> str:
+    """Convert low-level provider/tool-call exceptions into user guidance."""
+    original = str(exc).strip() or type(exc).__name__
+    if not _looks_like_json_parse_failure(exc):
+        return original
+    return (
+        "The model returned malformed or incomplete JSON while trying to call "
+        "a tool. GeoAgent could not safely continue that tool workflow.\n\n"
+        f"Original error: {original}\n\n"
+        "How to correct it:\n"
+        "- Retry with a more specific request, including the layer name and "
+        "desired output name.\n"
+        "- Break a long workflow into smaller steps if it keeps failing.\n"
+        "- Increase the model max tokens if the response may be truncated.\n"
+        "- Use a model/provider with reliable tool-calling support; local or "
+        "OpenAI-compatible endpoints may need tool/function calling enabled."
+    )
+
+
 class GeoAgent:
     """Public facade: Strands agent + GeoAgent context, tools, and safety hooks."""
 
@@ -212,7 +244,7 @@ class GeoAgent:
             elapsed = time.time() - t0
             return GeoAgentResponse(
                 success=False,
-                error_message=str(exc),
+                error_message=_format_chat_exception(exc),
                 execution_time=elapsed,
                 cancelled_tools=list(self._cancelled),
                 map=self._context.map_obj,

@@ -42,6 +42,24 @@ def test_chat_success_from_mocked_strands() -> None:
     mock_agent.assert_called_once()
 
 
+def test_chat_json_parse_error_returns_actionable_guidance() -> None:
+    """Verify malformed tool-call JSON gets user-facing correction guidance."""
+    m = MockLeafmap()
+    agent = for_leafmap(m, model=_MockModel())
+    agent._strands = MagicMock(  # noqa: SLF001
+        side_effect=ValueError(
+            "failed to parse JSON: unexpected end of JSON input (status code: -1)"
+        )
+    )
+
+    resp = agent.chat("create color shaded relief")
+
+    assert resp.success is False
+    assert "malformed or incomplete JSON" in resp.error_message
+    assert "Original error:" in resp.error_message
+    assert "Break a long workflow into smaller steps" in resp.error_message
+
+
 def test_chat_in_background_returns_and_invokes_callback() -> None:
     """Verify that chat in background returns and invokes callback."""
     m = MockLeafmap()

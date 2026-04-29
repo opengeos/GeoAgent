@@ -107,3 +107,4 @@ ENV/
 .vscode/
 CLAUDE.md
 .firecrawl/
+.codex

@@ -42,6 +42,9 @@ def test_whitebox_tools_expose_routed_surface() -> None:
         "search_whitebox_tools",
         "get_whitebox_tool_info",
         "run_whitebox_tool",
+        "run_whitebox_flow_accumulation",
+        "run_whitebox_fill_sinks",
+        "run_whitebox_color_shaded_relief",
     }
 
 
@@ -124,6 +127,25 @@ def test_get_whitebox_tool_info_parses_parameter_json(monkeypatch) -> None:
     assert "dem" in result["parameters"][0]["keys"]
     assert result["parameters"][0]["optional"] is False
     assert result["help"] == "Slope help text"
+
+
+def test_get_whitebox_tool_info_reports_invalid_parameter_json(monkeypatch) -> None:
+    """Verify invalid Whitebox metadata JSON produces an actionable error."""
+
+    class _FakeWBT:
+        verbose = True
+
+        def tool_parameters(self, tool_name):
+            assert tool_name == "slope"
+            return ""
+
+    whitebox_module = ModuleType("whitebox")
+    whitebox_module.WhiteboxTools = _FakeWBT
+    monkeypatch.setitem(sys.modules, "whitebox", whitebox_module)
+
+    tools = {tool.tool_name: tool for tool in whitebox_tools(object())}
+    with pytest.raises(ValueError, match="invalid parameter metadata JSON"):
+        tools["get_whitebox_tool_info"].__wrapped__("slope")
 
 
 def test_run_whitebox_tool_builds_args_and_loads_output(monkeypatch, tmp_path) -> None:
@@ -217,6 +239,297 @@ def test_run_whitebox_tool_builds_args_and_loads_output(monkeypatch, tmp_path) -
         {"path": str(output_path), "added": True, "layer_name": "Slope"}
     ]
     assert "Slope" in project.mapLayers()
+
+
+def test_run_whitebox_flow_accumulation_uses_active_layer(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify the flow accumulation convenience tool uses the active DEM."""
+    input_path = tmp_path / "dem.tif"
+    output_path = tmp_path / "flow_accumulation.tif"
+    input_path.write_text("dem", encoding="utf-8")
+
+    captured = {}
+
+    class _FakeWBT:
+        verbose = True
+
+        def __init__(self):
+            self.verbose = True
+
+        def tool_parameters(self, tool_name):
+            assert tool_name == "d8_flow_accumulation"
+            return json.dumps(
+                {
+                    "parameters": [
+                        {
+                            "name": "Input Raster File",
+                            "flags": ["-i", "--input"],
+                            "parameter_type": {"ExistingFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Output File",
+                            "flags": ["-o", "--output"],
+                            "parameter_type": {"NewFile": "Raster"},
+                            "optional": False,
+                        },
+                    ]
+                }
+            )
+
+        def run_tool(self, tool_name, args, callback=None):
+            captured["tool_name"] = tool_name
+            captured["args"] = args
+            output_path.write_text("flow", encoding="utf-8")
+            return 0
+
+    whitebox_module = ModuleType("whitebox")
+    whitebox_module.WhiteboxTools = _FakeWBT
+    monkeypatch.setitem(sys.modules, "whitebox", whitebox_module)
+
+    project = MockQGISProject()
+    layer = MockQGISLayer("DEM layer", str(input_path), "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project)
+    iface.setActiveLayer(layer)
+    tools = {tool.tool_name: tool for tool in whitebox_tools(iface, project)}
+
+    result = tools["run_whitebox_flow_accumulation"].__wrapped__(
+        output_path=str(output_path),
+        output_layer_name="Flow Accumulation",
+    )
+
+    assert captured["tool_name"] == "d8_flow_accumulation"
+    assert captured["args"] == [
+        f"--input={input_path}",
+        f"--output={output_path}",
+    ]
+    assert result["success"] is True
+    assert result["layers_added"] == [
+        {
+            "path": str(output_path),
+            "added": True,
+            "layer_name": "Flow Accumulation",
+        }
+    ]
+    assert "Flow Accumulation" in project.mapLayers()
+
+
+def test_run_whitebox_fill_sinks_uses_active_layer(monkeypatch, tmp_path) -> None:
+    """Verify the sink-filling convenience tool uses the active DEM."""
+    input_path = tmp_path / "dem.tif"
+    output_path = tmp_path / "dem_filled.tif"
+    input_path.write_text("dem", encoding="utf-8")
+
+    captured = {}
+
+    class _FakeWBT:
+        verbose = True
+
+        def __init__(self):
+            self.verbose = True
+
+        def tool_parameters(self, tool_name):
+            assert tool_name == "breach_depressions"
+            return json.dumps(
+                {
+                    "parameters": [
+                        {
+                            "name": "Input DEM File",
+                            "flags": ["-i", "--dem"],
+                            "parameter_type": {"ExistingFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Output File",
+                            "flags": ["-o", "--output"],
+                            "parameter_type": {"NewFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Maximum Breach Depth (z units)",
+                            "flags": ["--max_depth"],
+                            "parameter_type": "Float",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Fill single-cell pits?",
+                            "flags": ["--fill_pits"],
+                            "parameter_type": "Boolean",
+                            "optional": True,
+                        },
+                    ]
+                }
+            )
+
+        def run_tool(self, tool_name, args, callback=None):
+            captured["tool_name"] = tool_name
+            captured["args"] = args
+            output_path.write_text("filled", encoding="utf-8")
+            return 0
+
+    whitebox_module = ModuleType("whitebox")
+    whitebox_module.WhiteboxTools = _FakeWBT
+    monkeypatch.setitem(sys.modules, "whitebox", whitebox_module)
+
+    project = MockQGISProject()
+    layer = MockQGISLayer("DEM layer", str(input_path), "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project)
+    iface.setActiveLayer(layer)
+    tools = {tool.tool_name: tool for tool in whitebox_tools(iface, project)}
+
+    result = tools["run_whitebox_fill_sinks"].__wrapped__(
+        output_path=str(output_path),
+        output_layer_name="DEM Filled",
+        max_depth=10,
+        fill_pits=True,
+    )
+
+    assert captured["tool_name"] == "breach_depressions"
+    assert captured["args"] == [
+        f"--dem={input_path}",
+        f"--output={output_path}",
+        "--max_depth=10.0",
+        "--fill_pits",
+    ]
+    assert result["success"] is True
+    assert result["layers_added"] == [
+        {
+            "path": str(output_path),
+            "added": True,
+            "layer_name": "DEM Filled",
+        }
+    ]
+    assert "DEM Filled" in project.mapLayers()
+
+
+def test_run_whitebox_color_shaded_relief_uses_active_layer(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify the color shaded relief convenience tool uses the active DEM."""
+    input_path = tmp_path / "dem.tif"
+    output_path = tmp_path / "relief.tif"
+    input_path.write_text("dem", encoding="utf-8")
+
+    captured = {}
+
+    class _FakeWBT:
+        verbose = True
+
+        def __init__(self):
+            self.verbose = True
+
+        def tool_parameters(self, tool_name):
+            assert tool_name == "hypsometrically_tinted_hillshade"
+            return json.dumps(
+                {
+                    "parameters": [
+                        {
+                            "name": "Input DEM File",
+                            "flags": ["-i", "--dem"],
+                            "parameter_type": {"ExistingFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Output File",
+                            "flags": ["-o", "--output"],
+                            "parameter_type": {"NewFile": "Raster"},
+                            "optional": False,
+                        },
+                        {
+                            "name": "Illumination Source Altitude (degrees)",
+                            "flags": ["--altitude"],
+                            "parameter_type": "Float",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Hillshade Weight",
+                            "flags": ["--hs_weight"],
+                            "parameter_type": "Float",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Brightness",
+                            "flags": ["--brightness"],
+                            "parameter_type": "Float",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Atmospheric Effects",
+                            "flags": ["--atmospheric"],
+                            "parameter_type": "Float",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Palette",
+                            "flags": ["--palette"],
+                            "parameter_type": {"OptionList": ["atlas", "viridis"]},
+                            "optional": True,
+                        },
+                        {
+                            "name": "Reverse palette?",
+                            "flags": ["--reverse"],
+                            "parameter_type": "Boolean",
+                            "optional": True,
+                        },
+                        {
+                            "name": "Full 360-degree hillshade mode?",
+                            "flags": ["--full_mode"],
+                            "parameter_type": "Boolean",
+                            "optional": True,
+                        },
+                    ]
+                }
+            )
+
+        def run_tool(self, tool_name, args, callback=None):
+            captured["tool_name"] = tool_name
+            captured["args"] = args
+            output_path.write_text("relief", encoding="utf-8")
+            return 0
+
+    whitebox_module = ModuleType("whitebox")
+    whitebox_module.WhiteboxTools = _FakeWBT
+    monkeypatch.setitem(sys.modules, "whitebox", whitebox_module)
+
+    project = MockQGISProject()
+    layer = MockQGISLayer("DEM layer", str(input_path), "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project)
+    iface.setActiveLayer(layer)
+    tools = {tool.tool_name: tool for tool in whitebox_tools(iface, project)}
+
+    result = tools["run_whitebox_color_shaded_relief"].__wrapped__(
+        output_path=str(output_path),
+        output_layer_name="Color Shaded Relief",
+        palette="viridis",
+        hillshade_weight=0.6,
+        full_mode=True,
+    )
+
+    assert captured["tool_name"] == "hypsometrically_tinted_hillshade"
+    assert captured["args"] == [
+        f"--dem={input_path}",
+        f"--output={output_path}",
+        "--altitude=45.0",
+        "--hs_weight=0.6",
+        "--brightness=0.5",
+        "--atmospheric=0.0",
+        "--palette=viridis",
+        "--reverse=false",
+        "--full_mode",
+    ]
+    assert result["success"] is True
+    assert result["layers_added"] == [
+        {
+            "path": str(output_path),
+            "added": True,
+            "layer_name": "Color Shaded Relief",
+        }
+    ]
+    assert "Color Shaded Relief" in project.mapLayers()
 
 
 def test_for_whitebox_registers_tools_and_respects_fast_mode(monkeypatch) -> None:
