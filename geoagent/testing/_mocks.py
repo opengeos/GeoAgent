@@ -285,6 +285,8 @@ class MockQGISLayer:
         self._visible = True
         self._extent = tuple(extent) if extent else None
         self._opacity = 1.0
+        self.symbology: dict[str, Any] = {}
+        self.repaint_count = 0
 
     def name(self) -> str:
         """Return the object name."""
@@ -372,6 +374,10 @@ class MockQGISLayer:
     def setOpacity(self, opacity: float) -> None:
         """Set opacity."""
         self._opacity = float(opacity)
+
+    def triggerRepaint(self) -> None:
+        """Record layer repaint."""
+        self.repaint_count += 1
 
 
 class MockQGISCanvas:

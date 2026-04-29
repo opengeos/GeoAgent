@@ -297,6 +297,18 @@ def _format_tool_calls(tool_calls):
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
+def _conversation_markdown(messages):
+    """Return the full chat transcript as Markdown."""
+    blocks = []
+    for msg in messages:
+        sender = str(msg.get("sender") or "").strip()
+        body = str(msg.get("body") or "").strip()
+        if not sender or not body:
+            continue
+        blocks.append(f"## {sender}\n\n{body}")
+    return "\n\n".join(blocks)
+
+
 class PromptTextEdit(QPlainTextEdit):
     """Prompt editor with chat-friendly keyboard shortcuts."""
 
@@ -454,7 +466,6 @@ class ChatDockWidget(QDockWidget):
         self._prompt_history = []
         self._history_index = None
         self._messages = []
-        self._last_assistant_markdown = ""
         self._status_started_at = None
         self._status_base_text = "Running"
         self._status_frame = 0
@@ -558,7 +569,7 @@ class ChatDockWidget(QDockWidget):
 
         self.copy_md_btn = QPushButton("Copy Markdown")
         self.copy_md_btn.setEnabled(False)
-        self.copy_md_btn.clicked.connect(self._copy_latest_markdown)
+        self.copy_md_btn.clicked.connect(self._copy_transcript_markdown)
         primary_button_layout.addWidget(self.copy_md_btn)
         layout.addLayout(primary_button_layout)
 
@@ -801,9 +812,7 @@ class ChatDockWidget(QDockWidget):
         """Append a chat message and refresh the transcript."""
         body = message.strip()
         self._messages.append({"sender": sender, "body": body, "markdown": markdown})
-        if markdown:
-            self._last_assistant_markdown = body
-            self.copy_md_btn.setEnabled(True)
+        self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
 
     def _render_transcript(self):
@@ -825,20 +834,20 @@ class ChatDockWidget(QDockWidget):
         end_cursor = getattr(getattr(QTextCursor, "MoveOperation", QTextCursor), "End")
         self.transcript.moveCursor(end_cursor)
 
-    def _copy_latest_markdown(self):
-        """Copy the latest assistant Markdown response to the clipboard."""
-        if not self._last_assistant_markdown:
+    def _copy_transcript_markdown(self):
+        """Copy the full chat transcript to the clipboard as Markdown."""
+        transcript = _conversation_markdown(self._messages)
+        if not transcript:
             return
         clipboard = QGuiApplication.clipboard()
         if clipboard is not None:
-            clipboard.setText(self._last_assistant_markdown)
-            self.status_label.setText("Copied latest response as Markdown.")
+            clipboard.setText(transcript)
+            self.status_label.setText("Copied chat history as Markdown.")
             self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
     def _clear_transcript(self):
         """Clear all rendered chat messages."""
         self._messages = []
-        self._last_assistant_markdown = ""
         self.copy_md_btn.setEnabled(False)
         self.transcript.clear()
 

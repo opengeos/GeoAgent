@@ -54,6 +54,7 @@ def test_factory_returns_tools_for_iface() -> None:
         "remove_layer",
         "set_layer_visibility",
         "set_layer_opacity",
+        "set_layer_symbology",
         "inspect_layer_fields",
         "get_selected_features",
         "select_features_by_expression",
@@ -501,6 +502,88 @@ def test_save_project_records_path(tmp_path) -> None:
     out = tools["save_project"](path=str(tmp_path / "project.qgz"))
     assert out.endswith("project.qgz")
     assert project.saved_path == out
+
+
+def test_set_layer_symbology_updates_mock_layer() -> None:
+    """Verify simple layer styling is exposed as a QGIS tool."""
+    project = MockQGISProject()
+    layer = MockQGISLayer("Stream network", "/tmp/streams.shp", "vector")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    result = tools["set_layer_symbology"](
+        layer_name="Stream network",
+        color="blue",
+        line_width=2,
+        opacity=0.75,
+    )
+
+    assert result["message"] == "Updated symbology for layer 'Stream network'."
+    assert result["color"] == "blue"
+    assert result["line_width"] == 2.0
+    assert result["opacity"] == 0.75
+    assert layer.symbology == {"color": "blue", "line_width": 2.0}
+    assert layer.opacity() == 0.75
+    assert layer.repaint_count == 1
+    assert iface.mapCanvas().refresh_count == 1
+
+
+def test_set_layer_symbology_does_not_reassign_renderer_owned_symbol() -> None:
+    """Verify styling mutates the existing renderer symbol without re-owning it."""
+
+    class MockSymbolLayer:
+        """Minimal symbol layer with width controls."""
+
+        def __init__(self) -> None:
+            self.width = 0.0
+
+        def setWidth(self, width: float) -> None:
+            self.width = width
+
+    class MockSymbol:
+        """Minimal renderer-owned symbol."""
+
+        def __init__(self) -> None:
+            self.color = None
+            self.layer = MockSymbolLayer()
+
+        def setColor(self, color) -> None:
+            self.color = color
+
+        def symbolLayer(self, index: int):
+            return self.layer if index == 0 else None
+
+    class MockRenderer:
+        """Renderer that must keep ownership of its existing symbol."""
+
+        def __init__(self) -> None:
+            self.existing_symbol = MockSymbol()
+
+        def symbol(self):
+            return self.existing_symbol
+
+        def setSymbol(self, symbol) -> None:
+            raise AssertionError("setSymbol must not be called with an owned symbol")
+
+    project = MockQGISProject()
+    layer = MockQGISLayer("Stream network", "/tmp/streams.shp", "vector")
+    renderer = MockRenderer()
+    layer.renderer = lambda: renderer
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    result = tools["set_layer_symbology"](
+        layer_name="Stream network",
+        color="blue",
+        line_width=2,
+    )
+
+    assert result["message"] == "Updated symbology for layer 'Stream network'."
+    assert renderer.existing_symbol.color == "blue"
+    assert renderer.existing_symbol.layer.width == 2.0
+    assert layer.repaint_count == 1
 
 
 def test_qgis_tools_route_calls_through_gui_marshal(monkeypatch) -> None:

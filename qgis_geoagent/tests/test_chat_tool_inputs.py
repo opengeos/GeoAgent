@@ -1,6 +1,28 @@
 """Tests for QGIS chat transcript tool-input formatting."""
 
-from open_geoagent.dialogs.chat_dock import _format_tool_calls
+from open_geoagent.dialogs.chat_dock import _conversation_markdown, _format_tool_calls
+
+
+def test_conversation_markdown_includes_full_history() -> None:
+    """Verify copying Markdown includes every chat turn."""
+    text = _conversation_markdown(
+        [
+            {"sender": "You", "body": "hello", "markdown": False},
+            {"sender": "OpenGeoAgent", "body": "**Hi**", "markdown": True},
+            {"sender": "You", "body": "run flow accumulation", "markdown": False},
+            {
+                "sender": "OpenGeoAgent",
+                "body": "Done\n\nTool inputs:\n- **`run_whitebox_tool`**",
+                "markdown": True,
+            },
+        ]
+    )
+
+    assert text.startswith("## You\n\nhello")
+    assert "## OpenGeoAgent\n\n**Hi**" in text
+    assert "## You\n\nrun flow accumulation" in text
+    assert "Tool inputs:" in text
+    assert text.count("## OpenGeoAgent") == 2
 
 
 def test_format_tool_calls_labels_routed_whitebox_tools() -> None:
