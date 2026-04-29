@@ -1500,7 +1500,11 @@ def gee_data_catalogs_tools(
                     diagnostics["bounds"] = {
                         "collection_asset_id": bounds_collection_asset_id,
                         "filter_property": bounds_filter_property,
-                        "filter_value": bounds_filter_value,
+                        "filter_value": (
+                            _coerce_filter_value(bounds_filter_value)
+                            if bounds_filter_value is not None
+                            else None
+                        ),
                         "method": "ImageCollection.filterBounds",
                     }
                 if is_dswx and cloud_cover is not None:
@@ -1590,10 +1594,14 @@ def gee_data_catalogs_tools(
                 {
                     "collection_asset_id": bounds_collection_asset_id,
                     "filter_property": bounds_filter_property,
-                    "filter_value": bounds_filter_value,
+                    "filter_value": (
+                        _coerce_filter_value(bounds_filter_value)
+                        if bounds_filter_value is not None
+                        else None
+                    ),
                     "method": "ImageCollection.filterBounds",
                 }
-                if bounds_collection_asset_id
+                if (resolved_type == "ImageCollection" and bounds_collection_asset_id)
                 else None
             )
             if clip_collection is not None and resolved_type != "FeatureCollection":
@@ -1947,10 +1955,17 @@ def gee_data_catalogs_tools(
                     {
                         "collection_asset_id": bounds_collection_asset_id,
                         "filter_property": bounds_filter_property,
-                        "filter_value": bounds_filter_value,
+                        "filter_value": (
+                            _coerce_filter_value(bounds_filter_value)
+                            if bounds_filter_value is not None
+                            else None
+                        ),
                         "method": "ImageCollection.filterBounds",
                     }
-                    if bounds_collection_asset_id
+                    if (
+                        resolved_type == "ImageCollection"
+                        and bounds_collection_asset_id
+                    )
                     else None
                 ),
                 "zoom": zoom_result,
