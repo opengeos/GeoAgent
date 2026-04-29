@@ -7,6 +7,7 @@ import re
 import time
 import traceback
 
+from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import Qt, QSettings, QThread, QTimer, pyqtSignal
 from qgis.PyQt.QtGui import QGuiApplication, QTextCursor
 from qgis.PyQt.QtWidgets import (
@@ -428,8 +429,12 @@ class ChatWorker(QThread):
             parent = None
             try:
                 parent = self.iface.mainWindow()
-            except Exception:
-                pass
+            except Exception as exc:
+                QgsMessageLog.logMessage(
+                    f"Could not resolve QGIS main window for confirmation dialog: {exc}",
+                    "OpenGeoAgent",
+                    Qgis.Warning,
+                )
 
             arg_lines = []
             for key, value in request.args.items():
@@ -855,8 +860,12 @@ class ChatDockWidget(QDockWidget):
         """Stop the animated status timer when the dock is dismissed."""
         try:
             self._stop_running_status()
-        except Exception:
-            pass
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Failed to stop running status timer during dock shutdown: {exc}",
+                "OpenGeoAgent",
+                Qgis.Warning,
+            )
 
     def hideEvent(self, event):
         """Stop the animated status timer when the dock is hidden."""

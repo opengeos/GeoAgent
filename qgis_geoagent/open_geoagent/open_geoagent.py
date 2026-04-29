@@ -3,6 +3,7 @@
 import os
 import re
 
+from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolBar, QMessageBox
@@ -145,8 +146,12 @@ class OpenGeoAgent:
                     "OpenGeoAgent",
                     "Install missing dependencies before opening the chat panel.",
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                QgsMessageLog.logMessage(
+                    f"Failed to push dependency warning to message bar: {exc}",
+                    "OpenGeoAgent",
+                    Qgis.Warning,
+                )
             return
 
         if self._chat_dock is None:
