@@ -1425,14 +1425,6 @@ class ChatDockWidget(QDockWidget):
             return
 
         provider = self.provider_combo.currentText()
-        if self._image_attachments and provider != "openai-codex":
-            QMessageBox.critical(
-                self,
-                "OpenGeoAgent",
-                "Image attachments are currently supported with the "
-                "openai-codex provider.",
-            )
-            return
         self._save_model_settings()
         _apply_environment_from_settings(self.settings)
         if provider == "openai-codex":
