@@ -2,7 +2,7 @@
 
 __author__ = """Qiusheng Wu"""
 __email__ = "giswqs@gmail.com"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 from geoagent.core.config import GeoAgentConfig
 from geoagent.core.context import GeoAgentContext

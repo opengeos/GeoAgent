@@ -15,6 +15,8 @@ document this explicitly for the plugins.qgis.org Bandit scan.
 """
 
 import importlib
+import importlib.metadata
+import importlib.util
 import os
 import platform
 import shutil
@@ -123,12 +125,58 @@ def ensure_venv_packages_available() -> bool:
     return True
 
 
-def check_dependencies() -> List[Dict]:
-    """Check if required Python packages are importable.
+def _dependency_discoverable(import_name: str) -> Tuple[bool, Optional[str]]:
+    """Return whether a dependency is discoverable on ``sys.path``.
+
+    The plugin uses this lightweight check while opening the chat dock. Some
+    provider modules are expensive to import, so startup should only confirm
+    they are installed and leave full imports to the actual chat request.
+
+    Args:
+        import_name: Dotted module name to probe.
 
     Returns:
-        List of dicts with keys: name, pip_name, installed, version.
+        Tuple of (discoverable, error_message). ``error_message`` is ``None``
+        when discoverable is ``True``.
     """
+    try:
+        if importlib.util.find_spec(import_name) is None:
+            return False, f"No module named {import_name!r}"
+    except (ImportError, ModuleNotFoundError, ValueError) as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+    return True, None
+
+
+def _distribution_name(pip_name: str) -> str:
+    """Return a best-effort distribution name from a pip requirement string."""
+    return (
+        pip_name.split("[", 1)[0]
+        .split(">", 1)[0]
+        .split("<", 1)[0]
+        .split("=", 1)[0]
+        .strip()
+    )
+
+
+def _dependency_version(pip_name: str) -> Optional[str]:
+    """Return an installed distribution version without importing the package."""
+    try:
+        return importlib.metadata.version(_distribution_name(pip_name))
+    except importlib.metadata.PackageNotFoundError:
+        return None
+
+
+def check_dependencies() -> List[Dict]:
+    """Check if required Python packages are discoverable.
+
+    This intentionally avoids importing provider modules so opening the
+    settings panel stays responsive.
+
+    Returns:
+        List of dicts with keys: name, pip_name, installed, version, error.
+        ``error`` is populated when the package is not discoverable.
+    """
+    ensure_venv_packages_available()
     results = []
     for import_name, pip_name in REQUIRED_PACKAGES:
         info: Dict = {
@@ -136,24 +184,33 @@ def check_dependencies() -> List[Dict]:
             "pip_name": pip_name,
             "installed": False,
             "version": None,
+            "error": None,
         }
-        try:
-            mod = importlib.import_module(import_name)
+        discoverable, error = _dependency_discoverable(import_name)
+        if discoverable:
             info["installed"] = True
-            info["version"] = getattr(mod, "__version__", "installed")
-        except ImportError:
-            pass
+            info["version"] = _dependency_version(pip_name) or "installed"
+        else:
+            info["error"] = error
         results.append(info)
     return results
 
 
 def all_dependencies_met() -> bool:
-    """Return True if all required packages are importable.
+    """Return True if every required package is discoverable.
+
+    This is used on the chat-dock opening path, so it must avoid importing
+    heavy provider packages. Full imports happen later when the user sends a
+    chat request, where any provider-specific import error can be reported in
+    the chat panel.
 
     Returns:
-        True if all dependencies are installed and importable.
+        True if all dependencies are discoverable on ``sys.path``.
     """
-    return all(dep["installed"] for dep in check_dependencies())
+    ensure_venv_packages_available()
+    return all(
+        _dependency_discoverable(import_name)[0] for import_name, _ in REQUIRED_PACKAGES
+    )
 
 
 def get_missing_packages() -> List[str]:
