@@ -586,6 +586,50 @@ def test_set_layer_symbology_does_not_reassign_renderer_owned_symbol() -> None:
     assert layer.repaint_count == 1
 
 
+def test_run_pyqgis_script_executes_on_qgis_context() -> None:
+    """Verify fallback PyQGIS snippets can mutate active QGIS objects."""
+    project = MockQGISProject()
+    layer = MockQGISLayer("NAIP", "/tmp/naip.tif", "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project=project)
+    iface.setActiveLayer(layer)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    result = tools["run_pyqgis_script"].__wrapped__(
+        "active_layer.setOpacity(0.5)\n"
+        "canvas.refresh()\n"
+        "print(active_layer.name())",
+        description="Set active layer opacity.",
+    )
+
+    assert result["success"] is True
+    assert result["message"] == "Set active layer opacity."
+    assert result["stdout"] == "NAIP"
+    assert layer.opacity() == 0.5
+    assert iface.mapCanvas().refresh_count == 1
+
+
+def test_run_pyqgis_script_rejects_non_qgis_imports() -> None:
+    """Verify generated snippets cannot import non-QGIS modules."""
+    tools = {t.tool_name: t for t in qgis_tools(MockQGISIface(), MockQGISProject())}
+
+    try:
+        tools["run_pyqgis_script"].__wrapped__("import os\nos.getcwd()")
+    except ValueError as exc:
+        assert "Only qgis/PyQt and math imports" in str(exc)
+    else:  # pragma: no cover - defensive assertion
+        raise AssertionError("Expected unsafe import to be rejected")
+
+
+def test_run_pyqgis_script_requires_confirmation() -> None:
+    """Verify arbitrary PyQGIS execution is confirmation-gated."""
+    tools = {t.tool_name: t for t in qgis_tools(MockQGISIface(), MockQGISProject())}
+    meta = getattr(tools["run_pyqgis_script"], "_geoagent_meta")
+
+    assert meta.requires_confirmation is True
+    assert meta.destructive is True
+
+
 def test_qgis_tools_route_calls_through_gui_marshal(monkeypatch) -> None:
     """Verify that qgis tools route calls through gui marshal."""
     iface = MockQGISIface()

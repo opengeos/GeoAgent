@@ -720,3 +720,11 @@ def test_for_whitebox_registers_tools_and_respects_fast_mode(monkeypatch) -> Non
     assert "search_whitebox_tools" in fast_names
     assert "get_whitebox_tool_info" in fast_names
     assert "run_whitebox_tool" not in fast_names
+
+
+def test_whitebox_prompt_instructs_pyqgis_fallback() -> None:
+    """Verify QGIS API fallback execution stays in the Whitebox prompt."""
+    from geoagent.core.factory import WHITEBOX_SYSTEM_PROMPT
+
+    assert "run_pyqgis_script" in WHITEBOX_SYSTEM_PROMPT
+    assert "Do not merely provide a script" in WHITEBOX_SYSTEM_PROMPT

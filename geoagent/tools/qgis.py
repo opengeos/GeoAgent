@@ -17,6 +17,9 @@ Typical usage from inside a QGIS plugin's Python console::
 
 from __future__ import annotations
 
+import ast
+import contextlib
+import io
 import tempfile
 from pathlib import Path
 from typing import Any, Optional
@@ -24,6 +27,98 @@ from urllib.parse import quote
 
 from geoagent.core.decorators import geo_tool
 from geoagent.tools._qt_marshal import run_on_qt_gui_thread
+
+_PYQGIS_ALLOWED_IMPORTS = ("qgis", "math")
+_PYQGIS_BLOCKED_CALLS = {
+    "__import__",
+    "compile",
+    "eval",
+    "exec",
+    "input",
+    "open",
+}
+
+
+def _validate_pyqgis_script(code: str) -> None:
+    """Reject generated code that is outside the intended PyQGIS scope."""
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as exc:
+        raise ValueError(f"Invalid Python syntax: {exc}") from exc
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if not alias.name.startswith(_PYQGIS_ALLOWED_IMPORTS):
+                    raise ValueError(
+                        "Only qgis/PyQt and math imports are allowed in "
+                        "run_pyqgis_script."
+                    )
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if node.level or not module.startswith(_PYQGIS_ALLOWED_IMPORTS):
+                raise ValueError(
+                    "Only absolute qgis/PyQt and math imports are allowed in "
+                    "run_pyqgis_script."
+                )
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            if node.func.id in _PYQGIS_BLOCKED_CALLS:
+                raise ValueError(
+                    f"Calling {node.func.id!r} is not allowed in run_pyqgis_script."
+                )
+        elif isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+            raise ValueError("Dunder attribute access is not allowed.")
+        elif isinstance(node, ast.Name) and node.id in {
+            "__builtins__",
+            "__dict__",
+            "__globals__",
+            "__subclasses__",
+        }:
+            raise ValueError(f"Access to {node.id!r} is not allowed.")
+
+
+def _limited_pyqgis_import(
+    name: str,
+    globals: dict[str, Any] | None = None,
+    locals: dict[str, Any] | None = None,
+    fromlist: tuple[str, ...] = (),
+    level: int = 0,
+) -> Any:
+    """Allow imports needed for PyQGIS snippets and reject everything else."""
+    if level or not name.startswith(_PYQGIS_ALLOWED_IMPORTS):
+        raise ImportError(
+            f"Import {name!r} is not allowed in run_pyqgis_script. "
+            "Use QGIS/PyQt API imports only."
+        )
+    return __import__(name, globals, locals, fromlist, level)
+
+
+def _pyqgis_builtins() -> dict[str, Any]:
+    """Return a small builtins namespace for generated PyQGIS snippets."""
+    return {
+        "__import__": _limited_pyqgis_import,
+        "abs": abs,
+        "all": all,
+        "any": any,
+        "bool": bool,
+        "dict": dict,
+        "enumerate": enumerate,
+        "float": float,
+        "int": int,
+        "isinstance": isinstance,
+        "len": len,
+        "list": list,
+        "max": max,
+        "min": min,
+        "print": print,
+        "range": range,
+        "round": round,
+        "set": set,
+        "str": str,
+        "sum": sum,
+        "tuple": tuple,
+        "zip": zip,
+    }
 
 
 def _qcolor(value: Any) -> Any:
@@ -1393,6 +1488,81 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
     @geo_tool(
         category="qgis",
         requires_confirmation=True,
+        destructive=True,
+    )
+    def run_pyqgis_script(code: str, description: str = "") -> dict[str, Any]:
+        """Run a short PyQGIS script when no dedicated GeoAgent tool exists.
+
+        Use this for QGIS API operations that are not covered by a named
+        GeoAgent tool, such as raster renderer/band styling, labeling, layer
+        tree tweaks, or other project/canvas changes. The script runs on the
+        QGIS GUI thread with ``iface``, ``project``, ``canvas``, and
+        ``active_layer`` already defined.
+
+        Args:
+            code: Python code using the QGIS/PyQt API. Imports are limited to
+                qgis/PyQt and math modules. Do not use this for shell,
+                network, filesystem, or secret-handling operations.
+            description: One-sentence explanation of the intended QGIS change.
+
+        Returns:
+            A dict with success status, printed output, changed variable names,
+            and the executed code.
+        """
+        code = (code or "").strip()
+        if not code:
+            return {
+                "success": False,
+                "error": "No PyQGIS code was provided.",
+                "pyqgis_script": "",
+            }
+        _validate_pyqgis_script(code)
+
+        def _run() -> dict[str, Any]:
+            """Run the generated PyQGIS script on the GUI thread."""
+            proj = _project()
+            canvas = iface.mapCanvas() if hasattr(iface, "mapCanvas") else None
+            active_layer = (
+                iface.activeLayer() if hasattr(iface, "activeLayer") else None
+            )
+            namespace: dict[str, Any] = {
+                "__builtins__": _pyqgis_builtins(),
+                "iface": iface,
+                "project": proj,
+                "canvas": canvas,
+                "active_layer": active_layer,
+            }
+            stdout = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(stdout):
+                    exec(  # nosec B102 - confirmation-gated PyQGIS tool.
+                        compile(code, "<geoagent_pyqgis_script>", "exec"),
+                        namespace,
+                    )
+            except Exception as exc:
+                return {
+                    "success": False,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "stdout": stdout.getvalue().strip(),
+                    "description": description,
+                    "pyqgis_script": code,
+                }
+
+            ignored = {"__builtins__", "iface", "project", "canvas", "active_layer"}
+            variables = sorted(k for k in namespace if k not in ignored)
+            return {
+                "success": True,
+                "message": description or "PyQGIS script executed.",
+                "stdout": stdout.getvalue().strip(),
+                "variables": variables,
+                "pyqgis_script": code,
+            }
+
+        return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+        requires_confirmation=True,
     )
     def save_project(path: Optional[str] = None) -> str:
         """Save the current QGIS project, optionally to a new file path."""
@@ -1445,6 +1615,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         buffer_active_layer,
         open_attribute_table,
         refresh_canvas,
+        run_pyqgis_script,
         save_project,
     ]
 

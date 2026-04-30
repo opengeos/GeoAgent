@@ -337,6 +337,53 @@ def _format_tool_calls(tool_calls):
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
+def _latest_pyqgis_script(tool_calls):
+    """Return the last PyQGIS script found in recorded tool calls."""
+    for call in reversed(tool_calls or []):
+        if not isinstance(call, dict):
+            continue
+        if str(call.get("name") or "").strip() != "run_pyqgis_script":
+            continue
+        args = call.get("args")
+        if not isinstance(args, dict):
+            continue
+        code = str(args.get("code") or "").strip()
+        if code:
+            return code
+    return ""
+
+
+def _console_ready_pyqgis_script(code):
+    """Return PyQGIS code that can run in the QGIS Python Console."""
+    code = str(code or "").strip()
+    if not code:
+        return ""
+    preamble = """# OpenGeoAgent PyQGIS script.
+# This preamble makes scripts copied from GeoAgent runnable in the QGIS Python Console.
+try:
+    iface
+except NameError:
+    from qgis.utils import iface
+
+try:
+    project
+except NameError:
+    from qgis.core import QgsProject
+    project = QgsProject.instance()
+
+try:
+    canvas
+except NameError:
+    canvas = iface.mapCanvas()
+
+try:
+    active_layer
+except NameError:
+    active_layer = iface.activeLayer()
+"""
+    return f"{preamble}\n{code}\n"
+
+
 def _conversation_markdown(messages):
     """Return the full chat transcript as Markdown."""
     blocks = []
@@ -884,6 +931,7 @@ class ChatDockWidget(QDockWidget):
         self._prompt_history = []
         self._history_index = None
         self._messages = []
+        self._last_pyqgis_script = ""
         self._image_attachments = []
         self._streaming_message_index = None
         self._streaming_answer = ""
@@ -1031,6 +1079,14 @@ class ChatDockWidget(QDockWidget):
         self.copy_md_btn.setEnabled(False)
         self.copy_md_btn.clicked.connect(self._copy_transcript_markdown)
         primary_button_layout.addWidget(self.copy_md_btn)
+
+        self.copy_script_btn = QPushButton("Copy Script")
+        self.copy_script_btn.setEnabled(False)
+        self.copy_script_btn.setToolTip(
+            "Copy the most recent PyQGIS script executed by GeoAgent."
+        )
+        self.copy_script_btn.clicked.connect(self._copy_last_pyqgis_script)
+        primary_button_layout.addWidget(self.copy_script_btn)
         layout.addLayout(primary_button_layout)
 
         self.status_label = QLabel("Ready. Ctrl+Enter sends. Up/Down cycles prompts.")
@@ -1571,7 +1627,12 @@ class ChatDockWidget(QDockWidget):
         elif result.get("success"):
             answer = result.get("answer") or "(No text response.)"
             details = []
-            tool_inputs = _format_tool_calls(result.get("tool_calls") or [])
+            tool_calls = result.get("tool_calls") or []
+            pyqgis_script = _latest_pyqgis_script(tool_calls)
+            if pyqgis_script:
+                self._last_pyqgis_script = pyqgis_script
+                self.copy_script_btn.setEnabled(True)
+            tool_inputs = _format_tool_calls(tool_calls)
             if tool_inputs:
                 details.append(tool_inputs)
             if result.get("tools"):
@@ -1735,9 +1796,24 @@ class ChatDockWidget(QDockWidget):
             self.status_label.setText("Copied chat history as Markdown.")
             self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
+    def _copy_last_pyqgis_script(self):
+        """Copy the most recent executed PyQGIS script to the clipboard."""
+        script = _console_ready_pyqgis_script(self._last_pyqgis_script)
+        if not script:
+            self.status_label.setText("No PyQGIS script is available to copy.")
+            self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+            return
+        clipboard = QGuiApplication.clipboard()
+        if clipboard is not None:
+            clipboard.setText(script)
+            self.status_label.setText("Copied PyQGIS script.")
+            self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
     def _clear_transcript(self):
         """Clear all rendered chat messages."""
         self._messages = []
+        self._last_pyqgis_script = ""
+        self.copy_script_btn.setEnabled(False)
         self.copy_md_btn.setEnabled(False)
         self.transcript.clear()
 

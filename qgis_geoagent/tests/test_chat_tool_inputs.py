@@ -5,11 +5,13 @@ from qgis.PyQt.QtGui import QColor, QImage
 
 from open_geoagent.dialogs.chat_dock import (
     _build_chat_content,
+    _console_ready_pyqgis_script,
     _conversation_markdown,
     _format_tool_calls,
     _grab_screen_rect,
     _grab_widget_global_rect,
     _image_to_png_bytes,
+    _latest_pyqgis_script,
     _normalized_crop_rect,
 )
 
@@ -72,6 +74,35 @@ def test_build_chat_content_adds_image_blocks() -> None:
         {"text": "Describe this map screenshot."},
         {"image": {"format": "png", "source": {"bytes": b"png-bytes"}}},
     ]
+
+
+def test_latest_pyqgis_script_extracts_last_run_script() -> None:
+    """Verify the copy-script button gets the full latest PyQGIS snippet."""
+    script = _latest_pyqgis_script(
+        [
+            {"name": "get_active_layer", "args": {}},
+            {
+                "name": "run_pyqgis_script",
+                "args": {"code": "print('first')"},
+            },
+            {
+                "name": "run_pyqgis_script",
+                "args": {"code": "active_layer.triggerRepaint()"},
+            },
+        ]
+    )
+
+    assert script == "active_layer.triggerRepaint()"
+
+
+def test_console_ready_pyqgis_script_defines_geoagent_context_names() -> None:
+    """Verify copied scripts can run in the QGIS Python Console."""
+    script = _console_ready_pyqgis_script("layer = active_layer\ncanvas.refresh()")
+
+    assert "from qgis.utils import iface" in script
+    assert "QgsProject.instance()" in script
+    assert "active_layer = iface.activeLayer()" in script
+    assert script.endswith("layer = active_layer\ncanvas.refresh()\n")
 
 
 def test_normalized_crop_rect_clamps_reversed_selection() -> None:

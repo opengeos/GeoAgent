@@ -153,6 +153,11 @@ Workflow guidance:
 - Use QGIS layer names as input values only when the layer is backed by a
   local file. Otherwise ask the user to export the layer or provide a file.
 - Generated outputs are added back to QGIS when possible.
+- When the user asks for a QGIS API operation that has no dedicated tool, such
+  as raster renderer/band styling, labeling, layer tree tweaks, or other
+  project/canvas changes, write a short PyQGIS script and run it with
+  run_pyqgis_script. Do not merely provide a script for the user to paste when
+  run_pyqgis_script can safely perform the requested QGIS change.
 - Keep responses concise and include the Whitebox tool name, output path, and
   loaded layer names when available.
 """
