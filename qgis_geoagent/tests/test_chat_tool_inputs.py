@@ -81,8 +81,8 @@ def test_normalized_crop_rect_clamps_reversed_selection() -> None:
     assert rect == QRect(40, 40, 30, 20)
 
 
-def test_grab_screen_rect_uses_clamped_global_rect() -> None:
-    """Verify screen-region capture passes a bounded rectangle to QScreen."""
+def test_grab_screen_rect_passes_screen_local_rect() -> None:
+    """Verify screen-region capture converts global coords to screen-local coords."""
 
     class _Screen:
         def __init__(self) -> None:
@@ -99,7 +99,7 @@ def test_grab_screen_rect_uses_clamped_global_rect() -> None:
     result = _grab_screen_rect(screen, QRect(90, 80, 80, 60))
 
     assert result == "pixmap"
-    assert screen.calls == [(0, 90, 80, 20, 20)]
+    assert screen.calls == [(0, 80, 60, 20, 20)]
 
 
 def test_grab_widget_global_rect_maps_global_selection_to_widget() -> None:

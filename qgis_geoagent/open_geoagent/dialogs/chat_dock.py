@@ -342,7 +342,7 @@ def _conversation_markdown(messages):
     blocks = []
     for msg in messages:
         sender = str(msg.get("sender") or "").strip()
-        body = str(msg.get("body") or "").strip()
+        body = str(msg.get("display_body") or msg.get("body") or "").strip()
         if not sender or not body:
             continue
         blocks.append(f"## {sender}\n\n{body}")
@@ -444,10 +444,12 @@ def _grab_screen_rect(screen, rect):
     """Grab a global desktop rectangle from a screen."""
     if screen is None or rect is None:
         return QPixmap()
-    rect = _normalized_crop_rect(rect, screen.geometry())
+    screen_geometry = screen.geometry()
+    rect = _normalized_crop_rect(rect, screen_geometry)
     if rect.isNull():
         return QPixmap()
-    return screen.grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height())
+    local = rect.translated(-screen_geometry.topLeft())
+    return screen.grabWindow(0, local.x(), local.y(), local.width(), local.height())
 
 
 def _global_widget_rect(widget):
@@ -538,10 +540,15 @@ class CanvasRegionCapture(QObject):
         self.origin = QPoint()
         self.rubber_band = None
         self.active = False
+        self._prior_mouse_tracking = None
 
     def start(self):
         """Begin capturing mouse events from the canvas widget."""
         self.widget.installEventFilter(self)
+        try:
+            self._prior_mouse_tracking = bool(self.widget.hasMouseTracking())
+        except Exception:
+            self._prior_mouse_tracking = None
         self.widget.setMouseTracking(True)
         self.widget.setCursor(_qt_value("CursorShape", "CrossCursor"))
         self.widget.setFocus()
@@ -550,6 +557,9 @@ class CanvasRegionCapture(QObject):
         """Stop capture and remove temporary UI."""
         self.widget.removeEventFilter(self)
         self.widget.unsetCursor()
+        if self._prior_mouse_tracking is not None:
+            self.widget.setMouseTracking(self._prior_mouse_tracking)
+            self._prior_mouse_tracking = None
         if self.rubber_band is not None:
             self.rubber_band.hide()
             self.rubber_band.deleteLater()
@@ -1457,11 +1467,15 @@ class ChatDockWidget(QDockWidget):
         attachments = [dict(item) for item in self._image_attachments]
         chat_payload = _build_chat_content(prompt_with_context, attachments)
 
-        display_prompt = prompt
+        display_body = None
         if attachments:
             plural = "s" if len(attachments) != 1 else ""
-            display_prompt = f"{prompt}\n\n[Attached image{plural}: {len(attachments)}]"
-        self._append_message("You", display_prompt, markdown=False)
+            display_body = (
+                f"{prompt}\n\n"
+                f"[Attached image{plural} sent with this message: {len(attachments)}. "
+                "The image content is not retained in later text-only context.]"
+            )
+        self._append_message("You", prompt, markdown=False, display_body=display_body)
         self._streaming_message_index = None
         self._streaming_answer = ""
         self.prompt_input.clear()
@@ -1672,10 +1686,19 @@ class ChatDockWidget(QDockWidget):
             f"{spinner} {self._status_base_text}{dots} {elapsed}s - {suffix}"
         )
 
-    def _append_message(self, sender, message, markdown=False):
-        """Append a chat message and refresh the transcript."""
+    def _append_message(self, sender, message, markdown=False, display_body=None):
+        """Append a chat message and refresh the transcript.
+
+        ``body`` holds the canonical prompt or response text used for context
+        building. ``display_body`` optionally overrides what is shown in the
+        UI and copied transcripts so that ephemeral metadata (such as image
+        attachment markers) does not bleed into later conversation history.
+        """
         body = message.strip()
-        self._messages.append({"sender": sender, "body": body, "markdown": markdown})
+        entry = {"sender": sender, "body": body, "markdown": markdown}
+        if display_body is not None:
+            entry["display_body"] = display_body.strip()
+        self._messages.append(entry)
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
 
@@ -1693,10 +1716,11 @@ class ChatDockWidget(QDockWidget):
         blocks = []
         for msg in self._messages:
             sender = html.escape(msg["sender"])
+            display = msg.get("display_body") or msg["body"]
             if msg["markdown"]:
-                body = _markdown_to_basic_html(msg["body"])
+                body = _markdown_to_basic_html(display)
             else:
-                body = f"<p>{_plain_text_to_html(msg['body'])}</p>"
+                body = f"<p>{_plain_text_to_html(display)}</p>"
             blocks.append(
                 "<div style='margin-bottom: 12px;'>"
                 f"<p style='font-weight: 600; margin-bottom: 4px;'>{sender}</p>"
