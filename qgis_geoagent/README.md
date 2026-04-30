@@ -15,8 +15,14 @@ GitHub update checker.
 - Dockable OpenGeoAgent chat panel with Ctrl+Enter sending
 - Up/Down prompt history while the prompt editor is focused
 - Built-in sample prompt picker for common QGIS workflows
+- Agent modes for General QGIS, WhiteboxTools, NASA Earthdata, NASA OPERA,
+  GEE Data Catalogs, and STAC guidance workflows
+- Tool permission profiles, defaulting to inspect-only project access
+- Project-scoped chat history with Markdown import/export
+- Compact jobs panel for active and completed GeoAgent requests
 - Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, and LiteLLM
-- Settings panel for model defaults, API keys, hosts, and AWS region
+- Settings panel for model defaults, API keys, hosts, AWS region, provider
+  smoke tests, and redacted diagnostics export
 - Dependency installer that installs `GeoAgent[providers]` into
   `~/.open_geoagent/`
 - QGIS 3.28+ and QGIS 4 compatible plugin structure
@@ -103,10 +109,34 @@ Default models:
 ## Chat Workflow
 
 - Type a prompt and press **Ctrl+Enter** to send it.
+- Choose an **Agent mode** for the workflow you want. STAC mode provides
+  guided search/loading steps and dependency diagnostics; it does not add a
+  separate STAC loader beyond the current GeoAgent tool surface.
+- Choose a **Permissions** profile. The default **Inspect only** profile hides
+  mutating, long-running, and PyQGIS execution tools from the model. Use broader
+  profiles only when you want GeoAgent to edit layers, run processing, execute
+  PyQGIS/Earth Engine snippets, or auto-approve trusted actions.
 - **Stream output** is enabled by default and shows model text as it arrives.
 - Press **Up** or **Down** in the prompt editor to cycle through previous prompts.
 - Choose a prompt from **Sample prompts...** and click **Insert** to load it into
   the editor before sending.
+- Use **Export**, **Import**, and **Copy Markdown** to move project chat history
+  between sessions. The plugin stores chat history per QGIS project.
+- The **Jobs** panel records submitted requests with status, mode, prompt,
+  elapsed time, and tool summary. Completed jobs can be selected and rerun.
+
+## Diagnostics
+
+The Settings panel includes:
+
+- **Test Provider** for a tiny no-tool model smoke test using the selected
+  provider and model.
+- **Copy Diagnostics** and **Save Diagnostics** for redacted JSON containing
+  plugin version, QGIS/Python details, isolated environment paths, uv status,
+  dependency status, selected model settings, credential presence booleans, and
+  latest installer/provider-test status.
+
+Diagnostics never include raw API keys, OAuth tokens, or passwords.
 
 ## Key Functionality
 

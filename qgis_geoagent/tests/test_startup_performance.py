@@ -43,3 +43,12 @@ def test_all_dependencies_met_uses_lightweight_spec_checks(monkeypatch) -> None:
 
     assert deps_manager.all_dependencies_met() is True
     assert checked == ["geoagent", "openai"]
+
+
+def test_required_dependencies_include_core_runtime_packages() -> None:
+    """Dependency gate should catch partial GeoAgent installs."""
+    from open_geoagent.deps_manager import REQUIRED_PACKAGES
+
+    assert ("geoagent", "GeoAgent[providers]>=1.2.0") in REQUIRED_PACKAGES
+    assert ("strands", "strands-agents>=1.37") in REQUIRED_PACKAGES
+    assert ("pydantic", "pydantic>=2.0") in REQUIRED_PACKAGES

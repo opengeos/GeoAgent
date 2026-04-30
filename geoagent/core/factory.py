@@ -194,6 +194,46 @@ def _filter_by_imports(tools: list[Any]) -> list[Any]:
     return out
 
 
+def _permission_allows_tool(permission_profile: str | None, tool: Any) -> bool:
+    """Return whether a QGIS/plugin tool should be exposed for a profile."""
+    profile = permission_profile or "Trusted auto-approve"
+    if profile == "Execute PyQGIS":
+        profile = "Execute Scripts"
+    name = (
+        getattr(tool, "tool_name", "")
+        or getattr(tool, "__name__", "")
+        or getattr(tool, "name", "")
+    )
+    meta = getattr(tool, "_geoagent_meta", None)
+    category = str(getattr(meta, "category", "") or "")
+    requires_confirmation = bool(getattr(meta, "requires_confirmation", False))
+    destructive = bool(getattr(meta, "destructive", False))
+    long_running = bool(getattr(meta, "long_running", False))
+
+    if profile == "Trusted auto-approve":
+        return True
+    if profile == "Execute Scripts":
+        return True
+    if name == "run_pyqgis_script":
+        return False
+    if profile == "Run processing":
+        return True
+    if category in {"whitebox", "nasa_earthdata", "nasa_opera", "gee_data_catalogs"}:
+        return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
+    if profile == "Edit layers":
+        return not destructive and name != "run_processing_algorithm"
+    return not (requires_confirmation or destructive or long_running)
+
+
+def _filter_by_permission(
+    tools: list[Any], permission_profile: str | None
+) -> list[Any]:
+    """Filter QGIS-related tool surfaces according to a permission profile."""
+    if not permission_profile:
+        return tools
+    return [tool for tool in tools if _permission_allows_tool(permission_profile, tool)]
+
+
 def register_all_tools(registry: GeoToolRegistry, tools: Iterable[Any]) -> None:
     """Populate registry from decorated tools."""
     for t in tools:
@@ -216,6 +256,7 @@ def assemble_tools(
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     fast: bool = False,
+    permission_profile: str | None = None,
 ) -> tuple[list[Any], GeoToolRegistry]:
     """Collect tools for a context and build a metadata registry."""
     registry = GeoToolRegistry()
@@ -266,6 +307,7 @@ def assemble_tools(
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
+    collected = _filter_by_permission(collected, permission_profile)
     tools = collect_tools_for_context(collected, fast=fast, registry=registry)
     return tools, registry
 
@@ -390,6 +432,7 @@ def for_qgis(
     fast: bool = False,
     confirm: ConfirmCallback | None = None,
     extra_tools: Optional[list[Any]] = None,
+    permission_profile: str | None = None,
 ) -> GeoAgent:
     """Bind an agent to QGIS ``iface`` (and optional ``project``)."""
     ctx = GeoAgentContext(
@@ -402,6 +445,7 @@ def for_qgis(
         include_qgis=True,
         extra_tools=extra_tools,
         fast=fast,
+        permission_profile=permission_profile,
     )
     cfg = config or GeoAgentConfig()
     if provider is not None:
@@ -434,6 +478,7 @@ def for_nasa_opera(
     confirm: ConfirmCallback | None = None,
     extra_tools: Optional[list[Any]] = None,
     include_qgis: bool = True,
+    permission_profile: str | None = None,
 ) -> GeoAgent:
     """Bind an agent to the NASA OPERA QGIS plugin runtime.
 
@@ -454,6 +499,7 @@ def for_nasa_opera(
         include_nasa_opera=True,
         extra_tools=extra_tools,
         fast=fast,
+        permission_profile=permission_profile,
     )
     cfg = config or GeoAgentConfig()
     if provider is not None:
@@ -487,6 +533,7 @@ def for_nasa_earthdata(
     confirm: ConfirmCallback | None = None,
     extra_tools: Optional[list[Any]] = None,
     include_qgis: bool = True,
+    permission_profile: str | None = None,
 ) -> GeoAgent:
     """Bind an agent to the NASA Earthdata QGIS plugin runtime.
 
@@ -508,6 +555,7 @@ def for_nasa_earthdata(
         nasa_earthdata_plugin=plugin,
         extra_tools=extra_tools,
         fast=fast,
+        permission_profile=permission_profile,
     )
     cfg = config or GeoAgentConfig()
     if provider is not None:
@@ -541,6 +589,7 @@ def for_gee_data_catalogs(
     confirm: ConfirmCallback | None = None,
     extra_tools: Optional[list[Any]] = None,
     include_qgis: bool = True,
+    permission_profile: str | None = None,
 ) -> GeoAgent:
     """Bind an agent to the QGIS GEE Data Catalogs plugin runtime.
 
@@ -562,6 +611,7 @@ def for_gee_data_catalogs(
         gee_data_catalogs_plugin=plugin,
         extra_tools=extra_tools,
         fast=fast,
+        permission_profile=permission_profile,
     )
     cfg = config or GeoAgentConfig()
     if provider is not None:
@@ -594,6 +644,7 @@ def for_whitebox(
     confirm: ConfirmCallback | None = None,
     extra_tools: Optional[list[Any]] = None,
     include_qgis: bool = True,
+    permission_profile: str | None = None,
 ) -> GeoAgent:
     """Bind an agent to QGIS with WhiteboxTools analysis support.
 
@@ -614,6 +665,7 @@ def for_whitebox(
         include_whitebox=True,
         extra_tools=extra_tools,
         fast=fast,
+        permission_profile=permission_profile,
     )
     cfg = config or GeoAgentConfig()
     if provider is not None:

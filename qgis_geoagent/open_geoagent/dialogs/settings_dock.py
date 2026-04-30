@@ -1,13 +1,18 @@
 """Settings and dependency management for OpenGeoAgent."""
 
+import json
 import os
+import platform
+import sys
 import time
 
 from qgis.PyQt.QtCore import Qt, QSettings, QThread, QTimer, QUrl, pyqtSignal
+from qgis.PyQt.QtGui import QDesktopServices, QFont, QGuiApplication
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDockWidget,
+    QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -21,7 +26,6 @@ from qgis.PyQt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qgis.PyQt.QtGui import QDesktopServices, QFont
 
 from .chat_dock import DEFAULT_MODELS, DEFAULT_PROVIDER, PROVIDERS, SETTINGS_PREFIX
 from ..oauth import (
@@ -43,6 +47,165 @@ ENV_FALLBACKS = {
     "litellm_api_key": ("LITELLM_API_KEY",),
     "litellm_base_url": ("LITELLM_BASE_URL",),
 }
+
+
+def _apply_environment_from_settings(settings):
+    """Apply saved provider credentials to the current process."""
+    for key, env_names in ENV_FALLBACKS.items():
+        value = settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str).strip()
+        if not value:
+            value = _env_fallback(*env_names)
+        if value:
+            for env_name in env_names:
+                os.environ[env_name] = value
+
+
+def _plugin_version(plugin_dir):
+    """Read the plugin metadata version."""
+    try:
+        with open(os.path.join(plugin_dir, "metadata.txt"), "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("version="):
+                    return line.split("=", 1)[1].strip()
+    except OSError:
+        pass
+    return "Unknown"
+
+
+def _model_requires_default_temperature(provider, model_id):
+    """Return True when the selected model rejects non-default temperature."""
+    normalized = str(model_id or "").lower()
+    prefixes = (
+        "gpt-5",
+        "openai/gpt-5",
+        "o1",
+        "openai/o1",
+        "o3",
+        "openai/o3",
+        "o4",
+        "openai/o4",
+    )
+    return provider in {"openai", "litellm"} and normalized.startswith(prefixes)
+
+
+def collect_diagnostics(
+    settings,
+    plugin_dir,
+    latest_install_status="",
+    latest_test_status="",
+):
+    """Return redacted OpenGeoAgent diagnostics as a JSON-friendly dict."""
+    from ..deps_manager import (
+        check_dependencies,
+        get_venv_dir,
+        get_venv_site_packages,
+        venv_exists,
+    )
+    from ..uv_manager import get_uv_path, verify_uv
+
+    try:
+        uv_ok, uv_message = verify_uv()
+    except Exception as exc:
+        uv_ok, uv_message = False, str(exc)
+    try:
+        from qgis.core import Qgis
+
+        qgis_version = getattr(Qgis, "QGIS_VERSION", "Unknown")
+    except Exception:
+        qgis_version = "Unknown"
+
+    credential_presence = {}
+    for key, env_names in ENV_FALLBACKS.items():
+        saved = settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str).strip()
+        env_value = _env_fallback(*env_names)
+        credential_presence[key] = {
+            "saved": bool(saved),
+            "environment": bool(env_value),
+        }
+
+    return {
+        "plugin_version": _plugin_version(plugin_dir),
+        "qgis_version": qgis_version,
+        "python": {
+            "executable": sys.executable,
+            "version": sys.version.split()[0],
+            "platform": platform.platform(),
+        },
+        "venv": {
+            "exists": venv_exists(),
+            "path": get_venv_dir(),
+            "site_packages": get_venv_site_packages(),
+        },
+        "uv": {
+            "path": get_uv_path(),
+            "verified": bool(uv_ok),
+            "message": uv_message,
+        },
+        "dependencies": check_dependencies(),
+        "model": {
+            "provider": settings.value(
+                f"{SETTINGS_PREFIX}provider", DEFAULT_PROVIDER, type=str
+            ),
+            "model": settings.value(f"{SETTINGS_PREFIX}model", "", type=str),
+            "max_tokens": settings.value(
+                f"{SETTINGS_PREFIX}max_tokens", 4096, type=int
+            ),
+        },
+        "credential_presence": credential_presence,
+        "latest_install_status": latest_install_status,
+        "latest_provider_test_status": latest_test_status,
+    }
+
+
+class ProviderTestWorker(QThread):
+    """Run a tiny provider smoke test outside the QGIS UI thread."""
+
+    finished = pyqtSignal(dict)
+
+    def __init__(self, provider, model_id, max_tokens, settings, parent=None):
+        super().__init__(parent)
+        self.provider = provider
+        self.model_id = model_id
+        self.max_tokens = max_tokens
+        self.settings = settings
+
+    def run(self):
+        """Create a minimal no-tool Strands agent and send a short prompt."""
+        try:
+            _apply_environment_from_settings(self.settings)
+            if self.provider == "openai-codex":
+                from ..oauth import ensure_openai_oauth_environment
+
+                ensure_openai_oauth_environment(self.settings, codex=True)
+            from geoagent import GeoAgentConfig
+            from geoagent.core.model import resolve_model
+            from strands import Agent
+
+            token_floor = 4096 if self.provider == "ollama" else 1024
+            cfg = GeoAgentConfig(
+                provider=self.provider,
+                model=self.model_id or None,
+                temperature=(
+                    1
+                    if _model_requires_default_temperature(self.provider, self.model_id)
+                    else 0
+                ),
+                max_tokens=max(int(self.max_tokens or token_floor), token_floor),
+            )
+            model = resolve_model(cfg)
+            agent = Agent(
+                model=model,
+                tools=[],
+                system_prompt="You are a provider connectivity test. Reply briefly.",
+                callback_handler=None,
+            )
+            prompt = "Reply with exactly: ok"
+            if self.provider == "ollama":
+                prompt = "/no_think\nReply with exactly: ok"
+            agent(prompt)
+            self.finished.emit({"success": True, "message": "Provider test succeeded."})
+        except Exception as exc:
+            self.finished.emit({"success": False, "message": str(exc)})
 
 
 def _enum_value(cls, enum_name, member_name):
@@ -132,6 +295,9 @@ class SettingsDockWidget(QDockWidget):
         self.settings = QSettings()
         self._deps_worker = None
         self._oauth_worker = None
+        self._provider_test_worker = None
+        self._latest_install_status = ""
+        self._latest_provider_test_status = ""
 
         self.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
@@ -168,10 +334,24 @@ class SettingsDockWidget(QDockWidget):
         self.save_btn.clicked.connect(self._save_settings)
         button_layout.addWidget(self.save_btn)
 
+        self.test_provider_btn = QPushButton("Test Provider")
+        self.test_provider_btn.clicked.connect(self._test_provider)
+        button_layout.addWidget(self.test_provider_btn)
+
         self.reset_btn = QPushButton("Reset Defaults")
         self.reset_btn.clicked.connect(self._reset_defaults)
         button_layout.addWidget(self.reset_btn)
         layout.addLayout(button_layout)
+
+        diagnostics_layout = QHBoxLayout()
+        self.copy_diagnostics_btn = QPushButton("Copy Diagnostics")
+        self.copy_diagnostics_btn.clicked.connect(self._copy_diagnostics)
+        diagnostics_layout.addWidget(self.copy_diagnostics_btn)
+
+        self.save_diagnostics_btn = QPushButton("Save Diagnostics")
+        self.save_diagnostics_btn.clicked.connect(self._save_diagnostics)
+        diagnostics_layout.addWidget(self.save_diagnostics_btn)
+        layout.addLayout(diagnostics_layout)
 
         self.status_label = QLabel("Settings loaded")
         self.status_label.setStyleSheet("color: gray; font-size: 10px;")
@@ -440,6 +620,7 @@ class SettingsDockWidget(QDockWidget):
         self.refresh_deps_btn.setEnabled(True)
 
         if success:
+            self._latest_install_status = message
             self.deps_overall_label.setText(message)
             self.deps_overall_label.setStyleSheet(
                 "color: green; font-weight: bold; padding: 5px;"
@@ -455,6 +636,7 @@ class SettingsDockWidget(QDockWidget):
                 "Restart QGIS if the plugin cannot import them immediately.",
             )
         else:
+            self._latest_install_status = message
             self.deps_overall_label.setText("Installation failed.")
             self.deps_overall_label.setStyleSheet(
                 "color: red; font-weight: bold; padding: 5px;"
@@ -673,6 +855,74 @@ class SettingsDockWidget(QDockWidget):
         self.status_label.setText("Settings saved")
         self.status_label.setStyleSheet("color: green; font-size: 10px;")
         self.iface.messageBar().pushSuccess("OpenGeoAgent", "Settings saved.")
+
+    def _test_provider(self):
+        """Run a tiny provider smoke test in a background worker."""
+        if self._provider_test_worker is not None:
+            return
+        self._save_settings()
+        provider = self.provider_combo.currentText()
+        model_id = self.model_input.text().strip() or DEFAULT_MODELS.get(provider, "")
+        self.test_provider_btn.setEnabled(False)
+        self.status_label.setText("Testing provider...")
+        self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
+        self._provider_test_worker = ProviderTestWorker(
+            provider,
+            model_id,
+            self.max_tokens_spin.value(),
+            self.settings,
+            self,
+        )
+        self._provider_test_worker.finished.connect(self._on_provider_test_finished)
+        self._provider_test_worker.start()
+
+    def _on_provider_test_finished(self, result):
+        """Display provider smoke-test result."""
+        self.test_provider_btn.setEnabled(True)
+        self._provider_test_worker = None
+        message = result.get("message", "")
+        self._latest_provider_test_status = message
+        if result.get("success"):
+            self.status_label.setText(message)
+            self.status_label.setStyleSheet("color: green; font-size: 10px;")
+            self.iface.messageBar().pushSuccess("OpenGeoAgent", message)
+        else:
+            self.status_label.setText("Provider test failed")
+            self.status_label.setStyleSheet("color: red; font-size: 10px;")
+            QMessageBox.critical(self, "Provider Test Failed", message)
+
+    def _diagnostics_text(self):
+        """Return redacted diagnostics as pretty JSON."""
+        payload = collect_diagnostics(
+            self.settings,
+            os.path.dirname(os.path.dirname(__file__)),
+            self._latest_install_status,
+            self._latest_provider_test_status,
+        )
+        return json.dumps(payload, indent=2, sort_keys=True)
+
+    def _copy_diagnostics(self):
+        """Copy redacted diagnostics to the clipboard."""
+        clipboard = QGuiApplication.clipboard()
+        if clipboard is not None:
+            clipboard.setText(self._diagnostics_text())
+        self.status_label.setText("Copied diagnostics.")
+        self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+    def _save_diagnostics(self):
+        """Save redacted diagnostics to a JSON file."""
+        path, _selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Save OpenGeoAgent Diagnostics",
+            "open_geoagent_diagnostics.json",
+            "JSON (*.json);;Text (*.txt)",
+        )
+        if not path:
+            return
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(self._diagnostics_text())
+        self.status_label.setText("Saved diagnostics.")
+        self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
     def _reset_defaults(self):
         """Reset saved model settings after user confirmation."""

@@ -30,6 +30,8 @@ from qgis.PyQt.QtCore import QThread, pyqtSignal
 # Required packages: (import_name, pip_install_name)
 REQUIRED_PACKAGES = [
     ("geoagent", "GeoAgent[providers]>=1.2.0"),
+    ("strands", "strands-agents>=1.37"),
+    ("pydantic", "pydantic>=2.0"),
     ("whitebox", "whitebox>=2.3.6"),
     ("openai", "openai>=1.0"),
     ("anthropic", "anthropic>=0.40"),
@@ -257,6 +259,19 @@ def _get_subprocess_kwargs() -> dict:
     return {}
 
 
+def _uv_usable() -> bool:
+    """Return True when the cached uv binary exists and verifies successfully."""
+    try:
+        from .uv_manager import uv_exists, verify_uv
+
+        if not uv_exists():
+            return False
+        success, _message = verify_uv()
+        return bool(success)
+    except Exception:
+        return False
+
+
 def _find_python_executable() -> str:
     """Find a working Python executable for subprocess calls.
 
@@ -469,7 +484,7 @@ def create_venv(venv_dir: str) -> str:
     Raises:
         RuntimeError: If venv creation fails after all strategies.
     """
-    from .uv_manager import get_uv_path, uv_exists
+    from .uv_manager import get_uv_path
 
     os.makedirs(os.path.dirname(venv_dir), exist_ok=True)
 
@@ -478,7 +493,7 @@ def create_venv(venv_dir: str) -> str:
     kwargs = _get_subprocess_kwargs()
 
     # Strategy 0: Use uv venv when available (fastest, no pip needed)
-    if uv_exists():
+    if _uv_usable():
         uv_path = get_uv_path()
         python_exe = _find_python_executable()
         cmd = [uv_path, "venv", "--python", python_exe, venv_dir]
@@ -586,13 +601,13 @@ def install_packages(
     Returns:
         Tuple of (success, message).
     """
-    from .uv_manager import get_uv_path, uv_exists
+    from .uv_manager import get_uv_path
 
     python_path = get_venv_python_path(venv_dir)
     env = _get_clean_env()
     kwargs = _get_subprocess_kwargs()
 
-    use_uv = uv_exists()
+    use_uv = _uv_usable()
     if use_uv:
         uv_path = get_uv_path()
         cmd = [
@@ -647,13 +662,13 @@ class DepsInstallWorker(QThread):
     def run(self):
         """Execute uv download, venv creation, and dependency installation."""
         try:
-            from .uv_manager import download_uv, uv_exists
+            from .uv_manager import download_uv
 
             start_time = time.time()
             venv_dir = get_venv_dir()
 
             # Step 0: Download uv if needed (fast package installer)
-            if not uv_exists():
+            if not _uv_usable():
                 self.progress.emit(2, "Downloading uv package installer...")
                 success, msg = download_uv(
                     progress_callback=lambda p, m: self.progress.emit(
@@ -677,7 +692,7 @@ class DepsInstallWorker(QThread):
             self.progress.emit(10, "Virtual environment ready.")
 
             # Step 2: Verify pip (only needed when not using uv)
-            use_uv = uv_exists()
+            use_uv = _uv_usable()
             if not use_uv:
                 self.progress.emit(12, "Verifying pip...")
                 python_path = get_venv_python_path(venv_dir)

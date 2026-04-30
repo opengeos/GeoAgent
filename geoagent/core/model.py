@@ -8,6 +8,40 @@ from typing import Any
 from geoagent.core.config import GeoAgentConfig, ProviderName
 
 
+def _openai_token_params(model_id: str, max_tokens: int) -> dict[str, int]:
+    """Return the token-limit parameter supported by the OpenAI model family."""
+    normalized = str(model_id or "").lower()
+    completion_prefixes = (
+        "gpt-5",
+        "gpt-4.1",
+        "gpt-4o",
+        "chatgpt-4o",
+        "o1",
+        "o3",
+        "o4",
+    )
+    if normalized.startswith(completion_prefixes):
+        return {"max_completion_tokens": max_tokens}
+    return {"max_tokens": max_tokens}
+
+
+def _model_uses_default_temperature_only(model_id: str) -> bool:
+    """Return True for model families that reject explicit temperature values."""
+    normalized = str(model_id or "").lower()
+    return normalized.startswith(
+        (
+            "gpt-5",
+            "openai/gpt-5",
+            "o1",
+            "openai/o1",
+            "o3",
+            "openai/o3",
+            "o4",
+            "openai/o4",
+        )
+    )
+
+
 def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any:
     """Build a Strands model from :class:`GeoAgentConfig` or kwargs overrides.
 
@@ -35,10 +69,14 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
 
         model_id = cfg.model or os.environ.get("OPENAI_MODEL", "gpt-5.5")
         client_args = dict(cfg.client_args)
+        params = {}
+        if not _model_uses_default_temperature_only(model_id):
+            params["temperature"] = cfg.temperature
+        params.update(_openai_token_params(model_id, cfg.max_tokens))
         return OpenAIModel(
             client_args=client_args or None,
             model_id=model_id,
-            params={"temperature": cfg.temperature, "max_tokens": cfg.max_tokens},
+            params=params,
         )
 
     if provider == "openai-codex":
@@ -140,10 +178,13 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
         base_url = cfg.litellm_base_url or os.environ.get("LITELLM_BASE_URL")
         if base_url and "base_url" not in client_args:
             client_args["base_url"] = base_url
+        params = {"max_tokens": cfg.max_tokens}
+        if not _model_uses_default_temperature_only(model_id):
+            params["temperature"] = cfg.temperature
         return LiteLLMModel(
             client_args=client_args or None,
             model_id=model_id,
-            params={"temperature": cfg.temperature, "max_tokens": cfg.max_tokens},
+            params=params,
         )
 
     raise ValueError(f"Unknown provider: {provider}")
