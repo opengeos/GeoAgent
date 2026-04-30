@@ -35,6 +35,9 @@ workflows.
   `for_leafmap`, `for_anymap`, `for_qgis`, and `create_agent`.
 - Built-in tools for live maps, QGIS projects, STAC-style workflows, Earth
   observation workflows, and optional geospatial packages.
+- OpenGeoAgent QGIS plugin UI with pasted image attachments, screenshot
+  capture, image preview/save actions, transcript copying, and PyQGIS script
+  copying.
 - Confirmation hooks for destructive, persistent, or long-running tools.
 - Mock map and QGIS objects so integrations can be tested without full desktop
   or widget environments.
@@ -150,6 +153,12 @@ agent.chat("Summarize this project and zoom to the active layer.")
 QGIS tools are import-safe outside QGIS and run through a Qt GUI-thread
 marshaller when used in QGIS.
 
+The OpenGeoAgent QGIS plugin adds a dockable multimodal chat panel. Users can
+paste images from the clipboard, capture the map canvas, capture the QGIS
+window, select map or screen regions, preview and save attached images, copy
+the Markdown transcript, and copy the PyQGIS script that produced an executed
+result.
+
 ## Built-In Tool Surfaces
 
 ### Map Widgets
@@ -176,7 +185,9 @@ marshaller when used in QGIS.
 - selecting features with QGIS expressions and clearing selections;
 - zooming to selected features;
 - running QGIS Processing algorithms;
-- opening attribute tables and saving projects.
+- opening attribute tables and saving projects;
+- running confirmation-gated PyQGIS fallback scripts when the requested QGIS
+  API operation is not covered by a dedicated tool.
 
 ### Custom and Package Tools
 
@@ -219,6 +230,7 @@ Qt dialog, notebook modal, web prompt, or CLI prompt.
 ## Learn More
 
 - [Installation](installation.md)
+- [QGIS Plugin](qgis-plugin.md)
 - [Usage](usage.md)
 - [Tools](tools.md)
 - [Safety](safety.md)

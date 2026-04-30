@@ -2,20 +2,26 @@
 name=OpenGeoAgent
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
-description=GeoAgent-powered AI chatbot for QGIS projects.
-version=0.1.0
+description=GeoAgent-powered multimodal AI chatbot for QGIS projects.
+version=1.0.0
 author=Qiusheng Wu
 email=giswqs@gmail.com
 
-about=OpenGeoAgent provides a dockable chatbot interface for QGIS that builds on GeoAgent's QGIS tool surface.
+about=OpenGeoAgent provides a dockable multimodal chatbot interface for QGIS that builds on GeoAgent's QGIS tool surface.
 
     Features:
     - Dockable chat panel for asking questions about the current QGIS project
     - QGIS-safe GeoAgent tools for layer inspection, map navigation, data loading, selection, processing, and project operations
+    - Confirmation-gated PyQGIS script execution fallback for QGIS API tasks without a dedicated tool
     - Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, and LiteLLM
+    - Image-aware chat with clipboard paste support for providers and models that support vision inputs
+    - Screenshot attachments from the map canvas, selected map regions, the QGIS window, and selected screen regions
+    - Clickable image previews with save/export actions
+    - Copy Markdown transcript and copy executed PyQGIS script actions
     - Sample prompts, prompt history with Up/Down, and Ctrl+Enter sending
     - Settings panel for API keys, hosts, model defaults, and dependency status
     - One-click dependency installer using uv with an isolated virtual environment
+    - Lazy startup checks to keep opening the chat dock responsive
     - GitHub update checker
     - Local installation and packaging scripts
 
@@ -27,7 +33,7 @@ repository=https://github.com/opengeos/GeoAgent
 
 hasProcessingProvider=no
 
-tags=ai, agent, qgis, geospatial, chatbot, geoagent, llm, gemini
+tags=ai, agent, qgis, geospatial, chatbot, geoagent, llm, gemini, pyqgis, vision, multimodal, screenshot
 
 homepage=https://github.com/opengeos/GeoAgent
 category=Plugins
@@ -37,6 +43,14 @@ experimental=False
 deprecated=False
 
 changelog=
+    1.0.0 - Initial stable OpenGeoAgent release
+        - Added clipboard image paste support for chat attachments
+        - Added screenshot capture for map canvas, selected map regions, QGIS window, and selected screen regions
+        - Added image preview, save, and export actions
+        - Added confirmation-gated PyQGIS script execution fallback
+        - Added copy Markdown transcript and copy executed PyQGIS script actions
+        - Improved chat dock startup with lazy imports and lightweight dependency checks
+
     0.1.0 - Initial OpenGeoAgent plugin
         - Added GeoAgent-backed QGIS chat dock
         - Added provider/model settings and credential fields

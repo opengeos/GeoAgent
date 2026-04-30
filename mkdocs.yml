@@ -74,9 +74,9 @@ markdown_extensions:
 
 nav:
     - Home: index.md
-    - Getting Started:
-        - Installation: installation.md
-        - Usage: usage.md
+    - Installation: installation.md
+    - Usage: usage.md
+    - QGIS Plugin: qgis-plugin.md
     - Changelog: https://github.com/opengeos/GeoAgent/releases
     - Report Issues: https://github.com/opengeos/GeoAgent/issues
     - Contributing: contributing.md

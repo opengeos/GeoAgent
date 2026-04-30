@@ -35,6 +35,8 @@ Many geospatial libraries need the same agent features:
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
+- support multimodal plugin workflows such as pasted images and screenshots
+  when the selected model provider supports vision;
 - provide a stable integration point for downstream packages and plugins.
 
 GeoAgent centralizes that layer so each package does not need to maintain its
@@ -227,6 +229,39 @@ print(resp.answer_text)
 `geoagent.tools.qgis` is import-safe outside QGIS. It imports QGIS classes only
 inside tool bodies, so tests and non-QGIS environments can import the module.
 
+The OpenGeoAgent QGIS plugin adds a dockable chat UI on top of this factory. It
+supports provider and model controls, streaming responses, pasted image
+attachments, screenshot capture from the map canvas, QGIS window, or selected
+screen regions, image preview and save actions, Markdown transcript copying,
+and copying the PyQGIS script used for an executed result.
+
+## QGIS Plugin
+
+OpenGeoAgent is the QGIS plugin interface for GeoAgent. It adds a dockable AI
+assistant to QGIS so you can inspect projects, navigate the map canvas, load
+data, run processing workflows, style layers, and execute confirmation-gated
+PyQGIS scripts from natural language.
+
+![OpenGeoAgent QGIS plugin](https://github.com/user-attachments/assets/3047e39c-ad0a-4d77-a822-9597da539775)
+
+Key plugin features:
+
+- provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth,
+  Anthropic, Google Gemini, Ollama, and LiteLLM;
+- project-aware QGIS tools for layers, selections, map navigation, processing,
+  project saving, and attribute table actions;
+- image-aware chat with clipboard paste and screenshot attachments for models
+  that support vision inputs;
+- screenshot capture from the map canvas, selected map regions, the QGIS
+  window, and selected screen regions;
+- image preview and save/export actions;
+- copy Markdown transcript and copy executed PyQGIS script actions;
+- confirmation-gated `run_pyqgis_script` fallback when a task needs QGIS API
+  operations that are not covered by a dedicated tool;
+- lazy dependency checks so opening the chat dock stays responsive.
+
+See the [QGIS plugin documentation](docs/qgis-plugin.md) for setup and usage.
+
 ## Built-In Tool Surfaces
 
 ### leafmap and anymap
@@ -262,10 +297,16 @@ marshaller:
   `set_layer_opacity`;
 - select and process: `select_features_by_expression`, `clear_selection`,
   `run_processing_algorithm`;
-- open QGIS UI and save: `open_attribute_table`, `save_project`.
+- open QGIS UI and save: `open_attribute_table`, `save_project`;
+- run confirmation-gated PyQGIS fallback scripts with `run_pyqgis_script`
+  when a task requires QGIS API operations that are not covered by a dedicated
+  tool.
 
 QGIS chat uses a sequential tool executor and GUI-thread marshalling so map
-canvas and layer-tree calls are routed safely.
+canvas and layer-tree calls are routed safely. The PyQGIS fallback receives
+the current `iface`, `project`, `canvas`, and `active_layer`, making it useful
+for actions such as raster band renderer changes, labeling tweaks, layer tree
+updates, and other QGIS API operations.
 
 ### NASA OPERA
 
