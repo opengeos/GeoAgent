@@ -16,6 +16,7 @@ from open_geoagent.dialogs.chat_dock import (
     _normalized_crop_rect,
     _parse_markdown_transcript,
     _permission_allows_tool,
+    _project_history_key,
 )
 
 
@@ -327,6 +328,24 @@ def test_parse_markdown_transcript_round_trips_exported_history() -> None:
         {"sender": "You", "body": "hello", "markdown": False},
         {"sender": "OpenGeoAgent", "body": "**ok**", "markdown": True},
     ]
+
+
+def test_unsaved_project_has_no_history_key(monkeypatch) -> None:
+    """Untitled QGIS projects should not load shared chat history."""
+    import sys
+    import types
+
+    monkeypatch.setitem(
+        sys.modules,
+        "qgis.core",
+        types.SimpleNamespace(
+            QgsProject=types.SimpleNamespace(
+                instance=lambda: types.SimpleNamespace(fileName=lambda: "")
+            )
+        ),
+    )
+
+    assert _project_history_key(None) == ""
 
 
 def test_permission_profiles_filter_sensitive_tools() -> None:

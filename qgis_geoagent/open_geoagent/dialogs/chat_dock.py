@@ -246,7 +246,9 @@ def _project_history_key(iface):
             path = project.fileName() if project is not None else ""
         except Exception:
             path = ""
-    raw = path or "unsaved-project"
+    if not path:
+        return ""
+    raw = path
     digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
     return f"{SETTINGS_PREFIX}history/{digest}"
 
@@ -2449,6 +2451,8 @@ class ChatDockWidget(QDockWidget):
 
     def _load_project_history(self):
         """Load persisted chat messages for the current QGIS project."""
+        if not self._history_key:
+            return
         raw = self.settings.value(self._history_key, "", type=str)
         if not raw:
             return
@@ -2468,6 +2472,8 @@ class ChatDockWidget(QDockWidget):
 
     def _save_project_history(self):
         """Persist chat messages for the current QGIS project."""
+        if not self._history_key:
+            return
         try:
             payload = json.dumps(self._messages[-80:])
             self.settings.setValue(self._history_key, payload)
