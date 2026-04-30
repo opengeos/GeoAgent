@@ -90,9 +90,9 @@ def test_chat_worker_streams_when_enabled(monkeypatch) -> None:
     class _StubAgent:
         async def stream_chat(self, prompt: str):
             captured["prompt"] = prompt
-            yield {"data": "hel"}
+            yield {"data": "he"}
             await asyncio.sleep(0)
-            yield {"data": "lo"}
+            yield {"data": "llo"}
 
     def _stub_factory(iface, **kwargs):
         captured["iface"] = iface
@@ -128,7 +128,7 @@ def test_chat_worker_streams_when_enabled(monkeypatch) -> None:
     assert captured.get("iface") is sentinel_iface
     assert captured["prompt"] == "stream please"
     assert captured["kwargs"]["fast"] is True
-    assert chunks == ["hel", "lo"]
+    assert chunks == ["he", "llo"]
     assert emitted["payload"]["success"] is True
     assert emitted["payload"]["answer"] == "hello"
     assert emitted["payload"]["streamed"] is True

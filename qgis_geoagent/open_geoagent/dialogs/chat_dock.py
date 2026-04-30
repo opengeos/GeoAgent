@@ -557,6 +557,10 @@ class ChatDockWidget(QDockWidget):
         self._status_timer = QTimer(self)
         self._status_timer.setInterval(500)
         self._status_timer.timeout.connect(self._update_running_status)
+        self._stream_render_timer = QTimer(self)
+        self._stream_render_timer.setSingleShot(True)
+        self._stream_render_timer.setInterval(75)
+        self._stream_render_timer.timeout.connect(self._flush_streaming_render)
 
         self.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
@@ -858,6 +862,8 @@ class ChatDockWidget(QDockWidget):
     def _on_worker_finished(self, result):
         """Render the completed chat worker result."""
         self._stop_running_status()
+        if self._stream_render_timer.isActive():
+            self._stream_render_timer.stop()
         if result.get("cancelled_by_user"):
             self._append_message("OpenGeoAgent", "Cancelled by user.", markdown=False)
             self.status_label.setText("Cancelled")
@@ -900,7 +906,7 @@ class ChatDockWidget(QDockWidget):
         self._streaming_answer = ""
 
     def _on_worker_chunk(self, chunk):
-        """Render a streamed model text chunk."""
+        """Buffer a streamed model text chunk and schedule a debounced render."""
         if not chunk:
             return
         if self._streaming_message_index is None:
@@ -910,6 +916,13 @@ class ChatDockWidget(QDockWidget):
             )
             self.copy_md_btn.setEnabled(True)
         self._streaming_answer += chunk
+        if not self._stream_render_timer.isActive():
+            self._stream_render_timer.start()
+
+    def _flush_streaming_render(self):
+        """Render the latest buffered streaming answer."""
+        if self._streaming_message_index is None:
+            return
         self._update_message(
             self._streaming_message_index,
             self._streaming_answer,
@@ -976,7 +989,7 @@ class ChatDockWidget(QDockWidget):
         """Update an existing chat message and refresh the transcript."""
         if index < 0 or index >= len(self._messages):
             return
-        self._messages[index]["body"] = message.strip()
+        self._messages[index]["body"] = message
         self._messages[index]["markdown"] = markdown
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
