@@ -103,6 +103,7 @@ Default models:
 ## Chat Workflow
 
 - Type a prompt and press **Ctrl+Enter** to send it.
+- **Stream output** is enabled by default and shows model text as it arrives.
 - Press **Up** or **Down** in the prompt editor to cycle through previous prompts.
 - Choose a prompt from **Sample prompts...** and click **Insert** to load it into
   the editor before sending.

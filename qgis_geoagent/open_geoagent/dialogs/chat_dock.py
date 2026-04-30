@@ -1,5 +1,6 @@
 """Dockable OpenGeoAgent chat interface."""
 
+import asyncio
 import os
 import html
 import json
@@ -351,6 +352,7 @@ class ChatWorker(QThread):
     """Run GeoAgent chat without blocking the QGIS UI."""
 
     finished = pyqtSignal(dict)
+    chunk_received = pyqtSignal(str)
 
     def __init__(
         self,
@@ -361,6 +363,7 @@ class ChatWorker(QThread):
         fast,
         max_tokens,
         auto_approve_tools=False,
+        stream=False,
         parent=None,
     ):
         super().__init__(parent)
@@ -371,6 +374,7 @@ class ChatWorker(QThread):
         self.fast = fast
         self.max_tokens = max_tokens
         self.auto_approve_tools = bool(auto_approve_tools)
+        self.stream = bool(stream)
 
     def run(self):
         """Create a GeoAgent QGIS agent and execute one chat turn."""
@@ -397,6 +401,10 @@ class ChatWorker(QThread):
                 fast=self.fast,
                 confirm=self._confirm_tool,
             )
+            if self.stream:
+                self._run_streaming_chat(agent)
+                return
+
             response = agent.chat(self.prompt)
 
             if self.isInterruptionRequested():
@@ -438,6 +446,53 @@ class ChatWorker(QThread):
                     "cancelled_by_user": self.isInterruptionRequested(),
                 }
             )
+
+    def _run_streaming_chat(self, agent):
+        """Stream one chat turn and emit text chunks as they arrive."""
+        started_at = time.time()
+        chunks = []
+        final_result = None
+
+        async def _collect_stream():
+            nonlocal final_result
+            async for event in agent.stream_chat(self.prompt):
+                if self.isInterruptionRequested():
+                    break
+                if not isinstance(event, dict):
+                    continue
+                if "data" in event:
+                    chunk = str(event["data"])
+                    chunks.append(chunk)
+                    self.chunk_received.emit(chunk)
+                if "result" in event:
+                    final_result = event["result"]
+
+        asyncio.run(_collect_stream())
+
+        tool_metrics = getattr(
+            getattr(final_result, "metrics", None), "tool_metrics", {}
+        )
+        executed_tools = (
+            list(tool_metrics.keys()) if isinstance(tool_metrics, dict) else []
+        )
+        stop_reason = str(getattr(final_result, "stop_reason", "end_turn"))
+        success = stop_reason not in ("cancelled", "guardrail_intervened")
+        if self.isInterruptionRequested():
+            success = False
+
+        self.finished.emit(
+            {
+                "success": success,
+                "answer": "".join(chunks),
+                "error": "" if success else f"stop_reason={stop_reason}",
+                "tools": ", ".join(executed_tools),
+                "tool_calls": list(getattr(agent, "_tool_calls", []) or []),
+                "cancelled": ", ".join(getattr(agent, "_cancelled", []) or []),
+                "elapsed": f"{time.time() - started_at:.2f}s",
+                "cancelled_by_user": self.isInterruptionRequested(),
+                "streamed": True,
+            }
+        )
 
     def _confirm_tool(self, request):
         """Ask the QGIS user before running confirmation-required tools."""
@@ -494,6 +549,8 @@ class ChatDockWidget(QDockWidget):
         self._prompt_history = []
         self._history_index = None
         self._messages = []
+        self._streaming_message_index = None
+        self._streaming_answer = ""
         self._status_started_at = None
         self._status_base_text = "Running"
         self._status_frame = 0
@@ -538,12 +595,17 @@ class ChatDockWidget(QDockWidget):
         model_layout.addRow("Model:", self.model_input)
 
         self.fast_check = QCheckBox("Fast mode")
+        self.stream_check = QCheckBox("Stream output")
         self.auto_approve_tools_check = QCheckBox("Auto approve running tools")
         self.auto_approve_tools_check.setToolTip(
             "Run confirmation-required tools without prompting for this session."
         )
+        self.stream_check.setToolTip(
+            "Show model text as it arrives instead of waiting for the full response."
+        )
         mode_layout = QHBoxLayout()
         mode_layout.addWidget(self.fast_check)
+        mode_layout.addWidget(self.stream_check)
         mode_layout.addWidget(self.auto_approve_tools_check)
         mode_layout.addStretch(1)
         model_layout.addRow("", mode_layout)
@@ -630,6 +692,7 @@ class ChatDockWidget(QDockWidget):
         self.model_input.setText(model)
 
         self.fast_check.setChecked(_setting(self.settings, "fast_mode", False, bool))
+        self.stream_check.setChecked(_setting(self.settings, "stream_chat", True, bool))
         self.auto_approve_tools_check.setChecked(
             _setting(self.settings, "auto_approve_tools", False, bool)
         )
@@ -644,6 +707,9 @@ class ChatDockWidget(QDockWidget):
         self.settings.setValue(f"{SETTINGS_PREFIX}model", model)
         self.settings.setValue(
             f"{SETTINGS_PREFIX}fast_mode", self.fast_check.isChecked()
+        )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}stream_chat", self.stream_check.isChecked()
         )
         self.settings.setValue(
             f"{SETTINGS_PREFIX}auto_approve_tools",
@@ -693,14 +759,19 @@ class ChatDockWidget(QDockWidget):
         if model_id and not self.model_input.text().strip():
             self.model_input.setText(model_id)
         fast = self.fast_check.isChecked()
+        stream = self.stream_check.isChecked()
         auto_approve_tools = self.auto_approve_tools_check.isChecked()
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
         prompt_with_context = self._build_prompt_with_context(prompt)
 
         self._append_message("You", prompt, markdown=False)
+        self._streaming_message_index = None
+        self._streaming_answer = ""
         self.prompt_input.clear()
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
-        self._start_running_status("Running GeoAgent")
+        self._start_running_status(
+            "Streaming GeoAgent" if stream else "Running GeoAgent"
+        )
         self.send_btn.setEnabled(False)
         self.cancel_btn.setEnabled(True)
 
@@ -712,8 +783,10 @@ class ChatDockWidget(QDockWidget):
             fast,
             max_tokens,
             auto_approve_tools,
+            stream,
             self,
         )
+        self._worker.chunk_received.connect(self._on_worker_chunk)
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()
 
@@ -801,7 +874,14 @@ class ChatDockWidget(QDockWidget):
                 details.append(f"Elapsed: {result['elapsed']}")
             if details:
                 answer = f"{answer}\n\n" + "\n".join(details)
-            self._append_message("OpenGeoAgent", answer, markdown=True)
+            if result.get("streamed") and self._streaming_message_index is not None:
+                self._update_message(
+                    self._streaming_message_index,
+                    answer,
+                    markdown=True,
+                )
+            else:
+                self._append_message("OpenGeoAgent", answer, markdown=True)
             self.status_label.setText("Ready")
             self.status_label.setStyleSheet("color: gray; font-size: 10px;")
         else:
@@ -816,6 +896,25 @@ class ChatDockWidget(QDockWidget):
         self.send_btn.setEnabled(True)
         self.cancel_btn.setEnabled(False)
         self._worker = None
+        self._streaming_message_index = None
+        self._streaming_answer = ""
+
+    def _on_worker_chunk(self, chunk):
+        """Render a streamed model text chunk."""
+        if not chunk:
+            return
+        if self._streaming_message_index is None:
+            self._streaming_message_index = len(self._messages)
+            self._messages.append(
+                {"sender": "OpenGeoAgent", "body": "", "markdown": True}
+            )
+            self.copy_md_btn.setEnabled(True)
+        self._streaming_answer += chunk
+        self._update_message(
+            self._streaming_message_index,
+            self._streaming_answer,
+            markdown=True,
+        )
 
     def _cancel_running_task(self):
         """Request cancellation of the in-flight chat worker."""
@@ -873,6 +972,15 @@ class ChatDockWidget(QDockWidget):
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
 
+    def _update_message(self, index, message, markdown=False):
+        """Update an existing chat message and refresh the transcript."""
+        if index < 0 or index >= len(self._messages):
+            return
+        self._messages[index]["body"] = message.strip()
+        self._messages[index]["markdown"] = markdown
+        self.copy_md_btn.setEnabled(bool(self._messages))
+        self._render_transcript()
+
     def _render_transcript(self):
         """Render the stored chat messages as HTML."""
         blocks = []
@@ -888,6 +996,7 @@ class ChatDockWidget(QDockWidget):
                 f"{body}"
                 "</div>"
             )
+        blocks.append("<div style='height: 1em;'>&nbsp;</div>")
         self.transcript.setHtml("\n".join(blocks))
         end_cursor = getattr(getattr(QTextCursor, "MoveOperation", QTextCursor), "End")
         self.transcript.moveCursor(end_cursor)
