@@ -283,28 +283,31 @@ class GeoAgent:
                 yield event
             return
 
-        if (
-            self._context.metadata.get("integration")
-            in {"nasa_earthdata", "nasa_opera"}
-            and self._qgis_safe_mode
-            and is_qt_gui_thread()
-        ):
+        if self._qgis_safe_mode and is_qt_gui_thread():
             integration = self._context.metadata.get("integration")
-            label = (
-                "NASA Earthdata" if integration == "nasa_earthdata" else "NASA OPERA"
-            )
-            helper = (
-                "the NASA Earthdata AI Assistant panel"
-                if integration == "nasa_earthdata"
-                else (
-                    "the NASA OPERA AI Assistant panel or "
-                    "geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "
-                    "for direct QGIS-console workflows"
+            if integration in {"nasa_earthdata", "nasa_opera"}:
+                label = (
+                    "NASA Earthdata"
+                    if integration == "nasa_earthdata"
+                    else "NASA OPERA"
                 )
-            )
+                helper = (
+                    "the NASA Earthdata AI Assistant panel"
+                    if integration == "nasa_earthdata"
+                    else (
+                        "the NASA OPERA AI Assistant panel or "
+                        "geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "
+                        "for direct QGIS-console workflows"
+                    )
+                )
+                raise RuntimeError(
+                    f"{label} streaming chat should be launched from a worker thread "
+                    f"inside QGIS. Use {helper}."
+                )
             raise RuntimeError(
-                f"{label} streaming chat should be launched from a worker thread "
-                f"inside QGIS. Use {helper}."
+                "stream_chat() must not be called from the QGIS Qt GUI thread when "
+                "qgis_safe_mode=True. Launch streaming chat from a worker thread, "
+                "or use chat() from the GUI thread."
             )
 
         self._cancelled.clear()

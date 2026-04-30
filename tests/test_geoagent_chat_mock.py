@@ -107,8 +107,8 @@ def test_stream_chat_yields_mocked_strands_events() -> None:
     m = MockLeafmap()
     agent = for_leafmap(m, model=_MockModel())
     events = [
-        {"data": "hel"},
-        {"data": "lo"},
+        {"data": "he"},
+        {"data": "llo"},
         {"current_tool_use": {"name": "list_layers"}},
         {"result": SimpleNamespace(stop_reason="end_turn")},
     ]
