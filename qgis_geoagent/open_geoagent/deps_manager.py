@@ -29,7 +29,7 @@ from qgis.PyQt.QtCore import QThread, pyqtSignal
 
 # Required packages: (import_name, pip_install_name)
 REQUIRED_PACKAGES = [
-    ("geoagent", "GeoAgent[providers]>=1.0.0"),
+    ("geoagent", "GeoAgent[providers]>=1.2.0"),
     ("whitebox", "whitebox>=2.3.6"),
     ("openai", "openai>=1.0"),
     ("anthropic", "anthropic>=0.40"),
@@ -563,7 +563,7 @@ def create_venv(venv_dir: str) -> str:
         "This can happen when QGIS bundles Python in a way that prevents\n"
         "standard venv creation.\n\n"
         "You can try installing manually with:\n"
-        '  pip install "GeoAgent[providers]>=1.0.0"\n\n'
+        '  pip install "GeoAgent[providers]>=1.2.0"\n\n'
         "Details:\n" + "\n".join(f"  {d}" for d in details)
     )
 
@@ -697,7 +697,7 @@ class DepsInstallWorker(QThread):
                         False,
                         "pip is not available in the virtual environment.\n"
                         "Please install dependencies manually:\n"
-                        'pip install "GeoAgent[providers]>=1.0.0"',
+                        'pip install "GeoAgent[providers]>=1.2.0"',
                     )
                     return
             self.progress.emit(15, "Package installer ready.")

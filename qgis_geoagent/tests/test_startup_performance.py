@@ -25,7 +25,7 @@ def test_all_dependencies_met_uses_lightweight_spec_checks(monkeypatch) -> None:
     monkeypatch.setattr(
         deps_manager,
         "REQUIRED_PACKAGES",
-        [("geoagent", "GeoAgent[providers]>=1.0.0"), ("openai", "openai>=1.0")],
+        [("geoagent", "GeoAgent[providers]>=1.2.0"), ("openai", "openai>=1.0")],
     )
     monkeypatch.setattr(deps_manager, "ensure_venv_packages_available", lambda: True)
 
