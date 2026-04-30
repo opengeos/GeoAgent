@@ -29,6 +29,7 @@ from qgis.PyQt.QtGui import QCursor, QGuiApplication, QPixmap, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QAbstractItemView,
+    QHeaderView,
     QComboBox,
     QDialog,
     QDockWidget,
@@ -1470,6 +1471,10 @@ class ChatDockWidget(QDockWidget):
         self.jobs_table.setSelectionBehavior(
             _enum_value(QAbstractItemView, "SelectionBehavior", "SelectRows")
         )
+        jobs_header = self.jobs_table.horizontalHeader()
+        if jobs_header is not None:
+            stretch = _enum_value(QHeaderView, "ResizeMode", "Stretch")
+            jobs_header.setSectionResizeMode(stretch)
         jobs_controls_layout.addWidget(self.jobs_table)
         jobs_btn_layout = QHBoxLayout()
         self.rerun_job_btn = QPushButton("Rerun Job")
