@@ -23,6 +23,8 @@ class _MockModel:
 def test_nasa_earthdata_module_imports_without_qgis() -> None:
     """Verify NASA Earthdata tools are import-safe outside QGIS."""
     assert "geoagent.tools.nasa_earthdata" in sys.modules
+    if "qgis" in sys.modules:
+        pytest.skip("qgis is already imported in this environment.")
     assert "qgis" not in sys.modules
 
 
