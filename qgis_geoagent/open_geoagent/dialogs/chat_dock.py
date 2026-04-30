@@ -57,7 +57,6 @@ from qgis.PyQt.QtWidgets import (
     QPlainTextEdit,
     QRubberBand,
     QScrollArea,
-    QShortcut,
     QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
@@ -92,12 +91,11 @@ MAX_IMAGE_ATTACHMENTS = 4
 MAX_IMAGE_EDGE = 1568
 IMAGE_THUMBNAIL_SIZE = 72
 DEFAULT_TRANSCRIPTION_MODEL = "gpt-4o-mini-transcribe"
-DEFAULT_VOICE_SHORTCUT = "Ctrl+Shift+M"
+DEFAULT_VOICE_SHORTCUT = "Ctrl+Alt+Space"
+VOICE_SHORTCUT_SETTING = "voice_shortcut_v2"
 TRANSCRIPTION_MODELS = [
     "gpt-4o-mini-transcribe",
     "gpt-4o-transcribe",
-    "whisper-1",
-    "gpt-4o-mini-transcribe-2025-12-15",
 ]
 SAMPLE_PROMPTS = [
     "Summarize the current QGIS project layers, CRS, extents, and feature counts.",
@@ -365,6 +363,43 @@ def _enum_value(cls, enum_name, member_name):
     """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
+
+
+def _portable_key_sequence(sequence):
+    """Return a normalized portable string for a key sequence."""
+    sequence_format = getattr(QKeySequence, "SequenceFormat", QKeySequence)
+    portable = getattr(sequence_format, "PortableText", None)
+    text = sequence.toString(portable) if portable is not None else sequence.toString()
+    return str(text or "").strip().lower()
+
+
+def _key_event_sequence_value(event):
+    """Return a QKeySequence-compatible integer for a key event."""
+    key = int(event.key())
+    modifiers = event.modifiers()
+    mod_value = getattr(modifiers, "value", modifiers)
+    try:
+        mod_value = int(mod_value)
+    except TypeError:
+        mod_value = int(modifiers)
+    return mod_value | key
+
+
+def _event_matches_key_sequence(event, shortcut_text):
+    """Return True when a key event matches a configured shortcut."""
+    if not shortcut_text:
+        return False
+    key_press = _enum_value(QEvent, "Type", "KeyPress")
+    is_auto_repeat = getattr(event, "isAutoRepeat", lambda: False)
+    if event.type() != key_press or is_auto_repeat():
+        return False
+    configured = _portable_key_sequence(QKeySequence(shortcut_text))
+    if not configured:
+        return False
+    event_sequence = _portable_key_sequence(
+        QKeySequence(_key_event_sequence_value(event))
+    )
+    return event_sequence == configured
 
 
 def _exec_dialog(dialog):
@@ -922,6 +957,15 @@ class PromptTextEdit(QPlainTextEdit):
     previous_requested = pyqtSignal()
     next_requested = pyqtSignal()
     image_pasted = pyqtSignal(object)
+    voice_toggle_requested = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._voice_shortcut_text = ""
+
+    def set_voice_shortcut_text(self, shortcut_text):
+        """Set the key sequence that toggles voice recording."""
+        self._voice_shortcut_text = str(shortcut_text or "").strip()
 
     def insertFromMimeData(self, source):
         """Handle pasted clipboard images before falling back to text paste."""
@@ -942,6 +986,10 @@ class PromptTextEdit(QPlainTextEdit):
         key_up = _qt_value("Key", "Key_Up")
         key_down = _qt_value("Key", "Key_Down")
 
+        if _event_matches_key_sequence(event, self._voice_shortcut_text):
+            self.voice_toggle_requested.emit()
+            event.accept()
+            return
         if modifiers & control and key in (key_return, key_enter):
             self.send_requested.emit()
             event.accept()
@@ -1573,7 +1621,7 @@ class ChatDockWidget(QDockWidget):
         self._voice_recorder = None
         self._voice_recorder_refs = []
         self._voice_audio_path = ""
-        self._voice_shortcut = None
+        self._voice_stopping = False
         self._loading_settings = False
         self._region_capture = None
         self._screen_region_capture = None
@@ -1762,6 +1810,7 @@ class ChatDockWidget(QDockWidget):
         self.prompt_input.previous_requested.connect(self._previous_prompt)
         self.prompt_input.next_requested.connect(self._next_prompt)
         self.prompt_input.image_pasted.connect(self._add_clipboard_image)
+        self.prompt_input.voice_toggle_requested.connect(self._toggle_voice_recording)
 
         self.attachment_bar = QWidget()
         self.attachment_layout = QHBoxLayout(self.attachment_bar)
@@ -1804,13 +1853,7 @@ class ChatDockWidget(QDockWidget):
         self.voice_level.setTextVisible(False)
         self.voice_level.setMaximumWidth(72)
         self.voice_level.setFixedHeight(12)
-        self.voice_level.setToolTip("Live microphone input level.")
-        self.voice_level.setStyleSheet(
-            "QProgressBar { border: 1px solid #b0bec5; border-radius: 3px; "
-            "background: #eceff1; } "
-            "QProgressBar::chunk { background-color: #1976D2; border-radius: 2px; }"
-        )
-        self.voice_level.setVisible(False)
+        self._set_voice_level_idle()
         primary_button_layout.addWidget(self.voice_level)
 
         self.send_btn = QPushButton("Send")
@@ -2497,6 +2540,8 @@ class ChatDockWidget(QDockWidget):
 
     def _toggle_voice_recording(self):
         """Start or stop recording a voice prompt."""
+        if self._voice_stopping:
+            return
         if self._voice_recorder is not None:
             self._stop_voice_recording()
             return
@@ -2504,26 +2549,47 @@ class ChatDockWidget(QDockWidget):
 
     def _voice_shortcut_text(self):
         """Return the configured shortcut text for toggling voice input."""
-        return _setting(
-            self.settings,
-            "voice_shortcut",
-            DEFAULT_VOICE_SHORTCUT,
-            str,
-        ).strip()
+        return (
+            _setting(
+                self.settings,
+                VOICE_SHORTCUT_SETTING,
+                DEFAULT_VOICE_SHORTCUT,
+                str,
+            ).strip()
+            or DEFAULT_VOICE_SHORTCUT
+        )
 
     def _configure_voice_shortcut(self):
-        """Bind the configured keyboard shortcut to voice recording."""
+        """Refresh voice shortcut tooltip/logging.
+
+        The shortcut itself is handled in keyPressEvent methods to avoid
+        registering QShortcut/QAction objects that can collide with QGIS.
+        """
         shortcut_text = self._voice_shortcut_text()
+        if hasattr(self, "prompt_input"):
+            self.prompt_input.set_voice_shortcut_text(shortcut_text)
         if not shortcut_text:
+            self._update_voice_tooltip("")
             return
-        self._voice_shortcut = QShortcut(QKeySequence(shortcut_text), self)
-        self._voice_shortcut.setContext(
-            _qt_value("ShortcutContext", "WidgetWithChildrenShortcut")
+        sequence = QKeySequence(shortcut_text)
+        if sequence.isEmpty():
+            self._update_voice_tooltip("")
+            return
+        self._update_voice_tooltip(shortcut_text)
+        QgsMessageLog.logMessage(
+            f"Voice input shortcut set to {shortcut_text}",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Info,
         )
-        self._voice_shortcut.activated.connect(self._toggle_voice_recording)
+
+    def _update_voice_tooltip(self, shortcut_text=None):
+        """Refresh the voice button tooltip with the current shortcut."""
+        if shortcut_text is None:
+            shortcut_text = self._voice_shortcut_text()
+        suffix = f" Shortcut: {shortcut_text}." if shortcut_text else ""
         self.voice_btn.setToolTip(
             "Record speech, transcribe it with the OpenAI transcription API, "
-            f"and insert the text into the prompt editor. Shortcut: {shortcut_text}."
+            f"and insert the text into the prompt editor.{suffix}"
         )
 
     def _start_voice_recording(self):
@@ -2570,10 +2636,10 @@ class ChatDockWidget(QDockWidget):
         self._voice_audio_path = audio_path
         self._voice_recorder = recorder
         self._voice_recorder_refs = [recorder]
+        self._voice_stopping = False
         self.voice_btn.setChecked(True)
         self.voice_btn.setToolTip("Stop recording and transcribe the voice prompt.")
-        self.voice_level.setValue(0)
-        self.voice_level.setVisible(True)
+        self._set_voice_level_recording()
         self.status_label.setText("Recording voice prompt...")
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
 
@@ -2612,6 +2678,45 @@ class ChatDockWidget(QDockWidget):
         """Create a direct PCM voice recorder for the active Qt binding."""
         return VoicePromptRecorder(audio_path, self)
 
+    def _voice_level_stylesheet(self, chunk_color):
+        """Return the microphone indicator stylesheet for the current state."""
+        return (
+            "QProgressBar { border: 1px solid #b0bec5; border-radius: 3px; "
+            "background: #eceff1; } "
+            f"QProgressBar::chunk {{ background-color: {chunk_color}; "
+            "border-radius: 2px; }}"
+        )
+
+    def _set_voice_level_recording(self):
+        """Show the live microphone input level indicator."""
+        if not hasattr(self, "voice_level"):
+            return
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(0)
+        self.voice_level.setToolTip("Live microphone input level.")
+        self.voice_level.setStyleSheet(self._voice_level_stylesheet("#1976D2"))
+        self.voice_level.setVisible(True)
+
+    def _set_voice_level_transcribing(self):
+        """Show a distinct indicator while the recorded prompt is transcribed."""
+        if not hasattr(self, "voice_level"):
+            return
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(100)
+        self.voice_level.setToolTip("Transcribing recorded voice prompt.")
+        self.voice_level.setStyleSheet(self._voice_level_stylesheet("#F9A825"))
+        self.voice_level.setVisible(True)
+
+    def _set_voice_level_idle(self):
+        """Hide and reset the microphone input level indicator."""
+        if not hasattr(self, "voice_level"):
+            return
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(0)
+        self.voice_level.setToolTip("Live microphone input level.")
+        self.voice_level.setStyleSheet(self._voice_level_stylesheet("#1976D2"))
+        self.voice_level.setVisible(False)
+
     def _update_voice_level(self, level):
         """Update the live microphone input level indicator."""
         if hasattr(self, "voice_level"):
@@ -2622,9 +2727,11 @@ class ChatDockWidget(QDockWidget):
         recorder = self._voice_recorder
         if recorder is None:
             return
+        self._voice_stopping = True
         try:
             recorder.stop()
         except Exception as exc:
+            self._voice_stopping = False
             self._voice_recorder = None
             self._voice_recorder_refs = []
             self._reset_voice_button()
@@ -2637,6 +2744,7 @@ class ChatDockWidget(QDockWidget):
 
         self.voice_btn.setEnabled(False)
         self.voice_btn.setChecked(False)
+        self._set_voice_level_transcribing()
         self.status_label.setText("Transcribing voice prompt...")
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
         QTimer.singleShot(100, self._finish_voice_recording)
@@ -2646,6 +2754,7 @@ class ChatDockWidget(QDockWidget):
         audio_path = self._voice_audio_path
         self._voice_recorder = None
         self._voice_recorder_refs = []
+        self._voice_stopping = False
 
         if not audio_path or not os.path.exists(audio_path):
             self._reset_voice_button()
@@ -2731,15 +2840,8 @@ class ChatDockWidget(QDockWidget):
         """Restore the voice button to its idle state."""
         self.voice_btn.setEnabled(True)
         self.voice_btn.setChecked(False)
-        shortcut_text = self._voice_shortcut_text()
-        suffix = f" Shortcut: {shortcut_text}." if shortcut_text else ""
-        self.voice_btn.setToolTip(
-            "Record speech, transcribe it with the OpenAI transcription API, "
-            f"and insert the text into the prompt editor.{suffix}"
-        )
-        if hasattr(self, "voice_level"):
-            self.voice_level.setValue(0)
-            self.voice_level.setVisible(False)
+        self._update_voice_tooltip()
+        self._set_voice_level_idle()
 
     def _remove_temp_audio(self, audio_path):
         """Remove a temporary audio file if it still exists."""
@@ -3140,6 +3242,19 @@ class ChatDockWidget(QDockWidget):
         """Stop the animated status timer when the dock is hidden."""
         self._shutdown_running_state()
         super().hideEvent(event)
+
+    def keyPressEvent(self, event):
+        """Handle chat dock keyboard shortcuts."""
+        if _event_matches_key_sequence(event, self._voice_shortcut_text()):
+            self._toggle_voice_recording()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def showEvent(self, event):
+        """Refresh shortcut tooltip when the dock is shown."""
+        self._configure_voice_shortcut()
+        super().showEvent(event)
 
     def closeEvent(self, event):
         """Stop the animated status timer when the dock is closed."""

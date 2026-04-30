@@ -122,8 +122,9 @@ Default models:
   records through QGIS/Qt multimedia support, shows a live input-level
   indicator, transcribes the audio with the OpenAI transcription API, and
   inserts the text into the prompt editor for review. The default mic shortcut
-  is **Ctrl+Shift+M** and can be changed in **Settings > Model > Voice
-  Transcription**.
+  is **Ctrl+Alt+Space** and can be changed in **Settings > Model > Voice
+  Transcription**. The shortcut is handled while keyboard focus is inside the
+  chat dock.
 - Choose an **Agent mode** for the workflow you want. STAC mode provides
   guided search/loading steps and dependency diagnostics; it does not add a
   separate STAC loader beyond the current GeoAgent tool surface.

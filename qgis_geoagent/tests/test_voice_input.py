@@ -3,7 +3,10 @@
 import sys
 import types
 
-from open_geoagent.dialogs.chat_dock import VoiceTranscriptionWorker
+from open_geoagent.dialogs.chat_dock import (
+    SETTINGS_PREFIX,
+    VoiceTranscriptionWorker,
+)
 
 
 class _EmptySettings:
@@ -38,8 +41,6 @@ def test_voice_transcription_requires_openai_api_key(monkeypatch, tmp_path) -> N
 
 def test_voice_transcription_uses_saved_model(monkeypatch, tmp_path) -> None:
     """Voice transcription should use the QSettings transcription model."""
-    from open_geoagent.dialogs.chat_dock import SETTINGS_PREFIX
-
     audio_path = tmp_path / "voice.wav"
     audio_path.write_bytes(b"not-a-real-wav")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")

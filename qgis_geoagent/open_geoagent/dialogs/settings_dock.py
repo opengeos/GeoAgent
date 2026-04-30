@@ -36,6 +36,7 @@ from .chat_dock import (
     PROVIDERS,
     SETTINGS_PREFIX,
     TRANSCRIPTION_MODELS,
+    VOICE_SHORTCUT_SETTING,
 )
 from ..oauth import (
     CODEX_DEFAULT_CONFIG,
@@ -164,10 +165,11 @@ def collect_diagnostics(
                 type=str,
             ),
             "voice_shortcut": settings.value(
-                f"{SETTINGS_PREFIX}voice_shortcut",
+                f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}",
                 DEFAULT_VOICE_SHORTCUT,
                 type=str,
-            ),
+            )
+            or DEFAULT_VOICE_SHORTCUT,
             "max_tokens": settings.value(
                 f"{SETTINGS_PREFIX}max_tokens", 4096, type=int
             ),
@@ -875,7 +877,7 @@ class SettingsDockWidget(QDockWidget):
         self.transcription_model_combo.setCurrentText(transcription_model)
         voice_shortcut = (
             self.settings.value(
-                f"{SETTINGS_PREFIX}voice_shortcut",
+                f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}",
                 DEFAULT_VOICE_SHORTCUT,
                 type=str,
             ).strip()
@@ -933,7 +935,7 @@ class SettingsDockWidget(QDockWidget):
         )
         voice_shortcut = _key_sequence_text(self.voice_shortcut_edit.keySequence())
         self.settings.setValue(
-            f"{SETTINGS_PREFIX}voice_shortcut",
+            f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}",
             voice_shortcut.strip() or DEFAULT_VOICE_SHORTCUT,
         )
         for key, widget in getattr(self, "_credential_inputs", ()):
@@ -1040,6 +1042,7 @@ class SettingsDockWidget(QDockWidget):
             "fast_mode",
             "max_tokens",
             "transcription_model",
+            VOICE_SHORTCUT_SETTING,
             "voice_shortcut",
             "openai_api_key",
             "anthropic_api_key",
