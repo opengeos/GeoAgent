@@ -1,5 +1,6 @@
 # GeoAgent
 
+[![QGIS Plugin](https://img.shields.io/badge/QGIS-Plugin-green.svg)](https://plugins.qgis.org/plugins/open_geoagent)
 [![image](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/opengeos/GeoAgent/blob/main)
 [![notebook-link](https://img.shields.io/badge/notebook-link-e2d610?logo=jupyter&logoColor=white)](https://notebook.link/github/opengeos/GeoAgent/tree/main/lab/?path=docs%2Fnotebooks%2F00_key_features.ipynb)
 [![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/opengeos/leafmap/HEAD)

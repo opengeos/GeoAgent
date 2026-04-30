@@ -24,11 +24,13 @@ from qgis.PyQt.QtCore import (
     QTimer,
     pyqtSignal,
 )
-from qgis.PyQt.QtGui import QGuiApplication, QPixmap, QTextCursor
+from qgis.PyQt.QtGui import QCursor, QGuiApplication, QPixmap, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDialog,
     QDockWidget,
+    QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -39,6 +41,7 @@ from qgis.PyQt.QtWidgets import (
     QPushButton,
     QPlainTextEdit,
     QRubberBand,
+    QScrollArea,
     QSizePolicy,
     QTextEdit,
     QVBoxLayout,
@@ -129,6 +132,18 @@ def _enum_value(cls, enum_name, member_name):
     """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
+
+
+def _exec_dialog(dialog):
+    """Execute a dialog across PyQt API variants."""
+    exec_fn = getattr(dialog, "exec", None) or getattr(dialog, "exec_", None)
+    return exec_fn()
+
+
+def _exec_menu(menu, pos):
+    """Execute a menu across PyQt API variants."""
+    exec_fn = getattr(menu, "exec", None) or getattr(menu, "exec_", None)
+    return exec_fn(pos)
 
 
 def _plain_text_to_html(text):
@@ -405,6 +420,55 @@ def _crop_pixmap(pixmap, rect):
     return pixmap.copy(rect)
 
 
+def _screen_for_widget(widget):
+    """Return the screen containing a widget, falling back to cursor/primary."""
+    screen = None
+    if widget is not None:
+        try:
+            window_handle = widget.windowHandle()
+        except Exception:
+            window_handle = None
+        if window_handle is not None:
+            screen = window_handle.screen()
+        if screen is None and hasattr(widget, "screen"):
+            try:
+                screen = widget.screen()
+            except Exception:
+                screen = None
+    if screen is None and hasattr(QGuiApplication, "screenAt"):
+        screen = QGuiApplication.screenAt(QCursor.pos())
+    return screen or QGuiApplication.primaryScreen()
+
+
+def _grab_screen_rect(screen, rect):
+    """Grab a global desktop rectangle from a screen."""
+    if screen is None or rect is None:
+        return QPixmap()
+    rect = _normalized_crop_rect(rect, screen.geometry())
+    if rect.isNull():
+        return QPixmap()
+    return screen.grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height())
+
+
+def _global_widget_rect(widget):
+    """Return a widget's geometry in global screen coordinates."""
+    if widget is None:
+        return QRect()
+    return QRect(widget.mapToGlobal(QPoint(0, 0)), widget.size())
+
+
+def _grab_widget_global_rect(widget, global_rect):
+    """Grab a global rectangle from a QWidget by mapping it into widget space."""
+    if widget is None or global_rect is None:
+        return QPixmap()
+    widget_rect = _global_widget_rect(widget)
+    rect = _normalized_crop_rect(global_rect, widget_rect)
+    if rect.isNull():
+        return QPixmap()
+    local_rect = QRect(widget.mapFromGlobal(rect.topLeft()), rect.size())
+    return widget.grab(local_rect)
+
+
 class PromptTextEdit(QPlainTextEdit):
     """Prompt editor with chat-friendly keyboard shortcuts."""
 
@@ -446,6 +510,20 @@ class PromptTextEdit(QPlainTextEdit):
             return
 
         super().keyPressEvent(event)
+
+
+class AttachmentThumbnail(QLabel):
+    """Clickable thumbnail for a pending image attachment."""
+
+    clicked = pyqtSignal()
+
+    def mousePressEvent(self, event):
+        """Open preview on left-click."""
+        if event.button() == _qt_value("MouseButton", "LeftButton"):
+            self.clicked.emit()
+            event.accept()
+            return
+        super().mousePressEvent(event)
 
 
 class CanvasRegionCapture(QObject):
@@ -519,6 +597,78 @@ class CanvasRegionCapture(QObject):
             return True
 
         return False
+
+
+class ScreenRegionCapture(QWidget):
+    """Fullscreen overlay for selecting a screenshot region outside the canvas."""
+
+    finished = pyqtSignal(object)
+    cancelled = pyqtSignal()
+
+    def __init__(self, screen):
+        super().__init__(None)
+        self.screen_obj = screen or QGuiApplication.primaryScreen()
+        self.origin = QPoint()
+        self.rubber_band = None
+        self.active = False
+        frameless = _qt_value("WindowType", "FramelessWindowHint")
+        on_top = _qt_value("WindowType", "WindowStaysOnTopHint")
+        tool = _qt_value("WindowType", "Tool")
+        self.setWindowFlags(frameless | on_top | tool)
+        self.setCursor(_qt_value("CursorShape", "CrossCursor"))
+        self.setStyleSheet("background: rgba(0, 0, 0, 35);")
+        translucent = _qt_value("WidgetAttribute", "WA_TranslucentBackground")
+        self.setAttribute(translucent, True)
+        self.setGeometry(self.screen_obj.geometry())
+
+    def start(self):
+        """Show the overlay on the target screen."""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        self.setFocus()
+
+    def keyPressEvent(self, event):
+        """Cancel region capture on Escape."""
+        if event.key() == _qt_value("Key", "Key_Escape"):
+            self.cancelled.emit()
+            self.close()
+            return
+        super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        """Start the screen region selection."""
+        if event.button() != _qt_value("MouseButton", "LeftButton"):
+            return
+        self.origin = event.pos()
+        band_shape = _enum_value(QRubberBand, "Shape", "Rectangle")
+        self.rubber_band = QRubberBand(band_shape, self)
+        self.rubber_band.setGeometry(QRect(self.origin, QSize()))
+        self.rubber_band.show()
+        self.active = True
+
+    def mouseMoveEvent(self, event):
+        """Update the selected screen region."""
+        if self.active and self.rubber_band is not None:
+            self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
+
+    def mouseReleaseEvent(self, event):
+        """Finish screen region selection and emit the global selection rectangle."""
+        if not self.active or event.button() != _qt_value("MouseButton", "LeftButton"):
+            return
+        local_rect = QRect(self.origin, event.pos()).normalized()
+        global_rect = QRect(self.mapToGlobal(local_rect.topLeft()), local_rect.size())
+        self.active = False
+        if self.rubber_band is not None:
+            self.rubber_band.hide()
+        self.hide()
+        QTimer.singleShot(100, lambda: self._finish_capture(global_rect))
+
+    def _finish_capture(self, global_rect):
+        """Emit the selected region after the overlay has been hidden."""
+        self.finished.emit(global_rect)
+        self.close()
+        self.deleteLater()
 
 
 class ChatWorker(QThread):
@@ -720,6 +870,7 @@ class ChatDockWidget(QDockWidget):
         self.settings = QSettings()
         self._worker = None
         self._region_capture = None
+        self._screen_region_capture = None
         self._prompt_history = []
         self._history_index = None
         self._messages = []
@@ -844,6 +995,11 @@ class ChatDockWidget(QDockWidget):
         screenshot_menu = QMenu(self.screenshot_btn)
         screenshot_menu.addAction("Capture Map Canvas", self._capture_map_canvas)
         screenshot_menu.addAction("Select Region", self._start_region_capture)
+        screenshot_menu.addSeparator()
+        screenshot_menu.addAction("Capture QGIS Window", self._capture_qgis_window)
+        screenshot_menu.addAction(
+            "Select Screen Region", self._start_screen_region_capture
+        )
         self.screenshot_btn.setMenu(screenshot_menu)
         primary_button_layout.addWidget(self.screenshot_btn)
 
@@ -965,10 +1121,12 @@ class ChatDockWidget(QDockWidget):
             chip_layout.setContentsMargins(0, 0, 0, 0)
             chip_layout.setSpacing(2)
 
-            thumb = QLabel()
+            thumb = AttachmentThumbnail()
             thumb.setFixedSize(IMAGE_THUMBNAIL_SIZE, IMAGE_THUMBNAIL_SIZE)
             thumb.setStyleSheet("border: 1px solid #BDBDBD; background: #FAFAFA;")
             thumb.setAlignment(_qt_value("AlignmentFlag", "AlignCenter"))
+            thumb.setToolTip("Click to preview image")
+            thumb.setCursor(_qt_value("CursorShape", "PointingHandCursor"))
             pixmap = QPixmap()
             pixmap.loadFromData(attachment["bytes"], "PNG")
             if not pixmap.isNull():
@@ -981,6 +1139,9 @@ class ChatDockWidget(QDockWidget):
                         smooth,
                     )
                 )
+            thumb.clicked.connect(
+                lambda checked=False, i=index: self._preview_image_attachment(i)
+            )
             chip_layout.addWidget(thumb)
 
             remove_btn = QPushButton("Remove")
@@ -993,6 +1154,94 @@ class ChatDockWidget(QDockWidget):
 
         self.attachment_layout.addStretch(1)
         self.attachment_bar.setVisible(True)
+
+    def _preview_image_attachment(self, index):
+        """Show a larger preview of a pending image attachment."""
+        if index < 0 or index >= len(self._image_attachments):
+            return
+        attachment = self._image_attachments[index]
+        image_bytes = attachment["bytes"]
+        pixmap = QPixmap()
+        pixmap.loadFromData(image_bytes, "PNG")
+        if pixmap.isNull():
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                "Could not preview this image attachment.",
+            )
+            return
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(
+            f"Image Preview ({attachment['width']} x {attachment['height']})"
+        )
+        dialog.resize(900, 700)
+
+        layout = QVBoxLayout(dialog)
+        scroll = QScrollArea(dialog)
+        scroll.setWidgetResizable(True)
+        image_label = QLabel()
+        image_label.setAlignment(_qt_value("AlignmentFlag", "AlignCenter"))
+        image_label.setContextMenuPolicy(
+            _qt_value("ContextMenuPolicy", "CustomContextMenu")
+        )
+
+        available = _screen_for_widget(self).availableGeometry()
+        max_width = max(320, int(available.width() * 0.8))
+        max_height = max(240, int(available.height() * 0.8))
+        if pixmap.width() > max_width or pixmap.height() > max_height:
+            keep_aspect = _qt_value("AspectRatioMode", "KeepAspectRatio")
+            smooth = _qt_value("TransformationMode", "SmoothTransformation")
+            pixmap = pixmap.scaled(max_width, max_height, keep_aspect, smooth)
+        image_label.setPixmap(pixmap)
+        scroll.setWidget(image_label)
+        layout.addWidget(scroll)
+
+        def save_image():
+            """Save the original PNG attachment bytes."""
+            default_name = f"opengeoagent-image-{time.strftime('%Y%m%d-%H%M%S')}.png"
+            default_path = os.path.join(os.path.expanduser("~"), default_name)
+            path, _selected_filter = QFileDialog.getSaveFileName(
+                dialog,
+                "Save Image",
+                default_path,
+                "PNG Images (*.png);;All Files (*)",
+            )
+            if not path:
+                return
+            if not os.path.splitext(path)[1]:
+                path = f"{path}.png"
+            try:
+                with open(path, "wb") as f:
+                    f.write(image_bytes)
+            except Exception as exc:
+                QMessageBox.warning(
+                    dialog,
+                    "OpenGeoAgent",
+                    f"Could not save image:\n\n{exc}",
+                )
+                return
+            self.status_label.setText(f"Saved image to {path}")
+            self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+        def show_context_menu(pos):
+            """Show preview image actions."""
+            menu = QMenu(image_label)
+            menu.addAction("Save Image As...", save_image)
+            _exec_menu(menu, image_label.mapToGlobal(pos))
+
+        image_label.customContextMenuRequested.connect(show_context_menu)
+
+        button_layout = QHBoxLayout()
+        save_btn = QPushButton("Save Image")
+        save_btn.clicked.connect(save_image)
+        button_layout.addWidget(save_btn)
+        button_layout.addStretch(1)
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(dialog.accept)
+        button_layout.addWidget(close_btn)
+        layout.addLayout(button_layout)
+        _exec_dialog(dialog)
 
     def _remove_image_attachment(self, index):
         """Remove one pending image attachment."""
@@ -1025,7 +1274,7 @@ class ChatDockWidget(QDockWidget):
             QMessageBox.warning(
                 self,
                 "OpenGeoAgent",
-                "Could not capture a screenshot from the map canvas.",
+                "Could not capture a screenshot.",
             )
             return
         before = len(self._image_attachments)
@@ -1045,6 +1294,26 @@ class ChatDockWidget(QDockWidget):
             )
             return
         self._attach_screenshot_pixmap(widget.grab(), "map canvas")
+
+    def _capture_qgis_window(self):
+        """Capture the QGIS window containing this dock."""
+        window = self.window()
+        screen = _screen_for_widget(window)
+        if screen is None or window is None:
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                "No QGIS window is available to capture.",
+            )
+            return
+        pixmap = window.grab()
+        if pixmap.isNull():
+            try:
+                win_id = int(window.winId())
+            except Exception:
+                win_id = 0
+            pixmap = screen.grabWindow(win_id)
+        self._attach_screenshot_pixmap(pixmap, "QGIS window")
 
     def _start_region_capture(self):
         """Let the user drag a rectangular screenshot region on the map canvas."""
@@ -1089,6 +1358,47 @@ class ChatDockWidget(QDockWidget):
         """Handle cancelled regional screenshot capture."""
         self._region_capture = None
         self.status_label.setText("Screenshot capture cancelled.")
+        self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+
+    def _start_screen_region_capture(self):
+        """Let the user drag a screenshot region anywhere on the current screen."""
+        screen = _screen_for_widget(self.window())
+        if screen is None:
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                "No screen is available to capture.",
+            )
+            return
+        if self._screen_region_capture is not None:
+            self._screen_region_capture.close()
+            self._screen_region_capture = None
+        capture = ScreenRegionCapture(screen)
+        capture.finished.connect(self._finish_screen_region_capture)
+        capture.cancelled.connect(self._cancel_screen_region_capture)
+        self._screen_region_capture = capture
+        capture.start()
+        self.status_label.setText(
+            "Drag anywhere on the screen to attach a screenshot region. Press Esc to cancel."
+        )
+        self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
+
+    def _finish_screen_region_capture(self, global_rect):
+        """Attach a selected desktop screenshot region to the prompt."""
+        self._screen_region_capture = None
+        window = self.window()
+        pixmap = _grab_widget_global_rect(window, global_rect)
+        if pixmap.isNull():
+            screen = _screen_for_widget(window)
+            pixmap = _grab_screen_rect(screen, global_rect)
+        self._attach_screenshot_pixmap(pixmap, "screen region")
+
+    def _cancel_screen_region_capture(self):
+        """Handle cancelled desktop screenshot region capture."""
+        if self._screen_region_capture is not None:
+            self._screen_region_capture.close()
+        self._screen_region_capture = None
+        self.status_label.setText("Screen screenshot capture cancelled.")
         self.status_label.setStyleSheet("color: gray; font-size: 10px;")
 
     def _send_prompt(self):
@@ -1422,6 +1732,9 @@ class ChatDockWidget(QDockWidget):
             if self._region_capture is not None:
                 self._region_capture.stop()
                 self._region_capture = None
+            if self._screen_region_capture is not None:
+                self._screen_region_capture.close()
+                self._screen_region_capture = None
         except Exception as exc:
             QgsMessageLog.logMessage(
                 f"Failed to stop running status timer during dock shutdown: {exc}",

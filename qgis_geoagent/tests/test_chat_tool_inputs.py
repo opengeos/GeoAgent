@@ -1,12 +1,14 @@
 """Tests for QGIS chat transcript tool-input formatting."""
 
-from qgis.PyQt.QtCore import QRect
+from qgis.PyQt.QtCore import QPoint, QRect, QSize
 from qgis.PyQt.QtGui import QColor, QImage
 
 from open_geoagent.dialogs.chat_dock import (
     _build_chat_content,
     _conversation_markdown,
     _format_tool_calls,
+    _grab_screen_rect,
+    _grab_widget_global_rect,
     _image_to_png_bytes,
     _normalized_crop_rect,
 )
@@ -77,6 +79,55 @@ def test_normalized_crop_rect_clamps_reversed_selection() -> None:
     rect = _normalized_crop_rect(QRect(90, 80, -50, -40), QRect(0, 0, 70, 60))
 
     assert rect == QRect(40, 40, 30, 20)
+
+
+def test_grab_screen_rect_uses_clamped_global_rect() -> None:
+    """Verify screen-region capture passes a bounded rectangle to QScreen."""
+
+    class _Screen:
+        def __init__(self) -> None:
+            self.calls = []
+
+        def geometry(self):
+            return QRect(10, 20, 100, 80)
+
+        def grabWindow(self, win_id, x, y, width, height):
+            self.calls.append((win_id, x, y, width, height))
+            return "pixmap"
+
+    screen = _Screen()
+    result = _grab_screen_rect(screen, QRect(90, 80, 80, 60))
+
+    assert result == "pixmap"
+    assert screen.calls == [(0, 90, 80, 20, 20)]
+
+
+def test_grab_widget_global_rect_maps_global_selection_to_widget() -> None:
+    """Verify QGIS-window region capture crops from widget coordinates."""
+
+    class _Widget:
+        def __init__(self) -> None:
+            self.calls = []
+            self.offset = QPoint(20, 30)
+
+        def mapToGlobal(self, point):
+            return QPoint(self.offset.x() + point.x(), self.offset.y() + point.y())
+
+        def mapFromGlobal(self, point):
+            return QPoint(point.x() - self.offset.x(), point.y() - self.offset.y())
+
+        def size(self):
+            return QSize(100, 80)
+
+        def grab(self, rect):
+            self.calls.append(rect)
+            return "pixmap"
+
+    widget = _Widget()
+    result = _grab_widget_global_rect(widget, QRect(90, 80, 80, 60))
+
+    assert result == "pixmap"
+    assert widget.calls == [QRect(70, 50, 30, 30)]
 
 
 def test_format_tool_calls_labels_routed_whitebox_tools() -> None:
