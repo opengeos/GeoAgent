@@ -359,11 +359,13 @@ def _apply_environment_from_settings(settings):
     }
     for key, env_names in env_map.items():
         value = _setting(settings, key, "").strip()
-        if value:
-            if isinstance(env_names, str):
-                env_names = (env_names,)
-            for env_name in env_names:
+        if isinstance(env_names, str):
+            env_names = (env_names,)
+        for env_name in env_names:
+            if value:
                 os.environ[env_name] = value
+            else:
+                os.environ.pop(env_name, None)
 
 
 def _transcription_model_from_settings(settings):
@@ -455,8 +457,11 @@ def _markdown_image_target_to_html_src(target):
     target = str(target or "").strip()
     if not target:
         return ""
-    if target.startswith(("http://", "https://", "data:image/", "file://")):
+    lower = target.lower()
+    if lower.startswith(("http://", "https://", "data:image/", "file://")):
         return target
+    if re.match(r"^[a-z][a-z0-9+.-]*:", lower):
+        return ""
     try:
         path = Path(target).expanduser()
         if path.exists():
@@ -945,6 +950,39 @@ def _output_image_dir():
     return path
 
 
+def _allowed_output_image_roots():
+    """Return resolved directories where extracted output paths may live."""
+    roots: list[Path] = []
+    candidates = [
+        Path(tempfile.gettempdir()) / "open_geoagent_outputs",
+        Path(tempfile.gettempdir()) / "geoagent_images",
+    ]
+    env_dir = os.environ.get("GEOAGENT_IMAGE_OUTPUT_DIR", "").strip()
+    if env_dir:
+        candidates.append(Path(env_dir).expanduser())
+    for candidate in candidates:
+        try:
+            roots.append(candidate.resolve())
+        except Exception:
+            continue
+    return roots
+
+
+def _path_under_allowed_output_root(path):
+    """Return True when the given path resolves under an allowlisted root."""
+    try:
+        resolved = Path(path).expanduser().resolve()
+    except Exception:
+        return False
+    for root in _allowed_output_image_roots():
+        try:
+            resolved.relative_to(root)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
 def _output_image_extension(image):
     """Return a safe file extension for a model-generated image."""
     format_name = str(image.get("format") or "").lower().lstrip(".")
@@ -1048,6 +1086,8 @@ def _images_from_output_text(text):
     images = []
     for match in OUTPUT_IMAGE_PATH_RE.finditer(str(text or "")):
         path = match.group("path").rstrip(".,);]")
+        if not _path_under_allowed_output_root(path):
+            continue
         ext = path.rsplit(".", 1)[-1].lower()
         if ext == "jpeg":
             ext = "jpg"

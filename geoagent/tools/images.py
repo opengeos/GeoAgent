@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import os
 import tempfile
 import time
@@ -177,12 +178,17 @@ def image_generation_tools() -> list[Any]:
 
         out_dir = _output_dir(output_dir or None)
         images: list[dict[str, Any]] = []
+        decode_errors: list[str] = []
         for index, item in enumerate(_response_data_items(response), start=1):
             b64_json = _item_value(item, "b64_json")
             url = _item_value(item, "url")
             revised_prompt = _item_value(item, "revised_prompt")
             if b64_json:
-                image_bytes = base64.b64decode(str(b64_json))
+                try:
+                    image_bytes = base64.b64decode(str(b64_json), validate=True)
+                except (binascii.Error, ValueError) as exc:
+                    decode_errors.append(f"item {index}: {exc}")
+                    continue
                 stem = _safe_image_stem(prompt)
                 suffix = time.strftime("%Y%m%d-%H%M%S")
                 path = out_dir / f"{stem}-{suffix}-{index}.png"
@@ -207,9 +213,16 @@ def image_generation_tools() -> list[Any]:
                 )
 
         if not images:
+            error_message = "The image API response did not include an image."
+            if decode_errors:
+                error_message = (
+                    "The image API returned invalid base64 payload(s): "
+                    + "; ".join(decode_errors)
+                )
             return {
                 "success": False,
-                "error": "The image API response did not include an image.",
+                "error": error_message,
+                "model": model,
             }
 
         return {
