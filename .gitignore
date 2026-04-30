@@ -110,3 +110,4 @@ CLAUDE.md
 .codex
 *.zip
 docs/examples/codex_example_map.png
+scripts/

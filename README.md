@@ -171,6 +171,22 @@ resp = agent.chat("Explain STAC in two sentences.")
 print(resp.answer_text)
 ```
 
+Stream model output as it is generated:
+
+```python
+import asyncio
+from geoagent import GeoAgent
+
+agent = GeoAgent()
+
+async def main():
+    async for event in agent.stream_chat("Explain STAC in two sentences."):
+        if "data" in event:
+            print(event["data"], end="", flush=True)
+
+asyncio.run(main())
+```
+
 Bind an agent to a live `leafmap` map:
 
 ```python
@@ -375,6 +391,7 @@ Runnable notebooks live under `docs/examples/`:
 
 - `docs/examples/intro.ipynb` — basic GeoAgent usage.
 - `docs/examples/openai_codex.ipynb` — ChatGPT/Codex OAuth in Python/Jupyter.
+- `docs/examples/stream_chat_openai_codex.ipynb` — streamed ChatGPT/Codex output.
 - `docs/examples/live_mapping.ipynb` — live map workflow.
 - `docs/examples/qgis_agent.ipynb` — QGIS-oriented workflow using mocks.
 - `examples/nasa_opera_qgis.py` — NASA OPERA workflow for QGIS.

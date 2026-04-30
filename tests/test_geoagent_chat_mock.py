@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 import time
 import types
@@ -17,6 +18,20 @@ class _MockModel:
     """Provide a test double for MockModel."""
 
     stateful = False
+
+
+class _MockStreamingAgent:
+    """Provide a test double for a Strands agent with stream_async."""
+
+    def __init__(self, events):
+        self.events = events
+        self.calls = []
+
+    async def stream_async(self, query):
+        """Yield mocked streaming events."""
+        self.calls.append(query)
+        for event in self.events:
+            yield event
 
 
 def test_chat_success_from_mocked_strands() -> None:
@@ -85,6 +100,45 @@ def test_chat_json_parse_error_returns_actionable_guidance() -> None:
     assert "malformed or incomplete JSON" in resp.error_message
     assert "Original error:" in resp.error_message
     assert "Break a long workflow into smaller steps" in resp.error_message
+
+
+def test_stream_chat_yields_mocked_strands_events() -> None:
+    """Verify stream_chat yields Strands streaming events."""
+    m = MockLeafmap()
+    agent = for_leafmap(m, model=_MockModel())
+    events = [
+        {"data": "he"},
+        {"data": "llo"},
+        {"current_tool_use": {"name": "list_layers"}},
+        {"result": SimpleNamespace(stop_reason="end_turn")},
+    ]
+    mock_agent = _MockStreamingAgent(events)
+    agent._strands = mock_agent  # noqa: SLF001
+
+    async def _collect():
+        return [event async for event in agent.stream_chat("list layers")]
+
+    seen = asyncio.run(_collect())
+
+    assert seen == events
+    assert mock_agent.calls == ["list layers"]
+
+
+def test_stream_chat_clears_previous_run_state() -> None:
+    """Verify stream_chat starts from fresh cancellation/tool-call state."""
+    m = MockLeafmap()
+    agent = for_leafmap(m, model=_MockModel())
+    agent._cancelled.append("old_tool")  # noqa: SLF001
+    agent._tool_calls.append({"name": "old_tool"})  # noqa: SLF001
+    agent._strands = _MockStreamingAgent([{"data": "done"}])  # noqa: SLF001
+
+    async def _drain():
+        return [event async for event in agent.stream_chat("hello")]
+
+    asyncio.run(_drain())
+
+    assert agent._cancelled == []  # noqa: SLF001
+    assert agent._tool_calls == []  # noqa: SLF001
 
 
 def test_chat_in_background_returns_and_invokes_callback() -> None:
@@ -181,7 +235,7 @@ def test_qgis_chat_on_gui_thread_runs_worker_and_pumps_events(monkeypatch) -> No
         QObject=_QObject,
         QThread=_QThread,
         Qt=_Qt,
-        pyqtSlot=lambda *args, **kwargs: (lambda fn: fn),
+        pyqtSlot=lambda *args, **kwargs: lambda fn: fn,
     )
     fake_qt_widgets = types.SimpleNamespace(QApplication=_QApplication)
     fake_pyqt = types.SimpleNamespace(QtCore=fake_qt_core, QtWidgets=fake_qt_widgets)

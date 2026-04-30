@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 import threading
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 
 from strands import Agent
 from strands.tools.executors.sequential import SequentialToolExecutor
@@ -258,6 +258,67 @@ class GeoAgent:
                 cancelled_tools=list(self._cancelled),
                 map=self._context.map_obj,
             )
+
+    async def stream_chat(
+        self,
+        query: Any,
+        target_map: Any = None,
+    ) -> AsyncIterator[Any]:
+        """Stream a single user turn as raw Strands events.
+
+        Text deltas are emitted in events containing ``"data"``. The final
+        Strands result is emitted in the event containing ``"result"``.
+        """
+        if target_map is not None and target_map is not self._context.map_obj:
+            from geoagent.core.factory import for_leafmap
+
+            other = for_leafmap(
+                target_map,
+                config=self._config,
+                model=self._model,
+                fast=self._fast,
+                confirm=self._confirm,
+            )
+            async for event in other.stream_chat(query):
+                yield event
+            return
+
+        if self._qgis_safe_mode and is_qt_gui_thread():
+            integration = self._context.metadata.get("integration")
+            if integration in {"nasa_earthdata", "nasa_opera"}:
+                label = (
+                    "NASA Earthdata"
+                    if integration == "nasa_earthdata"
+                    else "NASA OPERA"
+                )
+                helper = (
+                    "the NASA Earthdata AI Assistant panel"
+                    if integration == "nasa_earthdata"
+                    else (
+                        "the NASA OPERA AI Assistant panel or "
+                        "geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "
+                        "for direct QGIS-console workflows"
+                    )
+                )
+                raise RuntimeError(
+                    f"{label} streaming chat should be launched from a worker thread "
+                    f"inside QGIS. Use {helper}."
+                )
+            raise RuntimeError(
+                "stream_chat() must not be called from the QGIS Qt GUI thread when "
+                "qgis_safe_mode=True. Launch streaming chat from a worker thread, "
+                "or use chat() from the GUI thread."
+            )
+
+        self._cancelled.clear()
+        self._tool_calls.clear()
+        try:
+            async for event in self._strands.stream_async(query):
+                yield event
+        except Exception as exc:
+            if _looks_like_json_parse_failure(exc):
+                raise RuntimeError(_format_chat_exception(exc)) from exc
+            raise
 
     def _chat_on_qgis_gui_thread(self, query: Any) -> GeoAgentResponse:
         """Run sync QGIS chat without starving the Qt event loop.
