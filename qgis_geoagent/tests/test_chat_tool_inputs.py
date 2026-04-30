@@ -348,6 +348,64 @@ def test_unsaved_project_has_no_history_key(monkeypatch) -> None:
     assert _project_history_key(None) == ""
 
 
+def test_agent_mode_load_guard_does_not_seed_prompt() -> None:
+    """Restoring a saved workflow mode should not prefill a new chat prompt."""
+    from open_geoagent.dialogs.chat_dock import ChatDockWidget
+
+    class _PromptInput:
+        def __init__(self):
+            self.text = ""
+
+        def toPlainText(self):
+            return self.text
+
+        def setPlainText(self, text):
+            self.text = text
+
+    dock = type("FakeDock", (), {})()
+    dock._loading_settings = True
+    dock.prompt_input = _PromptInput()
+
+    ChatDockWidget._on_agent_mode_changed(dock, "GEE Data Catalogs")
+
+    assert dock.prompt_input.toPlainText() == ""
+
+
+def test_transcribed_prompt_moves_cursor_to_end() -> None:
+    """Transcribed text should leave the prompt cursor at the end."""
+    from open_geoagent.dialogs.chat_dock import ChatDockWidget
+
+    class _PromptInput:
+        def __init__(self):
+            self.text = ""
+            self.moved = False
+            self.focused = False
+
+        def toPlainText(self):
+            return self.text
+
+        def setPlainText(self, text):
+            self.text = text
+
+        def moveCursor(self, _cursor):
+            self.moved = True
+
+        def setFocus(self):
+            self.focused = True
+
+    dock = type("FakeDock", (), {})()
+    dock.prompt_input = _PromptInput()
+    dock._move_prompt_cursor_to_end = lambda: ChatDockWidget._move_prompt_cursor_to_end(
+        dock
+    )
+
+    ChatDockWidget._insert_transcribed_prompt(dock, "hello world")
+
+    assert dock.prompt_input.toPlainText() == "hello world"
+    assert dock.prompt_input.moved is True
+    assert dock.prompt_input.focused is True
+
+
 def test_permission_profiles_filter_sensitive_tools() -> None:
     """Verify inspect-only mode hides mutating/long-running tools."""
 

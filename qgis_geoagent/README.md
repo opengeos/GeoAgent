@@ -13,6 +13,8 @@ GitHub update checker.
 ## Features
 
 - Dockable OpenGeoAgent chat panel with Ctrl+Enter sending
+- Voice prompt recording with automatic OpenAI speech-to-text transcription into
+  the chat editor
 - Up/Down prompt history while the prompt editor is focused
 - Built-in sample prompt picker for common QGIS workflows
 - Agent modes for General QGIS, WhiteboxTools, NASA Earthdata, NASA OPERA,
@@ -86,6 +88,13 @@ provider and model. API keys and host settings are stored in QGIS settings and
 applied to the current QGIS process before each chat request:
 
 - OpenAI: `OPENAI_API_KEY`
+- Voice transcription: `OPENAI_API_KEY` is required even when the chat provider
+  is set to ChatGPT/Codex OAuth. Voice input sends recorded audio to the OpenAI
+  transcription API and may incur API costs. If no key is configured, recording
+  is blocked and OpenGeoAgent shows a setup warning. Choose the transcription
+  model in **Settings > Model > Voice Transcription**. The default is
+  `gpt-4o-mini-transcribe`; `OPENAI_TRANSCRIPTION_MODEL` is used as a fallback
+  when no QGIS setting has been saved.
 - ChatGPT/Codex OAuth: choose `openai-codex` and click **Login with ChatGPT**
   in the Model tab. Headless use can set `OPENAI_CODEX_ACCESS_TOKEN`.
 - Anthropic: `ANTHROPIC_API_KEY`
@@ -109,6 +118,12 @@ Default models:
 ## Chat Workflow
 
 - Type a prompt and press **Ctrl+Enter** to send it.
+- Click the microphone button, speak, then click it again to stop. OpenGeoAgent
+  records through QGIS/Qt multimedia support, shows a live input-level
+  indicator, transcribes the audio with the OpenAI transcription API, and
+  inserts the text into the prompt editor for review. The default mic shortcut
+  is **Ctrl+Shift+M** and can be changed in **Settings > Model > Voice
+  Transcription**.
 - Choose an **Agent mode** for the workflow you want. STAC mode provides
   guided search/loading steps and dependency diagnostics; it does not add a
   separate STAC loader beyond the current GeoAgent tool surface.

@@ -7,7 +7,7 @@ import sys
 import time
 
 from qgis.PyQt.QtCore import Qt, QSettings, QThread, QTimer, QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices, QFont, QGuiApplication
+from qgis.PyQt.QtGui import QDesktopServices, QFont, QGuiApplication, QKeySequence
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -21,13 +21,22 @@ from qgis.PyQt.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QKeySequenceEdit,
     QSpinBox,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
-from .chat_dock import DEFAULT_MODELS, DEFAULT_PROVIDER, PROVIDERS, SETTINGS_PREFIX
+from .chat_dock import (
+    DEFAULT_MODELS,
+    DEFAULT_PROVIDER,
+    DEFAULT_TRANSCRIPTION_MODEL,
+    DEFAULT_VOICE_SHORTCUT,
+    PROVIDERS,
+    SETTINGS_PREFIX,
+    TRANSCRIPTION_MODELS,
+)
 from ..oauth import (
     CODEX_DEFAULT_CONFIG,
     OAUTH_CONFIG_KEYS,
@@ -147,6 +156,18 @@ def collect_diagnostics(
                 f"{SETTINGS_PREFIX}provider", DEFAULT_PROVIDER, type=str
             ),
             "model": settings.value(f"{SETTINGS_PREFIX}model", "", type=str),
+            "transcription_model": settings.value(
+                f"{SETTINGS_PREFIX}transcription_model",
+                os.environ.get(
+                    "OPENAI_TRANSCRIPTION_MODEL", DEFAULT_TRANSCRIPTION_MODEL
+                ),
+                type=str,
+            ),
+            "voice_shortcut": settings.value(
+                f"{SETTINGS_PREFIX}voice_shortcut",
+                DEFAULT_VOICE_SHORTCUT,
+                type=str,
+            ),
             "max_tokens": settings.value(
                 f"{SETTINGS_PREFIX}max_tokens", 4096, type=int
             ),
@@ -212,6 +233,15 @@ def _enum_value(cls, enum_name, member_name):
     """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
+
+
+def _key_sequence_text(sequence):
+    """Return a portable string for a QKeySequence."""
+    sequence_format = getattr(QKeySequence, "SequenceFormat", QKeySequence)
+    portable = getattr(sequence_format, "PortableText", None)
+    if portable is not None:
+        return sequence.toString(portable)
+    return sequence.toString()
 
 
 def _env_fallback(*env_names):
@@ -510,6 +540,37 @@ class SettingsDockWidget(QDockWidget):
 
         layout.addWidget(credentials_group)
 
+        voice_group = QGroupBox("Voice Transcription")
+        voice_form = QFormLayout(voice_group)
+
+        self.transcription_model_combo = QComboBox()
+        self.transcription_model_combo.addItems(TRANSCRIPTION_MODELS)
+        self.transcription_model_combo.setEditable(True)
+        self.transcription_model_combo.setMinimumContentsLength(24)
+        self.transcription_model_combo.setSizeAdjustPolicy(
+            _enum_value(
+                QComboBox,
+                "SizeAdjustPolicy",
+                "AdjustToMinimumContentsLengthWithIcon",
+            )
+        )
+        voice_form.addRow("Transcription model:", self.transcription_model_combo)
+
+        self.voice_shortcut_edit = QKeySequenceEdit()
+        voice_form.addRow("Mic shortcut:", self.voice_shortcut_edit)
+
+        voice_note = QLabel(
+            "Voice input uses the OpenAI transcription API with the OpenAI API "
+            "key above and may incur API costs. ChatGPT/Codex OAuth is not used "
+            "for transcription. The shortcut starts and stops recording when the "
+            "chat dock has focus."
+        )
+        voice_note.setWordWrap(True)
+        voice_note.setStyleSheet("font-size: 10px; color: gray;")
+        voice_form.addRow(voice_note)
+
+        layout.addWidget(voice_group)
+
         oauth_group = QGroupBox("ChatGPT Login")
         oauth_form = QFormLayout(oauth_group)
 
@@ -799,6 +860,28 @@ class SettingsDockWidget(QDockWidget):
         self.max_tokens_spin.setValue(
             self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
         )
+        transcription_model = (
+            self.settings.value(
+                f"{SETTINGS_PREFIX}transcription_model",
+                os.environ.get(
+                    "OPENAI_TRANSCRIPTION_MODEL", DEFAULT_TRANSCRIPTION_MODEL
+                ),
+                type=str,
+            ).strip()
+            or DEFAULT_TRANSCRIPTION_MODEL
+        )
+        if self.transcription_model_combo.findText(transcription_model) < 0:
+            self.transcription_model_combo.addItem(transcription_model)
+        self.transcription_model_combo.setCurrentText(transcription_model)
+        voice_shortcut = (
+            self.settings.value(
+                f"{SETTINGS_PREFIX}voice_shortcut",
+                DEFAULT_VOICE_SHORTCUT,
+                type=str,
+            ).strip()
+            or DEFAULT_VOICE_SHORTCUT
+        )
+        self.voice_shortcut_edit.setKeySequence(QKeySequence(voice_shortcut))
 
         self._credential_inputs = (
             ("openai_api_key", self.openai_key_input),
@@ -842,6 +925,16 @@ class SettingsDockWidget(QDockWidget):
         )
         self.settings.setValue(
             f"{SETTINGS_PREFIX}max_tokens", self.max_tokens_spin.value()
+        )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}transcription_model",
+            self.transcription_model_combo.currentText().strip()
+            or DEFAULT_TRANSCRIPTION_MODEL,
+        )
+        voice_shortcut = _key_sequence_text(self.voice_shortcut_edit.keySequence())
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}voice_shortcut",
+            voice_shortcut.strip() or DEFAULT_VOICE_SHORTCUT,
         )
         for key, widget in getattr(self, "_credential_inputs", ()):
             current = widget.text()
@@ -946,6 +1039,8 @@ class SettingsDockWidget(QDockWidget):
             "model",
             "fast_mode",
             "max_tokens",
+            "transcription_model",
+            "voice_shortcut",
             "openai_api_key",
             "anthropic_api_key",
             "gemini_api_key",
