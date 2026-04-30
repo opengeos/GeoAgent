@@ -163,9 +163,7 @@ def test_openai_new_models_use_max_completion_tokens(monkeypatch) -> None:
     )
     monkeypatch.setitem(sys.modules, "strands.models.openai", openai_module)
 
-    module_path = (
-        Path(__file__).resolve().parents[2] / "geoagent" / "core" / "model.py"
-    )
+    module_path = Path(__file__).resolve().parents[2] / "geoagent" / "core" / "model.py"
     spec = util.spec_from_file_location("_geoagent_model_under_test", module_path)
     module = util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -261,9 +259,7 @@ def test_litellm_openai_gpt5_omits_temperature(monkeypatch) -> None:
     )
     monkeypatch.setitem(sys.modules, "strands.models.litellm", litellm_module)
 
-    module_path = (
-        Path(__file__).resolve().parents[2] / "geoagent" / "core" / "model.py"
-    )
+    module_path = Path(__file__).resolve().parents[2] / "geoagent" / "core" / "model.py"
     spec = util.spec_from_file_location(
         "_geoagent_model_under_test_litellm", module_path
     )

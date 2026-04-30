@@ -196,9 +196,7 @@ class ProviderTestWorker(QThread):
                 model=self.model_id or None,
                 temperature=(
                     1
-                    if _model_requires_default_temperature(
-                        self.provider, self.model_id
-                    )
+                    if _model_requires_default_temperature(self.provider, self.model_id)
                     else 0
                 ),
                 max_tokens=max(int(self.max_tokens or token_floor), token_floor),
