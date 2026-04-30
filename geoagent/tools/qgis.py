@@ -28,7 +28,7 @@ from urllib.parse import quote
 from geoagent.core.decorators import geo_tool
 from geoagent.tools._qt_marshal import run_on_qt_gui_thread
 
-_PYQGIS_ALLOWED_IMPORTS = ("qgis", "math")
+_PYQGIS_ALLOWED_TOP_LEVEL = frozenset({"qgis", "math"})
 _PYQGIS_BLOCKED_CALLS = {
     "__import__",
     "compile",
@@ -37,6 +37,18 @@ _PYQGIS_BLOCKED_CALLS = {
     "input",
     "open",
 }
+
+
+def _is_allowed_pyqgis_module(name: str) -> bool:
+    """Return True only for the qgis/math packages and their submodules.
+
+    Matching on the top-level package (split on ``.``) avoids prefix
+    collisions with unrelated modules such as ``mathutils`` or ``qgisx``.
+    """
+    if not name:
+        return False
+    top, _, _ = name.partition(".")
+    return top in _PYQGIS_ALLOWED_TOP_LEVEL
 
 
 def _validate_pyqgis_script(code: str) -> None:
@@ -49,14 +61,14 @@ def _validate_pyqgis_script(code: str) -> None:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if not alias.name.startswith(_PYQGIS_ALLOWED_IMPORTS):
+                if not _is_allowed_pyqgis_module(alias.name):
                     raise ValueError(
                         "Only qgis/PyQt and math imports are allowed in "
                         "run_pyqgis_script."
                     )
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if node.level or not module.startswith(_PYQGIS_ALLOWED_IMPORTS):
+            if node.level or not _is_allowed_pyqgis_module(module):
                 raise ValueError(
                     "Only absolute qgis/PyQt and math imports are allowed in "
                     "run_pyqgis_script."
@@ -85,7 +97,7 @@ def _limited_pyqgis_import(
     level: int = 0,
 ) -> Any:
     """Allow imports needed for PyQGIS snippets and reject everything else."""
-    if level or not name.startswith(_PYQGIS_ALLOWED_IMPORTS):
+    if level or not _is_allowed_pyqgis_module(name):
         raise ImportError(
             f"Import {name!r} is not allowed in run_pyqgis_script. "
             "Use QGIS/PyQt API imports only."

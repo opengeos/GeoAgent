@@ -124,11 +124,40 @@ def ensure_venv_packages_available() -> bool:
     return True
 
 
+def _dependency_importable(import_name: str) -> Tuple[bool, Optional[str]]:
+    """Return whether a dependency can actually be imported right now.
+
+    ``importlib.util.find_spec`` only confirms the module is discoverable on
+    ``sys.path``; the import itself can still raise (missing native deps,
+    import-time exceptions, broken installs). This helper performs the real
+    import so callers reflect runtime importability rather than discoverability.
+
+    Args:
+        import_name: Dotted module name to probe.
+
+    Returns:
+        Tuple of (importable, error_message). ``error_message`` is ``None`` when
+        importable is ``True``.
+    """
+    try:
+        if importlib.util.find_spec(import_name) is None:
+            return False, f"No module named {import_name!r}"
+    except (ImportError, ModuleNotFoundError, ValueError) as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+    try:
+        importlib.import_module(import_name)
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+    return True, None
+
+
 def check_dependencies() -> List[Dict]:
     """Check if required Python packages are importable.
 
     Returns:
-        List of dicts with keys: name, pip_name, installed, version.
+        List of dicts with keys: name, pip_name, installed, version, error.
+        ``error`` is populated when the package is discoverable but importing
+        it fails at runtime (e.g., missing native dependency).
     """
     results = []
     for import_name, pip_name in REQUIRED_PACKAGES:
@@ -137,39 +166,34 @@ def check_dependencies() -> List[Dict]:
             "pip_name": pip_name,
             "installed": False,
             "version": None,
+            "error": None,
         }
-        try:
-            spec = importlib.util.find_spec(import_name)
-            if spec is None:
-                raise ImportError(import_name)
+        importable, error = _dependency_importable(import_name)
+        if importable:
             info["installed"] = True
             try:
                 mod = importlib.import_module(import_name)
                 info["version"] = getattr(mod, "__version__", "installed")
-            except Exception:
-                info["version"] = "installed"
-        except ImportError:
-            pass
+            except Exception as exc:  # pragma: no cover - defensive
+                info["installed"] = False
+                info["error"] = f"{type(exc).__name__}: {exc}"
+        else:
+            info["error"] = error
         results.append(info)
     return results
 
 
-def _dependency_importable(import_name: str) -> bool:
-    """Return True when a dependency can be imported without importing it now."""
-    try:
-        return importlib.util.find_spec(import_name) is not None
-    except (ImportError, ModuleNotFoundError, ValueError):
-        return False
-
-
 def all_dependencies_met() -> bool:
-    """Return True if all required packages are importable.
+    """Return True if every required package can actually be imported.
+
+    Uses a real ``importlib.import_module`` call (not just ``find_spec``) so
+    discoverable-but-broken installs do not falsely satisfy the gate.
 
     Returns:
-        True if all dependencies are installed and importable.
+        True if all dependencies import successfully.
     """
     return all(
-        _dependency_importable(import_name) for import_name, _ in REQUIRED_PACKAGES
+        _dependency_importable(import_name)[0] for import_name, _ in REQUIRED_PACKAGES
     )
 
 

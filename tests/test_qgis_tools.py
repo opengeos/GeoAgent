@@ -621,6 +621,19 @@ def test_run_pyqgis_script_rejects_non_qgis_imports() -> None:
         raise AssertionError("Expected unsafe import to be rejected")
 
 
+def test_run_pyqgis_script_rejects_prefix_collision_imports() -> None:
+    """Verify modules whose names share a prefix with qgis/math are blocked."""
+    tools = {t.tool_name: t for t in qgis_tools(MockQGISIface(), MockQGISProject())}
+
+    for snippet in ("import qgisx", "import mathutils", "from mathutils import foo"):
+        try:
+            tools["run_pyqgis_script"].__wrapped__(snippet)
+        except ValueError as exc:
+            assert "qgis/PyQt and math imports" in str(exc)
+        else:  # pragma: no cover - defensive assertion
+            raise AssertionError(f"Expected {snippet!r} to be rejected")
+
+
 def test_run_pyqgis_script_requires_confirmation() -> None:
     """Verify arbitrary PyQGIS execution is confirmation-gated."""
     tools = {t.tool_name: t for t in qgis_tools(MockQGISIface(), MockQGISProject())}

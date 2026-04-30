@@ -728,3 +728,11 @@ def test_whitebox_prompt_instructs_pyqgis_fallback() -> None:
 
     assert "run_pyqgis_script" in WHITEBOX_SYSTEM_PROMPT
     assert "Do not merely provide a script" in WHITEBOX_SYSTEM_PROMPT
+
+
+def test_qgis_default_prompt_instructs_pyqgis_fallback() -> None:
+    """Verify the default for_qgis prompt also points the agent at run_pyqgis_script."""
+    from geoagent.core.factory import QGIS_SYSTEM_PROMPT
+
+    assert "run_pyqgis_script" in QGIS_SYSTEM_PROMPT
+    assert "Do not merely provide a script" in QGIS_SYSTEM_PROMPT
