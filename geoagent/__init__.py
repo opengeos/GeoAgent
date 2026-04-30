@@ -13,6 +13,13 @@ from geoagent.core.decorators import (
     stamp_geo_meta,
 )
 from geoagent.core.model import get_default_model, get_llm, resolve_model
+from geoagent.core.openai_codex import (
+    clear_token_payload as clear_openai_codex_token,
+    ensure_openai_codex_environment,
+    is_openai_codex_logged_in,
+    load_token_payload as load_openai_codex_token,
+    login_openai_codex,
+)
 from geoagent.core.result import GeoAgentResponse
 from geoagent.core.safety import (
     ConfirmCallback,
@@ -62,4 +69,9 @@ __all__ = [
     "resolve_model",
     "get_llm",
     "get_default_model",
+    "login_openai_codex",
+    "ensure_openai_codex_environment",
+    "load_openai_codex_token",
+    "clear_openai_codex_token",
+    "is_openai_codex_logged_in",
 ]

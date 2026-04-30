@@ -49,6 +49,14 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
         api_key = client_args.get("api_key") or os.environ.get(
             "OPENAI_CODEX_ACCESS_TOKEN"
         )
+        if not api_key:
+            try:
+                from geoagent.core.openai_codex import ensure_openai_codex_environment
+
+                ensure_openai_codex_environment()
+                api_key = os.environ.get("OPENAI_CODEX_ACCESS_TOKEN")
+            except RuntimeError:
+                api_key = ""
         base_url = (
             client_args.get("base_url")
             or cfg.openai_codex_base_url
@@ -59,7 +67,8 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
         if not api_key:
             raise ValueError(
                 "OpenAI Codex provider requires a ChatGPT OAuth access token. "
-                "Login from OpenGeoAgent settings or set OPENAI_CODEX_ACCESS_TOKEN."
+                "Run `geoagent codex login`, call `geoagent.login_openai_codex()`, "
+                "or set OPENAI_CODEX_ACCESS_TOKEN."
             )
         client_args["api_key"] = api_key
         client_args["base_url"] = base_url

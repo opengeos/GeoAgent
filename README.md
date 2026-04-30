@@ -113,6 +113,30 @@ specified:
 ChatGPT/Codex OAuth uses the Codex browser login flow and the Codex Responses
 backend.
 
+For notebooks and Python scripts, log in once with the CLI:
+
+```bash
+geoagent codex login
+```
+
+or from Python/Jupyter:
+
+```python
+from geoagent import login_openai_codex
+
+login_openai_codex()
+```
+
+GeoAgent stores the refresh token in your user config directory and exports
+`OPENAI_CODEX_ACCESS_TOKEN` for the current Python process. Later sessions can
+reuse the stored login automatically, or explicitly call:
+
+```python
+from geoagent import ensure_openai_codex_environment
+
+ensure_openai_codex_environment()
+```
+
 You can also configure providers explicitly:
 
 ```python
@@ -350,6 +374,7 @@ so small prompts may not show a large timing difference on every provider.
 Runnable notebooks live under `docs/examples/`:
 
 - `docs/examples/intro.ipynb` — basic GeoAgent usage.
+- `docs/examples/openai_codex.ipynb` — ChatGPT/Codex OAuth in Python/Jupyter.
 - `docs/examples/live_mapping.ipynb` — live map workflow.
 - `docs/examples/qgis_agent.ipynb` — QGIS-oriented workflow using mocks.
 - `examples/nasa_opera_qgis.py` — NASA OPERA workflow for QGIS.

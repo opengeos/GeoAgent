@@ -1,5 +1,25 @@
 # Usage
 
+## ChatGPT/Codex Login
+
+For notebooks and Python scripts, run the browser login once:
+
+```bash
+geoagent codex login
+```
+
+or start the same flow from Jupyter:
+
+```python
+from geoagent import login_openai_codex
+
+login_openai_codex()
+```
+
+GeoAgent saves the refresh token in your user config directory, exports
+`OPENAI_CODEX_ACCESS_TOKEN` for the current process, and refreshes the stored
+login automatically when `provider="openai-codex"` is used later.
+
 ```python
 from geoagent import GeoAgent, for_leafmap, GeoAgentConfig
 
