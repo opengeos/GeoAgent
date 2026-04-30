@@ -17,6 +17,25 @@ from geoagent.testing import MockQGISIface, MockQGISLayer, MockQGISProject
 from geoagent.tools.qgis import qgis_tools
 
 
+def _color_matches(actual, expected: str) -> bool:
+    """Return True when ``actual`` is the same color as ``expected``.
+
+    The QGIS tools convert color strings into ``QColor`` when QGIS is on
+    the import path, otherwise they pass the raw value through. The test
+    accepts either form so it stays valid in both environments.
+    """
+    if actual == expected:
+        return True
+    name = getattr(actual, "name", None)
+    if callable(name):
+        try:
+            from qgis.PyQt.QtGui import QColor  # type: ignore[import-not-found]
+        except Exception:
+            return False
+        return name() == QColor(expected).name()
+    return False
+
+
 def test_qgis_module_imports_without_qgis() -> None:
     """Verify the qgis tools module imports without the qgis package.
 
@@ -581,7 +600,7 @@ def test_set_layer_symbology_does_not_reassign_renderer_owned_symbol() -> None:
     )
 
     assert result["message"] == "Updated symbology for layer 'Stream network'."
-    assert renderer.existing_symbol.color == "blue"
+    assert _color_matches(renderer.existing_symbol.color, "blue")
     assert renderer.existing_symbol.layer.width == 2.0
     assert layer.repaint_count == 1
 

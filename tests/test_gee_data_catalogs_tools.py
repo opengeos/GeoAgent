@@ -175,6 +175,7 @@ def test_load_gee_dataset_clips_raster_to_feature_collection(monkeypatch) -> Non
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     iface = _Iface()
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
@@ -280,6 +281,7 @@ def test_load_gee_dataset_uses_mosaic_as_composite_method(monkeypatch) -> None:
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     iface = _Iface()
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
@@ -390,6 +392,7 @@ def test_load_gee_dataset_filters_explicit_image_collection_bbox(
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     iface = _Iface()
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
@@ -670,6 +673,7 @@ def test_load_gee_dataset_renders_opera_dswx_hls_with_valid_band_and_mode(
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(_Iface())}
     result = tools["load_gee_dataset"].__wrapped__(
@@ -792,6 +796,7 @@ def test_calculate_gee_normalized_difference_loads_index(monkeypatch) -> None:
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     iface = _Iface()
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
@@ -844,6 +849,7 @@ def test_list_loaded_gee_layers_reports_registry(monkeypatch) -> None:
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(object())}
     result = tools["list_loaded_gee_layers"].__wrapped__()
@@ -902,6 +908,7 @@ def test_calculate_gee_layer_statistics_reduces_registered_dem(monkeypatch) -> N
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(object())}
     result = tools["calculate_gee_layer_statistics"].__wrapped__(
@@ -981,6 +988,7 @@ def test_run_gee_python_snippet_hillshade_from_registered_layer(
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     code = """
 import ee
@@ -1052,6 +1060,7 @@ def test_run_gee_python_snippet_supports_direct_add_layer(
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     code = "image = ee.Image('USGS/SRTMGL1_003')\nadd_layer(image, {}, 'SRTM')"
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(_Iface())}
@@ -1089,6 +1098,7 @@ def test_run_gee_python_snippet_rejects_unsafe_code(monkeypatch, code: str) -> N
         sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
     )
     monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
 
     tools = {t.tool_name: t for t in gee_data_catalogs_tools(object())}
     result = tools["run_gee_python_snippet"].__wrapped__(code)

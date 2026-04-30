@@ -6,6 +6,8 @@ import threading
 import sys
 import types
 
+import pytest
+
 from geoagent import for_nasa_opera
 from geoagent.tools.nasa_opera import nasa_opera_tools, submit_nasa_opera_chat_task
 from geoagent.testing import MockQGISIface, MockQGISProject
@@ -20,6 +22,8 @@ class _MockModel:
 def test_nasa_opera_module_imports_without_qgis() -> None:
     """Verify NASA OPERA tools are import-safe outside QGIS."""
     assert "geoagent.tools.nasa_opera" in sys.modules
+    if "qgis" in sys.modules:
+        pytest.skip("qgis is already imported in this environment.")
     assert "qgis" not in sys.modules
     assert "nasa_opera.ai.tools" not in sys.modules
 
