@@ -592,6 +592,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/stream_chat_openai_codex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stream chat openai codex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../examples/live_mapping/" class="md-nav__link">
         
   
@@ -868,6 +896,17 @@
     <span class="md-ellipsis">
       
         chat_in_background()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.stream_chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stream_chat()
       
     </span>
   </a>
@@ -1324,6 +1363,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoagent.core.agent.GeoAgent.stream_chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stream_chat()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoagent.core.agent.GeoAgent.with_map" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1573,6 +1623,67 @@ geoagent.core.agent.GeoAgent        </code>
                 <span class="n">cancelled_tools</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="p">),</span>
                 <span class="nb">map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">,</span>
             <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_chat</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stream a single user turn as raw Strands events.</span>
+
+<span class="sd">        Text deltas are emitted in events containing ``&quot;data&quot;``. The final</span>
+<span class="sd">        Strands result is emitted in the event containing ``&quot;result&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
+
+            <span class="n">other</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span>
+                <span class="n">target_map</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+                <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">,</span>
+                <span class="n">confirm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">stream_chat</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">event</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">():</span>
+            <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">integration</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">}:</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;NASA Earthdata&quot;</span>
+                    <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                    <span class="k">else</span> <span class="s2">&quot;NASA OPERA&quot;</span>
+                <span class="p">)</span>
+                <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;the NASA Earthdata AI Assistant panel&quot;</span>
+                    <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                    <span class="k">else</span> <span class="p">(</span>
+                        <span class="s2">&quot;the NASA OPERA AI Assistant panel or &quot;</span>
+                        <span class="s2">&quot;geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) &quot;</span>
+                        <span class="s2">&quot;for direct QGIS-console workflows&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;stream_chat() must not be called from the QGIS Qt GUI thread when &quot;</span>
+                <span class="s2">&quot;qgis_safe_mode=True. Launch streaming chat from a worker thread, &quot;</span>
+                <span class="s2">&quot;or use chat() from the GUI thread.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">event</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_looks_like_json_parse_failure</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_format_chat_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">raise</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run sync QGIS chat without starving the Qt event loop.</span>
@@ -1941,6 +2052,92 @@ call blocks the GUI event loop during network/model latency.</p>
     <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">thread</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h4 id="geoagent.core.agent.GeoAgent.stream_chat" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">stream_chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.agent.GeoAgent.stream_chat" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Stream a single user turn as raw Strands events.</p>
+<p>Text deltas are emitted in events containing <code>"data"</code>. The final
+Strands result is emitted in the event containing <code>"result"</code>.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/agent.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_chat</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stream a single user turn as raw Strands events.</span>
+
+<span class="sd">    Text deltas are emitted in events containing ``&quot;data&quot;``. The final</span>
+<span class="sd">    Strands result is emitted in the event containing ``&quot;result&quot;``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
+
+        <span class="n">other</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span>
+            <span class="n">target_map</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fast</span><span class="p">,</span>
+            <span class="n">confirm</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">stream_chat</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">event</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">():</span>
+        <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">integration</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">}:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;NASA Earthdata&quot;</span>
+                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                <span class="k">else</span> <span class="s2">&quot;NASA OPERA&quot;</span>
+            <span class="p">)</span>
+            <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;the NASA Earthdata AI Assistant panel&quot;</span>
+                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                <span class="k">else</span> <span class="p">(</span>
+                    <span class="s2">&quot;the NASA OPERA AI Assistant panel or &quot;</span>
+                    <span class="s2">&quot;geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) &quot;</span>
+                    <span class="s2">&quot;for direct QGIS-console workflows&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;stream_chat() must not be called from the QGIS Qt GUI thread when &quot;</span>
+            <span class="s2">&quot;qgis_safe_mode=True. Launch streaming chat from a worker thread, &quot;</span>
+            <span class="s2">&quot;or use chat() from the GUI thread.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">event</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_looks_like_json_parse_failure</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_format_chat_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span>
 </code></pre></div>
         </details>
     </div>

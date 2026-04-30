@@ -12,13 +12,13 @@
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://geoagent.gishub.org/examples/qgis_agent/">
+        <link rel="canonical" href="https://geoagent.gishub.org/examples/stream_chat_openai_codex/">
       
       
-        <link rel="prev" href="../live_mapping/">
+        <link rel="prev" href="../openai_codex/">
       
       
-        <link rel="next" href="../../geoagent/">
+        <link rel="next" href="../live_mapping/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Qgis agent - GeoAgent</title>
+        <title>Stream chat openai codex - GeoAgent</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#geoagent-qgis-tools-claude-mock-iface" class="md-skip">
+        <a href="#geoagent-stream_chat-chatgptcodex-oauth" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Qgis agent
+              Stream chat openai codex
             
           </span>
         </div>
@@ -591,10 +591,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../stream_chat_openai_codex/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stream chat openai codex
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -610,6 +637,37 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#stream-a-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stream a response
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -647,19 +705,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../qgis_agent/" class="md-nav__link">
         
   
   
@@ -675,7 +724,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1070,6 +1118,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#stream-a-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stream a response
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1082,7 +1149,7 @@
               <article class="md-content__inner md-typeset">
                 
 
-    <a href="/examples/qgis_agent/qgis_agent.ipynb" title="Download Notebook" class="md-content__button md-icon">
+    <a href="/examples/stream_chat_openai_codex/stream_chat_openai_codex.ipynb" title="Download Notebook" class="md-content__button md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7z"/></svg>
     </a>
 
@@ -1822,16 +1889,12 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="geoagent-qgis-tools-claude-mock-iface">GeoAgent + QGIS tools + Claude (mock iface)<a class="anchor-link" href="#geoagent-qgis-tools-claude-mock-iface">¶</a></h1><p>This notebook runs <strong>without QGIS</strong> using <code>geoagent.testing</code> mocks so you can try the agent in Jupyter.</p>
-<p><strong>In QGIS</strong> (Python console or plugin), use the real interface:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qgis.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">iface</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_qgis</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgentConfig</span>
-
-<span class="n">agent</span> <span class="o">=</span> <span class="n">for_qgis</span><span class="p">(</span><span class="n">iface</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">GeoAgentConfig</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">))</span>
-<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"List project layers."</span><span class="p">)</span>
-</pre></div>
-<p>Requires <code>pip install "GeoAgent[anthropic]"</code> and <code>ANTHROPIC_API_KEY</code>.</p>
+<h1 id="geoagent-stream_chat-chatgptcodex-oauth">GeoAgent stream_chat + ChatGPT/Codex OAuth<a class="anchor-link" href="#geoagent-stream_chat-chatgptcodex-oauth">¶</a></h1><p>This notebook demonstrates streaming model output from <code>agent.stream_chat(...)</code> with the <code>openai-codex</code> provider.</p>
+<ul>
+<li>Install: <code>pip install "GeoAgent[openai]"</code>.</li>
+<li>Run the login cell once. Later notebooks can reuse the stored ChatGPT/Codex login automatically.</li>
+<li>Jupyter supports top-level <code>await</code>, so the streaming cell can use <code>async for</code> directly.</li>
+</ul>
 </div>
 </div>
 </div>
@@ -1854,9 +1917,9 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="s2">"GeoAgent[anthropic]"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="s2">"GeoAgent[openai]"</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">%pip install -q "GeoAgent[anthropic]"</div>
+<div class="clipboard-copy-txt" id="cell-1">%pip install -q "GeoAgent[openai]"</div>
 </div>
 </div>
 </div>
@@ -1881,19 +1944,25 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_openai_codex_environment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">login_openai_codex</span>
 
-<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Set ANTHROPIC_API_KEY"</span><span class="p">)</span>
-
-<span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_MODEL"</span><span class="p">,</span> <span class="s2">"claude-sonnet-4-6"</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">ensure_openai_codex_environment</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Using stored ChatGPT/Codex login."</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+    <span class="n">login_openai_codex</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Logged in with ChatGPT/Codex OAuth."</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">import os
+<div class="clipboard-copy-txt" id="cell-2">from geoagent import ensure_openai_codex_environment
+from geoagent import login_openai_codex
 
-if not os.environ.get("ANTHROPIC_API_KEY"):
-    raise RuntimeError("Set ANTHROPIC_API_KEY")
-
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")</div>
+try:
+    ensure_openai_codex_environment()
+    print("Using stored ChatGPT/Codex login.")
+except RuntimeError:
+    login_openai_codex()
+    print("Logged in with ChatGPT/Codex OAuth.")</div>
 </div>
 </div>
 </div>
@@ -1918,43 +1987,15 @@ MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_qgis</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockQGISIface</span><span class="p">,</span> <span class="n">MockQGISLayer</span><span class="p">,</span> <span class="n">MockQGISProject</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="n">project</span> <span class="o">=</span> <span class="n">MockQGISProject</span><span class="p">()</span>
-<span class="n">project</span><span class="o">.</span><span class="n">addMapLayer</span><span class="p">(</span><span class="n">MockQGISLayer</span><span class="p">(</span><span class="s2">"StudyArea"</span><span class="p">,</span> <span class="s2">"/tmp/a.shp"</span><span class="p">))</span>
-<span class="n">iface</span> <span class="o">=</span> <span class="n">MockQGISIface</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">)</span>
-
-<span class="n">agent</span> <span class="o">=</span> <span class="n">for_qgis</span><span class="p">(</span>
-    <span class="n">iface</span><span class="p">,</span>
-    <span class="n">project</span><span class="p">,</span>
-    <span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
-    <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"List the layer names in this project in a short bullet list."</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_CODEX_MODEL"</span><span class="p">,</span> <span class="s2">"gpt-5.5"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Using model:"</span><span class="p">,</span> <span class="n">MODEL</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">from geoagent import for_qgis
-from geoagent.testing import MockQGISIface, MockQGISLayer, MockQGISProject
+<div class="clipboard-copy-txt" id="cell-3">import os
 
-project = MockQGISProject()
-project.addMapLayer(MockQGISLayer("StudyArea", "/tmp/a.shp"))
-iface = MockQGISIface(project=project)
-
-agent = for_qgis(
-    iface,
-    project,
-    provider="anthropic",
-    model_id=MODEL,
-    fast=True,
-)
-
-resp = agent.chat("List the layer names in this project in a short bullet list.")
-print(resp.answer_text)
-print("tools:", resp.executed_tools)</div>
+MODEL = os.environ.get("OPENAI_CODEX_MODEL", "gpt-5.5")
+print("Using model:", MODEL)</div>
 </div>
 </div>
 </div>
@@ -1979,43 +2020,111 @@ print("tools:", resp.executed_tools)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_qgis</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span><span class="p">,</span> <span class="n">GeoAgentConfig</span>
 
-<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Set ANTHROPIC_API_KEY"</span><span class="p">)</span>
-
-<span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_MODEL"</span><span class="p">,</span> <span class="s2">"claude-sonnet-4-6"</span><span class="p">)</span>
-
-<span class="n">agent</span> <span class="o">=</span> <span class="n">for_qgis</span><span class="p">(</span>
-    <span class="n">iface</span><span class="p">,</span>
-    <span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
-    <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">GeoAgentConfig</span><span class="p">(</span>
+        <span class="n">provider</span><span class="o">=</span><span class="s2">"openai-codex"</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+    <span class="p">),</span>
 <span class="p">)</span>
-
-<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"List the layer names in this project in a short bullet list."</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">from geoagent import for_qgis
-import os
+<div class="clipboard-copy-txt" id="cell-4">from geoagent import GeoAgent, GeoAgentConfig
 
-if not os.environ.get("ANTHROPIC_API_KEY"):
-    raise RuntimeError("Set ANTHROPIC_API_KEY")
+agent = GeoAgent(
+    config=GeoAgentConfig(
+        provider="openai-codex",
+        model=MODEL,
+        temperature=0.0,
+        max_tokens=2048,
+    ),
+)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="stream-a-response">Stream a response<a class="anchor-link" href="#stream-a-response">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">tool_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="n">final_result</span> <span class="o">=</span> <span class="kc">None</span>
 
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+<span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">agent</span><span class="o">.</span><span class="n">stream_chat</span><span class="p">(</span>
+    <span class="s2">"Explain GeoAgent streaming in three concise bullets."</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="s2">"current_tool_use"</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+        <span class="n">tool_name</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">"current_tool_use"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tool_name</span><span class="p">:</span>
+            <span class="n">tool_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">[Using tool: </span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-agent = for_qgis(
-    iface,
-    provider="anthropic",
-    model_id=MODEL,
-    fast=True,
-)
+    <span class="k">if</span> <span class="s2">"data"</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+        <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"data"</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"data"</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-resp = agent.chat("List the layer names in this project in a short bullet list.")
-print(resp.answer_text)
-print("tools:", resp.executed_tools)</div>
+    <span class="k">if</span> <span class="s2">"result"</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+        <span class="n">final_result</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">"result"</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n\n</span><span class="s2">streamed_chars:"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tool_names</span><span class="p">))</span>
+<span class="k">if</span> <span class="n">final_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"stop_reason:"</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">final_result</span><span class="p">,</span> <span class="s2">"stop_reason"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-5">chunks = []
+tool_names = set()
+final_result = None
+
+async for event in agent.stream_chat(
+    "Explain GeoAgent streaming in three concise bullets."
+):
+    if "current_tool_use" in event:
+        tool_name = event["current_tool_use"].get("name")
+        if tool_name:
+            tool_names.add(tool_name)
+            print(f"\n[Using tool: {tool_name}]\n", flush=True)
+
+    if "data" in event:
+        chunks.append(event["data"])
+        print(event["data"], end="", flush=True)
+
+    if "result" in event:
+        final_result = event["result"]
+
+print("\n\nstreamed_chars:", len("".join(chunks)))
+print("tools:", sorted(tool_names))
+if final_result is not None:
+    print("stop_reason:", getattr(final_result, "stop_reason", None))</div>
 </div>
 </div>
 </div>
@@ -2051,7 +2160,7 @@ print("tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 05:03:11 UTC"><span class="timeago" datetime="2026-04-30T05:03:11+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 05:03:11 UTC">2026-04-30</span>
   </span>
 
     
@@ -2061,7 +2170,7 @@ print("tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 05:03:11 UTC"><span class="timeago" datetime="2026-04-30T05:03:11+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 05:03:11 UTC">2026-04-30</span>
   </span>
 
     

@@ -88,4 +88,8 @@
          <loc>https://geoagent.gishub.org/examples/qgis_agent/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
+    <url>
+         <loc>https://geoagent.gishub.org/examples/stream_chat_openai_codex/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
 </urlset>
