@@ -10,27 +10,45 @@ try:
     import nbformat
     from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 except ModuleNotFoundError:
+    _cell_id_counter = 0
+
+    def _next_cell_id() -> str:
+        """Return a stable synthetic notebook cell id."""
+        global _cell_id_counter
+        cell_id = str(_cell_id_counter)
+        _cell_id_counter += 1
+        return cell_id
+
+    def _source_lines(source: str) -> list[str]:
+        """Return nbformat-style source lines."""
+        return source.splitlines(keepends=True) or [""]
 
     def new_code_cell(source: str) -> dict:
         """Return a minimal Jupyter code cell."""
         return {
             "cell_type": "code",
             "execution_count": None,
+            "id": _next_cell_id(),
             "metadata": {},
             "outputs": [],
-            "source": source,
+            "source": _source_lines(source),
         }
 
     def new_markdown_cell(source: str) -> dict:
         """Return a minimal Jupyter markdown cell."""
         return {
             "cell_type": "markdown",
+            "id": _next_cell_id(),
             "metadata": {},
-            "source": source,
+            "source": _source_lines(source),
         }
 
     def new_notebook(*, metadata: dict, cells: list[dict]) -> dict:
         """Return a minimal Jupyter notebook document."""
+        global _cell_id_counter
+        for index, cell in enumerate(cells):
+            cell["id"] = str(index)
+        _cell_id_counter = 0
         return {
             "cells": cells,
             "metadata": metadata,
@@ -298,6 +316,56 @@ def main() -> None:
                 "print(resp.answer_text)\n"
                 'print("executed_tools:", resp.executed_tools)'
             ),
+            new_markdown_cell("## Image Example"),
+            new_code_cell("%pip install -q pillow"),
+            new_code_cell(
+                "from pathlib import Path\n"
+                "\n"
+                "from IPython.display import Image, display\n"
+                "from PIL import Image as PILImage\n"
+                "from PIL import ImageDraw\n"
+                "\n"
+                'image_path = Path("codex_example_map.png")\n'
+                'img = PILImage.new("RGB", (640, 360), "#dce9f2")\n'
+                "draw = ImageDraw.Draw(img)\n"
+                'draw.rectangle((0, 235, 640, 360), fill="#6fbf73")\n'
+                "draw.polygon(\n"
+                '    [(0, 90), (190, 70), (310, 160), (0, 230)], fill="#8ccf6a"\n'
+                ")\n"
+                "draw.polygon(\n"
+                '    [(430, 45), (640, 25), (640, 230), (520, 205)], fill="#7db56f"\n'
+                ")\n"
+                "draw.line(\n"
+                "    [(70, 0), (120, 80), (170, 140), (230, 210), (330, 360)],\n"
+                '    fill="#3d7fbf",\n'
+                "    width=18,\n"
+                ")\n"
+                'draw.ellipse((100, 95, 140, 135), fill="#e84d4d")\n'
+                'draw.ellipse((455, 155, 495, 195), fill="#f2c94c")\n'
+                'draw.text((32, 28), "Synthetic map image", fill="#1f2937")\n'
+                'draw.text((145, 105), "site A", fill="#1f2937")\n'
+                'draw.text((500, 165), "site B", fill="#1f2937")\n'
+                "img.save(image_path)\n"
+                "display(Image(filename=str(image_path)))"
+            ),
+            new_code_cell(
+                "image_bytes = image_path.read_bytes()\n"
+                "resp = agent.chat(\n"
+                "    [\n"
+                "        {\n"
+                '            "text": "Describe this map-like image. '
+                'Identify the labeled sites, water, and land cover."\n'
+                "        },\n"
+                "        {\n"
+                '            "image": {\n'
+                '                "format": "png",\n'
+                '                "source": {"bytes": image_bytes},\n'
+                "            }\n"
+                "        },\n"
+                "    ]\n"
+                ")\n"
+                "print(resp.answer_text)"
+            ),
             new_markdown_cell("## Leafmap Example"),
             new_code_cell('%pip install -q "GeoAgent[leafmap]" leafmap'),
             new_code_cell(
@@ -315,9 +383,8 @@ def main() -> None:
                 "    fast=True,\n"
                 ")\n"
                 "\n"
-                "resp = map_agent.chat(\n"
-                '    "Using the current map state, describe the map center and zoom."\n'
-                ")\n"
+                'resp = map_agent.chat("Using the current map state, describe the '
+                'map center and zoom.")\n'
                 "print(resp.answer_text)\n"
                 'print("tools:", resp.executed_tools)'
             ),
