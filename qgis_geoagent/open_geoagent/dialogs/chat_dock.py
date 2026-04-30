@@ -4,10 +4,14 @@ import asyncio
 import hashlib
 import os
 import html
+import importlib
+import array
 import json
 import re
+import tempfile
 import time
 import traceback
+import wave
 
 from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import (
@@ -25,7 +29,14 @@ from qgis.PyQt.QtCore import (
     QTimer,
     pyqtSignal,
 )
-from qgis.PyQt.QtGui import QCursor, QGuiApplication, QPixmap, QTextCursor
+from qgis.PyQt.QtGui import (
+    QCursor,
+    QGuiApplication,
+    QIcon,
+    QKeySequence,
+    QPixmap,
+    QTextCursor,
+)
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QAbstractItemView,
@@ -41,6 +52,7 @@ from qgis.PyQt.QtWidgets import (
     QLineEdit,
     QMenu,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QPlainTextEdit,
     QRubberBand,
@@ -78,6 +90,13 @@ MAX_CONTEXT_CHARS = 12000
 MAX_IMAGE_ATTACHMENTS = 4
 MAX_IMAGE_EDGE = 1568
 IMAGE_THUMBNAIL_SIZE = 72
+DEFAULT_TRANSCRIPTION_MODEL = "gpt-4o-mini-transcribe"
+DEFAULT_VOICE_SHORTCUT = "Ctrl+Alt+Space"
+VOICE_SHORTCUT_SETTING = "voice_shortcut_v2"
+TRANSCRIPTION_MODELS = [
+    "gpt-4o-mini-transcribe",
+    "gpt-4o-transcribe",
+]
 SAMPLE_PROMPTS = [
     "Summarize the current QGIS project layers, CRS, extents, and feature counts.",
     "Zoom to the active layer and describe what it contains.",
@@ -226,8 +245,12 @@ def _filter_tools_for_permission(agent, permission_profile):
             agent._tool_list = filtered
             if hasattr(agent, "_rebuild_strands_agent"):
                 agent._rebuild_strands_agent()
-    except Exception:
-        pass
+    except Exception as exc:
+        QgsMessageLog.logMessage(
+            f"Failed to apply permission profile to GeoAgent: {exc}",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Warning,
+        )
     return agent
 
 
@@ -249,7 +272,9 @@ def _project_history_key(iface):
     if not path:
         return ""
     raw = path
-    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    digest = hashlib.sha1(  # noqa: S324  - non-security identifier hash
+        raw.encode("utf-8"), usedforsecurity=False
+    ).hexdigest()[:16]
     return f"{SETTINGS_PREFIX}history/{digest}"
 
 
@@ -325,6 +350,15 @@ def _apply_environment_from_settings(settings):
                 os.environ[env_name] = value
 
 
+def _transcription_model_from_settings(settings):
+    """Return the configured OpenAI speech-to-text model."""
+    saved = _setting(settings, "transcription_model", "", str).strip()
+    if saved:
+        return saved
+    env_model = os.environ.get("OPENAI_TRANSCRIPTION_MODEL", "").strip()
+    return env_model or DEFAULT_TRANSCRIPTION_MODEL
+
+
 def _qt_value(enum_name, member_name):
     """Return a Qt enum member across PyQt enum API variants."""
     container = getattr(Qt, enum_name, Qt)
@@ -335,6 +369,43 @@ def _enum_value(cls, enum_name, member_name):
     """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
+
+
+def _portable_key_sequence(sequence):
+    """Return a normalized portable string for a key sequence."""
+    sequence_format = getattr(QKeySequence, "SequenceFormat", QKeySequence)
+    portable = getattr(sequence_format, "PortableText", None)
+    text = sequence.toString(portable) if portable is not None else sequence.toString()
+    return str(text or "").strip().lower()
+
+
+def _key_event_sequence_value(event):
+    """Return a QKeySequence-compatible integer for a key event."""
+    key = int(event.key())
+    modifiers = event.modifiers()
+    mod_value = getattr(modifiers, "value", modifiers)
+    try:
+        mod_value = int(mod_value)
+    except TypeError:
+        mod_value = int(modifiers)
+    return mod_value | key
+
+
+def _event_matches_key_sequence(event, shortcut_text):
+    """Return True when a key event matches a configured shortcut."""
+    if not shortcut_text:
+        return False
+    key_press = _enum_value(QEvent, "Type", "KeyPress")
+    is_auto_repeat = getattr(event, "isAutoRepeat", lambda: False)
+    if event.type() != key_press or is_auto_repeat():
+        return False
+    configured = _portable_key_sequence(QKeySequence(shortcut_text))
+    if not configured:
+        return False
+    event_sequence = _portable_key_sequence(
+        QKeySequence(_key_event_sequence_value(event))
+    )
+    return event_sequence == configured
 
 
 def _exec_dialog(dialog):
@@ -892,6 +963,15 @@ class PromptTextEdit(QPlainTextEdit):
     previous_requested = pyqtSignal()
     next_requested = pyqtSignal()
     image_pasted = pyqtSignal(object)
+    voice_toggle_requested = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._voice_shortcut_text = ""
+
+    def set_voice_shortcut_text(self, shortcut_text):
+        """Set the key sequence that toggles voice recording."""
+        self._voice_shortcut_text = str(shortcut_text or "").strip()
 
     def insertFromMimeData(self, source):
         """Handle pasted clipboard images before falling back to text paste."""
@@ -912,6 +992,10 @@ class PromptTextEdit(QPlainTextEdit):
         key_up = _qt_value("Key", "Key_Up")
         key_down = _qt_value("Key", "Key_Down")
 
+        if _event_matches_key_sequence(event, self._voice_shortcut_text):
+            self.voice_toggle_requested.emit()
+            event.accept()
+            return
         if modifiers & control and key in (key_return, key_enter):
             self.send_requested.emit()
             event.accept()
@@ -1316,6 +1400,274 @@ class ChatWorker(QThread):
         return bool(run_on_qt_gui_thread(_ask))
 
 
+class VoiceTranscriptionWorker(QThread):
+    """Transcribe a recorded audio file without blocking the QGIS UI."""
+
+    finished = pyqtSignal(dict)
+
+    def __init__(self, audio_path, settings, parent=None):
+        super().__init__(parent)
+        self.audio_path = audio_path
+        self.settings = settings
+
+    def run(self):
+        """Send the recorded audio to OpenAI speech-to-text."""
+        try:
+            _apply_environment_from_settings(self.settings)
+            api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+            if not api_key:
+                raise RuntimeError(
+                    "Voice transcription requires an OpenAI API key. Add one in "
+                    "OpenGeoAgent Settings > Model, or set OPENAI_API_KEY."
+                )
+
+            from openai import OpenAI
+
+            model = _transcription_model_from_settings(self.settings)
+            client = OpenAI(api_key=api_key)
+            with open(self.audio_path, "rb") as audio_file:
+                transcription = client.audio.transcriptions.create(
+                    model=model,
+                    file=audio_file,
+                )
+            text = getattr(transcription, "text", "")
+            if not text and isinstance(transcription, dict):
+                text = transcription.get("text", "")
+            text = str(text or "").strip()
+            if not text:
+                raise RuntimeError("OpenAI returned an empty transcription.")
+            self.finished.emit({"success": True, "text": text, "error": ""})
+        except Exception as exc:
+            self.finished.emit(
+                {
+                    "success": False,
+                    "text": "",
+                    "error": f"{exc}\n\n{traceback.format_exc()}",
+                }
+            )
+
+
+class VoicePromptRecorder(QObject):
+    """Stream microphone PCM audio directly to a WAV file."""
+
+    level_changed = pyqtSignal(int)
+    limit_reached = pyqtSignal()
+
+    MAX_RECORDING_SECONDS = 600
+
+    def __init__(self, audio_path, parent=None):
+        super().__init__(parent)
+        self.audio_path = audio_path
+        self._audio_source = None
+        self._audio_device = None
+        self._format = None
+        self._io_device = None
+        self._wav_file = None
+        self._bytes_written = 0
+        self._max_bytes = 0
+        self._limit_signaled = False
+        try:
+            self._multimedia = importlib.import_module("qgis.PyQt.QtMultimedia")
+        except ImportError as exc:
+            raise RuntimeError(
+                "This QGIS/PyQt build does not expose QtMultimedia. Voice input "
+                "requires Qt multimedia support for microphone recording."
+            ) from exc
+
+    def record(self):
+        """Start capturing microphone samples and stream them to disk."""
+        self._audio_device, self._format = self._select_audio_format()
+        wav_file = wave.open(self.audio_path, "wb")
+        try:
+            wav_file.setnchannels(self._channel_count(self._format))
+            wav_file.setsampwidth(self._sample_width(self._format))
+            wav_file.setframerate(self._sample_rate(self._format))
+        except Exception:
+            wav_file.close()
+            raise
+        self._wav_file = wav_file
+        bytes_per_second = (
+            self._sample_rate(self._format)
+            * self._channel_count(self._format)
+            * self._sample_width(self._format)
+        )
+        self._max_bytes = max(1, bytes_per_second * self.MAX_RECORDING_SECONDS)
+
+        try:
+            self._audio_source = self._create_audio_source(
+                self._audio_device, self._format
+            )
+            self._io_device = self._audio_source.start()
+        except Exception:
+            self._close_wav_file()
+            raise
+        if self._io_device is None:
+            self._close_wav_file()
+            raise RuntimeError("Could not open the default microphone for recording.")
+        self._io_device.readyRead.connect(self._read_available)
+
+    def stop(self):
+        """Stop capturing and finalize the WAV file."""
+        if self._io_device is not None:
+            self._read_available()
+        if self._audio_source is not None:
+            self._audio_source.stop()
+        self._io_device = None
+
+        bytes_written = self._bytes_written
+        self._close_wav_file()
+
+        if bytes_written <= 0:
+            raise RuntimeError(
+                "No microphone audio was captured. Check the selected input device "
+                "and OS microphone permission for QGIS."
+            )
+
+    def _read_available(self):
+        """Stream available microphone bytes to the WAV file under the size cap."""
+        if self._io_device is None or self._wav_file is None:
+            return
+        data = self._io_device.readAll()
+        if not data:
+            return
+        chunk = bytes(data)
+        remaining = self._max_bytes - self._bytes_written
+        if remaining <= 0:
+            self._signal_limit_reached()
+            return
+        if len(chunk) > remaining:
+            chunk = chunk[:remaining]
+        self._wav_file.writeframes(chunk)
+        self._bytes_written += len(chunk)
+        self.level_changed.emit(self._audio_level(chunk))
+        if self._bytes_written >= self._max_bytes:
+            self._signal_limit_reached()
+
+    def _signal_limit_reached(self):
+        """Notify listeners once when the recording cap is reached."""
+        if self._limit_signaled:
+            return
+        self._limit_signaled = True
+        self.limit_reached.emit()
+
+    def _close_wav_file(self):
+        """Close the open WAV file if any, logging close errors."""
+        if self._wav_file is None:
+            return
+        try:
+            self._wav_file.close()
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Failed to close voice WAV file: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Warning,
+            )
+        self._wav_file = None
+
+    def _select_audio_format(self):
+        """Return a default input device and an Int16 mono audio format."""
+        multimedia = self._multimedia
+        audio_format = multimedia.QAudioFormat()
+        audio_format.setSampleRate(16000)
+        audio_format.setChannelCount(1)
+
+        if hasattr(audio_format, "setSampleFormat"):
+            sample_format = getattr(audio_format, "SampleFormat")
+            audio_format.setSampleFormat(getattr(sample_format, "Int16"))
+            device = multimedia.QMediaDevices.defaultAudioInput()
+            if self._device_is_null(device):
+                raise RuntimeError("No default microphone input device was found.")
+            if hasattr(device, "isFormatSupported") and not device.isFormatSupported(
+                audio_format
+            ):
+                preferred = device.preferredFormat()
+                if self._sample_width(preferred) != 2:
+                    raise RuntimeError(
+                        "The default microphone does not expose 16-bit PCM audio, "
+                        "which OpenGeoAgent needs for WAV recording."
+                    )
+                audio_format = preferred
+            return device, audio_format
+
+        audio_format.setSampleSize(16)
+        audio_format.setCodec("audio/pcm")
+        audio_format.setByteOrder(
+            _enum_value(multimedia.QAudioFormat, "Endian", "LittleEndian")
+        )
+        audio_format.setSampleType(
+            _enum_value(multimedia.QAudioFormat, "SampleType", "SignedInt")
+        )
+        device = multimedia.QAudioDeviceInfo.defaultInputDevice()
+        if self._device_is_null(device):
+            raise RuntimeError("No default microphone input device was found.")
+        if not device.isFormatSupported(audio_format):
+            audio_format = device.nearestFormat(audio_format)
+        if self._sample_width(audio_format) != 2:
+            raise RuntimeError(
+                "The default microphone does not expose 16-bit PCM audio, "
+                "which OpenGeoAgent needs for WAV recording."
+            )
+        return device, audio_format
+
+    def _create_audio_source(self, device, audio_format):
+        """Create the Qt audio input object for Qt 5 or Qt 6."""
+        multimedia = self._multimedia
+        if hasattr(multimedia, "QAudioSource"):
+            return multimedia.QAudioSource(device, audio_format, self)
+        try:
+            return multimedia.QAudioInput(device, audio_format, self)
+        except TypeError:
+            return multimedia.QAudioInput(audio_format, self)
+
+    @staticmethod
+    def _audio_level(chunk):
+        """Return a rough 0-100 input level for 16-bit PCM samples."""
+        if len(chunk) < 2:
+            return 0
+        if len(chunk) % 2:
+            chunk = chunk[:-1]
+        samples = array.array("h")
+        samples.frombytes(chunk)
+        if not samples:
+            return 0
+        if len(samples) > 800:
+            step = max(1, len(samples) // 800)
+            samples = samples[::step]
+        peak = max(abs(sample) for sample in samples)
+        return min(100, int((peak / 32767) * 100))
+
+    @staticmethod
+    def _device_is_null(device):
+        is_null = getattr(device, "isNull", None)
+        return bool(is_null()) if callable(is_null) else False
+
+    @staticmethod
+    def _channel_count(audio_format):
+        value = getattr(audio_format, "channelCount", None)
+        return int(value()) if callable(value) else 1
+
+    @staticmethod
+    def _sample_rate(audio_format):
+        value = getattr(audio_format, "sampleRate", None)
+        return int(value()) if callable(value) else 16000
+
+    @staticmethod
+    def _sample_width(audio_format):
+        sample_format = getattr(audio_format, "sampleFormat", None)
+        if callable(sample_format):
+            name = str(sample_format()).split(".")[-1].lower()
+            if name == "uint8":
+                return 1
+            if name in {"int16", "unknown"}:
+                return 2
+            if name in {"int32", "float"}:
+                return 4
+        sample_size = getattr(audio_format, "sampleSize", None)
+        if callable(sample_size):
+            return max(1, int(sample_size()) // 8)
+        return 2
+
+
 class ChatDockWidget(QDockWidget):
     """Dock widget that sends user prompts to a GeoAgent QGIS agent."""
 
@@ -1324,6 +1676,12 @@ class ChatDockWidget(QDockWidget):
         self.iface = iface
         self.settings = QSettings()
         self._worker = None
+        self._voice_worker = None
+        self._voice_recorder = None
+        self._voice_recorder_refs = []
+        self._voice_audio_path = ""
+        self._voice_stopping = False
+        self._loading_settings = False
         self._region_capture = None
         self._screen_region_capture = None
         self._prompt_history = []
@@ -1511,6 +1869,7 @@ class ChatDockWidget(QDockWidget):
         self.prompt_input.previous_requested.connect(self._previous_prompt)
         self.prompt_input.next_requested.connect(self._next_prompt)
         self.prompt_input.image_pasted.connect(self._add_clipboard_image)
+        self.prompt_input.voice_toggle_requested.connect(self._toggle_voice_recording)
 
         self.attachment_bar = QWidget()
         self.attachment_layout = QHBoxLayout(self.attachment_bar)
@@ -1526,6 +1885,36 @@ class ChatDockWidget(QDockWidget):
         primary_button_layout.setSpacing(6)
         secondary_button_layout = QHBoxLayout()
         secondary_button_layout.setSpacing(6)
+        self.voice_btn = QPushButton()
+        mic_icon_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "icons", "mic.svg"
+        )
+        mic_icon = QIcon.fromTheme("audio-input-microphone")
+        if mic_icon.isNull():
+            mic_icon = QIcon(mic_icon_path)
+        self.voice_btn.setIcon(mic_icon)
+        self.voice_btn.setIconSize(QSize(18, 18))
+        self.voice_btn.setAccessibleName("Voice input")
+        self.voice_btn.setToolTip(
+            "Record speech, transcribe it with the OpenAI transcription API, "
+            "and insert the text into the prompt editor."
+        )
+        self.voice_btn.setCheckable(True)
+        self.voice_btn.setMinimumWidth(32)
+        self.voice_btn.setMaximumWidth(38)
+        self.voice_btn.clicked.connect(self._toggle_voice_recording)
+        primary_button_layout.addWidget(self.voice_btn)
+        self._configure_voice_shortcut()
+
+        self.voice_level = QProgressBar()
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(0)
+        self.voice_level.setTextVisible(False)
+        self.voice_level.setMaximumWidth(72)
+        self.voice_level.setFixedHeight(12)
+        self._set_voice_level_idle()
+        primary_button_layout.addWidget(self.voice_level)
+
         self.send_btn = QPushButton("Send")
         self.send_btn.clicked.connect(self._send_prompt)
         primary_button_layout.addWidget(self.send_btn)
@@ -1580,6 +1969,7 @@ class ChatDockWidget(QDockWidget):
 
         for button in (
             self.send_btn,
+            self.voice_btn,
             self.screenshot_btn,
             self.cancel_btn,
             self.clear_btn,
@@ -1605,39 +1995,47 @@ class ChatDockWidget(QDockWidget):
 
     def _load_settings(self):
         """Load persisted model settings into the dock controls."""
-        provider = _setting(self.settings, "provider", DEFAULT_PROVIDER)
-        index = self.provider_combo.findText(provider)
-        if index < 0:
-            index = self.provider_combo.findText(DEFAULT_PROVIDER)
-        self.provider_combo.setCurrentIndex(index if index >= 0 else 0)
+        self._loading_settings = True
+        try:
+            provider = _setting(self.settings, "provider", DEFAULT_PROVIDER)
+            index = self.provider_combo.findText(provider)
+            if index < 0:
+                index = self.provider_combo.findText(DEFAULT_PROVIDER)
+            self.provider_combo.setCurrentIndex(index if index >= 0 else 0)
 
-        model = _setting(self.settings, "model", "")
-        if not model:
-            model = _default_model_for_provider(self.provider_combo.currentText())
-        self.model_input.setText(model)
+            model = _setting(self.settings, "model", "")
+            if not model:
+                model = _default_model_for_provider(self.provider_combo.currentText())
+            self.model_input.setText(model)
 
-        self.fast_check.setChecked(_setting(self.settings, "fast_mode", False, bool))
-        self.stream_check.setChecked(_setting(self.settings, "stream_chat", True, bool))
-        self.auto_approve_tools_check.setChecked(
-            _setting(self.settings, "auto_approve_tools", False, bool)
-        )
-        expanded = _setting(self.settings, "model_section_expanded", True, bool)
-        self.model_group.setChecked(expanded)
-        self.model_controls.setVisible(expanded)
-        jobs_expanded = _setting(self.settings, "jobs_section_expanded", True, bool)
-        self.jobs_group.setChecked(jobs_expanded)
-        self.jobs_controls.setVisible(jobs_expanded)
-        mode = _setting(self.settings, "agent_mode", DEFAULT_AGENT_MODE)
-        index = self.agent_mode_combo.findText(mode)
-        self.agent_mode_combo.setCurrentIndex(index if index >= 0 else 0)
-        profile = _setting(
-            self.settings,
-            "permission_profile",
-            DEFAULT_PERMISSION_PROFILE,
-        )
-        profile = PERMISSION_PROFILE_ALIASES.get(profile, profile)
-        index = self.permission_combo.findText(profile)
-        self.permission_combo.setCurrentIndex(index if index >= 0 else 0)
+            self.fast_check.setChecked(
+                _setting(self.settings, "fast_mode", False, bool)
+            )
+            self.stream_check.setChecked(
+                _setting(self.settings, "stream_chat", True, bool)
+            )
+            self.auto_approve_tools_check.setChecked(
+                _setting(self.settings, "auto_approve_tools", False, bool)
+            )
+            expanded = _setting(self.settings, "model_section_expanded", True, bool)
+            self.model_group.setChecked(expanded)
+            self.model_controls.setVisible(expanded)
+            jobs_expanded = _setting(self.settings, "jobs_section_expanded", True, bool)
+            self.jobs_group.setChecked(jobs_expanded)
+            self.jobs_controls.setVisible(jobs_expanded)
+            mode = _setting(self.settings, "agent_mode", DEFAULT_AGENT_MODE)
+            index = self.agent_mode_combo.findText(mode)
+            self.agent_mode_combo.setCurrentIndex(index if index >= 0 else 0)
+            profile = _setting(
+                self.settings,
+                "permission_profile",
+                DEFAULT_PERMISSION_PROFILE,
+            )
+            profile = PERMISSION_PROFILE_ALIASES.get(profile, profile)
+            index = self.permission_combo.findText(profile)
+            self.permission_combo.setCurrentIndex(index if index >= 0 else 0)
+        finally:
+            self._loading_settings = False
         self._load_project_history()
 
     def _save_model_settings(self):
@@ -1690,6 +2088,8 @@ class ChatDockWidget(QDockWidget):
 
     def _on_agent_mode_changed(self, mode):
         """Load a mode-specific workflow prompt when useful."""
+        if getattr(self, "_loading_settings", False):
+            return
         if not hasattr(self, "prompt_input"):
             return
         prompts = WORKFLOW_PROMPTS.get(mode, [])
@@ -2197,6 +2597,346 @@ class ChatDockWidget(QDockWidget):
         self.prompt_input.setPlainText(self._prompt_history[self._history_index])
         self.prompt_input.setFocus()
 
+    def _toggle_voice_recording(self):
+        """Start or stop recording a voice prompt."""
+        if self._voice_stopping:
+            return
+        if self._voice_recorder is not None:
+            self._stop_voice_recording()
+            return
+        self._start_voice_recording()
+
+    def _voice_shortcut_text(self):
+        """Return the configured shortcut text for toggling voice input."""
+        return (
+            _setting(
+                self.settings,
+                VOICE_SHORTCUT_SETTING,
+                DEFAULT_VOICE_SHORTCUT,
+                str,
+            ).strip()
+            or DEFAULT_VOICE_SHORTCUT
+        )
+
+    def _configure_voice_shortcut(self):
+        """Refresh voice shortcut tooltip/logging.
+
+        The shortcut itself is handled in keyPressEvent methods to avoid
+        registering QShortcut/QAction objects that can collide with QGIS.
+        """
+        shortcut_text = self._voice_shortcut_text()
+        if hasattr(self, "prompt_input"):
+            self.prompt_input.set_voice_shortcut_text(shortcut_text)
+        if not shortcut_text:
+            self._update_voice_tooltip("")
+            return
+        sequence = QKeySequence(shortcut_text)
+        if sequence.isEmpty():
+            self._update_voice_tooltip("")
+            return
+        self._update_voice_tooltip(shortcut_text)
+        QgsMessageLog.logMessage(
+            f"Voice input shortcut set to {shortcut_text}",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Info,
+        )
+
+    def _update_voice_tooltip(self, shortcut_text=None):
+        """Refresh the voice button tooltip with the current shortcut."""
+        if shortcut_text is None:
+            shortcut_text = self._voice_shortcut_text()
+        suffix = f" Shortcut: {shortcut_text}." if shortcut_text else ""
+        self.voice_btn.setToolTip(
+            "Record speech, transcribe it with the OpenAI transcription API, "
+            f"and insert the text into the prompt editor.{suffix}"
+        )
+
+    def _start_voice_recording(self):
+        """Record microphone audio to a temporary file."""
+        if self._voice_worker is not None:
+            QMessageBox.information(
+                self,
+                "OpenGeoAgent",
+                "Voice transcription is already running.",
+            )
+            self.voice_btn.setChecked(False)
+            return
+
+        if not self._voice_transcription_api_key():
+            self.voice_btn.setChecked(False)
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent Voice Input",
+                "Voice transcription uses the OpenAI transcription API and may "
+                "incur API costs.\n\nAdd an OpenAI API key in OpenGeoAgent "
+                "Settings > Model, or set OPENAI_API_KEY, before using voice input.",
+            )
+            return
+
+        if not self._confirm_voice_transcription_notice():
+            return
+
+        fd, audio_path = tempfile.mkstemp(prefix="open_geoagent_voice_", suffix=".wav")
+        os.close(fd)
+        try:
+            recorder = self._create_voice_recorder(audio_path)
+            recorder.level_changed.connect(self._update_voice_level)
+            recorder.limit_reached.connect(self._on_voice_limit_reached)
+            recorder.record()
+        except Exception as exc:
+            self._remove_temp_audio(audio_path)
+            self.voice_btn.setChecked(False)
+            QMessageBox.critical(
+                self,
+                "Voice Input Unavailable",
+                f"Could not start microphone recording:\n\n{exc}",
+            )
+            return
+
+        self._voice_audio_path = audio_path
+        self._voice_recorder = recorder
+        self._voice_recorder_refs = [recorder]
+        self._voice_stopping = False
+        self.voice_btn.setChecked(True)
+        self.voice_btn.setToolTip("Stop recording and transcribe the voice prompt.")
+        self._set_voice_level_recording()
+        self.status_label.setText("Recording voice prompt...")
+        self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
+
+    def _voice_transcription_api_key(self):
+        """Return the configured OpenAI API key for voice transcription, if any."""
+        _apply_environment_from_settings(self.settings)
+        return os.environ.get("OPENAI_API_KEY", "").strip()
+
+    def _confirm_voice_transcription_notice(self):
+        """Show the one-time OpenAI transcription cost notice."""
+        acknowledged = _setting(
+            self.settings,
+            "voice_transcription_notice_acknowledged",
+            False,
+            bool,
+        )
+        if acknowledged:
+            return True
+        response = QMessageBox.question(
+            self,
+            "OpenGeoAgent Voice Input",
+            "Voice input sends recorded audio to the OpenAI transcription API. "
+            "This can incur OpenAI API costs.\n\nContinue?",
+            QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if response != QMessageBox.StandardButton.Ok:
+            self.voice_btn.setChecked(False)
+            return False
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}voice_transcription_notice_acknowledged", True
+        )
+        return True
+
+    def _create_voice_recorder(self, audio_path):
+        """Create a direct PCM voice recorder for the active Qt binding."""
+        return VoicePromptRecorder(audio_path, self)
+
+    def _voice_level_stylesheet(self, chunk_color):
+        """Return the microphone indicator stylesheet for the current state."""
+        return (
+            "QProgressBar { border: 1px solid #b0bec5; border-radius: 3px; "
+            "background: #eceff1; } "
+            f"QProgressBar::chunk {{ background-color: {chunk_color}; "
+            "border-radius: 2px; }}"
+        )
+
+    def _set_voice_level_recording(self):
+        """Show the live microphone input level indicator."""
+        if not hasattr(self, "voice_level"):
+            return
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(0)
+        self.voice_level.setToolTip("Live microphone input level.")
+        self.voice_level.setStyleSheet(self._voice_level_stylesheet("#1976D2"))
+        self.voice_level.setVisible(True)
+
+    def _set_voice_level_transcribing(self):
+        """Show a distinct indicator while the recorded prompt is transcribed."""
+        if not hasattr(self, "voice_level"):
+            return
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(100)
+        self.voice_level.setToolTip("Transcribing recorded voice prompt.")
+        self.voice_level.setStyleSheet(self._voice_level_stylesheet("#F9A825"))
+        self.voice_level.setVisible(True)
+
+    def _set_voice_level_idle(self):
+        """Hide and reset the microphone input level indicator."""
+        if not hasattr(self, "voice_level"):
+            return
+        self.voice_level.setRange(0, 100)
+        self.voice_level.setValue(0)
+        self.voice_level.setToolTip("Live microphone input level.")
+        self.voice_level.setStyleSheet(self._voice_level_stylesheet("#1976D2"))
+        self.voice_level.setVisible(False)
+
+    def _update_voice_level(self, level):
+        """Update the live microphone input level indicator."""
+        if hasattr(self, "voice_level"):
+            self.voice_level.setValue(max(0, min(100, int(level or 0))))
+
+    def _on_voice_limit_reached(self):
+        """Stop voice recording when the maximum length is reached."""
+        if self._voice_recorder is None:
+            return
+        QgsMessageLog.logMessage(
+            "Voice recording stopped after reaching the "
+            f"{VoicePromptRecorder.MAX_RECORDING_SECONDS}-second limit.",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Warning,
+        )
+        self.iface.messageBar().pushWarning(
+            "OpenGeoAgent",
+            "Voice recording reached the maximum length and was stopped "
+            "automatically.",
+        )
+        self._stop_voice_recording()
+
+    def _stop_voice_recording(self):
+        """Stop recording and begin transcription."""
+        recorder = self._voice_recorder
+        if recorder is None:
+            return
+        self._voice_stopping = True
+        try:
+            recorder.stop()
+        except Exception as exc:
+            self._voice_stopping = False
+            self._voice_recorder = None
+            self._voice_recorder_refs = []
+            self._reset_voice_button()
+            QMessageBox.critical(
+                self,
+                "Voice Input Failed",
+                f"Could not stop microphone recording:\n\n{exc}",
+            )
+            return
+
+        self.voice_btn.setEnabled(False)
+        self.voice_btn.setChecked(False)
+        self._set_voice_level_transcribing()
+        self.status_label.setText("Transcribing voice prompt...")
+        self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
+        QTimer.singleShot(100, self._finish_voice_recording)
+
+    def _finish_voice_recording(self):
+        """Release the recorder and transcribe the recorded audio file."""
+        audio_path = self._voice_audio_path
+        recorder = self._voice_recorder
+        self._voice_recorder = None
+        self._voice_recorder_refs = []
+        self._voice_stopping = False
+        if recorder is not None:
+            recorder.deleteLater()
+
+        if not audio_path or not os.path.exists(audio_path):
+            self._reset_voice_button()
+            QMessageBox.critical(
+                self,
+                "Voice Input Failed",
+                "No recorded audio file was created.",
+            )
+            return
+
+        if os.path.getsize(audio_path) <= 0:
+            self._remove_temp_audio(audio_path)
+            self._voice_audio_path = ""
+            self._reset_voice_button()
+            QMessageBox.critical(
+                self,
+                "Voice Input Failed",
+                "The recorded audio file is empty.",
+            )
+            return
+
+        self._voice_worker = VoiceTranscriptionWorker(audio_path, self.settings, self)
+        self._voice_worker.finished.connect(self._on_voice_transcription_finished)
+        self._voice_worker.start()
+
+    def _on_voice_transcription_finished(self, result):
+        """Insert transcribed voice text into the prompt editor."""
+        audio_path = self._voice_audio_path
+        self._remove_temp_audio(audio_path)
+        self._voice_audio_path = ""
+        if self._voice_worker is not None:
+            self._voice_worker.deleteLater()
+            self._voice_worker = None
+        self._reset_voice_button()
+
+        if result.get("success"):
+            self._insert_transcribed_prompt(result.get("text", ""))
+            self.status_label.setText("Voice prompt transcribed.")
+            self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+            return
+
+        error = str(result.get("error") or "Unknown transcription error")
+        error = error.split("\n\nTraceback", 1)[0]
+        self.status_label.setText("Voice transcription failed.")
+        self.status_label.setStyleSheet("color: red; font-size: 10px;")
+        QMessageBox.critical(
+            self,
+            "Voice Transcription Failed",
+            error,
+        )
+
+    def _insert_transcribed_prompt(self, text):
+        """Insert transcribed text at the prompt cursor and move it to the end."""
+        text = str(text or "").strip()
+        if not text:
+            return
+        current = self.prompt_input.toPlainText()
+        if not current:
+            self.prompt_input.setPlainText(text)
+            self._move_prompt_cursor_to_end()
+            return
+
+        cursor = self.prompt_input.textCursor()
+        if cursor.hasSelection():
+            cursor.insertText(text)
+        else:
+            position = cursor.position()
+            before = current[:position]
+            after = current[position:]
+            prefix = "" if not before or before[-1].isspace() else " "
+            suffix = "" if not after or after[:1].isspace() else " "
+            cursor.insertText(f"{prefix}{text}{suffix}")
+        self.prompt_input.setTextCursor(cursor)
+        self._move_prompt_cursor_to_end()
+
+    def _move_prompt_cursor_to_end(self):
+        """Move the prompt editor cursor to the end of its text."""
+        end_cursor = getattr(getattr(QTextCursor, "MoveOperation", QTextCursor), "End")
+        self.prompt_input.moveCursor(end_cursor)
+        self.prompt_input.setFocus()
+
+    def _reset_voice_button(self):
+        """Restore the voice button to its idle state."""
+        self.voice_btn.setEnabled(True)
+        self.voice_btn.setChecked(False)
+        self._update_voice_tooltip()
+        self._set_voice_level_idle()
+
+    def _remove_temp_audio(self, audio_path):
+        """Remove a temporary audio file if it still exists."""
+        if not audio_path:
+            return
+        try:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
+        except OSError as exc:
+            QgsMessageLog.logMessage(
+                f"Failed to remove temporary voice recording: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Warning,
+            )
+
     def _on_worker_finished(self, result):
         """Render the completed chat worker result."""
         self._stop_running_status()
@@ -2477,8 +3217,12 @@ class ChatDockWidget(QDockWidget):
         try:
             payload = json.dumps(self._messages[-80:])
             self.settings.setValue(self._history_key, payload)
-        except Exception:
-            pass
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Failed to persist chat history: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Warning,
+            )
 
     def _add_job(self, job):
         """Record a submitted chat job and refresh the jobs table."""
@@ -2557,6 +3301,35 @@ class ChatDockWidget(QDockWidget):
             if self._screen_region_capture is not None:
                 self._screen_region_capture.close()
                 self._screen_region_capture = None
+            if self._voice_recorder is not None:
+                recorder = self._voice_recorder
+                try:
+                    recorder.stop()
+                except Exception as exc:
+                    QgsMessageLog.logMessage(
+                        f"Failed to stop voice recorder during dock shutdown: {exc}",
+                        "OpenGeoAgent",
+                        Qgis.MessageLevel.Warning,
+                    )
+                finally:
+                    self._voice_recorder = None
+                    self._voice_recorder_refs = []
+                    recorder.deleteLater()
+            if self._voice_worker is not None:
+                worker = self._voice_worker
+                try:
+                    worker.finished.disconnect(self._on_voice_transcription_finished)
+                except (TypeError, RuntimeError):
+                    pass
+                if worker.isRunning():
+                    # Block briefly so the OpenAI request can finish writing or
+                    # release the temp WAV file before we delete it. Avoids
+                    # tearing down the QThread mid-request.
+                    worker.wait(5000)
+                worker.deleteLater()
+                self._voice_worker = None
+            self._remove_temp_audio(self._voice_audio_path)
+            self._voice_audio_path = ""
         except Exception as exc:
             QgsMessageLog.logMessage(
                 f"Failed to stop running status timer during dock shutdown: {exc}",
@@ -2568,6 +3341,19 @@ class ChatDockWidget(QDockWidget):
         """Stop the animated status timer when the dock is hidden."""
         self._shutdown_running_state()
         super().hideEvent(event)
+
+    def keyPressEvent(self, event):
+        """Handle chat dock keyboard shortcuts."""
+        if _event_matches_key_sequence(event, self._voice_shortcut_text()):
+            self._toggle_voice_recording()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def showEvent(self, event):
+        """Refresh shortcut tooltip when the dock is shown."""
+        self._configure_voice_shortcut()
+        super().showEvent(event)
 
     def closeEvent(self, event):
         """Stop the animated status timer when the dock is closed."""

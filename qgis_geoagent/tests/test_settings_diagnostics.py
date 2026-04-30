@@ -9,6 +9,7 @@ from pathlib import Path
 from open_geoagent.dialogs.settings_dock import (
     ProviderTestWorker,
     SETTINGS_PREFIX,
+    VOICE_SHORTCUT_SETTING,
     collect_diagnostics,
     _model_requires_default_temperature,
 )
@@ -46,6 +47,8 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
         {
             f"{SETTINGS_PREFIX}provider": "openai",
             f"{SETTINGS_PREFIX}model": "gpt-test",
+            f"{SETTINGS_PREFIX}transcription_model": "gpt-4o-transcribe",
+            f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}": "Alt+M",
             f"{SETTINGS_PREFIX}openai_api_key": "sk-secret",
         }
     )
@@ -56,6 +59,8 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
 
     assert diagnostics["credential_presence"]["openai_api_key"]["saved"] is True
     assert diagnostics["model"]["provider"] == "openai"
+    assert diagnostics["model"]["transcription_model"] == "gpt-4o-transcribe"
+    assert diagnostics["model"]["voice_shortcut"] == "Alt+M"
     assert "sk-secret" not in text
 
 

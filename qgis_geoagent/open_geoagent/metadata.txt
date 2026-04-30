@@ -3,7 +3,7 @@ name=OpenGeoAgent
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
 description=GeoAgent-powered multimodal AI chatbot for QGIS projects.
-version=1.0.0
+version=1.1.0
 author=Qiusheng Wu
 email=giswqs@gmail.com
 
@@ -14,6 +14,7 @@ about=OpenGeoAgent provides a dockable multimodal chatbot interface for QGIS tha
     - QGIS-safe GeoAgent tools for layer inspection, map navigation, data loading, selection, processing, and project operations
     - Confirmation-gated PyQGIS script execution fallback for QGIS API tasks without a dedicated tool
     - Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, and LiteLLM
+    - Voice prompt recording with OpenAI speech-to-text transcription into the chat editor
     - Image-aware chat with clipboard paste support for providers and models that support vision inputs
     - Screenshot attachments from the map canvas, selected map regions, the QGIS window, and selected screen regions
     - Clickable image previews with save/export actions
@@ -27,6 +28,7 @@ about=OpenGeoAgent provides a dockable multimodal chatbot interface for QGIS tha
 
     Requirements:
     - GeoAgent and provider clients, installable from Settings > Dependencies
+    - OPENAI_API_KEY for voice transcription, which uses the OpenAI transcription API and may incur API costs
 
 tracker=https://github.com/opengeos/GeoAgent/issues
 repository=https://github.com/opengeos/GeoAgent
@@ -43,8 +45,14 @@ experimental=False
 deprecated=False
 
 changelog=
+    1.1.0 - Improved voice input controls
+        - Added configurable OpenAI transcription model selection
+        - Added microphone button, voice shortcut, and recording/transcription indicators
+        - Improved voice transcription status handling and prompt insertion behavior
+
     1.0.0 - Initial stable OpenGeoAgent release
         - Added clipboard image paste support for chat attachments
+        - Added voice prompt recording with OpenAI speech-to-text transcription
         - Added screenshot capture for map canvas, selected map regions, QGIS window, and selected screen regions
         - Added image preview, save, and export actions
         - Added confirmation-gated PyQGIS script execution fallback

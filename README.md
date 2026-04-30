@@ -242,7 +242,9 @@ assistant to QGIS so you can inspect projects, navigate the map canvas, load
 data, run processing workflows, style layers, and execute confirmation-gated
 PyQGIS scripts from natural language.
 
-![OpenGeoAgent QGIS plugin](https://github.com/user-attachments/assets/3047e39c-ad0a-4d77-a822-9597da539775)
+![OpenGeoAgent QGIS plugin](https://github.com/user-attachments/assets/ba33831f-3259-461a-89f3-1e9a13cac3e0)
+
+![OpenGeoAgent QGIS plugin GUI](https://github.com/user-attachments/assets/393065b9-7c6a-4219-90e9-c8eb59b9bae7)
 
 Key plugin features:
 
