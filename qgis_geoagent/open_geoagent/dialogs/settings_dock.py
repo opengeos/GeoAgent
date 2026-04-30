@@ -81,6 +81,22 @@ def _plugin_version(plugin_dir):
     return "Unknown"
 
 
+def _model_requires_default_temperature(provider, model_id):
+    """Return True when the selected model rejects non-default temperature."""
+    normalized = str(model_id or "").lower()
+    prefixes = (
+        "gpt-5",
+        "openai/gpt-5",
+        "o1",
+        "openai/o1",
+        "o3",
+        "openai/o3",
+        "o4",
+        "openai/o4",
+    )
+    return provider in {"openai", "litellm"} and normalized.startswith(prefixes)
+
+
 def collect_diagnostics(
     settings,
     plugin_dir,
@@ -163,24 +179,41 @@ class ProviderTestWorker(QThread):
         self.settings = settings
 
     def run(self):
-        """Create a no-tool GeoAgent and send a short prompt."""
+        """Create a minimal no-tool Strands agent and send a short prompt."""
         try:
             _apply_environment_from_settings(self.settings)
             if self.provider == "openai-codex":
                 from ..oauth import ensure_openai_oauth_environment
 
                 ensure_openai_oauth_environment(self.settings, codex=True)
-            from geoagent import GeoAgent, GeoAgentConfig
+            from geoagent import GeoAgentConfig
+            from geoagent.core.model import resolve_model
+            from strands import Agent
 
+            token_floor = 4096 if self.provider == "ollama" else 1024
             cfg = GeoAgentConfig(
                 provider=self.provider,
                 model=self.model_id or None,
-                max_tokens=min(int(self.max_tokens or 128), 128),
+                temperature=(
+                    1
+                    if _model_requires_default_temperature(
+                        self.provider, self.model_id
+                    )
+                    else 0
+                ),
+                max_tokens=max(int(self.max_tokens or token_floor), token_floor),
             )
-            agent = GeoAgent(config=cfg, tools=[])
-            response = agent.chat("Reply with exactly: ok")
-            if not response.success:
-                raise RuntimeError(response.error_message or "Provider test failed")
+            model = resolve_model(cfg)
+            agent = Agent(
+                model=model,
+                tools=[],
+                system_prompt="You are a provider connectivity test. Reply briefly.",
+                callback_handler=None,
+            )
+            prompt = "Reply with exactly: ok"
+            if self.provider == "ollama":
+                prompt = "/no_think\nReply with exactly: ok"
+            agent(prompt)
             self.finished.emit({"success": True, "message": "Provider test succeeded."})
         except Exception as exc:
             self.finished.emit({"success": False, "message": str(exc)})

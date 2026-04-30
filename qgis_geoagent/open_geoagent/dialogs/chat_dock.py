@@ -1180,7 +1180,7 @@ class ChatDockWidget(QDockWidget):
         self.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
         )
-        self.setMinimumWidth(280)
+        self.setMinimumWidth(220)
 
         self._setup_ui()
         self._load_settings()
@@ -1193,12 +1193,21 @@ class ChatDockWidget(QDockWidget):
         layout = QVBoxLayout(main_widget)
         layout.setSpacing(8)
 
-        model_group = QGroupBox("Model")
-        model_layout = QFormLayout(model_group)
+        self.model_group = QGroupBox("Model")
+        self.model_group.setCheckable(True)
+        self.model_group.setChecked(True)
+        self.model_group.toggled.connect(self._on_model_section_toggled)
+        model_group_layout = QVBoxLayout(self.model_group)
+        model_group_layout.setContentsMargins(8, 8, 8, 8)
+
+        self.model_controls = QWidget()
+        model_layout = QFormLayout(self.model_controls)
+        model_layout.setContentsMargins(0, 0, 0, 0)
+        model_group_layout.addWidget(self.model_controls)
 
         self.provider_combo = QComboBox()
         self.provider_combo.addItems(PROVIDERS)
-        self.provider_combo.setMinimumContentsLength(10)
+        self.provider_combo.setMinimumContentsLength(8)
         self.provider_combo.setSizeAdjustPolicy(
             _enum_value(
                 QComboBox,
@@ -1206,20 +1215,36 @@ class ChatDockWidget(QDockWidget):
                 "AdjustToMinimumContentsLengthWithIcon",
             )
         )
+        self.provider_combo.setSizePolicy(
+            _enum_value(QSizePolicy, "Policy", "Ignored"),
+            _enum_value(QSizePolicy, "Policy", "Fixed"),
+        )
         self.provider_combo.currentTextChanged.connect(self._on_provider_changed)
         model_layout.addRow("Provider:", self.provider_combo)
 
         self.model_input = QLineEdit()
         self.model_input.setPlaceholderText("Use provider default")
+        self.model_input.setSizePolicy(
+            _enum_value(QSizePolicy, "Policy", "Ignored"),
+            _enum_value(QSizePolicy, "Policy", "Fixed"),
+        )
         model_layout.addRow("Model:", self.model_input)
 
         self.agent_mode_combo = QComboBox()
         self.agent_mode_combo.addItems(AGENT_MODES)
+        self.agent_mode_combo.setSizePolicy(
+            _enum_value(QSizePolicy, "Policy", "Ignored"),
+            _enum_value(QSizePolicy, "Policy", "Fixed"),
+        )
         self.agent_mode_combo.currentTextChanged.connect(self._on_agent_mode_changed)
         model_layout.addRow("Agent mode:", self.agent_mode_combo)
 
         self.permission_combo = QComboBox()
         self.permission_combo.addItems(PERMISSION_PROFILES)
+        self.permission_combo.setSizePolicy(
+            _enum_value(QSizePolicy, "Policy", "Ignored"),
+            _enum_value(QSizePolicy, "Policy", "Fixed"),
+        )
         model_layout.addRow("Permissions:", self.permission_combo)
 
         self.fast_check = QCheckBox("Fast mode")
@@ -1238,13 +1263,13 @@ class ChatDockWidget(QDockWidget):
         mode_layout.addStretch(1)
         model_layout.addRow("", mode_layout)
 
-        layout.addWidget(model_group)
+        layout.addWidget(self.model_group)
 
         sample_layout = QHBoxLayout()
         self.sample_combo = QComboBox()
         self.sample_combo.addItem("Sample prompts...")
         self.sample_combo.addItems(_all_sample_prompts())
-        self.sample_combo.setMinimumContentsLength(22)
+        self.sample_combo.setMinimumContentsLength(14)
         self.sample_combo.setSizeAdjustPolicy(
             _enum_value(
                 QComboBox,
@@ -1260,8 +1285,15 @@ class ChatDockWidget(QDockWidget):
         sample_layout.addWidget(self.sample_combo, 1)
         layout.addLayout(sample_layout)
 
-        jobs_group = QGroupBox("Jobs")
-        jobs_layout = QVBoxLayout(jobs_group)
+        self.jobs_group = QGroupBox("Jobs")
+        self.jobs_group.setCheckable(True)
+        self.jobs_group.setChecked(True)
+        self.jobs_group.toggled.connect(self._on_jobs_section_toggled)
+        jobs_layout = QVBoxLayout(self.jobs_group)
+
+        self.jobs_controls = QWidget()
+        jobs_controls_layout = QVBoxLayout(self.jobs_controls)
+        jobs_controls_layout.setContentsMargins(0, 0, 0, 0)
         self.jobs_table = QTableWidget(0, 4)
         self.jobs_table.setHorizontalHeaderLabels(
             ["Status", "Mode", "Prompt", "Details"]
@@ -1270,7 +1302,7 @@ class ChatDockWidget(QDockWidget):
         self.jobs_table.setSelectionBehavior(
             _enum_value(QAbstractItemView, "SelectionBehavior", "SelectRows")
         )
-        jobs_layout.addWidget(self.jobs_table)
+        jobs_controls_layout.addWidget(self.jobs_table)
         jobs_btn_layout = QHBoxLayout()
         self.rerun_job_btn = QPushButton("Rerun Job")
         self.rerun_job_btn.clicked.connect(self._rerun_selected_job)
@@ -1280,8 +1312,9 @@ class ChatDockWidget(QDockWidget):
         self.cancel_job_btn.setEnabled(False)
         jobs_btn_layout.addWidget(self.cancel_job_btn)
         jobs_btn_layout.addStretch(1)
-        jobs_layout.addLayout(jobs_btn_layout)
-        layout.addWidget(jobs_group)
+        jobs_controls_layout.addLayout(jobs_btn_layout)
+        jobs_layout.addWidget(self.jobs_controls)
+        layout.addWidget(self.jobs_group)
 
         self.transcript = QTextEdit()
         self.transcript.setReadOnly(True)
@@ -1383,6 +1416,12 @@ class ChatDockWidget(QDockWidget):
         self.auto_approve_tools_check.setChecked(
             _setting(self.settings, "auto_approve_tools", False, bool)
         )
+        expanded = _setting(self.settings, "model_section_expanded", True, bool)
+        self.model_group.setChecked(expanded)
+        self.model_controls.setVisible(expanded)
+        jobs_expanded = _setting(self.settings, "jobs_section_expanded", True, bool)
+        self.jobs_group.setChecked(jobs_expanded)
+        self.jobs_controls.setVisible(jobs_expanded)
         mode = _setting(self.settings, "agent_mode", DEFAULT_AGENT_MODE)
         index = self.agent_mode_combo.findText(mode)
         self.agent_mode_combo.setCurrentIndex(index if index >= 0 else 0)
@@ -1419,10 +1458,29 @@ class ChatDockWidget(QDockWidget):
         self.settings.setValue(
             f"{SETTINGS_PREFIX}permission_profile", self.permission_combo.currentText()
         )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}model_section_expanded", self.model_group.isChecked()
+        )
 
     def _on_provider_changed(self, provider):
         """Update the model field when the provider changes."""
         self.model_input.setText(_default_model_for_provider(provider))
+
+    def _on_model_section_toggled(self, expanded):
+        """Show or hide model controls to keep the dock compact."""
+        if hasattr(self, "model_controls"):
+            self.model_controls.setVisible(bool(expanded))
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}model_section_expanded", bool(expanded)
+        )
+
+    def _on_jobs_section_toggled(self, expanded):
+        """Show or hide job controls to keep the dock compact."""
+        if hasattr(self, "jobs_controls"):
+            self.jobs_controls.setVisible(bool(expanded))
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}jobs_section_expanded", bool(expanded)
+        )
 
     def _on_agent_mode_changed(self, mode):
         """Load a mode-specific workflow prompt when useful."""
@@ -2243,6 +2301,9 @@ class ChatDockWidget(QDockWidget):
             ]
             for col, value in enumerate(values):
                 self.jobs_table.setItem(row, col, QTableWidgetItem(str(value)))
+        if self._jobs:
+            self.jobs_table.scrollToBottom()
+            self.jobs_table.selectRow(len(self._jobs) - 1)
 
     def _selected_job_index(self):
         """Return the selected job row or None."""
