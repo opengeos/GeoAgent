@@ -256,7 +256,10 @@ Key plugin features:
   that support vision inputs;
 - screenshot capture from the map canvas, selected map regions, the QGIS
   window, and selected screen regions;
-- image preview and save/export actions;
+- image preview and save/export actions, plus inline rendering of image outputs
+  returned by multimodal models;
+- direct image generation with the `generate_image` tool when `OPENAI_API_KEY`
+  is configured;
 - copy Markdown transcript and copy executed PyQGIS script actions;
 - confirmation-gated `run_pyqgis_script` fallback when a task needs QGIS API
   operations that are not covered by a dedicated tool;

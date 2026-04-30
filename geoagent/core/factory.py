@@ -15,6 +15,7 @@ from geoagent.core.safety import ConfirmCallback
 from geoagent.core.agent import GeoAgent
 from geoagent.tools.anymap import anymap_tools
 from geoagent.tools.gee_data_catalogs import gee_data_catalogs_tools
+from geoagent.tools.images import image_generation_tools
 from geoagent.tools.leafmap import leafmap_tools
 from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
@@ -138,6 +139,11 @@ Workflow guidance:
   project/canvas changes, write a short PyQGIS script and run it with
   run_pyqgis_script. Do not merely provide a script for the user to paste when
   run_pyqgis_script can safely perform the requested QGIS change.
+- When the user asks to create, draw, render, or generate an image or picture,
+  or provides a standalone visual description after discussing image
+  generation, call generate_image if it is available. Do not reply with only a
+  prompt for another image generator unless the tool reports that image
+  generation is not configured.
 - Keep responses concise and include the tool name, output path, and loaded
   layer names when available.
 """
@@ -253,6 +259,7 @@ def assemble_tools(
     include_nasa_opera: bool = False,
     include_gee_data_catalogs: bool = False,
     include_whitebox: bool = False,
+    include_image_generation: bool = False,
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     fast: bool = False,
@@ -304,6 +311,10 @@ def assemble_tools(
         )
         register_all_tools(registry, whitebox_tool_list)
         collected.extend(whitebox_tool_list)
+    if include_image_generation:
+        image_tools = _filter_by_imports(image_generation_tools())
+        register_all_tools(registry, image_tools)
+        collected.extend(image_tools)
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
@@ -363,6 +374,7 @@ def for_leafmap(
     tools, registry = assemble_tools(
         context=ctx,
         include_leafmap=True,
+        include_image_generation=True,
         extra_tools=extra_tools,
         fast=fast,
     )
@@ -400,6 +412,7 @@ def for_anymap(
     tools, registry = assemble_tools(
         context=ctx,
         include_anymap=True,
+        include_image_generation=True,
         extra_tools=extra_tools,
         fast=fast,
     )
@@ -443,6 +456,7 @@ def for_qgis(
     tools, registry = assemble_tools(
         context=ctx,
         include_qgis=True,
+        include_image_generation=True,
         extra_tools=extra_tools,
         fast=fast,
         permission_profile=permission_profile,
@@ -497,6 +511,7 @@ def for_nasa_opera(
         context=ctx,
         include_qgis=include_qgis,
         include_nasa_opera=True,
+        include_image_generation=True,
         extra_tools=extra_tools,
         fast=fast,
         permission_profile=permission_profile,
@@ -552,6 +567,7 @@ def for_nasa_earthdata(
         context=ctx,
         include_qgis=include_qgis,
         include_nasa_earthdata=True,
+        include_image_generation=True,
         nasa_earthdata_plugin=plugin,
         extra_tools=extra_tools,
         fast=fast,
@@ -608,6 +624,7 @@ def for_gee_data_catalogs(
         context=ctx,
         include_qgis=include_qgis,
         include_gee_data_catalogs=True,
+        include_image_generation=True,
         gee_data_catalogs_plugin=plugin,
         extra_tools=extra_tools,
         fast=fast,
@@ -663,6 +680,7 @@ def for_whitebox(
         context=ctx,
         include_qgis=include_qgis,
         include_whitebox=True,
+        include_image_generation=True,
         extra_tools=extra_tools,
         fast=fast,
         permission_profile=permission_profile,

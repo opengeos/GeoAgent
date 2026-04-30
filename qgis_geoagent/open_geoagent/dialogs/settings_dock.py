@@ -30,9 +30,11 @@ from qgis.PyQt.QtWidgets import (
 
 from .chat_dock import (
     DEFAULT_MODELS,
+    DEFAULT_IMAGE_MODEL,
     DEFAULT_PROVIDER,
     DEFAULT_TRANSCRIPTION_MODEL,
     DEFAULT_VOICE_SHORTCUT,
+    IMAGE_MODELS,
     PROVIDERS,
     SETTINGS_PREFIX,
     TRANSCRIPTION_MODELS,
@@ -50,6 +52,8 @@ from ..oauth import (
 
 ENV_FALLBACKS = {
     "openai_api_key": ("OPENAI_API_KEY",),
+    "openai_org_id": ("OPENAI_ORG_ID",),
+    "openai_project_id": ("OPENAI_PROJECT_ID",),
     "anthropic_api_key": ("ANTHROPIC_API_KEY",),
     "gemini_api_key": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
     "aws_region": ("AWS_REGION", "AWS_DEFAULT_REGION"),
@@ -162,6 +166,11 @@ def collect_diagnostics(
                 os.environ.get(
                     "OPENAI_TRANSCRIPTION_MODEL", DEFAULT_TRANSCRIPTION_MODEL
                 ),
+                type=str,
+            ),
+            "image_model": settings.value(
+                f"{SETTINGS_PREFIX}image_model",
+                os.environ.get("GEOAGENT_IMAGE_MODEL", DEFAULT_IMAGE_MODEL),
                 type=str,
             ),
             "voice_shortcut": settings.value(
@@ -528,6 +537,16 @@ class SettingsDockWidget(QDockWidget):
         self.openai_key_input.setEchoMode(password_mode)
         credentials_form.addRow("OpenAI API key:", self.openai_key_input)
 
+        self.openai_org_input = QLineEdit()
+        self.openai_org_input.setEchoMode(password_mode)
+        self.openai_org_input.setPlaceholderText("Optional OpenAI organization ID")
+        credentials_form.addRow("OpenAI org ID:", self.openai_org_input)
+
+        self.openai_project_input = QLineEdit()
+        self.openai_project_input.setEchoMode(password_mode)
+        self.openai_project_input.setPlaceholderText("Optional OpenAI project ID")
+        credentials_form.addRow("OpenAI project ID:", self.openai_project_input)
+
         self.anthropic_key_input = QLineEdit()
         self.anthropic_key_input.setEchoMode(password_mode)
         credentials_form.addRow("Anthropic API key:", self.anthropic_key_input)
@@ -553,6 +572,32 @@ class SettingsDockWidget(QDockWidget):
         credentials_form.addRow("LiteLLM base URL:", self.litellm_base_url_input)
 
         layout.addWidget(credentials_group)
+
+        image_group = QGroupBox("Image Generation")
+        image_form = QFormLayout(image_group)
+
+        self.image_model_combo = QComboBox()
+        self.image_model_combo.addItems(IMAGE_MODELS)
+        self.image_model_combo.setEditable(True)
+        self.image_model_combo.setMinimumContentsLength(18)
+        self.image_model_combo.setSizeAdjustPolicy(
+            _enum_value(
+                QComboBox,
+                "SizeAdjustPolicy",
+                "AdjustToMinimumContentsLengthWithIcon",
+            )
+        )
+        image_form.addRow("Image model:", self.image_model_combo)
+
+        image_note = QLabel(
+            "Direct image generation uses the OpenAI Images API. "
+            "`gpt-image-2` is the default; choose `gpt-image-1` when you want "
+            "the lower-cost fallback model."
+        )
+        image_note.setWordWrap(True)
+        image_note.setStyleSheet("font-size: 10px; color: gray;")
+        image_form.addRow(image_note)
+        layout.addWidget(image_group)
 
         voice_group = QGroupBox("Voice Transcription")
         voice_form = QFormLayout(voice_group)
@@ -887,6 +932,17 @@ class SettingsDockWidget(QDockWidget):
         if self.transcription_model_combo.findText(transcription_model) < 0:
             self.transcription_model_combo.addItem(transcription_model)
         self.transcription_model_combo.setCurrentText(transcription_model)
+        image_model = (
+            self.settings.value(
+                f"{SETTINGS_PREFIX}image_model",
+                os.environ.get("GEOAGENT_IMAGE_MODEL", DEFAULT_IMAGE_MODEL),
+                type=str,
+            ).strip()
+            or DEFAULT_IMAGE_MODEL
+        )
+        if self.image_model_combo.findText(image_model) < 0:
+            self.image_model_combo.addItem(image_model)
+        self.image_model_combo.setCurrentText(image_model)
         voice_shortcut = (
             self.settings.value(
                 f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}",
@@ -899,6 +955,8 @@ class SettingsDockWidget(QDockWidget):
 
         self._credential_inputs = (
             ("openai_api_key", self.openai_key_input),
+            ("openai_org_id", self.openai_org_input),
+            ("openai_project_id", self.openai_project_input),
             ("anthropic_api_key", self.anthropic_key_input),
             ("gemini_api_key", self.gemini_key_input),
             ("aws_region", self.aws_region_input),
@@ -944,6 +1002,10 @@ class SettingsDockWidget(QDockWidget):
             f"{SETTINGS_PREFIX}transcription_model",
             self.transcription_model_combo.currentText().strip()
             or DEFAULT_TRANSCRIPTION_MODEL,
+        )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}image_model",
+            self.image_model_combo.currentText().strip() or DEFAULT_IMAGE_MODEL,
         )
         sequence = _single_chord_sequence(self.voice_shortcut_edit.keySequence())
         if sequence != self.voice_shortcut_edit.keySequence():
@@ -1057,9 +1119,12 @@ class SettingsDockWidget(QDockWidget):
             "fast_mode",
             "max_tokens",
             "transcription_model",
+            "image_model",
             VOICE_SHORTCUT_SETTING,
             "voice_shortcut",
             "openai_api_key",
+            "openai_org_id",
+            "openai_project_id",
             "anthropic_api_key",
             "gemini_api_key",
             "aws_region",

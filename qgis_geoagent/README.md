@@ -88,6 +88,8 @@ provider and model. API keys and host settings are stored in QGIS settings and
 applied to the current QGIS process before each chat request:
 
 - OpenAI: `OPENAI_API_KEY`
+- OpenAI organization/project targeting: optional `OPENAI_ORG_ID` and
+  `OPENAI_PROJECT_ID`
 - Voice transcription: `OPENAI_API_KEY` is required even when the chat provider
   is set to ChatGPT/Codex OAuth. Voice input sends recorded audio to the OpenAI
   transcription API and may incur API costs. If no key is configured, recording
@@ -95,6 +97,11 @@ applied to the current QGIS process before each chat request:
   model in **Settings > Model > Voice Transcription**. The default is
   `gpt-4o-mini-transcribe`; `OPENAI_TRANSCRIPTION_MODEL` is used as a fallback
   when no QGIS setting has been saved.
+- Image generation: `OPENAI_API_KEY` is required for direct requests such as
+  "generate a cat image." ChatGPT/Codex OAuth can still power chat, but the
+  `generate_image` tool calls the OpenAI Images API. The default image model
+  is `gpt-image-2`; choose `gpt-image-1` in Settings > Model > Image
+  Generation when you want the lower-cost fallback model.
 - ChatGPT/Codex OAuth: choose `openai-codex` and click **Login with ChatGPT**
   in the Model tab. Headless use can set `OPENAI_CODEX_ACCESS_TOKEN`.
 - Anthropic: `ANTHROPIC_API_KEY`

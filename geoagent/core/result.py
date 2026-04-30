@@ -17,6 +17,8 @@ class GeoAgentResponse:
     success: bool = True
     error_message: Optional[str] = None
     execution_time: float = 0.0
+    content_blocks: list[dict[str, Any]] = field(default_factory=list)
+    images: list[dict[str, Any]] = field(default_factory=list)
     executed_tools: list[str] = field(default_factory=list)
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
     cancelled_tools: list[str] = field(default_factory=list)

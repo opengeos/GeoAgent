@@ -68,6 +68,21 @@ Screenshot options include:
 Attached images appear as thumbnails in the chat. Click an image to open a
 larger preview, then use the save action or context menu to export it.
 
+When a multimodal model returns image content blocks, OpenGeoAgent writes those
+image artifacts to a local temporary output directory, renders them inline in
+the chat transcript, and includes Markdown image references when copying or
+exporting the conversation.
+
+OpenGeoAgent also exposes a `generate_image` tool for direct image creation
+requests such as "generate a cat image." This tool uses the OpenAI Images API
+and requires `OPENAI_API_KEY`; ChatGPT/Codex OAuth alone is not enough for this
+API call. The default image model is `gpt-image-2`; choose another image model
+in Settings > Model > Image Generation when needed. Generated files are saved
+locally and rendered inline in the chat.
+If verified image-model access belongs to a specific OpenAI organization or
+project, set the optional OpenAI org/project IDs in the plugin settings so the
+Images API request uses that verified context.
+
 ## PyQGIS Fallback
 
 When a request needs QGIS API functionality that is not covered by a dedicated
