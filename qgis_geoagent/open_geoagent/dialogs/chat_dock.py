@@ -1,6 +1,7 @@
 """Dockable OpenGeoAgent chat interface."""
 
 import asyncio
+import hashlib
 import os
 import html
 import json
@@ -27,6 +28,7 @@ from qgis.PyQt.QtCore import (
 from qgis.PyQt.QtGui import QCursor, QGuiApplication, QPixmap, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
+    QAbstractItemView,
     QComboBox,
     QDialog,
     QDockWidget,
@@ -43,6 +45,8 @@ from qgis.PyQt.QtWidgets import (
     QRubberBand,
     QScrollArea,
     QSizePolicy,
+    QTableWidget,
+    QTableWidgetItem,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -76,16 +80,208 @@ IMAGE_THUMBNAIL_SIZE = 72
 SAMPLE_PROMPTS = [
     "Summarize the current QGIS project layers, CRS, extents, and feature counts.",
     "Zoom to the active layer and describe what it contains.",
-    "List visible layers and identify any layers with no features or invalid data sources.",
+    (
+        "List visible layers and identify any layers with no features or "
+        "invalid data sources."
+    ),
     "Add an OpenStreetMap basemap and zoom to the project extent.",
-    "Inspect the active vector layer fields and suggest useful styling or labeling options.",
-    "Select features in the active layer where population is greater than 100000, then zoom to the selected features.",
-    "Run a buffer around the active layer by 1000 meters and add the output to the project.",
+    (
+        "Inspect the active vector layer fields and suggest useful styling or "
+        "labeling options."
+    ),
+    (
+        "Select features in the active layer where population is greater than "
+        "100000, then zoom to the selected features."
+    ),
+    (
+        "Run a buffer around the active layer by 1000 meters and add the "
+        "output to the project."
+    ),
     "Find a WhiteboxTools command for calculating slope from the active DEM layer.",
     "Run a WhiteboxTools hillshade analysis on a local DEM and add the result to QGIS.",
     "Search WhiteboxTools for watershed or flow accumulation tools.",
     "Create a concise map QA checklist for this project before I export it.",
 ]
+AGENT_MODES = [
+    "General QGIS",
+    "WhiteboxTools",
+    "NASA Earthdata",
+    "NASA OPERA",
+    "GEE Data Catalogs",
+    "STAC",
+]
+DEFAULT_AGENT_MODE = "General QGIS"
+PERMISSION_PROFILES = [
+    "Inspect only",
+    "Edit layers",
+    "Run processing",
+    "Execute PyQGIS",
+    "Trusted auto-approve",
+]
+DEFAULT_PERMISSION_PROFILE = "Inspect only"
+WORKFLOW_PROMPTS = {
+    "NASA Earthdata": [
+        (
+            "Search NASA Earthdata for datasets about surface water in the "
+            "current map extent."
+        ),
+        (
+            "Search NASA Earthdata granules for the selected dataset, display "
+            "footprints, and summarize available raster links."
+        ),
+    ],
+    "NASA OPERA": [
+        "List available NASA OPERA datasets and recommend one for water mapping.",
+        (
+            "Search OPERA DSWx data for the current map extent and display "
+            "matching footprints."
+        ),
+    ],
+    "GEE Data Catalogs": [
+        (
+            "Search the Earth Engine data catalog for Sentinel-2 surface "
+            "reflectance datasets."
+        ),
+        (
+            "Find a dataset for land cover mapping and explain how it can be "
+            "loaded into QGIS."
+        ),
+    ],
+    "STAC": [
+        (
+            "Guide me through searching a STAC catalog for imagery over the "
+            "current map extent."
+        ),
+        (
+            "Check STAC-related dependencies and outline the steps to add a "
+            "STAC raster layer in QGIS."
+        ),
+    ],
+}
+
+
+def _all_sample_prompts():
+    """Return general sample prompts plus guided workflow prompts."""
+    prompts = list(SAMPLE_PROMPTS)
+    for mode_prompts in WORKFLOW_PROMPTS.values():
+        prompts.extend(mode_prompts)
+    return prompts
+
+
+def _permission_allows_tool(permission_profile, tool_name, meta=None):
+    """Return whether a QGIS-related tool may be exposed for a profile."""
+    profile = permission_profile or DEFAULT_PERMISSION_PROFILE
+    name = str(tool_name or "")
+    category = str(getattr(meta, "category", "") or "")
+    requires_confirmation = bool(getattr(meta, "requires_confirmation", False))
+    destructive = bool(getattr(meta, "destructive", False))
+    long_running = bool(getattr(meta, "long_running", False))
+
+    if profile == "Trusted auto-approve":
+        return True
+    if profile == "Execute PyQGIS":
+        return True
+    if name == "run_pyqgis_script":
+        return False
+    if profile == "Run processing":
+        return True
+    if category in {"whitebox", "nasa_earthdata", "nasa_opera", "gee_data_catalogs"}:
+        return profile in {"Run processing", "Execute PyQGIS", "Trusted auto-approve"}
+    if profile == "Edit layers":
+        return not destructive and name != "run_processing_algorithm"
+    return not (requires_confirmation or destructive or long_running)
+
+
+def _filter_tools_for_permission(agent, permission_profile):
+    """Filter an agent's tool surface when the core factory lacks profile support."""
+    try:
+        registry = getattr(agent, "tool_registry", None)
+        strands_agent = getattr(agent, "strands_agent", None)
+        tools = list(
+            getattr(strands_agent, "tools", None) or getattr(agent, "_tool_list", [])
+        )
+        if not tools:
+            return agent
+        filtered = []
+        for tool in tools:
+            name = (
+                getattr(tool, "tool_name", "")
+                or getattr(tool, "__name__", "")
+                or getattr(tool, "name", "")
+            )
+            meta = getattr(tool, "_geoagent_meta", None)
+            if meta is None and registry is not None and name:
+                try:
+                    meta = registry.get(name)
+                except Exception:
+                    meta = None
+            if _permission_allows_tool(permission_profile, name, meta):
+                filtered.append(tool)
+        if len(filtered) != len(tools) and hasattr(agent, "_tool_list"):
+            agent._tool_list = filtered
+            if hasattr(agent, "_rebuild_strands_agent"):
+                agent._rebuild_strands_agent()
+    except Exception:
+        pass
+    return agent
+
+
+def _project_history_key(iface):
+    """Return a stable QSettings key suffix for the current QGIS project."""
+    path = ""
+    try:
+        from qgis.core import QgsProject
+
+        path = QgsProject.instance().fileName() or ""
+    except Exception:
+        path = ""
+    if not path:
+        try:
+            project = getattr(iface, "project", lambda: None)()
+            path = project.fileName() if project is not None else ""
+        except Exception:
+            path = ""
+    raw = path or "unsaved-project"
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    return f"{SETTINGS_PREFIX}history/{digest}"
+
+
+def _parse_markdown_transcript(text):
+    """Parse exported Markdown transcript blocks back into chat messages."""
+    messages = []
+    sender = None
+    body_lines = []
+    for line in str(text or "").splitlines():
+        if line.startswith("## "):
+            if sender is not None:
+                body = "\n".join(body_lines).strip()
+                if body:
+                    messages.append(
+                        {"sender": sender, "body": body, "markdown": sender != "You"}
+                    )
+            sender = line[3:].strip() or "OpenGeoAgent"
+            body_lines = []
+        else:
+            body_lines.append(line)
+    if sender is not None:
+        body = "\n".join(body_lines).strip()
+        if body:
+            messages.append(
+                {"sender": sender, "body": body, "markdown": sender != "You"}
+            )
+    return messages
+
+
+def _job_status_text(job):
+    """Return compact text for one recorded job."""
+    tools = job.get("tools") or ""
+    error = job.get("error") or ""
+    parts = [job.get("status", "")]
+    if tools:
+        parts.append(f"tools: {tools}")
+    if error:
+        parts.append(f"error: {error[:120]}")
+    return "; ".join(part for part in parts if part)
 
 
 def _default_model_for_provider(provider):
@@ -744,6 +940,8 @@ class ChatWorker(QThread):
         max_tokens,
         auto_approve_tools=False,
         stream=False,
+        agent_mode=DEFAULT_AGENT_MODE,
+        permission_profile=DEFAULT_PERMISSION_PROFILE,
         parent=None,
     ):
         super().__init__(parent)
@@ -755,12 +953,14 @@ class ChatWorker(QThread):
         self.max_tokens = max_tokens
         self.auto_approve_tools = bool(auto_approve_tools)
         self.stream = bool(stream)
+        self.agent_mode = agent_mode or DEFAULT_AGENT_MODE
+        self.permission_profile = permission_profile or DEFAULT_PERMISSION_PROFILE
 
     def run(self):
         """Create a GeoAgent QGIS agent and execute one chat turn."""
         try:
             from geoagent import GeoAgentConfig
-            from geoagent import for_whitebox
+            import geoagent
 
             try:
                 from qgis.core import QgsProject
@@ -774,13 +974,40 @@ class ChatWorker(QThread):
                 model=self.model_id,
                 max_tokens=self.max_tokens,
             )
-            agent = for_whitebox(
-                self.iface,
-                project=project,
-                config=config,
-                fast=self.fast,
-                confirm=self._confirm_tool,
-            )
+            factory_name = {
+                "General QGIS": "for_qgis",
+                "WhiteboxTools": "for_whitebox",
+                "NASA Earthdata": "for_nasa_earthdata",
+                "NASA OPERA": "for_nasa_opera",
+                "GEE Data Catalogs": "for_gee_data_catalogs",
+                "STAC": "for_qgis",
+            }.get(self.agent_mode, "for_qgis")
+            factory = getattr(geoagent, factory_name)
+            kwargs = {
+                "project": project,
+                "config": config,
+                "fast": self.fast,
+                "confirm": self._confirm_tool,
+            }
+            if self.permission_profile:
+                kwargs["permission_profile"] = self.permission_profile
+            try:
+                agent = factory(self.iface, **kwargs)
+            except TypeError as exc:
+                if "permission_profile" not in str(exc):
+                    raise
+                kwargs.pop("permission_profile", None)
+                agent = factory(self.iface, **kwargs)
+                agent = _filter_tools_for_permission(agent, self.permission_profile)
+            agent = _filter_tools_for_permission(agent, self.permission_profile)
+            if self.agent_mode == "STAC":
+                self.prompt = (
+                    "You are in STAC guidance mode. The current GeoAgent STAC "
+                    "tool surface is limited, so provide dependency checks, "
+                    "catalog-search steps, and QGIS loading guidance without "
+                    "pretending to run missing STAC loader tools.\n\n"
+                    f"{self.prompt}"
+                )
             if self.stream:
                 self._run_streaming_chat(agent)
                 return
@@ -889,9 +1116,10 @@ class ChatWorker(QThread):
                 parent = self.iface.mainWindow()
             except Exception as exc:
                 QgsMessageLog.logMessage(
-                    f"Could not resolve QGIS main window for confirmation dialog: {exc}",
+                    "Could not resolve QGIS main window for confirmation dialog: "
+                    f"{exc}",
                     "OpenGeoAgent",
-                    Qgis.Warning,
+                    Qgis.MessageLevel.Warning,
                 )
 
             arg_lines = []
@@ -945,6 +1173,9 @@ class ChatDockWidget(QDockWidget):
         self._stream_render_timer.setSingleShot(True)
         self._stream_render_timer.setInterval(75)
         self._stream_render_timer.timeout.connect(self._flush_streaming_render)
+        self._history_key = _project_history_key(iface)
+        self._jobs = []
+        self._active_job_index = None
 
         self.setAllowedAreas(
             Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
@@ -982,6 +1213,15 @@ class ChatDockWidget(QDockWidget):
         self.model_input.setPlaceholderText("Use provider default")
         model_layout.addRow("Model:", self.model_input)
 
+        self.agent_mode_combo = QComboBox()
+        self.agent_mode_combo.addItems(AGENT_MODES)
+        self.agent_mode_combo.currentTextChanged.connect(self._on_agent_mode_changed)
+        model_layout.addRow("Agent mode:", self.agent_mode_combo)
+
+        self.permission_combo = QComboBox()
+        self.permission_combo.addItems(PERMISSION_PROFILES)
+        model_layout.addRow("Permissions:", self.permission_combo)
+
         self.fast_check = QCheckBox("Fast mode")
         self.stream_check = QCheckBox("Stream output")
         self.auto_approve_tools_check = QCheckBox("Auto approve running tools")
@@ -1003,7 +1243,7 @@ class ChatDockWidget(QDockWidget):
         sample_layout = QHBoxLayout()
         self.sample_combo = QComboBox()
         self.sample_combo.addItem("Sample prompts...")
-        self.sample_combo.addItems(SAMPLE_PROMPTS)
+        self.sample_combo.addItems(_all_sample_prompts())
         self.sample_combo.setMinimumContentsLength(22)
         self.sample_combo.setSizeAdjustPolicy(
             _enum_value(
@@ -1019,6 +1259,29 @@ class ChatDockWidget(QDockWidget):
         self.sample_combo.currentTextChanged.connect(self._select_sample_prompt)
         sample_layout.addWidget(self.sample_combo, 1)
         layout.addLayout(sample_layout)
+
+        jobs_group = QGroupBox("Jobs")
+        jobs_layout = QVBoxLayout(jobs_group)
+        self.jobs_table = QTableWidget(0, 4)
+        self.jobs_table.setHorizontalHeaderLabels(
+            ["Status", "Mode", "Prompt", "Details"]
+        )
+        self.jobs_table.setMaximumHeight(120)
+        self.jobs_table.setSelectionBehavior(
+            _enum_value(QAbstractItemView, "SelectionBehavior", "SelectRows")
+        )
+        jobs_layout.addWidget(self.jobs_table)
+        jobs_btn_layout = QHBoxLayout()
+        self.rerun_job_btn = QPushButton("Rerun Job")
+        self.rerun_job_btn.clicked.connect(self._rerun_selected_job)
+        jobs_btn_layout.addWidget(self.rerun_job_btn)
+        self.cancel_job_btn = QPushButton("Cancel Active")
+        self.cancel_job_btn.clicked.connect(self._cancel_running_task)
+        self.cancel_job_btn.setEnabled(False)
+        jobs_btn_layout.addWidget(self.cancel_job_btn)
+        jobs_btn_layout.addStretch(1)
+        jobs_layout.addLayout(jobs_btn_layout)
+        layout.addWidget(jobs_group)
 
         self.transcript = QTextEdit()
         self.transcript.setReadOnly(True)
@@ -1075,6 +1338,14 @@ class ChatDockWidget(QDockWidget):
         self.clear_btn.clicked.connect(self._clear_transcript)
         primary_button_layout.addWidget(self.clear_btn)
 
+        self.export_md_btn = QPushButton("Export")
+        self.export_md_btn.clicked.connect(self._export_transcript_markdown)
+        primary_button_layout.addWidget(self.export_md_btn)
+
+        self.import_md_btn = QPushButton("Import")
+        self.import_md_btn.clicked.connect(self._import_transcript_markdown)
+        primary_button_layout.addWidget(self.import_md_btn)
+
         self.copy_md_btn = QPushButton("Copy Markdown")
         self.copy_md_btn.setEnabled(False)
         self.copy_md_btn.clicked.connect(self._copy_transcript_markdown)
@@ -1112,6 +1383,17 @@ class ChatDockWidget(QDockWidget):
         self.auto_approve_tools_check.setChecked(
             _setting(self.settings, "auto_approve_tools", False, bool)
         )
+        mode = _setting(self.settings, "agent_mode", DEFAULT_AGENT_MODE)
+        index = self.agent_mode_combo.findText(mode)
+        self.agent_mode_combo.setCurrentIndex(index if index >= 0 else 0)
+        profile = _setting(
+            self.settings,
+            "permission_profile",
+            DEFAULT_PERMISSION_PROFILE,
+        )
+        index = self.permission_combo.findText(profile)
+        self.permission_combo.setCurrentIndex(index if index >= 0 else 0)
+        self._load_project_history()
 
     def _save_model_settings(self):
         """Persist the selected provider, model, and fast-mode setting."""
@@ -1131,10 +1413,24 @@ class ChatDockWidget(QDockWidget):
             f"{SETTINGS_PREFIX}auto_approve_tools",
             self.auto_approve_tools_check.isChecked(),
         )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}agent_mode", self.agent_mode_combo.currentText()
+        )
+        self.settings.setValue(
+            f"{SETTINGS_PREFIX}permission_profile", self.permission_combo.currentText()
+        )
 
     def _on_provider_changed(self, provider):
         """Update the model field when the provider changes."""
         self.model_input.setText(_default_model_for_provider(provider))
+
+    def _on_agent_mode_changed(self, mode):
+        """Load a mode-specific workflow prompt when useful."""
+        if not hasattr(self, "prompt_input"):
+            return
+        prompts = WORKFLOW_PROMPTS.get(mode, [])
+        if prompts and not self.prompt_input.toPlainText().strip():
+            self.prompt_input.setPlainText(prompts[0])
 
     def _add_clipboard_image(self, image):
         """Attach an image pasted into the prompt editor."""
@@ -1401,7 +1697,8 @@ class ChatDockWidget(QDockWidget):
         self._region_capture = capture
         capture.start()
         self.status_label.setText(
-            "Drag over the map canvas to attach a screenshot region. Press Esc to cancel."
+            "Drag over the map canvas to attach a screenshot region. "
+            "Press Esc to cancel."
         )
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
 
@@ -1445,7 +1742,8 @@ class ChatDockWidget(QDockWidget):
         self._screen_region_capture = capture
         capture.start()
         self.status_label.setText(
-            "Drag anywhere on the screen to attach a screenshot region. Press Esc to cancel."
+            "Drag anywhere on the screen to attach a screenshot region. "
+            "Press Esc to cancel."
         )
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
 
@@ -1507,6 +1805,10 @@ class ChatDockWidget(QDockWidget):
         fast = self.fast_check.isChecked()
         stream = self.stream_check.isChecked()
         auto_approve_tools = self.auto_approve_tools_check.isChecked()
+        agent_mode = self.agent_mode_combo.currentText()
+        permission_profile = self.permission_combo.currentText()
+        if permission_profile == "Trusted auto-approve":
+            auto_approve_tools = True
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
         if not prompt:
             prompt = "Describe the attached image."
@@ -1534,6 +1836,20 @@ class ChatDockWidget(QDockWidget):
         )
         self.send_btn.setEnabled(False)
         self.cancel_btn.setEnabled(True)
+        self.cancel_job_btn.setEnabled(True)
+        self._active_job_index = self._add_job(
+            {
+                "prompt": prompt,
+                "provider": provider,
+                "model": model_id,
+                "mode": agent_mode,
+                "permission_profile": permission_profile,
+                "status": "Running",
+                "started_at": time.time(),
+                "tools": "",
+                "error": "",
+            }
+        )
 
         self._worker = ChatWorker(
             self.iface,
@@ -1544,6 +1860,8 @@ class ChatDockWidget(QDockWidget):
             max_tokens,
             auto_approve_tools,
             stream,
+            agent_mode,
+            permission_profile,
             self,
         )
         self._worker.chunk_received.connect(self._on_worker_chunk)
@@ -1624,6 +1942,7 @@ class ChatDockWidget(QDockWidget):
             self._append_message("OpenGeoAgent", "Cancelled by user.", markdown=False)
             self.status_label.setText("Cancelled")
             self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+            self._finish_active_job("Cancelled", result)
         elif result.get("success"):
             answer = result.get("answer") or "(No text response.)"
             details = []
@@ -1651,6 +1970,7 @@ class ChatDockWidget(QDockWidget):
                 self._append_message("OpenGeoAgent", answer, markdown=True)
             self.status_label.setText("Ready")
             self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+            self._finish_active_job("Succeeded", result)
         else:
             error = result.get("error") or "Unknown error"
             cancelled = result.get("cancelled")
@@ -1659,12 +1979,15 @@ class ChatDockWidget(QDockWidget):
             self._append_message("OpenGeoAgent", f"Error:\n{error}", markdown=False)
             self.status_label.setText("Error")
             self.status_label.setStyleSheet("color: red; font-size: 10px;")
+            self._finish_active_job("Failed", result)
 
         self.send_btn.setEnabled(True)
         self.cancel_btn.setEnabled(False)
+        self.cancel_job_btn.setEnabled(False)
         self._worker = None
         self._streaming_message_index = None
         self._streaming_answer = ""
+        self._active_job_index = None
 
     def _on_worker_chunk(self, chunk):
         """Buffer a streamed model text chunk and schedule a debounced render."""
@@ -1697,6 +2020,7 @@ class ChatDockWidget(QDockWidget):
             return
         worker.requestInterruption()
         self.cancel_btn.setEnabled(False)
+        self.cancel_job_btn.setEnabled(False)
         self.status_label.setText(
             "Cancellation requested. Waiting for the current model "
             "call or tool to finish before stopping."
@@ -1754,6 +2078,7 @@ class ChatDockWidget(QDockWidget):
         self._messages.append(entry)
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
+        self._save_project_history()
 
     def _update_message(self, index, message, markdown=False):
         """Update an existing chat message and refresh the transcript."""
@@ -1763,6 +2088,7 @@ class ChatDockWidget(QDockWidget):
         self._messages[index]["markdown"] = markdown
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
+        self._save_project_history()
 
     def _render_transcript(self):
         """Render the stored chat messages as HTML."""
@@ -1809,6 +2135,46 @@ class ChatDockWidget(QDockWidget):
             self.status_label.setText("Copied PyQGIS script.")
             self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
+    def _export_transcript_markdown(self):
+        """Save the chat transcript as Markdown."""
+        transcript = _conversation_markdown(self._messages)
+        if not transcript:
+            return
+        path, _selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Export Chat Transcript",
+            "open_geoagent_chat.md",
+            "Markdown (*.md);;Text (*.txt)",
+        )
+        if not path:
+            return
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(transcript)
+        self.status_label.setText("Exported chat transcript.")
+        self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+    def _import_transcript_markdown(self):
+        """Import a Markdown transcript into the current project history."""
+        path, _selected_filter = QFileDialog.getOpenFileName(
+            self,
+            "Import Chat Transcript",
+            "",
+            "Markdown (*.md);;Text (*.txt);;All files (*)",
+        )
+        if not path:
+            return
+        with open(path, "r", encoding="utf-8") as f:
+            messages = _parse_markdown_transcript(f.read())
+        if not messages:
+            QMessageBox.information(self, "OpenGeoAgent", "No chat messages found.")
+            return
+        self._messages = messages
+        self.copy_md_btn.setEnabled(True)
+        self._render_transcript()
+        self._save_project_history()
+        self.status_label.setText("Imported chat transcript.")
+        self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
     def _clear_transcript(self):
         """Clear all rendered chat messages."""
         self._messages = []
@@ -1816,6 +2182,98 @@ class ChatDockWidget(QDockWidget):
         self.copy_script_btn.setEnabled(False)
         self.copy_md_btn.setEnabled(False)
         self.transcript.clear()
+        self._save_project_history()
+
+    def _load_project_history(self):
+        """Load persisted chat messages for the current QGIS project."""
+        raw = self.settings.value(self._history_key, "", type=str)
+        if not raw:
+            return
+        try:
+            messages = json.loads(raw)
+        except (TypeError, ValueError):
+            return
+        if not isinstance(messages, list):
+            return
+        self._messages = [
+            item
+            for item in messages
+            if isinstance(item, dict) and item.get("sender") and item.get("body")
+        ]
+        self.copy_md_btn.setEnabled(bool(self._messages))
+        self._render_transcript()
+
+    def _save_project_history(self):
+        """Persist chat messages for the current QGIS project."""
+        try:
+            payload = json.dumps(self._messages[-80:])
+            self.settings.setValue(self._history_key, payload)
+        except Exception:
+            pass
+
+    def _add_job(self, job):
+        """Record a submitted chat job and refresh the jobs table."""
+        self._jobs.append(dict(job))
+        self._render_jobs()
+        return len(self._jobs) - 1
+
+    def _finish_active_job(self, status, result):
+        """Attach final status details to the active job."""
+        if self._active_job_index is None:
+            return
+        if self._active_job_index < 0 or self._active_job_index >= len(self._jobs):
+            return
+        job = self._jobs[self._active_job_index]
+        job["status"] = status
+        job["elapsed"] = result.get("elapsed", "")
+        job["tools"] = result.get("tools", "")
+        job["tool_calls"] = result.get("tool_calls", [])
+        job["error"] = result.get("error", "")
+        self._render_jobs()
+
+    def _render_jobs(self):
+        """Refresh the compact jobs table."""
+        self.jobs_table.setRowCount(len(self._jobs))
+        for row, job in enumerate(self._jobs):
+            values = [
+                job.get("status", ""),
+                job.get("mode", ""),
+                job.get("prompt", ""),
+                _job_status_text(job),
+            ]
+            for col, value in enumerate(values):
+                self.jobs_table.setItem(row, col, QTableWidgetItem(str(value)))
+
+    def _selected_job_index(self):
+        """Return the selected job row or None."""
+        ranges = self.jobs_table.selectedRanges()
+        if not ranges:
+            return None
+        row = ranges[0].topRow()
+        if row < 0 or row >= len(self._jobs):
+            return None
+        return row
+
+    def _rerun_selected_job(self):
+        """Copy a completed job prompt/settings back into the controls and send it."""
+        index = self._selected_job_index()
+        if index is None:
+            return
+        job = self._jobs[index]
+        self.prompt_input.setPlainText(job.get("prompt", ""))
+        for combo, key in (
+            (self.provider_combo, "provider"),
+            (self.agent_mode_combo, "mode"),
+            (self.permission_combo, "permission_profile"),
+        ):
+            value = job.get(key, "")
+            found = combo.findText(value)
+            if found >= 0:
+                combo.setCurrentIndex(found)
+        model = job.get("model", "")
+        if model:
+            self.model_input.setText(model)
+        self._send_prompt()
 
     def _shutdown_running_state(self):
         """Stop the animated status timer when the dock is dismissed."""
@@ -1831,7 +2289,7 @@ class ChatDockWidget(QDockWidget):
             QgsMessageLog.logMessage(
                 f"Failed to stop running status timer during dock shutdown: {exc}",
                 "OpenGeoAgent",
-                Qgis.Warning,
+                Qgis.MessageLevel.Warning,
             )
 
     def hideEvent(self, event):

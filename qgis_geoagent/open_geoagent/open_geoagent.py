@@ -150,7 +150,7 @@ class OpenGeoAgent:
                 QgsMessageLog.logMessage(
                     f"Failed to push dependency warning to message bar: {exc}",
                     "OpenGeoAgent",
-                    Qgis.Warning,
+                    Qgis.MessageLevel.Warning,
                 )
             return
 

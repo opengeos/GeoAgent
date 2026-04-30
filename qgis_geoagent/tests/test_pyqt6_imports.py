@@ -52,3 +52,15 @@ def _module_names():
 def test_module_imports_under_pyqt6(module_name):
     """Each plugin module must import cleanly when qgis.PyQt maps to PyQt6."""
     importlib.import_module(module_name)
+
+
+def test_plugin_uses_scoped_qgis_message_levels():
+    """Avoid legacy Qgis.Warning style enum access."""
+    offenders = []
+    for path in PLUGIN_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for legacy in ("Qgis.Warning", "Qgis.Info", "Qgis.Critical"):
+            if legacy in text:
+                offenders.append(f"{path.relative_to(REPO_ROOT)}:{legacy}")
+
+    assert offenders == []

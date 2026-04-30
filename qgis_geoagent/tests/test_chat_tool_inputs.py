@@ -13,6 +13,8 @@ from open_geoagent.dialogs.chat_dock import (
     _image_to_png_bytes,
     _latest_pyqgis_script,
     _normalized_crop_rect,
+    _parse_markdown_transcript,
+    _permission_allows_tool,
 )
 
 
@@ -231,3 +233,29 @@ def test_format_tool_calls_collapses_repeated_noop_defaults() -> None:
     assert "`method=fill_depressions_wang_and_liu`" in text
     assert "max_depth" not in text
     assert "fill_pits" not in text
+
+
+def test_parse_markdown_transcript_round_trips_exported_history() -> None:
+    """Verify imported Markdown becomes project history messages."""
+    messages = _parse_markdown_transcript(
+        "## You\n\nhello\n\n## OpenGeoAgent\n\n**ok**\n"
+    )
+
+    assert messages == [
+        {"sender": "You", "body": "hello", "markdown": False},
+        {"sender": "OpenGeoAgent", "body": "**ok**", "markdown": True},
+    ]
+
+
+def test_permission_profiles_filter_sensitive_tools() -> None:
+    """Verify inspect-only mode hides mutating/long-running tools."""
+
+    class _Meta:
+        category = "qgis"
+        requires_confirmation = True
+        destructive = False
+        long_running = False
+
+    assert not _permission_allows_tool("Inspect only", "run_pyqgis_script", _Meta())
+    assert _permission_allows_tool("Execute PyQGIS", "run_pyqgis_script", _Meta())
+    assert _permission_allows_tool("Trusted auto-approve", "run_pyqgis_script", _Meta())
