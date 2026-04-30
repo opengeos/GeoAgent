@@ -11,6 +11,7 @@ from open_geoagent.dialogs.chat_dock import (
     _grab_screen_rect,
     _grab_widget_global_rect,
     _image_to_png_bytes,
+    _latest_executable_snippet,
     _latest_pyqgis_script,
     _normalized_crop_rect,
     _parse_markdown_transcript,
@@ -95,6 +96,87 @@ def test_latest_pyqgis_script_extracts_last_run_script() -> None:
     )
 
     assert script == "active_layer.triggerRepaint()"
+
+
+def test_latest_executable_snippet_supports_gee_and_results() -> None:
+    """Verify Copy Script can find non-PyQGIS executable snippets."""
+    snippet = _latest_executable_snippet(
+        [
+            {
+                "name": "run_pyqgis_script",
+                "args": {"code": "iface.mapCanvas().refresh()"},
+            },
+            {
+                "name": "load_gee_dataset",
+                "args": {},
+                "result": {
+                    "earth_engine_python_snippet": "image = ee.Image('NASA/NASADEM')"
+                },
+            },
+            {
+                "name": "run_gee_python_snippet",
+                "args": {"code": "add_layer(ee.Image('x'), {}, 'x')"},
+            },
+        ]
+    )
+
+    assert snippet == {
+        "kind": "Earth Engine",
+        "tool_name": "run_gee_python_snippet",
+        "code": "add_layer(ee.Image('x'), {}, 'x')",
+    }
+
+
+def test_latest_executable_snippet_finds_gee_loader_result() -> None:
+    """Verify GEE load tools enable Copy Script from returned snippets."""
+    snippet = _latest_executable_snippet(
+        [
+            {
+                "name": "load_gee_dataset",
+                "args": {"asset_id": "NASA/NASADEM_HGT/001"},
+                "result": {
+                    "success": True,
+                    "earth_engine_python_snippet": (
+                        "asset_id = 'NASA/NASADEM_HGT/001'\n"
+                        "image = ee.Image(asset_id)"
+                    ),
+                },
+            }
+        ]
+    )
+
+    assert snippet == {
+        "kind": "Earth Engine",
+        "tool_name": "load_gee_dataset",
+        "code": "asset_id = 'NASA/NASADEM_HGT/001'\nimage = ee.Image(asset_id)",
+    }
+
+
+def test_latest_executable_snippet_builds_gee_loader_script_from_args() -> None:
+    """Verify Copy Script enables when Strands records only GEE tool inputs."""
+    snippet = _latest_executable_snippet(
+        [
+            {
+                "name": "load_gee_dataset",
+                "args": {
+                    "asset_id": "NASA/NASADEM_HGT/001",
+                    "asset_type": "Image",
+                    "bands": "elevation",
+                    "layer_name": "Global NASADEM elevation",
+                    "min_value": 0,
+                    "max_value": 3000,
+                    "palette": "0000ff,00ffff,ffff00,ff0000",
+                },
+            }
+        ]
+    )
+
+    assert snippet["kind"] == "Earth Engine"
+    assert snippet["tool_name"] == "load_gee_dataset"
+    assert "asset_id = 'NASA/NASADEM_HGT/001'" in snippet["code"]
+    assert "image = ee.Image(asset_id)" in snippet["code"]
+    assert "'bands': 'elevation'" in snippet["code"]
+    assert "Global NASADEM elevation" in snippet["code"]
 
 
 def test_console_ready_pyqgis_script_defines_geoagent_context_names() -> None:
@@ -257,5 +339,21 @@ def test_permission_profiles_filter_sensitive_tools() -> None:
         long_running = False
 
     assert not _permission_allows_tool("Inspect only", "run_pyqgis_script", _Meta())
+    assert _permission_allows_tool("Execute Scripts", "run_pyqgis_script", _Meta())
     assert _permission_allows_tool("Execute PyQGIS", "run_pyqgis_script", _Meta())
     assert _permission_allows_tool("Trusted auto-approve", "run_pyqgis_script", _Meta())
+
+
+def test_execute_scripts_profile_allows_gee_snippet_tool() -> None:
+    """Verify script execution profile covers GEE snippets, not only PyQGIS."""
+
+    class _Meta:
+        category = "gee_data_catalogs"
+        requires_confirmation = True
+        destructive = False
+        long_running = True
+
+    assert not _permission_allows_tool(
+        "Inspect only", "run_gee_python_snippet", _Meta()
+    )
+    assert _permission_allows_tool("Execute Scripts", "run_gee_python_snippet", _Meta())

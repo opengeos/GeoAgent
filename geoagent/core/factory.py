@@ -197,6 +197,8 @@ def _filter_by_imports(tools: list[Any]) -> list[Any]:
 def _permission_allows_tool(permission_profile: str | None, tool: Any) -> bool:
     """Return whether a QGIS/plugin tool should be exposed for a profile."""
     profile = permission_profile or "Trusted auto-approve"
+    if profile == "Execute PyQGIS":
+        profile = "Execute Scripts"
     name = (
         getattr(tool, "tool_name", "")
         or getattr(tool, "__name__", "")
@@ -210,14 +212,14 @@ def _permission_allows_tool(permission_profile: str | None, tool: Any) -> bool:
 
     if profile == "Trusted auto-approve":
         return True
-    if profile == "Execute PyQGIS":
+    if profile == "Execute Scripts":
         return True
     if name == "run_pyqgis_script":
         return False
     if profile == "Run processing":
         return True
     if category in {"whitebox", "nasa_earthdata", "nasa_opera", "gee_data_catalogs"}:
-        return profile in {"Run processing", "Execute PyQGIS", "Trusted auto-approve"}
+        return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
         return not destructive and name != "run_processing_algorithm"
     return not (requires_confirmation or destructive or long_running)

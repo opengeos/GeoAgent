@@ -115,7 +115,7 @@ Default models:
 - Choose a **Permissions** profile. The default **Inspect only** profile hides
   mutating, long-running, and PyQGIS execution tools from the model. Use broader
   profiles only when you want GeoAgent to edit layers, run processing, execute
-  PyQGIS, or auto-approve trusted actions.
+  PyQGIS/Earth Engine snippets, or auto-approve trusted actions.
 - **Stream output** is enabled by default and shows model text as it arrives.
 - Press **Up** or **Down** in the prompt editor to cycle through previous prompts.
 - Choose a prompt from **Sample prompts...** and click **Insert** to load it into

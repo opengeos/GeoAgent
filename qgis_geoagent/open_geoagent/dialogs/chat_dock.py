@@ -115,9 +115,12 @@ PERMISSION_PROFILES = [
     "Inspect only",
     "Edit layers",
     "Run processing",
-    "Execute PyQGIS",
+    "Execute Scripts",
     "Trusted auto-approve",
 ]
+PERMISSION_PROFILE_ALIASES = {
+    "Execute PyQGIS": "Execute Scripts",
+}
 DEFAULT_PERMISSION_PROFILE = "Inspect only"
 WORKFLOW_PROMPTS = {
     "NASA Earthdata": [
@@ -179,14 +182,15 @@ def _permission_allows_tool(permission_profile, tool_name, meta=None):
 
     if profile == "Trusted auto-approve":
         return True
-    if profile == "Execute PyQGIS":
+    profile = PERMISSION_PROFILE_ALIASES.get(profile, profile)
+    if profile == "Execute Scripts":
         return True
     if name == "run_pyqgis_script":
         return False
     if profile == "Run processing":
         return True
     if category in {"whitebox", "nasa_earthdata", "nasa_opera", "gee_data_catalogs"}:
-        return profile in {"Run processing", "Execute PyQGIS", "Trusted auto-approve"}
+        return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
         return not destructive and name != "run_processing_algorithm"
     return not (requires_confirmation or destructive or long_running)
@@ -533,20 +537,174 @@ def _format_tool_calls(tool_calls):
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
-def _latest_pyqgis_script(tool_calls):
-    """Return the last PyQGIS script found in recorded tool calls."""
+SCRIPT_SPECS = {
+    "run_pyqgis_script": {
+        "arg_keys": ("code",),
+        "result_keys": ("pyqgis_script",),
+        "kind": "PyQGIS",
+    },
+    "run_gee_python_snippet": {
+        "arg_keys": ("code",),
+        "result_keys": ("earth_engine_python_snippet",),
+        "kind": "Earth Engine",
+    },
+}
+RESULT_SCRIPT_KEYS = {
+    "pyqgis_script": "PyQGIS",
+    "earth_engine_python_snippet": "Earth Engine",
+}
+
+
+def _python_literal(value):
+    """Return a compact Python literal for copied snippets."""
+    try:
+        return repr(value)
+    except Exception:
+        return repr(str(value))
+
+
+def _coerce_optional_float(value):
+    """Return a float for non-empty numeric values, otherwise None."""
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return value
+
+
+def _gee_load_dataset_snippet_from_args(args):
+    """Build a simple Earth Engine snippet from load_gee_dataset arguments."""
+    if not isinstance(args, dict):
+        return ""
+    asset_id = str(args.get("asset_id") or "").strip()
+    if not asset_id:
+        return ""
+    asset_type = str(args.get("asset_type") or "Image").strip() or "Image"
+    layer_name = str(args.get("layer_name") or asset_id.split("/")[-1]).strip()
+    method = str(args.get("method") or args.get("reducer") or "mosaic").strip()
+    bands = args.get("bands")
+    vis_params = {}
+    if bands not in (None, ""):
+        vis_params["bands"] = bands
+    min_value = _coerce_optional_float(args.get("min_value"))
+    max_value = _coerce_optional_float(args.get("max_value"))
+    palette = args.get("palette")
+    if min_value is not None:
+        vis_params["min"] = min_value
+    if max_value is not None:
+        vis_params["max"] = max_value
+    if palette not in (None, ""):
+        vis_params["palette"] = palette
+
+    lines = [
+        "import ee",
+        "import geemap",
+        "",
+        "m = geemap.Map()",
+        f"asset_id = {_python_literal(asset_id)}",
+    ]
+    if asset_type == "ImageCollection":
+        lines.append("collection = ee.ImageCollection(asset_id)")
+        start_date = args.get("start_date")
+        end_date = args.get("end_date")
+        if start_date and end_date:
+            lines.append(
+                "collection = collection.filterDate("
+                f"{_python_literal(start_date)}, {_python_literal(end_date)})"
+            )
+        bbox = args.get("bbox")
+        if bbox:
+            lines.append(f"bbox = {_python_literal(bbox)}")
+            lines.append(
+                "collection = collection.filterBounds(ee.Geometry.Rectangle(bbox))"
+            )
+        if method == "mosaic":
+            lines.append("image = collection.mosaic()")
+        elif method == "mode":
+            lines.append("image = collection.reduce(ee.Reducer.mode())")
+        else:
+            lines.append(f"image = collection.{method}()")
+    elif asset_type == "FeatureCollection":
+        lines.append("image = ee.FeatureCollection(asset_id)")
+    else:
+        lines.append("image = ee.Image(asset_id)")
+    lines.extend(
+        [
+            f"vis_params = {_python_literal(vis_params)}",
+            f"m.add_layer(image, vis_params, {_python_literal(layer_name)})",
+            "m",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _script_from_tool_args(tool_name, args):
+    """Return a copyable script derived from tool arguments alone."""
+    if tool_name == "load_gee_dataset":
+        return {
+            "kind": "Earth Engine",
+            "tool_name": tool_name,
+            "code": _gee_load_dataset_snippet_from_args(args),
+        }
+    return {}
+
+
+def _first_script_value(mapping, keys):
+    """Return the first non-empty script-like value for keys in mapping."""
+    if not isinstance(mapping, dict):
+        return ""
+    for key in keys:
+        value = str(mapping.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _latest_executable_snippet(tool_calls):
+    """Return the latest copyable code snippet found in recorded tool calls."""
     for call in reversed(tool_calls or []):
         if not isinstance(call, dict):
             continue
-        if str(call.get("name") or "").strip() != "run_pyqgis_script":
-            continue
-        args = call.get("args")
-        if not isinstance(args, dict):
-            continue
-        code = str(args.get("code") or "").strip()
-        if code:
-            return code
-    return ""
+        name = str(call.get("name") or "").strip()
+        spec = SCRIPT_SPECS.get(name)
+        if spec is not None:
+            code = _first_script_value(call.get("args"), spec["arg_keys"])
+            if not code:
+                code = _first_script_value(call.get("result"), spec["result_keys"])
+            if code:
+                return {
+                    "kind": spec["kind"],
+                    "tool_name": name,
+                    "code": code,
+                }
+        result = call.get("result")
+        if isinstance(result, dict):
+            for key, kind in RESULT_SCRIPT_KEYS.items():
+                code = str(result.get(key) or "").strip()
+                if code:
+                    return {
+                        "kind": kind,
+                        "tool_name": name,
+                        "code": code,
+                    }
+        snippet = _script_from_tool_args(name, call.get("args"))
+        if snippet.get("code"):
+            return snippet
+    return {}
+
+
+def _latest_pyqgis_script(tool_calls):
+    """Return the last PyQGIS script found in recorded tool calls."""
+    snippet = _latest_executable_snippet(
+        [
+            call
+            for call in tool_calls or []
+            if isinstance(call, dict)
+            and str(call.get("name") or "").strip() == "run_pyqgis_script"
+        ]
+    )
+    return str(snippet.get("code") or "")
 
 
 def _console_ready_pyqgis_script(code):
@@ -578,6 +736,16 @@ except NameError:
     active_layer = iface.activeLayer()
 """
     return f"{preamble}\n{code}\n"
+
+
+def _copy_ready_snippet(snippet):
+    """Return clipboard-ready code for a discovered executable snippet."""
+    code = str(snippet.get("code") or "").strip()
+    if not code:
+        return ""
+    if snippet.get("kind") == "PyQGIS":
+        return _console_ready_pyqgis_script(code)
+    return f"# OpenGeoAgent {snippet.get('kind', 'Python')} snippet.\n{code}\n"
 
 
 def _conversation_markdown(messages):
@@ -1159,7 +1327,7 @@ class ChatDockWidget(QDockWidget):
         self._prompt_history = []
         self._history_index = None
         self._messages = []
-        self._last_pyqgis_script = ""
+        self._last_script_snippet = {}
         self._image_attachments = []
         self._streaming_message_index = None
         self._streaming_answer = ""
@@ -1340,7 +1508,12 @@ class ChatDockWidget(QDockWidget):
         layout.addWidget(self.attachment_bar)
         layout.addWidget(self.prompt_input)
 
+        button_rows = QVBoxLayout()
+        button_rows.setSpacing(4)
         primary_button_layout = QHBoxLayout()
+        primary_button_layout.setSpacing(6)
+        secondary_button_layout = QHBoxLayout()
+        secondary_button_layout.setSpacing(6)
         self.send_btn = QPushButton("Send")
         self.send_btn.clicked.connect(self._send_prompt)
         primary_button_layout.addWidget(self.send_btn)
@@ -1373,25 +1546,45 @@ class ChatDockWidget(QDockWidget):
 
         self.export_md_btn = QPushButton("Export")
         self.export_md_btn.clicked.connect(self._export_transcript_markdown)
-        primary_button_layout.addWidget(self.export_md_btn)
+        secondary_button_layout.addWidget(self.export_md_btn)
 
         self.import_md_btn = QPushButton("Import")
         self.import_md_btn.clicked.connect(self._import_transcript_markdown)
-        primary_button_layout.addWidget(self.import_md_btn)
+        secondary_button_layout.addWidget(self.import_md_btn)
 
-        self.copy_md_btn = QPushButton("Copy Markdown")
+        self.copy_md_btn = QPushButton("Copy MD")
         self.copy_md_btn.setEnabled(False)
+        self.copy_md_btn.setToolTip("Copy the full chat transcript as Markdown.")
         self.copy_md_btn.clicked.connect(self._copy_transcript_markdown)
-        primary_button_layout.addWidget(self.copy_md_btn)
+        secondary_button_layout.addWidget(self.copy_md_btn)
 
         self.copy_script_btn = QPushButton("Copy Script")
         self.copy_script_btn.setEnabled(False)
         self.copy_script_btn.setToolTip(
-            "Copy the most recent PyQGIS script executed by GeoAgent."
+            "Copy the most recent executable script or snippet from GeoAgent."
         )
-        self.copy_script_btn.clicked.connect(self._copy_last_pyqgis_script)
-        primary_button_layout.addWidget(self.copy_script_btn)
-        layout.addLayout(primary_button_layout)
+        self.copy_script_btn.clicked.connect(self._copy_last_script_snippet)
+        secondary_button_layout.addWidget(self.copy_script_btn)
+
+        for button in (
+            self.send_btn,
+            self.screenshot_btn,
+            self.cancel_btn,
+            self.clear_btn,
+            self.export_md_btn,
+            self.import_md_btn,
+            self.copy_md_btn,
+            self.copy_script_btn,
+        ):
+            button.setMinimumWidth(0)
+            button.setSizePolicy(
+                _enum_value(QSizePolicy, "Policy", "Ignored"),
+                _enum_value(QSizePolicy, "Policy", "Fixed"),
+            )
+
+        button_rows.addLayout(primary_button_layout)
+        button_rows.addLayout(secondary_button_layout)
+        layout.addLayout(button_rows)
 
         self.status_label = QLabel("Ready. Ctrl+Enter sends. Up/Down cycles prompts.")
         self.status_label.setWordWrap(True)
@@ -1430,6 +1623,7 @@ class ChatDockWidget(QDockWidget):
             "permission_profile",
             DEFAULT_PERMISSION_PROFILE,
         )
+        profile = PERMISSION_PROFILE_ALIASES.get(profile, profile)
         index = self.permission_combo.findText(profile)
         self.permission_combo.setCurrentIndex(index if index >= 0 else 0)
         self._load_project_history()
@@ -2005,9 +2199,9 @@ class ChatDockWidget(QDockWidget):
             answer = result.get("answer") or "(No text response.)"
             details = []
             tool_calls = result.get("tool_calls") or []
-            pyqgis_script = _latest_pyqgis_script(tool_calls)
-            if pyqgis_script:
-                self._last_pyqgis_script = pyqgis_script
+            snippet = _latest_executable_snippet(tool_calls)
+            if snippet:
+                self._last_script_snippet = snippet
                 self.copy_script_btn.setEnabled(True)
             tool_inputs = _format_tool_calls(tool_calls)
             if tool_inputs:
@@ -2180,17 +2374,18 @@ class ChatDockWidget(QDockWidget):
             self.status_label.setText("Copied chat history as Markdown.")
             self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
-    def _copy_last_pyqgis_script(self):
-        """Copy the most recent executed PyQGIS script to the clipboard."""
-        script = _console_ready_pyqgis_script(self._last_pyqgis_script)
+    def _copy_last_script_snippet(self):
+        """Copy the most recent executable script/snippet to the clipboard."""
+        script = _copy_ready_snippet(self._last_script_snippet)
         if not script:
-            self.status_label.setText("No PyQGIS script is available to copy.")
+            self.status_label.setText("No executable script is available to copy.")
             self.status_label.setStyleSheet("color: gray; font-size: 10px;")
             return
         clipboard = QGuiApplication.clipboard()
         if clipboard is not None:
             clipboard.setText(script)
-            self.status_label.setText("Copied PyQGIS script.")
+            kind = self._last_script_snippet.get("kind", "script")
+            self.status_label.setText(f"Copied {kind} script.")
             self.status_label.setStyleSheet("color: green; font-size: 10px;")
 
     def _export_transcript_markdown(self):
@@ -2236,7 +2431,7 @@ class ChatDockWidget(QDockWidget):
     def _clear_transcript(self):
         """Clear all rendered chat messages."""
         self._messages = []
-        self._last_pyqgis_script = ""
+        self._last_script_snippet = {}
         self.copy_script_btn.setEnabled(False)
         self.copy_md_btn.setEnabled(False)
         self.transcript.clear()
