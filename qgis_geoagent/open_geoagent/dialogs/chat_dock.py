@@ -245,8 +245,12 @@ def _filter_tools_for_permission(agent, permission_profile):
             agent._tool_list = filtered
             if hasattr(agent, "_rebuild_strands_agent"):
                 agent._rebuild_strands_agent()
-    except Exception:
-        pass
+    except Exception as exc:
+        QgsMessageLog.logMessage(
+            f"Failed to apply permission profile to GeoAgent: {exc}",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Warning,
+        )
     return agent
 
 
@@ -268,7 +272,9 @@ def _project_history_key(iface):
     if not path:
         return ""
     raw = path
-    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    digest = hashlib.sha1(  # noqa: S324  - non-security identifier hash
+        raw.encode("utf-8"), usedforsecurity=False
+    ).hexdigest()[:16]
     return f"{SETTINGS_PREFIX}history/{digest}"
 
 
@@ -1545,13 +1551,17 @@ class VoicePromptRecorder(QObject):
         self.limit_reached.emit()
 
     def _close_wav_file(self):
-        """Close the open WAV file if any, swallowing close errors."""
+        """Close the open WAV file if any, logging close errors."""
         if self._wav_file is None:
             return
         try:
             self._wav_file.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Failed to close voice WAV file: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Warning,
+            )
         self._wav_file = None
 
     def _select_audio_format(self):
@@ -3207,8 +3217,12 @@ class ChatDockWidget(QDockWidget):
         try:
             payload = json.dumps(self._messages[-80:])
             self.settings.setValue(self._history_key, payload)
-        except Exception:
-            pass
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Failed to persist chat history: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Warning,
+            )
 
     def _add_job(self, job):
         """Record a submitted chat job and refresh the jobs table."""
