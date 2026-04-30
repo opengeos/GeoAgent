@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-import time
+import asyncio
+import queue
 import threading
+import time
 from typing import Any, AsyncIterator, Optional
 
 from strands import Agent
@@ -304,12 +306,15 @@ class GeoAgent:
                     f"{label} streaming chat should be launched from a worker thread "
                     f"inside QGIS. Use {helper}."
                 )
-            raise RuntimeError(
-                "stream_chat() must not be called from the QGIS Qt GUI thread when "
-                "qgis_safe_mode=True. Launch streaming chat from a worker thread, "
-                "or use chat() from the GUI thread."
-            )
+            async for event in self._stream_chat_on_qgis_gui_thread(query):
+                yield event
+            return
 
+        async for event in self._stream_chat_impl(query):
+            yield event
+
+    async def _stream_chat_impl(self, query: Any) -> AsyncIterator[Any]:
+        """Run a streaming user turn on the current thread."""
         self._cancelled.clear()
         self._tool_calls.clear()
         try:
@@ -319,6 +324,48 @@ class GeoAgent:
             if _looks_like_json_parse_failure(exc):
                 raise RuntimeError(_format_chat_exception(exc)) from exc
             raise
+
+    async def _stream_chat_on_qgis_gui_thread(self, query: Any) -> AsyncIterator[Any]:
+        """Stream QGIS chat from a worker thread while pumping Qt events."""
+        events: queue.Queue[tuple[str, Any]] = queue.Queue()
+
+        async def _run_stream() -> None:
+            """Execute async streaming work off the GUI thread."""
+            async for event in self._stream_chat_impl(query):
+                events.put(("event", event))
+
+        def _worker() -> None:
+            """Run the async stream and forward events to the GUI thread."""
+            try:
+                asyncio.run(_run_stream())
+            except BaseException as exc:  # pragma: no cover - defensive path
+                events.put(("error", exc))
+            finally:
+                events.put(("done", None))
+
+        thread = threading.Thread(
+            target=_worker,
+            daemon=True,
+            name="GeoAgent-QGIS-stream-chat",
+        )
+        thread.start()
+
+        while True:
+            try:
+                kind, payload = events.get_nowait()
+            except queue.Empty:
+                process_qt_events()
+                await asyncio.sleep(0.05)
+                continue
+
+            if kind == "event":
+                yield payload
+            elif kind == "error":
+                thread.join(timeout=0)
+                raise payload
+            elif kind == "done":
+                thread.join(timeout=0)
+                return
 
     def _chat_on_qgis_gui_thread(self, query: Any) -> GeoAgentResponse:
         """Run sync QGIS chat without starving the Qt event loop.

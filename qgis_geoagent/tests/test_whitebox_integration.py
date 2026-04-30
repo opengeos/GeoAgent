@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 import types
 from typing import Any
@@ -77,3 +78,57 @@ def test_chat_worker_uses_whitebox_factory(monkeypatch) -> None:
     assert captured["kwargs"]["confirm"](types.SimpleNamespace(args={})) is True
     assert emitted["payload"]["success"] is True
     assert any("WhiteboxTools" in prompt for prompt in SAMPLE_PROMPTS)
+
+
+def test_chat_worker_streams_when_enabled(monkeypatch) -> None:
+    """ChatWorker.run streams deltas through chunk_received when enabled."""
+    import geoagent
+    from open_geoagent.dialogs.chat_dock import ChatWorker
+
+    captured: dict[str, Any] = {}
+
+    class _StubAgent:
+        async def stream_chat(self, prompt: str):
+            captured["prompt"] = prompt
+            yield {"data": "he"}
+            await asyncio.sleep(0)
+            yield {"data": "llo"}
+
+    def _stub_factory(iface, **kwargs):
+        captured["iface"] = iface
+        captured["kwargs"] = kwargs
+        return _StubAgent()
+
+    monkeypatch.setattr(geoagent, "for_whitebox", _stub_factory)
+    monkeypatch.setitem(
+        sys.modules,
+        "qgis.core",
+        types.SimpleNamespace(QgsProject=types.SimpleNamespace(instance=lambda: None)),
+    )
+
+    sentinel_iface = object()
+    worker = ChatWorker(
+        iface=sentinel_iface,
+        prompt="stream please",
+        provider="openai-codex",
+        model_id="gpt-5.5",
+        fast=True,
+        max_tokens=1024,
+        auto_approve_tools=True,
+        stream=True,
+    )
+
+    chunks: list[str] = []
+    emitted: dict[str, Any] = {}
+    worker.chunk_received.connect(chunks.append)
+    worker.finished.connect(lambda payload: emitted.setdefault("payload", payload))
+
+    worker.run()
+
+    assert captured.get("iface") is sentinel_iface
+    assert captured["prompt"] == "stream please"
+    assert captured["kwargs"]["fast"] is True
+    assert chunks == ["he", "llo"]
+    assert emitted["payload"]["success"] is True
+    assert emitted["payload"]["answer"] == "hello"
+    assert emitted["payload"]["streamed"] is True
