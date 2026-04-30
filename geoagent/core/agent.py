@@ -175,7 +175,7 @@ class GeoAgent:
 
     def chat(
         self,
-        query: str,
+        query: Any,
         target_map: Any = None,
     ) -> GeoAgentResponse:
         """Run a single user turn and return a :class:`GeoAgentResponse`."""
@@ -224,7 +224,7 @@ class GeoAgent:
 
         return self._chat_impl(query)
 
-    def _chat_impl(self, query: str) -> GeoAgentResponse:
+    def _chat_impl(self, query: Any) -> GeoAgentResponse:
         """Run a single user turn on the current thread."""
         self._cancelled.clear()
         self._tool_calls.clear()
@@ -259,7 +259,7 @@ class GeoAgent:
                 map=self._context.map_obj,
             )
 
-    def _chat_on_qgis_gui_thread(self, query: str) -> GeoAgentResponse:
+    def _chat_on_qgis_gui_thread(self, query: Any) -> GeoAgentResponse:
         """Run sync QGIS chat without starving the Qt event loop.
 
         QGIS users often call ``resp = agent.chat(...)`` from the Python
@@ -298,7 +298,7 @@ class GeoAgent:
 
     def chat_in_background(
         self,
-        query: str,
+        query: Any,
         *,
         target_map: Any = None,
         on_result: Any | None = None,

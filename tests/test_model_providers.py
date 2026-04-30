@@ -133,10 +133,35 @@ def test_resolve_openai_codex_model(monkeypatch) -> None:
     }
 
 
+def test_resolve_openai_codex_uses_stored_login(monkeypatch, tmp_path) -> None:
+    """Verify stored Codex OAuth tokens are loaded for Python sessions."""
+    fake_model = _install_fake_openai_responses_model(monkeypatch)
+    token_file = tmp_path / "codex.json"
+    token_file.write_text(
+        (
+            '{"access_token": "stored-token", "account_id": "account-456", '
+            '"expires_at": 4102444800}'
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("OPENAI_CODEX_ACCESS_TOKEN", raising=False)
+    monkeypatch.setenv("GEOAGENT_CODEX_TOKEN_FILE", str(token_file))
+
+    model = resolve_model(GeoAgentConfig(provider="openai-codex", model="gpt-5.5"))
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs["client_args"]["api_key"] == "stored-token"
+    assert (
+        model.kwargs["client_args"]["default_headers"]["ChatGPT-Account-Id"]
+        == "account-456"
+    )
+
+
 def test_openai_codex_requires_token(monkeypatch) -> None:
     """Verify missing Codex OAuth token gives a clear error."""
     _install_fake_openai_responses_model(monkeypatch)
     monkeypatch.delenv("OPENAI_CODEX_ACCESS_TOKEN", raising=False)
+    monkeypatch.setenv("GEOAGENT_CODEX_TOKEN_FILE", "/tmp/geoagent-missing-codex.json")
 
     with pytest.raises(ValueError, match="ChatGPT OAuth access token"):
         resolve_model(GeoAgentConfig(provider="openai-codex"))

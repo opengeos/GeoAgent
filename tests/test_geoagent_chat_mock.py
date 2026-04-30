@@ -42,6 +42,33 @@ def test_chat_success_from_mocked_strands() -> None:
     mock_agent.assert_called_once()
 
 
+def test_chat_passes_multimodal_content_blocks_to_strands() -> None:
+    """Verify chat accepts Strands multimodal content blocks."""
+    m = MockLeafmap()
+    agent = for_leafmap(m, model=_MockModel())
+
+    metrics = SimpleNamespace(tool_metrics={})
+    msg = {"role": "assistant", "content": [{"text": "image described"}]}
+    fake_result = SimpleNamespace(
+        stop_reason="end_turn",
+        metrics=metrics,
+        message=msg,
+    )
+    content = [
+        {"text": "Describe this image."},
+        {"image": {"format": "png", "source": {"bytes": b"fake-png"}}},
+    ]
+
+    mock_agent = MagicMock(return_value=fake_result)
+    agent._strands = mock_agent  # noqa: SLF001
+
+    resp = agent.chat(content)
+
+    assert resp.success
+    assert resp.answer_text == "image described"
+    mock_agent.assert_called_once_with(content)
+
+
 def test_chat_json_parse_error_returns_actionable_guidance() -> None:
     """Verify malformed tool-call JSON gets user-facing correction guidance."""
     m = MockLeafmap()
