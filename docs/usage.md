@@ -36,6 +36,19 @@ resp = agent.chat("Your prompt")
 print(resp.answer_text)
 ```
 
+For token-by-token output, use the async streaming sibling:
+
+```python
+import asyncio
+
+async def main():
+    async for event in agent.stream_chat("Your prompt"):
+        if "data" in event:
+            print(event["data"], end="", flush=True)
+
+asyncio.run(main())
+```
+
 Use `fast=True` with `GeoAgent(..., fast=True)` or `for_leafmap(m, fast=True)` for a smaller prompt and fewer tools.
 
 Access the underlying Strands agent as `agent.strands_agent`.
