@@ -9,8 +9,22 @@ import time
 import traceback
 
 from qgis.core import Qgis, QgsMessageLog
-from qgis.PyQt.QtCore import Qt, QSettings, QThread, QTimer, pyqtSignal
-from qgis.PyQt.QtGui import QGuiApplication, QTextCursor
+from qgis.PyQt.QtCore import (
+    QByteArray,
+    QBuffer,
+    QEvent,
+    QIODevice,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    QSettings,
+    QThread,
+    QTimer,
+    pyqtSignal,
+)
+from qgis.PyQt.QtGui import QGuiApplication, QPixmap, QTextCursor
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -20,9 +34,11 @@ from qgis.PyQt.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMenu,
     QMessageBox,
     QPushButton,
     QPlainTextEdit,
+    QRubberBand,
     QSizePolicy,
     QTextEdit,
     QVBoxLayout,
@@ -51,6 +67,9 @@ PROVIDERS = [
 ]
 MAX_CONTEXT_MESSAGES = 12
 MAX_CONTEXT_CHARS = 12000
+MAX_IMAGE_ATTACHMENTS = 4
+MAX_IMAGE_EDGE = 1568
+IMAGE_THUMBNAIL_SIZE = 72
 SAMPLE_PROMPTS = [
     "Summarize the current QGIS project layers, CRS, extents, and feature counts.",
     "Zoom to the active layer and describe what it contains.",
@@ -315,12 +334,93 @@ def _conversation_markdown(messages):
     return "\n\n".join(blocks)
 
 
+def _scaled_image_for_attachment(image):
+    """Return an image copy small enough for model upload."""
+    if image.width() <= MAX_IMAGE_EDGE and image.height() <= MAX_IMAGE_EDGE:
+        return image
+    keep_aspect = _qt_value("AspectRatioMode", "KeepAspectRatio")
+    smooth = _qt_value("TransformationMode", "SmoothTransformation")
+    return image.scaled(MAX_IMAGE_EDGE, MAX_IMAGE_EDGE, keep_aspect, smooth)
+
+
+def _image_to_png_bytes(image):
+    """Serialize a Qt image-like object to PNG bytes."""
+    if hasattr(image, "toImage"):
+        image = image.toImage()
+    if image is None or not hasattr(image, "isNull") or image.isNull():
+        raise ValueError("Clipboard image is empty or unsupported.")
+
+    image = _scaled_image_for_attachment(image)
+    data = QByteArray()
+    buffer = QBuffer(data)
+    write_only = _enum_value(QIODevice, "OpenModeFlag", "WriteOnly")
+    if not buffer.open(write_only):
+        raise ValueError("Could not prepare clipboard image for upload.")
+    try:
+        if not image.save(buffer, "PNG"):
+            raise ValueError("Could not encode clipboard image as PNG.")
+    finally:
+        buffer.close()
+    return bytes(data.data()), image.width(), image.height()
+
+
+def _attachment_to_content_block(attachment):
+    """Convert one image attachment into a Strands content block."""
+    return {
+        "image": {
+            "format": attachment["format"],
+            "source": {"bytes": attachment["bytes"]},
+        }
+    }
+
+
+def _build_chat_content(prompt, attachments):
+    """Build a Strands-compatible text plus image payload."""
+    if not attachments:
+        return prompt
+    content = [{"text": prompt}]
+    content.extend(_attachment_to_content_block(item) for item in attachments)
+    return content
+
+
+def _normalized_crop_rect(rect, bounds):
+    """Normalize and clamp a crop rectangle to pixmap bounds."""
+    if rect is None or bounds is None:
+        return QRect()
+    rect = rect.normalized()
+    if hasattr(rect, "intersected"):
+        rect = rect.intersected(bounds)
+    if rect.isNull() or rect.width() <= 1 or rect.height() <= 1:
+        return QRect()
+    return rect
+
+
+def _crop_pixmap(pixmap, rect):
+    """Return a normalized rectangular crop from a pixmap."""
+    if pixmap is None or pixmap.isNull() or rect is None:
+        return QPixmap()
+    rect = _normalized_crop_rect(rect, pixmap.rect())
+    if rect.isNull():
+        return QPixmap()
+    return pixmap.copy(rect)
+
+
 class PromptTextEdit(QPlainTextEdit):
     """Prompt editor with chat-friendly keyboard shortcuts."""
 
     send_requested = pyqtSignal()
     previous_requested = pyqtSignal()
     next_requested = pyqtSignal()
+    image_pasted = pyqtSignal(object)
+
+    def insertFromMimeData(self, source):
+        """Handle pasted clipboard images before falling back to text paste."""
+        if source.hasImage():
+            self.image_pasted.emit(source.imageData())
+            if source.hasText():
+                super().insertFromMimeData(source)
+            return
+        super().insertFromMimeData(source)
 
     def keyPressEvent(self, event):
         """Handle send and prompt-history keyboard shortcuts."""
@@ -346,6 +446,79 @@ class PromptTextEdit(QPlainTextEdit):
             return
 
         super().keyPressEvent(event)
+
+
+class CanvasRegionCapture(QObject):
+    """Event filter that lets the user drag a screenshot rectangle on a canvas."""
+
+    finished = pyqtSignal(object)
+    cancelled = pyqtSignal()
+
+    def __init__(self, widget, parent=None):
+        super().__init__(parent)
+        self.widget = widget
+        self.origin = QPoint()
+        self.rubber_band = None
+        self.active = False
+
+    def start(self):
+        """Begin capturing mouse events from the canvas widget."""
+        self.widget.installEventFilter(self)
+        self.widget.setMouseTracking(True)
+        self.widget.setCursor(_qt_value("CursorShape", "CrossCursor"))
+        self.widget.setFocus()
+
+    def stop(self):
+        """Stop capture and remove temporary UI."""
+        self.widget.removeEventFilter(self)
+        self.widget.unsetCursor()
+        if self.rubber_band is not None:
+            self.rubber_band.hide()
+            self.rubber_band.deleteLater()
+            self.rubber_band = None
+        self.active = False
+
+    def eventFilter(self, watched, event):
+        """Capture a press-drag-release rectangle or cancel on Escape."""
+        if watched is not self.widget:
+            return False
+        event_type = event.type()
+        mouse_press = _enum_value(QEvent, "Type", "MouseButtonPress")
+        mouse_move = _enum_value(QEvent, "Type", "MouseMove")
+        mouse_release = _enum_value(QEvent, "Type", "MouseButtonRelease")
+        key_press = _enum_value(QEvent, "Type", "KeyPress")
+        left_button = _qt_value("MouseButton", "LeftButton")
+        escape_key = _qt_value("Key", "Key_Escape")
+
+        if event_type == key_press and event.key() == escape_key:
+            self.stop()
+            self.cancelled.emit()
+            return True
+
+        if event_type == mouse_press and event.button() == left_button:
+            self.origin = event.pos()
+            band_shape = _enum_value(QRubberBand, "Shape", "Rectangle")
+            self.rubber_band = QRubberBand(band_shape, self.widget)
+            self.rubber_band.setGeometry(QRect(self.origin, QSize()))
+            self.rubber_band.show()
+            self.active = True
+            return True
+
+        if event_type == mouse_move and self.active and self.rubber_band is not None:
+            self.rubber_band.setGeometry(QRect(self.origin, event.pos()).normalized())
+            return True
+
+        if (
+            event_type == mouse_release
+            and self.active
+            and event.button() == left_button
+        ):
+            rect = QRect(self.origin, event.pos()).normalized()
+            self.stop()
+            self.finished.emit(rect)
+            return True
+
+        return False
 
 
 class ChatWorker(QThread):
@@ -546,9 +719,11 @@ class ChatDockWidget(QDockWidget):
         self.iface = iface
         self.settings = QSettings()
         self._worker = None
+        self._region_capture = None
         self._prompt_history = []
         self._history_index = None
         self._messages = []
+        self._image_attachments = []
         self._streaming_message_index = None
         self._streaming_answer = ""
         self._status_started_at = None
@@ -650,12 +825,27 @@ class ChatDockWidget(QDockWidget):
         self.prompt_input.send_requested.connect(self._send_prompt)
         self.prompt_input.previous_requested.connect(self._previous_prompt)
         self.prompt_input.next_requested.connect(self._next_prompt)
+        self.prompt_input.image_pasted.connect(self._add_clipboard_image)
+
+        self.attachment_bar = QWidget()
+        self.attachment_layout = QHBoxLayout(self.attachment_bar)
+        self.attachment_layout.setContentsMargins(0, 0, 0, 0)
+        self.attachment_layout.setSpacing(6)
+        self.attachment_bar.setVisible(False)
+        layout.addWidget(self.attachment_bar)
         layout.addWidget(self.prompt_input)
 
         primary_button_layout = QHBoxLayout()
         self.send_btn = QPushButton("Send")
         self.send_btn.clicked.connect(self._send_prompt)
         primary_button_layout.addWidget(self.send_btn)
+
+        self.screenshot_btn = QPushButton("Screenshot")
+        screenshot_menu = QMenu(self.screenshot_btn)
+        screenshot_menu.addAction("Capture Map Canvas", self._capture_map_canvas)
+        screenshot_menu.addAction("Select Region", self._start_region_capture)
+        self.screenshot_btn.setMenu(screenshot_menu)
+        primary_button_layout.addWidget(self.screenshot_btn)
 
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.setEnabled(False)
@@ -724,10 +914,187 @@ class ChatDockWidget(QDockWidget):
         """Update the model field when the provider changes."""
         self.model_input.setText(_default_model_for_provider(provider))
 
+    def _add_clipboard_image(self, image):
+        """Attach an image pasted into the prompt editor."""
+        if len(self._image_attachments) >= MAX_IMAGE_ATTACHMENTS:
+            QMessageBox.information(
+                self,
+                "OpenGeoAgent",
+                f"Attach at most {MAX_IMAGE_ATTACHMENTS} images per message.",
+            )
+            return
+        try:
+            image_bytes, width, height = _image_to_png_bytes(image)
+        except Exception as exc:
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                f"Could not attach clipboard image:\n\n{exc}",
+            )
+            return
+        self._image_attachments.append(
+            {
+                "bytes": image_bytes,
+                "format": "png",
+                "width": width,
+                "height": height,
+            }
+        )
+        self._render_image_attachments()
+        self.status_label.setText(
+            f"Attached {len(self._image_attachments)} image"
+            f"{'s' if len(self._image_attachments) != 1 else ''}."
+        )
+        self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+    def _render_image_attachments(self):
+        """Refresh the attachment thumbnail strip."""
+        while self.attachment_layout.count():
+            item = self.attachment_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
+        if not self._image_attachments:
+            self.attachment_bar.setVisible(False)
+            return
+
+        for index, attachment in enumerate(self._image_attachments):
+            chip = QWidget()
+            chip_layout = QVBoxLayout(chip)
+            chip_layout.setContentsMargins(0, 0, 0, 0)
+            chip_layout.setSpacing(2)
+
+            thumb = QLabel()
+            thumb.setFixedSize(IMAGE_THUMBNAIL_SIZE, IMAGE_THUMBNAIL_SIZE)
+            thumb.setStyleSheet("border: 1px solid #BDBDBD; background: #FAFAFA;")
+            thumb.setAlignment(_qt_value("AlignmentFlag", "AlignCenter"))
+            pixmap = QPixmap()
+            pixmap.loadFromData(attachment["bytes"], "PNG")
+            if not pixmap.isNull():
+                keep_aspect = _qt_value("AspectRatioMode", "KeepAspectRatio")
+                smooth = _qt_value("TransformationMode", "SmoothTransformation")
+                thumb.setPixmap(
+                    pixmap.scaled(
+                        QSize(IMAGE_THUMBNAIL_SIZE, IMAGE_THUMBNAIL_SIZE),
+                        keep_aspect,
+                        smooth,
+                    )
+                )
+            chip_layout.addWidget(thumb)
+
+            remove_btn = QPushButton("Remove")
+            remove_btn.setFixedWidth(IMAGE_THUMBNAIL_SIZE)
+            remove_btn.clicked.connect(
+                lambda checked=False, i=index: self._remove_image_attachment(i)
+            )
+            chip_layout.addWidget(remove_btn)
+            self.attachment_layout.addWidget(chip)
+
+        self.attachment_layout.addStretch(1)
+        self.attachment_bar.setVisible(True)
+
+    def _remove_image_attachment(self, index):
+        """Remove one pending image attachment."""
+        if 0 <= index < len(self._image_attachments):
+            self._image_attachments.pop(index)
+            self._render_image_attachments()
+
+    def _clear_image_attachments(self):
+        """Clear all pending image attachments."""
+        self._image_attachments = []
+        self._render_image_attachments()
+
+    def _map_canvas_widget(self):
+        """Return the best QWidget to capture for the current QGIS map canvas."""
+        try:
+            canvas = self.iface.mapCanvas()
+        except Exception:
+            canvas = None
+        if canvas is None:
+            return None
+        try:
+            viewport = canvas.viewport()
+        except Exception:
+            viewport = None
+        return viewport or canvas
+
+    def _attach_screenshot_pixmap(self, pixmap, label):
+        """Attach a captured screenshot pixmap to the pending chat message."""
+        if pixmap is None or pixmap.isNull():
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                "Could not capture a screenshot from the map canvas.",
+            )
+            return
+        before = len(self._image_attachments)
+        self._add_clipboard_image(pixmap.toImage())
+        if len(self._image_attachments) > before:
+            self.status_label.setText(f"Attached {label} screenshot.")
+            self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+    def _capture_map_canvas(self):
+        """Capture the full QGIS map canvas and attach it to the prompt."""
+        widget = self._map_canvas_widget()
+        if widget is None:
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                "No QGIS map canvas is available to capture.",
+            )
+            return
+        self._attach_screenshot_pixmap(widget.grab(), "map canvas")
+
+    def _start_region_capture(self):
+        """Let the user drag a rectangular screenshot region on the map canvas."""
+        widget = self._map_canvas_widget()
+        if widget is None:
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                "No QGIS map canvas is available to capture.",
+            )
+            return
+        if self._region_capture is not None:
+            self._region_capture.stop()
+        capture = CanvasRegionCapture(widget, self)
+        capture.finished.connect(
+            lambda rect, w=widget: self._finish_region_capture(w, rect)
+        )
+        capture.cancelled.connect(self._cancel_region_capture)
+        self._region_capture = capture
+        capture.start()
+        self.status_label.setText(
+            "Drag over the map canvas to attach a screenshot region. Press Esc to cancel."
+        )
+        self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
+
+    def _finish_region_capture(self, widget, rect):
+        """Crop the selected map canvas region and attach it to the prompt."""
+        self._region_capture = None
+        pixmap = _crop_pixmap(widget.grab(), rect)
+        if pixmap.isNull():
+            QMessageBox.information(
+                self,
+                "OpenGeoAgent",
+                "Select a larger screenshot region.",
+            )
+            self.status_label.setText("Screenshot region was too small.")
+            self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+            return
+        self._attach_screenshot_pixmap(pixmap, "map region")
+
+    def _cancel_region_capture(self):
+        """Handle cancelled regional screenshot capture."""
+        self._region_capture = None
+        self.status_label.setText("Screenshot capture cancelled.")
+        self.status_label.setStyleSheet("color: gray; font-size: 10px;")
+
     def _send_prompt(self):
         """Start a chat request for the current prompt."""
         prompt = self.prompt_input.toPlainText().strip()
-        if not prompt:
+        if not prompt and not self._image_attachments:
             return
         if self._worker is not None:
             QMessageBox.information(
@@ -738,6 +1105,14 @@ class ChatDockWidget(QDockWidget):
             return
 
         provider = self.provider_combo.currentText()
+        if self._image_attachments and provider != "openai-codex":
+            QMessageBox.critical(
+                self,
+                "OpenGeoAgent",
+                "Image attachments are currently supported with the "
+                "openai-codex provider.",
+            )
+            return
         self._save_model_settings()
         _apply_environment_from_settings(self.settings)
         if provider == "openai-codex":
@@ -756,7 +1131,6 @@ class ChatDockWidget(QDockWidget):
                 )
                 return
 
-        self._record_prompt(prompt)
         model_id = self.model_input.text().strip() or _default_model_for_provider(
             provider
         )
@@ -766,12 +1140,22 @@ class ChatDockWidget(QDockWidget):
         stream = self.stream_check.isChecked()
         auto_approve_tools = self.auto_approve_tools_check.isChecked()
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
+        if not prompt:
+            prompt = "Describe the attached image."
+        self._record_prompt(prompt)
         prompt_with_context = self._build_prompt_with_context(prompt)
+        attachments = [dict(item) for item in self._image_attachments]
+        chat_payload = _build_chat_content(prompt_with_context, attachments)
 
-        self._append_message("You", prompt, markdown=False)
+        display_prompt = prompt
+        if attachments:
+            plural = "s" if len(attachments) != 1 else ""
+            display_prompt = f"{prompt}\n\n[Attached image{plural}: {len(attachments)}]"
+        self._append_message("You", display_prompt, markdown=False)
         self._streaming_message_index = None
         self._streaming_answer = ""
         self.prompt_input.clear()
+        self._clear_image_attachments()
         self.status_label.setStyleSheet("color: #1976D2; font-size: 10px;")
         self._start_running_status(
             "Streaming GeoAgent" if stream else "Running GeoAgent"
@@ -781,7 +1165,7 @@ class ChatDockWidget(QDockWidget):
 
         self._worker = ChatWorker(
             self.iface,
-            prompt_with_context,
+            chat_payload,
             provider,
             model_id,
             fast,
@@ -1035,6 +1419,9 @@ class ChatDockWidget(QDockWidget):
         """Stop the animated status timer when the dock is dismissed."""
         try:
             self._stop_running_status()
+            if self._region_capture is not None:
+                self._region_capture.stop()
+                self._region_capture = None
         except Exception as exc:
             QgsMessageLog.logMessage(
                 f"Failed to stop running status timer during dock shutdown: {exc}",
