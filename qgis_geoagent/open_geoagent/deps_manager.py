@@ -168,7 +168,9 @@ def all_dependencies_met() -> bool:
     Returns:
         True if all dependencies are installed and importable.
     """
-    return all(_dependency_importable(import_name) for import_name, _ in REQUIRED_PACKAGES)
+    return all(
+        _dependency_importable(import_name) for import_name, _ in REQUIRED_PACKAGES
+    )
 
 
 def get_missing_packages() -> List[str]:
