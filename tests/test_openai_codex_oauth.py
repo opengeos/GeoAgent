@@ -6,9 +6,10 @@ import base64
 import hashlib
 import importlib.util
 import json
+import os
 import pathlib
-import sys
 import stat
+import sys
 import urllib.parse
 
 import pytest
@@ -79,7 +80,8 @@ def test_save_load_and_clear_token_payload(tmp_path) -> None:
 
     assert saved == token_file
     assert openai_codex.load_token_payload(token_file=token_file) == token
-    assert stat.S_IMODE(token_file.stat().st_mode) == 0o600
+    if os.name == "posix":
+        assert stat.S_IMODE(token_file.stat().st_mode) == 0o600
 
     openai_codex.clear_token_payload(token_file=token_file)
 
