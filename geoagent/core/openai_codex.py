@@ -99,7 +99,7 @@ def decode_jwt_payload(token: str) -> dict[str, Any]:
     try:
         data = base64.urlsafe_b64decode((payload + padding).encode("ascii"))
         decoded = json.loads(data.decode("utf-8"))
-    except (ValueError, json.JSONDecodeError):
+    except (TypeError, ValueError, UnicodeDecodeError, json.JSONDecodeError):
         return {}
     return decoded if isinstance(decoded, dict) else {}
 
@@ -355,16 +355,30 @@ def save_token_payload(
         if token_file is not None
         else default_token_file()
     )
+    if path.is_symlink():
+        raise RuntimeError(f"Refusing to write Codex tokens through a symlink: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(token_payload, indent=2, sort_keys=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as file:
-        file.write(payload)
-        file.write("\n")
+    tmp_path = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    fd = os.open(tmp_path, flags, 0o600)
     try:
-        path.chmod(stat.S_IRUSR | stat.S_IWUSR)
-    except OSError:
-        pass
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
+            file.write(payload)
+            file.write("\n")
+        try:
+            tmp_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+        except OSError:
+            pass
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            tmp_path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
     return path
 
 

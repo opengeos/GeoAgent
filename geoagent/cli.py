@@ -65,11 +65,15 @@ def _run_codex_status(args: argparse.Namespace) -> int:
     expires_at = payload.get("expires_at")
     status = "expires soon" if token_expires_soon(expires_at) else "valid"
     if expires_at:
-        expiry = time.strftime(
-            "%Y-%m-%d %H:%M:%S %Z",
-            time.localtime(float(expires_at)),
-        )
-        print(f"Logged in ({status}); token expires at {expiry}")
+        try:
+            expiry = time.strftime(
+                "%Y-%m-%d %H:%M:%S %Z",
+                time.localtime(float(expires_at)),
+            )
+        except (TypeError, ValueError, OverflowError):
+            print(f"Logged in ({status}); token expiry is unknown")
+        else:
+            print(f"Logged in ({status}); token expires at {expiry}")
     else:
         print(f"Logged in ({status}); token expiry is unknown")
     return 0
