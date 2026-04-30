@@ -1669,12 +1669,15 @@ geoagent.core.agent.GeoAgent        </code>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;stream_chat() must not be called from the QGIS Qt GUI thread when &quot;</span>
-                <span class="s2">&quot;qgis_safe_mode=True. Launch streaming chat from a worker thread, &quot;</span>
-                <span class="s2">&quot;or use chat() from the GUI thread.&quot;</span>
-            <span class="p">)</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">event</span>
+            <span class="k">return</span>
 
+        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">event</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_chat_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a streaming user turn on the current thread.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1684,6 +1687,48 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="k">if</span> <span class="n">_looks_like_json_parse_failure</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_format_chat_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
             <span class="k">raise</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stream QGIS chat from a worker thread while pumping Qt events.&quot;&quot;&quot;</span>
+        <span class="n">events</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_run_stream</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute async streaming work off the GUI thread.&quot;&quot;&quot;</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">event</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Run the async stream and forward events to the GUI thread.&quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_run_stream</span><span class="p">())</span>
+            <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - defensive path</span>
+                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="p">))</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span>
+            <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;GeoAgent-QGIS-stream-chat&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">kind</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+                <span class="n">process_qt_events</span><span class="p">()</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">payload</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span>
+                <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">payload</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;done&quot;</span><span class="p">:</span>
+                <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">return</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run sync QGIS chat without starving the Qt event loop.</span>
@@ -2123,21 +2168,12 @@ Strands result is emitted in the event containing <code>"result"</code>.</p>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="s2">&quot;stream_chat() must not be called from the QGIS Qt GUI thread when &quot;</span>
-            <span class="s2">&quot;qgis_safe_mode=True. Launch streaming chat from a worker thread, &quot;</span>
-            <span class="s2">&quot;or use chat() from the GUI thread.&quot;</span>
-        <span class="p">)</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
             <span class="k">yield</span> <span class="n">event</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">_looks_like_json_parse_failure</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_format_chat_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-        <span class="k">raise</span>
+        <span class="k">return</span>
+
+    <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">event</span>
 </code></pre></div>
         </details>
     </div>
