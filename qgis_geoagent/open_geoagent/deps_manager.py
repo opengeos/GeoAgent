@@ -15,6 +15,7 @@ document this explicitly for the plugins.qgis.org Bandit scan.
 """
 
 import importlib
+import importlib.util
 import os
 import platform
 import shutil
@@ -138,13 +139,27 @@ def check_dependencies() -> List[Dict]:
             "version": None,
         }
         try:
-            mod = importlib.import_module(import_name)
+            spec = importlib.util.find_spec(import_name)
+            if spec is None:
+                raise ImportError(import_name)
             info["installed"] = True
-            info["version"] = getattr(mod, "__version__", "installed")
+            try:
+                mod = importlib.import_module(import_name)
+                info["version"] = getattr(mod, "__version__", "installed")
+            except Exception:
+                info["version"] = "installed"
         except ImportError:
             pass
         results.append(info)
     return results
+
+
+def _dependency_importable(import_name: str) -> bool:
+    """Return True when a dependency can be imported without importing it now."""
+    try:
+        return importlib.util.find_spec(import_name) is not None
+    except (ImportError, ModuleNotFoundError, ValueError):
+        return False
 
 
 def all_dependencies_met() -> bool:
@@ -153,7 +168,7 @@ def all_dependencies_met() -> bool:
     Returns:
         True if all dependencies are installed and importable.
     """
-    return all(dep["installed"] for dep in check_dependencies())
+    return all(_dependency_importable(import_name) for import_name, _ in REQUIRED_PACKAGES)
 
 
 def get_missing_packages() -> List[str]:
