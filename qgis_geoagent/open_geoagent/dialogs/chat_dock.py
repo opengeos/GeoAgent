@@ -1167,7 +1167,6 @@ class ChatWorker(QThread):
                     raise
                 kwargs.pop("permission_profile", None)
                 agent = factory(self.iface, **kwargs)
-                agent = _filter_tools_for_permission(agent, self.permission_profile)
             agent = _filter_tools_for_permission(agent, self.permission_profile)
             if self.agent_mode == "STAC":
                 self.prompt = (
@@ -1470,6 +1469,12 @@ class ChatDockWidget(QDockWidget):
         self.jobs_table.setMaximumHeight(120)
         self.jobs_table.setSelectionBehavior(
             _enum_value(QAbstractItemView, "SelectionBehavior", "SelectRows")
+        )
+        self.jobs_table.setSelectionMode(
+            _enum_value(QAbstractItemView, "SelectionMode", "SingleSelection")
+        )
+        self.jobs_table.setEditTriggers(
+            _enum_value(QAbstractItemView, "EditTrigger", "NoEditTriggers")
         )
         jobs_header = self.jobs_table.horizontalHeader()
         if jobs_header is not None:

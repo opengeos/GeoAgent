@@ -51,19 +51,10 @@ ENV_FALLBACKS = {
 
 def _apply_environment_from_settings(settings):
     """Apply saved provider credentials to the current process."""
-    env_map = {
-        "openai_api_key": ("OPENAI_API_KEY",),
-        "anthropic_api_key": ("ANTHROPIC_API_KEY",),
-        "gemini_api_key": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
-        "aws_region": ("AWS_REGION",),
-        "ollama_host": ("OLLAMA_HOST",),
-        "litellm_api_key": ("LITELLM_API_KEY",),
-        "litellm_base_url": ("LITELLM_BASE_URL",),
-    }
-    for key, env_names in env_map.items():
+    for key, env_names in ENV_FALLBACKS.items():
         value = settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str).strip()
         if not value:
-            value = _env_fallback(*ENV_FALLBACKS.get(key, ()))
+            value = _env_fallback(*env_names)
         if value:
             for env_name in env_names:
                 os.environ[env_name] = value
