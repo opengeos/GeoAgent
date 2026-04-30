@@ -564,6 +564,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../examples/openai_codex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Openai codex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../examples/live_mapping/" class="md-nav__link">
         
   
@@ -1341,6 +1369,14 @@
         <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="s2">&quot;OPENAI_CODEX_ACCESS_TOKEN&quot;</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.openai_codex</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_openai_codex_environment</span>
+
+                <span class="n">ensure_openai_codex_environment</span><span class="p">()</span>
+                <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_CODEX_ACCESS_TOKEN&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                <span class="n">api_key</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_url&quot;</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">openai_codex_base_url</span>
@@ -1351,7 +1387,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;OpenAI Codex provider requires a ChatGPT OAuth access token. &quot;</span>
-                <span class="s2">&quot;Login from OpenGeoAgent settings or set OPENAI_CODEX_ACCESS_TOKEN.&quot;</span>
+                <span class="s2">&quot;Run `geoagent codex login`, call `geoagent.login_openai_codex()`, &quot;</span>
+                <span class="s2">&quot;or set OPENAI_CODEX_ACCESS_TOKEN.&quot;</span>
             <span class="p">)</span>
         <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
         <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>

@@ -12,13 +12,13 @@
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://geoagent.gishub.org/examples/intro/">
+        <link rel="canonical" href="https://geoagent.gishub.org/examples/openai_codex/">
       
       
-        <link rel="prev" href="../../contributing/">
+        <link rel="prev" href="../intro/">
       
       
-        <link rel="next" href="../openai_codex/">
+        <link rel="next" href="../live_mapping/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Intro - GeoAgent</title>
+        <title>Openai codex - GeoAgent</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#geoagent-10-anthropic-claude" class="md-skip">
+        <a href="#geoagent-chatgptcodex-oauth" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Intro
+              Openai codex
             
           </span>
         </div>
@@ -535,19 +535,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../intro/" class="md-nav__link">
         
   
   
@@ -563,7 +554,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -573,10 +563,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../openai_codex/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Openai codex
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -592,6 +609,48 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#image-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#leafmap-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Leafmap Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1042,6 +1101,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#image-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#leafmap-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Leafmap Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1054,7 +1143,7 @@
               <article class="md-content__inner md-typeset">
                 
 
-    <a href="/examples/intro/intro.ipynb" title="Download Notebook" class="md-content__button md-icon">
+    <a href="/examples/openai_codex/openai_codex.ipynb" title="Download Notebook" class="md-content__button md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7z"/></svg>
     </a>
 
@@ -1794,10 +1883,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="geoagent-10-anthropic-claude">GeoAgent 1.0 — Anthropic (Claude)<a class="anchor-link" href="#geoagent-10-anthropic-claude">¶</a></h1><ul>
-<li>Set <strong><code>ANTHROPIC_API_KEY</code></strong> in your environment.</li>
-<li>Optionally set <strong><code>ANTHROPIC_MODEL</code></strong> (default: <code>claude-sonnet-4-6</code> — Claude Sonnet 4.6).</li>
-<li>Install: <code>pip install "GeoAgent[anthropic]"</code>.</li>
+<h1 id="geoagent-chatgptcodex-oauth">GeoAgent + ChatGPT/Codex OAuth<a class="anchor-link" href="#geoagent-chatgptcodex-oauth">¶</a></h1><p>This notebook uses the same ChatGPT/Codex OAuth flow as the QGIS plugin, but stores the login in GeoAgent's user config directory for regular Python and Jupyter sessions.</p>
+<ul>
+<li>Install: <code>pip install "GeoAgent[openai]"</code>.</li>
+<li>Run the login cell once. Later notebooks can reuse the stored login automatically.</li>
 </ul>
 </div>
 </div>
@@ -1821,9 +1910,9 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="s2">"GeoAgent[anthropic]"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># %pip install -q "GeoAgent[openai]"</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">%pip install -q "GeoAgent[anthropic]"</div>
+<div class="clipboard-copy-txt" id="cell-1"># %pip install -q "GeoAgent[openai]"</div>
 </div>
 </div>
 </div>
@@ -1848,21 +1937,25 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_openai_codex_environment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">login_openai_codex</span>
 
-<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Set ANTHROPIC_API_KEY before running this cell."</span><span class="p">)</span>
-
-<span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_MODEL"</span><span class="p">,</span> <span class="s2">"claude-sonnet-4-6"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Using model:"</span><span class="p">,</span> <span class="n">MODEL</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">ensure_openai_codex_environment</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Using stored ChatGPT/Codex login."</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+    <span class="n">login_openai_codex</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Logged in with ChatGPT/Codex OAuth."</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">import os
+<div class="clipboard-copy-txt" id="cell-2">from geoagent import ensure_openai_codex_environment
+from geoagent import login_openai_codex
 
-if not os.environ.get("ANTHROPIC_API_KEY"):
-    raise RuntimeError("Set ANTHROPIC_API_KEY before running this cell.")
-
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-print("Using model:", MODEL)</div>
+try:
+    ensure_openai_codex_environment()
+    print("Using stored ChatGPT/Codex login.")
+except RuntimeError:
+    login_openai_codex()
+    print("Logged in with ChatGPT/Codex OAuth.")</div>
 </div>
 </div>
 </div>
@@ -1887,39 +1980,354 @@ print("Using model:", MODEL)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgentConfig</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_CODEX_MODEL"</span><span class="p">,</span> <span class="s2">"gpt-5.5"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Using model:"</span><span class="p">,</span> <span class="n">MODEL</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-3">import os
+
+MODEL = os.environ.get("OPENAI_CODEX_MODEL", "gpt-5.5")
+print("Using model:", MODEL)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span><span class="p">,</span> <span class="n">GeoAgentConfig</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span>
     <span class="n">config</span><span class="o">=</span><span class="n">GeoAgentConfig</span><span class="p">(</span>
-        <span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span>
+        <span class="n">provider</span><span class="o">=</span><span class="s2">"openai-codex"</span><span class="p">,</span>
         <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
         <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
         <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
-<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"In one sentence, what is STAC in Earth observation?"</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"In one sentence, what is GeoAgent useful for?"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"success:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"executed_tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">from geoagent import GeoAgent
-from geoagent.core.config import GeoAgentConfig
+<div class="clipboard-copy-txt" id="cell-4">from geoagent import GeoAgent, GeoAgentConfig
 
 agent = GeoAgent(
     config=GeoAgentConfig(
-        provider="anthropic",
+        provider="openai-codex",
         model=MODEL,
         temperature=0.0,
         max_tokens=2048,
     ),
 )
 
-resp = agent.chat("In one sentence, what is STAC in Earth observation?")
+resp = agent.chat("In one sentence, what is GeoAgent useful for?")
 print("success:", resp.success)
 print(resp.answer_text)
 print("executed_tools:", resp.executed_tools)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="image-example">Image Example<a class="anchor-link" href="#image-example">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># %pip install -q pillow</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-5"># %pip install -q pillow</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageDraw</span>
+
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"codex_example_map.png"</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">,</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">360</span><span class="p">),</span> <span class="s2">"#dce9f2"</span><span class="p">)</span>
+<span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">rectangle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">640</span><span class="p">,</span> <span class="mi">360</span><span class="p">),</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#6fbf73"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">polygon</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="p">(</span><span class="mi">190</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="p">(</span><span class="mi">310</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">230</span><span class="p">)],</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#8ccf6a"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">polygon</span><span class="p">([(</span><span class="mi">430</span><span class="p">,</span> <span class="mi">45</span><span class="p">),</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">230</span><span class="p">),</span> <span class="p">(</span><span class="mi">520</span><span class="p">,</span> <span class="mi">205</span><span class="p">)],</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#7db56f"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">line</span><span class="p">(</span>
+    <span class="p">[(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span> <span class="p">(</span><span class="mi">170</span><span class="p">,</span> <span class="mi">140</span><span class="p">),</span> <span class="p">(</span><span class="mi">230</span><span class="p">,</span> <span class="mi">210</span><span class="p">),</span> <span class="p">(</span><span class="mi">330</span><span class="p">,</span> <span class="mi">360</span><span class="p">)],</span>
+    <span class="n">fill</span><span class="o">=</span><span class="s2">"#3d7fbf"</span><span class="p">,</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">ellipse</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="mi">135</span><span class="p">),</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#e84d4d"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">ellipse</span><span class="p">((</span><span class="mi">455</span><span class="p">,</span> <span class="mi">155</span><span class="p">,</span> <span class="mi">495</span><span class="p">,</span> <span class="mi">195</span><span class="p">),</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#f2c94c"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="mi">32</span><span class="p">,</span> <span class="mi">28</span><span class="p">),</span> <span class="s2">"Synthetic map image"</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#1f2937"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="mi">145</span><span class="p">,</span> <span class="mi">105</span><span class="p">),</span> <span class="s2">"site A"</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#1f2937"</span><span class="p">)</span>
+<span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="mi">500</span><span class="p">,</span> <span class="mi">165</span><span class="p">),</span> <span class="s2">"site B"</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">"#1f2937"</span><span class="p">)</span>
+<span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">image_path</span><span class="p">)))</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-6">from pathlib import Path
+
+from IPython.display import Image, display
+from PIL import Image as PILImage
+from PIL import ImageDraw
+
+image_path = Path("codex_example_map.png")
+img = PILImage.new("RGB", (640, 360), "#dce9f2")
+draw = ImageDraw.Draw(img)
+draw.rectangle((0, 235, 640, 360), fill="#6fbf73")
+draw.polygon([(0, 90), (190, 70), (310, 160), (0, 230)], fill="#8ccf6a")
+draw.polygon([(430, 45), (640, 25), (640, 230), (520, 205)], fill="#7db56f")
+draw.line(
+    [(70, 0), (120, 80), (170, 140), (230, 210), (330, 360)],
+    fill="#3d7fbf",
+    width=18,
+)
+draw.ellipse((100, 95, 140, 135), fill="#e84d4d")
+draw.ellipse((455, 155, 495, 195), fill="#f2c94c")
+draw.text((32, 28), "Synthetic map image", fill="#1f2937")
+draw.text((145, 105), "site A", fill="#1f2937")
+draw.text((500, 165), "site B", fill="#1f2937")
+img.save(image_path)
+display(Image(filename=str(image_path)))</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">image_bytes</span> <span class="o">=</span> <span class="n">image_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"Describe this map-like image. Identify the labeled sites, water, and land cover."</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">"image"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"format"</span><span class="p">:</span> <span class="s2">"png"</span><span class="p">,</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"bytes"</span><span class="p">:</span> <span class="n">image_bytes</span><span class="p">},</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-7">image_bytes = image_path.read_bytes()
+resp = agent.chat(
+    [
+        {
+            "text": "Describe this map-like image. Identify the labeled sites, water, and land cover."
+        },
+        {
+            "image": {
+                "format": "png",
+                "source": {"bytes": image_bytes},
+            }
+        },
+    ]
+)
+print(resp.answer_text)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="leafmap-example">Leafmap Example<a class="anchor-link" href="#leafmap-example">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=10">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># %pip install -q "GeoAgent[leafmap]" leafmap</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-8"># %pip install -q "GeoAgent[leafmap]" leafmap</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=11">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">leafmap.maplibregl</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">leafmap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">leafmap</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">83.92</span><span class="p">,</span> <span class="mf">35.96</span><span class="p">],</span> <span class="n">zoom</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="s2">"520px"</span><span class="p">)</span>
+<span class="n">m</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-9">import leafmap.maplibregl as leafmap
+from geoagent import for_leafmap
+
+m = leafmap.Map(center=[-83.92, 35.96], zoom=9, height="520px")
+m</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">map_agent</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span>
+    <span class="n">m</span><span class="p">,</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">"openai-codex"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
+    <span class="n">fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">map_agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Using the current map state, describe the map center and zoom."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-10">map_agent = for_leafmap(
+    m,
+    provider="openai-codex",
+    model_id=MODEL,
+    fast=True,
+)
+
+resp = map_agent.chat("Using the current map state, describe the map center and zoom.")
+print(resp.answer_text)
+print("tools:", resp.executed_tools)</div>
 </div>
 </div>
 </div>
@@ -1955,7 +2363,7 @@ print("executed_tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 04:11:16 UTC"><span class="timeago" datetime="2026-04-30T04:11:16+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 04:11:16 UTC">2026-04-30</span>
   </span>
 
     
@@ -1965,7 +2373,7 @@ print("executed_tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 01:38:21 UTC"><span class="timeago" datetime="2026-02-01T01:38:21+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 01:38:21 UTC">2026-02-01</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 04:11:16 UTC"><span class="timeago" datetime="2026-04-30T04:11:16+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 04:11:16 UTC">2026-04-30</span>
   </span>
 
     
