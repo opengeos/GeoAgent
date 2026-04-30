@@ -519,53 +519,6 @@
   
   
   
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Getting Started
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
       <a href="installation/" class="md-nav__link">
         
@@ -586,10 +539,9 @@
     </li>
   
 
-              
-            
-              
-                
+    
+      
+      
   
   
   
@@ -614,11 +566,30 @@
     </li>
   
 
-              
-            
-          </ul>
-        </nav>
+    
       
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qgis-plugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QGIS Plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -719,10 +690,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   
@@ -740,8 +711,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -913,10 +884,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
             
   
   
@@ -934,8 +905,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1519,6 +1490,9 @@ workflows.</p>
   <code>for_leafmap</code>, <code>for_anymap</code>, <code>for_qgis</code>, and <code>create_agent</code>.</li>
 <li>Built-in tools for live maps, QGIS projects, STAC-style workflows, Earth
   observation workflows, and optional geospatial packages.</li>
+<li>OpenGeoAgent QGIS plugin UI with pasted image attachments, screenshot
+  capture, image preview/save actions, transcript copying, and PyQGIS script
+  copying.</li>
 <li>Confirmation hooks for destructive, persistent, or long-running tools.</li>
 <li>Mock map and QGIS objects so integrations can be tested without full desktop
   or widget environments.</li>
@@ -1687,6 +1661,11 @@ package manager. Install GeoAgent into the Python environment used by QGIS.</p>
 </code></pre></div></td></tr></table></div>
 <p>QGIS tools are import-safe outside QGIS and run through a Qt GUI-thread
 marshaller when used in QGIS.</p>
+<p>The OpenGeoAgent QGIS plugin adds a dockable multimodal chat panel. Users can
+paste images from the clipboard, capture the map canvas, capture the QGIS
+window, select map or screen regions, preview and save attached images, copy
+the Markdown transcript, and copy the PyQGIS script that produced an executed
+result.</p>
 <h2 id="built-in-tool-surfaces">Built-In Tool Surfaces<a class="headerlink" href="#built-in-tool-surfaces" title="Permanent link">&para;</a></h2>
 <h3 id="map-widgets">Map Widgets<a class="headerlink" href="#map-widgets" title="Permanent link">&para;</a></h3>
 <p><code>for_leafmap</code> and <code>for_anymap</code> provide tools for:</p>
@@ -1710,7 +1689,9 @@ marshaller when used in QGIS.</p>
 <li>selecting features with QGIS expressions and clearing selections;</li>
 <li>zooming to selected features;</li>
 <li>running QGIS Processing algorithms;</li>
-<li>opening attribute tables and saving projects.</li>
+<li>opening attribute tables and saving projects;</li>
+<li>running confirmation-gated PyQGIS fallback scripts when the requested QGIS
+  API operation is not covered by a dedicated tool.</li>
 </ul>
 <h3 id="custom-and-package-tools">Custom and Package Tools<a class="headerlink" href="#custom-and-package-tools" title="Permanent link">&para;</a></h3>
 <p>Use <code>create_agent</code> and <code>@geo_tool</code> to build tools for another package:</p>
@@ -1755,6 +1736,7 @@ Qt dialog, notebook modal, web prompt, or CLI prompt.</p>
 <h2 id="learn-more">Learn More<a class="headerlink" href="#learn-more" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="installation/">Installation</a></li>
+<li><a href="qgis-plugin/">QGIS Plugin</a></li>
 <li><a href="usage/">Usage</a></li>
 <li><a href="tools/">Tools</a></li>
 <li><a href="safety/">Safety</a></li>
@@ -1784,7 +1766,7 @@ Qt dialog, notebook modal, web prompt, or CLI prompt.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 13:12:23 UTC"><span class="timeago" datetime="2026-04-30T13:12:23+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 13:12:23 UTC">2026-04-30</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 14:36:32 UTC"><span class="timeago" datetime="2026-04-30T14:36:32+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 14:36:32 UTC">2026-04-30</span>
   </span>
 
     
