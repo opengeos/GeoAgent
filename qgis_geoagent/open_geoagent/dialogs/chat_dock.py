@@ -1442,18 +1442,24 @@ class VoiceTranscriptionWorker(QThread):
 
 
 class VoicePromptRecorder(QObject):
-    """Capture microphone PCM audio and write it as a WAV file."""
+    """Stream microphone PCM audio directly to a WAV file."""
 
     level_changed = pyqtSignal(int)
+    limit_reached = pyqtSignal()
+
+    MAX_RECORDING_SECONDS = 600
 
     def __init__(self, audio_path, parent=None):
         super().__init__(parent)
         self.audio_path = audio_path
-        self._buffer = bytearray()
         self._audio_source = None
         self._audio_device = None
         self._format = None
         self._io_device = None
+        self._wav_file = None
+        self._bytes_written = 0
+        self._max_bytes = 0
+        self._limit_signaled = False
         try:
             self._multimedia = importlib.import_module("qgis.PyQt.QtMultimedia")
         except ImportError as exc:
@@ -1463,39 +1469,90 @@ class VoicePromptRecorder(QObject):
             ) from exc
 
     def record(self):
-        """Start capturing microphone samples."""
+        """Start capturing microphone samples and stream them to disk."""
         self._audio_device, self._format = self._select_audio_format()
-        self._audio_source = self._create_audio_source(self._audio_device, self._format)
-        self._io_device = self._audio_source.start()
+        wav_file = wave.open(self.audio_path, "wb")
+        try:
+            wav_file.setnchannels(self._channel_count(self._format))
+            wav_file.setsampwidth(self._sample_width(self._format))
+            wav_file.setframerate(self._sample_rate(self._format))
+        except Exception:
+            wav_file.close()
+            raise
+        self._wav_file = wav_file
+        bytes_per_second = (
+            self._sample_rate(self._format)
+            * self._channel_count(self._format)
+            * self._sample_width(self._format)
+        )
+        self._max_bytes = max(1, bytes_per_second * self.MAX_RECORDING_SECONDS)
+
+        try:
+            self._audio_source = self._create_audio_source(
+                self._audio_device, self._format
+            )
+            self._io_device = self._audio_source.start()
+        except Exception:
+            self._close_wav_file()
+            raise
         if self._io_device is None:
+            self._close_wav_file()
             raise RuntimeError("Could not open the default microphone for recording.")
         self._io_device.readyRead.connect(self._read_available)
 
     def stop(self):
-        """Stop capturing and write the WAV file."""
+        """Stop capturing and finalize the WAV file."""
         if self._io_device is not None:
             self._read_available()
         if self._audio_source is not None:
             self._audio_source.stop()
         self._io_device = None
 
-        if not self._buffer:
+        bytes_written = self._bytes_written
+        self._close_wav_file()
+
+        if bytes_written <= 0:
             raise RuntimeError(
                 "No microphone audio was captured. Check the selected input device "
                 "and OS microphone permission for QGIS."
             )
 
-        self._write_wav()
-
     def _read_available(self):
-        """Append currently available microphone bytes to the recording buffer."""
-        if self._io_device is None:
+        """Stream available microphone bytes to the WAV file under the size cap."""
+        if self._io_device is None or self._wav_file is None:
             return
         data = self._io_device.readAll()
-        if data:
-            chunk = bytes(data)
-            self._buffer.extend(chunk)
-            self.level_changed.emit(self._audio_level(chunk))
+        if not data:
+            return
+        chunk = bytes(data)
+        remaining = self._max_bytes - self._bytes_written
+        if remaining <= 0:
+            self._signal_limit_reached()
+            return
+        if len(chunk) > remaining:
+            chunk = chunk[:remaining]
+        self._wav_file.writeframes(chunk)
+        self._bytes_written += len(chunk)
+        self.level_changed.emit(self._audio_level(chunk))
+        if self._bytes_written >= self._max_bytes:
+            self._signal_limit_reached()
+
+    def _signal_limit_reached(self):
+        """Notify listeners once when the recording cap is reached."""
+        if self._limit_signaled:
+            return
+        self._limit_signaled = True
+        self.limit_reached.emit()
+
+    def _close_wav_file(self):
+        """Close the open WAV file if any, swallowing close errors."""
+        if self._wav_file is None:
+            return
+        try:
+            self._wav_file.close()
+        except Exception:
+            pass
+        self._wav_file = None
 
     def _select_audio_format(self):
         """Return a default input device and an Int16 mono audio format."""
@@ -1551,14 +1608,6 @@ class VoicePromptRecorder(QObject):
             return multimedia.QAudioInput(device, audio_format, self)
         except TypeError:
             return multimedia.QAudioInput(audio_format, self)
-
-    def _write_wav(self):
-        """Write buffered PCM samples to the configured WAV path."""
-        with wave.open(self.audio_path, "wb") as wav_file:
-            wav_file.setnchannels(self._channel_count(self._format))
-            wav_file.setsampwidth(self._sample_width(self._format))
-            wav_file.setframerate(self._sample_rate(self._format))
-            wav_file.writeframes(bytes(self._buffer))
 
     @staticmethod
     def _audio_level(chunk):
@@ -2622,6 +2671,7 @@ class ChatDockWidget(QDockWidget):
         try:
             recorder = self._create_voice_recorder(audio_path)
             recorder.level_changed.connect(self._update_voice_level)
+            recorder.limit_reached.connect(self._on_voice_limit_reached)
             recorder.record()
         except Exception as exc:
             self._remove_temp_audio(audio_path)
@@ -2722,6 +2772,23 @@ class ChatDockWidget(QDockWidget):
         if hasattr(self, "voice_level"):
             self.voice_level.setValue(max(0, min(100, int(level or 0))))
 
+    def _on_voice_limit_reached(self):
+        """Stop voice recording when the maximum length is reached."""
+        if self._voice_recorder is None:
+            return
+        QgsMessageLog.logMessage(
+            "Voice recording stopped after reaching the "
+            f"{VoicePromptRecorder.MAX_RECORDING_SECONDS}-second limit.",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Warning,
+        )
+        self.iface.messageBar().pushWarning(
+            "OpenGeoAgent",
+            "Voice recording reached the maximum length and was stopped "
+            "automatically.",
+        )
+        self._stop_voice_recording()
+
     def _stop_voice_recording(self):
         """Stop recording and begin transcription."""
         recorder = self._voice_recorder
@@ -2752,9 +2819,12 @@ class ChatDockWidget(QDockWidget):
     def _finish_voice_recording(self):
         """Release the recorder and transcribe the recorded audio file."""
         audio_path = self._voice_audio_path
+        recorder = self._voice_recorder
         self._voice_recorder = None
         self._voice_recorder_refs = []
         self._voice_stopping = False
+        if recorder is not None:
+            recorder.deleteLater()
 
         if not audio_path or not os.path.exists(audio_path):
             self._reset_voice_button()
@@ -2807,7 +2877,7 @@ class ChatDockWidget(QDockWidget):
         )
 
     def _insert_transcribed_prompt(self, text):
-        """Insert transcribed text at the current prompt cursor."""
+        """Insert transcribed text at the prompt cursor and move it to the end."""
         text = str(text or "").strip()
         if not text:
             return
@@ -3218,8 +3288,9 @@ class ChatDockWidget(QDockWidget):
                 self._screen_region_capture.close()
                 self._screen_region_capture = None
             if self._voice_recorder is not None:
+                recorder = self._voice_recorder
                 try:
-                    self._voice_recorder.stop()
+                    recorder.stop()
                 except Exception as exc:
                     QgsMessageLog.logMessage(
                         f"Failed to stop voice recorder during dock shutdown: {exc}",
@@ -3229,6 +3300,20 @@ class ChatDockWidget(QDockWidget):
                 finally:
                     self._voice_recorder = None
                     self._voice_recorder_refs = []
+                    recorder.deleteLater()
+            if self._voice_worker is not None:
+                worker = self._voice_worker
+                try:
+                    worker.finished.disconnect(self._on_voice_transcription_finished)
+                except (TypeError, RuntimeError):
+                    pass
+                if worker.isRunning():
+                    # Block briefly so the OpenAI request can finish writing or
+                    # release the temp WAV file before we delete it. Avoids
+                    # tearing down the QThread mid-request.
+                    worker.wait(5000)
+                worker.deleteLater()
+                self._voice_worker = None
             self._remove_temp_audio(self._voice_audio_path)
             self._voice_audio_path = ""
         except Exception as exc:

@@ -246,6 +246,18 @@ def _key_sequence_text(sequence):
     return sequence.toString()
 
 
+def _single_chord_sequence(sequence):
+    """Return a QKeySequence trimmed to its first chord.
+
+    QKeySequenceEdit can record multi-step shortcuts (eg. ``Ctrl+K, Ctrl+C``)
+    but the voice toggle matcher only compares a single key press, so any
+    trailing chords would be unreachable.
+    """
+    if sequence.isEmpty() or sequence.count() <= 1:
+        return sequence
+    return QKeySequence(sequence[0])
+
+
 def _env_fallback(*env_names):
     """Return the first non-empty environment value from ``env_names``."""
     for env_name in env_names:
@@ -933,7 +945,10 @@ class SettingsDockWidget(QDockWidget):
             self.transcription_model_combo.currentText().strip()
             or DEFAULT_TRANSCRIPTION_MODEL,
         )
-        voice_shortcut = _key_sequence_text(self.voice_shortcut_edit.keySequence())
+        sequence = _single_chord_sequence(self.voice_shortcut_edit.keySequence())
+        if sequence != self.voice_shortcut_edit.keySequence():
+            self.voice_shortcut_edit.setKeySequence(sequence)
+        voice_shortcut = _key_sequence_text(sequence)
         self.settings.setValue(
             f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}",
             voice_shortcut.strip() or DEFAULT_VOICE_SHORTCUT,
