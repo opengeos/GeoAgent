@@ -25,7 +25,7 @@ def test_all_dependencies_met_uses_lightweight_spec_checks(monkeypatch) -> None:
     monkeypatch.setattr(
         deps_manager,
         "CORE_RUNTIME_PACKAGES",
-        [("geoagent", "GeoAgent[providers]>=1.4.0"), ("strands", "strands-agents")],
+        [("geoagent", "GeoAgent[providers]>=1.4.1"), ("strands", "strands-agents")],
     )
     monkeypatch.setattr(deps_manager, "ensure_venv_packages_available", lambda: True)
 
@@ -49,7 +49,7 @@ def test_required_dependencies_include_core_runtime_packages() -> None:
     """Dependency gate should catch partial GeoAgent installs."""
     from open_geoagent.deps_manager import REQUIRED_PACKAGES
 
-    assert ("geoagent", "GeoAgent[providers]>=1.4.0") in REQUIRED_PACKAGES
+    assert ("geoagent", "GeoAgent[providers]>=1.4.1") in REQUIRED_PACKAGES
     assert ("strands", "strands-agents>=1.37") in REQUIRED_PACKAGES
     assert ("pydantic", "pydantic>=2.0") in REQUIRED_PACKAGES
 

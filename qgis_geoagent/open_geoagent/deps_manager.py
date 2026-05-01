@@ -30,7 +30,7 @@ from qgis.PyQt.QtCore import QThread, pyqtSignal
 # Dependency specs: (import_name, pip_install_name)
 MIN_PYTHON_VERSION = (3, 11)
 CORE_RUNTIME_PACKAGES = [
-    ("geoagent", "GeoAgent[providers]>=1.4.0"),
+    ("geoagent", "GeoAgent[providers]>=1.4.1"),
     ("strands", "strands-agents>=1.37"),
     ("pydantic", "pydantic>=2.0"),
 ]
@@ -663,7 +663,7 @@ def create_venv(venv_dir: str) -> str:
         "This can happen when QGIS bundles Python in a way that prevents\n"
         "standard venv creation.\n\n"
         "You can try installing manually with:\n"
-        '  pip install "GeoAgent[providers]>=1.4.0"\n\n'
+        '  pip install "GeoAgent[providers]>=1.4.1"\n\n'
         "Details:\n" + "\n".join(f"  {d}" for d in details)
     )
 
@@ -805,7 +805,7 @@ class DepsInstallWorker(QThread):
                         False,
                         "pip is not available in the virtual environment.\n"
                         "Please install dependencies manually:\n"
-                        'pip install "GeoAgent[providers]>=1.4.0"',
+                        'pip install "GeoAgent[providers]>=1.4.1"',
                     )
                     return
             self.progress.emit(15, "Package installer ready.")
