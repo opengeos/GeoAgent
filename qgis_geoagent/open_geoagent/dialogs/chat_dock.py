@@ -14,6 +14,7 @@ import time
 import traceback
 import wave
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import (
@@ -154,7 +155,7 @@ PERMISSION_PROFILES = [
 PERMISSION_PROFILE_ALIASES = {
     "Execute PyQGIS": "Execute Scripts",
 }
-DEFAULT_PERMISSION_PROFILE = "Trusted auto-approve"
+DEFAULT_PERMISSION_PROFILE = "Inspect only"
 WORKFLOW_PROMPTS = {
     "NASA Earthdata": [
         (
@@ -649,6 +650,63 @@ def _clean_tool_display_args(args):
     return cleaned
 
 
+_SENSITIVE_QUERY_PARAMS = {
+    "sig",
+    "signature",
+    "sv",
+    "se",
+    "st",
+    "sp",
+    "sas",
+    "token",
+    "access_token",
+    "x-amz-signature",
+    "x-amz-credential",
+    "x-amz-security-token",
+    "x-goog-signature",
+    "x-goog-credential",
+    "key",
+    "api_key",
+    "apikey",
+}
+
+
+def _redact_url_for_display(url):
+    """Redact bearer-like query parameters (e.g., SAS tokens) from a URL.
+
+    Signed Planetary Computer or cloud storage URLs embed credentials in the
+    query string. Persisting them in chat transcripts increases the leakage
+    risk when users copy or share logs.
+    """
+    if not url:
+        return url
+    try:
+        parts = urlsplit(url)
+    except (ValueError, TypeError):
+        return url
+    if not parts.query:
+        return url
+    redacted_pairs = []
+    changed = False
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        if key.lower() in _SENSITIVE_QUERY_PARAMS and value:
+            redacted_pairs.append((key, "REDACTED"))
+            changed = True
+        else:
+            redacted_pairs.append((key, value))
+    if not changed:
+        return url
+    return urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(redacted_pairs, doseq=True),
+            parts.fragment,
+        )
+    )
+
+
 def _format_tool_calls(tool_calls):
     """Return Markdown lines describing tool input parameters."""
     if not tool_calls:
@@ -700,10 +758,14 @@ def _format_tool_calls(tool_calls):
     if stac_asset_urls:
         lines.append("")
         lines.append("STAC asset URLs:")
+        lines.append(
+            "_Signed query parameters are redacted to avoid leaking "
+            "credentials when transcripts are shared._"
+        )
         for layer_name, href in stac_asset_urls:
             lines.append(f"- **{layer_name}:**")
             lines.append("```text")
-            lines.append(href)
+            lines.append(_redact_url_for_display(href))
             lines.append("```")
     return "\n".join(lines) if len(lines) > 1 else ""
 
@@ -1591,8 +1653,6 @@ class ChatWorker(QThread):
         self.stream = bool(stream)
         self.agent_mode = agent_mode or DEFAULT_AGENT_MODE
         self.permission_profile = permission_profile or DEFAULT_PERMISSION_PROFILE
-        if self.permission_profile == "Trusted auto-approve":
-            self.auto_approve_tools = True
 
     def run(self):
         """Create a GeoAgent QGIS agent and execute one chat turn."""

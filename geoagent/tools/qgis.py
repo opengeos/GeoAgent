@@ -1384,6 +1384,11 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             )
             if layer is None:
                 raise ValueError("No active DEM layer is available.")
+            if not _is_raster_layer(layer):
+                raise ValueError(
+                    f"Layer {layer.name()!r} is not a raster layer; "
+                    "select a DEM raster layer for hillshade generation."
+                )
             source = str(layer.source() if hasattr(layer, "source") else "")
             if not source:
                 raise ValueError(

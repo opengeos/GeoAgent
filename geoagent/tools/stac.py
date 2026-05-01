@@ -588,8 +588,10 @@ def _canvas_extent_to_wgs84_bbox(canvas: Any) -> dict[str, Any]:
     except Exception as exc:
         return {
             "success": False,
-            "bbox": raw_bbox,
-            "crs": source_crs,
+            "bbox": None,
+            "crs": None,
+            "source_bbox": raw_bbox,
+            "source_crs": source_crs,
             "reason": (
                 "Could not transform the QGIS canvas extent to EPSG:4326: "
                 f"{type(exc).__name__}: {exc}"
@@ -598,8 +600,10 @@ def _canvas_extent_to_wgs84_bbox(canvas: Any) -> dict[str, Any]:
 
     return {
         "success": False,
-        "bbox": raw_bbox,
-        "crs": source_crs,
+        "bbox": None,
+        "crs": None,
+        "source_bbox": raw_bbox,
+        "source_crs": source_crs,
         "reason": "Could not transform the QGIS canvas extent to EPSG:4326.",
     }
 
