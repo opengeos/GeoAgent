@@ -39,6 +39,10 @@ Use the settings panel to configure API keys, hosts, model defaults, and
 dependency status. Vision features require a provider and model that support
 image inputs.
 
+## Sample Data
+
+You can download sample data from Source Coop [here](https://data.source.coop/opengeos/geoai/geoagent-sample-data.zip).
+
 ## Chat With QGIS
 
 The chat dock is aware of the current QGIS project and active layer. It can
