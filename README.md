@@ -24,6 +24,8 @@ wraps Strands with geospatial context, tool metadata, optional package
 adapters, provider configuration, and confirmation hooks for operations that
 should not run silently.
 
+[![](https://img.youtube.com/vi/5zkXQlHUsu8/maxresdefault.jpg)](https://youtu.be/5zkXQlHUsu8)
+
 ## Why GeoAgent?
 
 Many geospatial libraries need the same agent features:

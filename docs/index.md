@@ -24,6 +24,8 @@ invent a separate agent framework. GeoAgent provides the shared foundation,
 while packages contribute focused tool adapters for their own objects and
 workflows.
 
+[![](https://img.youtube.com/vi/5zkXQlHUsu8/maxresdefault.jpg)](https://youtu.be/5zkXQlHUsu8)
+
 ## What GeoAgent Provides
 
 - A `GeoAgent` facade around a Strands `Agent`.

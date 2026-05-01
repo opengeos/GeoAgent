@@ -43,6 +43,10 @@ image inputs.
 
 You can download sample data from Source Coop [here](https://data.source.coop/opengeos/geoai/geoagent-sample-data.zip).
 
+## Video Tutorial
+
+[![](https://img.youtube.com/vi/5zkXQlHUsu8/maxresdefault.jpg)](https://youtu.be/5zkXQlHUsu8)
+
 ## Chat With QGIS
 
 The chat dock is aware of the current QGIS project and active layer. It can
