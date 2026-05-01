@@ -1170,6 +1170,7 @@ def _allowed_output_image_roots():
     candidates = [
         Path(tempfile.gettempdir()) / "open_geoagent_outputs",
         Path(tempfile.gettempdir()) / "geoagent_images",
+        Path(tempfile.gettempdir()) / "open_geoagent_timelapse",
     ]
     env_dir = os.environ.get("GEOAGENT_IMAGE_OUTPUT_DIR", "").strip()
     if env_dir:
@@ -1323,6 +1324,8 @@ def _local_image_metadata_from_path(path):
     """Return image metadata for an existing local image path."""
     path = str(path or "").strip().rstrip(".,);]")
     if not path:
+        return None
+    if not _path_under_allowed_output_root(path):
         return None
     try:
         resolved = Path(path).expanduser().resolve()

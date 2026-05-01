@@ -85,8 +85,11 @@ def _add_plugin_parent_to_path(plugin: Any = None) -> None:
     if not plugin_dir:
         return
     parent = os.path.dirname(os.path.abspath(str(plugin_dir)))
-    if parent and parent not in sys.path:
-        sys.path.append(parent)
+    if not parent:
+        return
+    while parent in sys.path:
+        sys.path.remove(parent)
+    sys.path.insert(0, parent)
 
 
 def _ensure_plugin_deps(plugin: Any = None) -> bool:
@@ -401,43 +404,50 @@ def _add_timelapse_bbox_layer(
                 QgsPointXY,
                 QgsVectorLayer,
             )
+        except ImportError:
+            layer = _FallbackBboxLayer(layer_name, bbox)
+            proj.addMapLayer(layer)
+        else:
+            try:
+                layer = QgsVectorLayer("Polygon?crs=EPSG:4326", layer_name, "memory")
+                if not layer.isValid():
+                    return {
+                        "success": False,
+                        "layer_name": layer_name,
+                        "reason": "Could not create bbox memory layer.",
+                    }
+                feature = QgsFeature()
+                points = [
+                    QgsPointXY(west, south),
+                    QgsPointXY(east, south),
+                    QgsPointXY(east, north),
+                    QgsPointXY(west, north),
+                    QgsPointXY(west, south),
+                ]
+                feature.setGeometry(QgsGeometry.fromPolygonXY([points]))
+                provider = layer.dataProvider()
+                provider.addFeatures([feature])
+                layer.updateExtents()
 
-            layer = QgsVectorLayer("Polygon?crs=EPSG:4326", layer_name, "memory")
-            if not layer.isValid():
+                try:
+                    symbol = QgsFillSymbol.createSimple(
+                        {
+                            "color": "255,0,0,20",
+                            "outline_color": "255,0,0,255",
+                            "outline_width": "0.8",
+                        }
+                    )
+                    layer.renderer().setSymbol(symbol)
+                except Exception:
+                    pass
+
+                proj.addMapLayer(layer)
+            except Exception as exc:
                 return {
                     "success": False,
                     "layer_name": layer_name,
-                    "reason": "Could not create bbox memory layer.",
+                    "reason": str(exc),
                 }
-            feature = QgsFeature()
-            points = [
-                QgsPointXY(west, south),
-                QgsPointXY(east, south),
-                QgsPointXY(east, north),
-                QgsPointXY(west, north),
-                QgsPointXY(west, south),
-            ]
-            feature.setGeometry(QgsGeometry.fromPolygonXY([points]))
-            provider = layer.dataProvider()
-            provider.addFeatures([feature])
-            layer.updateExtents()
-
-            try:
-                symbol = QgsFillSymbol.createSimple(
-                    {
-                        "color": "255,0,0,20",
-                        "outline_color": "255,0,0,255",
-                        "outline_width": "0.8",
-                    }
-                )
-                layer.renderer().setSymbol(symbol)
-            except Exception:
-                pass
-
-            proj.addMapLayer(layer)
-        except Exception:
-            layer = _FallbackBboxLayer(layer_name, bbox)
-            proj.addMapLayer(layer)
 
         try:
             iface.mapCanvas().refresh()
@@ -664,7 +674,9 @@ def timelapse_tools(
 
             west, south, east, north = parsed_bbox
             roi = core.bbox_to_ee_geometry(west, south, east, north)
-            output = os.path.abspath(output_path or _default_output_path(imagery))
+            output = os.path.abspath(
+                os.path.expanduser(output_path or _default_output_path(imagery))
+            )
             os.makedirs(os.path.dirname(output), exist_ok=True)
             current_year = datetime.now().year
             parsed_bands = _parse_list(bands)
@@ -747,7 +759,7 @@ def timelapse_tools(
                     custom_bands=_parse_list(goes_custom_bands),
                 )
 
-            result_path = os.path.abspath(str(result or output))
+            result_path = os.path.abspath(os.path.expanduser(str(result or output)))
             bbox_layer = None
             if add_bbox_to_map:
                 layer_name = (
