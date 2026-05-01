@@ -12,13 +12,13 @@
         <meta name="author" content="Qiusheng Wu">
       
       
-        <link rel="canonical" href="https://geoagent.gishub.org/examples/intro/">
+        <link rel="canonical" href="https://geoagent.gishub.org/examples/stac_workflow/">
       
       
-        <link rel="prev" href="../../contributing/">
+        <link rel="prev" href="../qgis_agent/">
       
       
-        <link rel="next" href="../openai_codex/">
+        <link rel="next" href="../../geoagent/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Intro - GeoAgent</title>
+        <title>Stac workflow - GeoAgent</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#geoagent-10-anthropic-claude" class="md-skip">
+        <a href="#geoagent-stac-tools" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Intro
+              Stac workflow
             
           </span>
         </div>
@@ -506,19 +506,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../intro/" class="md-nav__link">
         
   
   
@@ -534,7 +525,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -656,10 +646,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../stac_workflow/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -675,6 +674,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -1081,7 +1081,7 @@
               <article class="md-content__inner md-typeset">
                 
 
-    <a href="/examples/intro/intro.ipynb" title="Download Notebook" class="md-content__button md-icon">
+    <a href="/examples/stac_workflow/stac_workflow.ipynb" title="Download Notebook" class="md-content__button md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7z"/></svg>
     </a>
 
@@ -1821,10 +1821,11 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="geoagent-10-anthropic-claude">GeoAgent 1.0 — Anthropic (Claude)<a class="anchor-link" href="#geoagent-10-anthropic-claude">¶</a></h1><ul>
-<li>Set <strong><code>ANTHROPIC_API_KEY</code></strong> in your environment.</li>
-<li>Optionally set <strong><code>ANTHROPIC_MODEL</code></strong> (default: <code>claude-sonnet-4-6</code> — Claude Sonnet 4.6).</li>
-<li>Install: <code>pip install "GeoAgent[anthropic]"</code>.</li>
+<h1 id="geoagent-stac-tools">GeoAgent + STAC tools<a class="anchor-link" href="#geoagent-stac-tools">¶</a></h1><p>This notebook demonstrates GeoAgent's STAC tool surface without requiring a real QGIS session or an LLM API key. It uses <code>geoagent.testing</code> QGIS mocks, direct tool calls, and the public Microsoft Planetary Computer STAC API.</p>
+<ul>
+<li>Install: <code>pip install "GeoAgent[stac]"</code>.</li>
+<li>No provider key is required unless you call <code>agent.chat(...)</code>.</li>
+<li>The final cell loads a selected STAC raster asset URL into the mock QGIS project.</li>
 </ul>
 </div>
 </div>
@@ -1848,16 +1849,27 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="s2">"GeoAgent[anthropic]"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="s2">"GeoAgent[stac]"</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">%pip install -q "GeoAgent[anthropic]"</div>
+<div class="clipboard-copy-txt" id="cell-1">%pip install -q "GeoAgent[stac]"</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Create a STAC-enabled GeoAgent. The tiny model stand-in avoids provider setup because this notebook calls tools directly rather than sending prompts to a model.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1875,28 +1887,99 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">auto_approve_all</span><span class="p">,</span> <span class="n">for_stac</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.testing</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockQGISIface</span><span class="p">,</span> <span class="n">MockQGISProject</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
-<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_API_KEY"</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Set ANTHROPIC_API_KEY before running this cell."</span><span class="p">)</span>
 
-<span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_MODEL"</span><span class="p">,</span> <span class="s2">"claude-sonnet-4-6"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Using model:"</span><span class="p">,</span> <span class="n">MODEL</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NotebookModel</span><span class="p">:</span>
+    <span class="n">stateful</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">tool_payload</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the JSON payload from a Strands direct tool-call result."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"content"</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">content</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">else</span> <span class="s2">""</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">"GeoAgent tool call failed"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="n">project</span> <span class="o">=</span> <span class="n">MockQGISProject</span><span class="p">()</span>
+<span class="n">iface</span> <span class="o">=</span> <span class="n">MockQGISIface</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">for_stac</span><span class="p">(</span>
+    <span class="n">iface</span><span class="p">,</span>
+    <span class="n">project</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">NotebookModel</span><span class="p">(),</span>
+    <span class="n">confirm</span><span class="o">=</span><span class="n">auto_approve_all</span><span class="p">,</span>
+    <span class="n">permission_profile</span><span class="o">=</span><span class="s2">"Trusted auto-approve"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">agent</span><span class="o">.</span><span class="n">tool_names</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">import os
+<div class="clipboard-copy-txt" id="cell-2">from geoagent import auto_approve_all, for_stac
+from geoagent.testing import MockQGISIface, MockQGISProject
+import json
 
-if not os.environ.get("ANTHROPIC_API_KEY"):
-    raise RuntimeError("Set ANTHROPIC_API_KEY before running this cell.")
 
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-print("Using model:", MODEL)</div>
+class NotebookModel:
+    stateful = False
+
+
+def tool_payload(result):
+    """Return the JSON payload from a Strands direct tool-call result."""
+    if isinstance(result, dict) and "content" in result:
+        content = result.get("content") or []
+        text = (
+            content[0].get("text", "")
+            if content and isinstance(content[0], dict)
+            else ""
+        )
+        if result.get("status") == "error":
+            raise RuntimeError(text or "GeoAgent tool call failed")
+        if text:
+            return json.loads(text)
+    return result
+
+
+project = MockQGISProject()
+iface = MockQGISIface(project)
+
+agent = for_stac(
+    iface,
+    project,
+    model=NotebookModel(),
+    confirm=auto_approve_all,
+    permission_profile="Trusted auto-approve",
+)
+
+agent.tool_names</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>List a few collections from the catalog.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1914,39 +1997,215 @@ print("Using model:", MODEL)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgentConfig</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">catalog_url</span> <span class="o">=</span> <span class="s2">"https://planetarycomputer.microsoft.com/api/stac/v1"</span>
 
-<span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span>
-    <span class="n">config</span><span class="o">=</span><span class="n">GeoAgentConfig</span><span class="p">(</span>
-        <span class="n">provider</span><span class="o">=</span><span class="s2">"anthropic"</span><span class="p">,</span>
-        <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
-        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
-    <span class="p">),</span>
+<span class="n">collections</span> <span class="o">=</span> <span class="n">tool_payload</span><span class="p">(</span>
+    <span class="n">agent</span><span class="o">.</span><span class="n">tool</span><span class="o">.</span><span class="n">list_stac_collections</span><span class="p">(</span><span class="n">catalog_url</span><span class="o">=</span><span class="n">catalog_url</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="p">[(</span><span class="n">c</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">collections</span><span class="p">[</span><span class="s2">"collections"</span><span class="p">]]</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-3">catalog_url = "https://planetarycomputer.microsoft.com/api/stac/v1"
+
+collections = tool_payload(
+    agent.tool.list_stac_collections(catalog_url=catalog_url, limit=8)
+)
+[(c["id"], c.get("title")) for c in collections["collections"]]</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Search Sentinel-2 L2A items over Knoxville, Tennessee for a short date range. The bbox order is west, south, east, north.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">search</span> <span class="o">=</span> <span class="n">tool_payload</span><span class="p">(</span>
+    <span class="n">agent</span><span class="o">.</span><span class="n">tool</span><span class="o">.</span><span class="n">search_stac_items</span><span class="p">(</span>
+        <span class="n">catalog_url</span><span class="o">=</span><span class="n">catalog_url</span><span class="p">,</span>
+        <span class="n">collection</span><span class="o">=</span><span class="s2">"sentinel-2-l2a"</span><span class="p">,</span>
+        <span class="n">bbox</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">84.10</span><span class="p">,</span> <span class="mf">35.80</span><span class="p">,</span> <span class="o">-</span><span class="mf">83.70</span><span class="p">,</span> <span class="mf">36.10</span><span class="p">],</span>
+        <span class="n">datetime</span><span class="o">=</span><span class="s2">"2024-06-01/2024-06-30"</span><span class="p">,</span>
+        <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="p">)</span>
 <span class="p">)</span>
 
-<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"In one sentence, what is STAC in Earth observation?"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"success:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"executed_tools:"</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">executed_tools</span><span class="p">)</span>
+<span class="n">search</span><span class="p">[</span><span class="s2">"count"</span><span class="p">],</span> <span class="n">search</span><span class="p">[</span><span class="s2">"items"</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">from geoagent import GeoAgent
-from geoagent.core.config import GeoAgentConfig
-
-agent = GeoAgent(
-    config=GeoAgentConfig(
-        provider="anthropic",
-        model=MODEL,
-        temperature=0.0,
-        max_tokens=2048,
-    ),
+<div class="clipboard-copy-txt" id="cell-4">search = tool_payload(
+    agent.tool.search_stac_items(
+        catalog_url=catalog_url,
+        collection="sentinel-2-l2a",
+        bbox=[-84.10, 35.80, -83.70, 36.10],
+        datetime="2024-06-01/2024-06-30",
+        limit=5,
+    )
 )
 
-resp = agent.chat("In one sentence, what is STAC in Earth observation?")
-print("success:", resp.success)
-print(resp.answer_text)
-print("executed_tools:", resp.executed_tools)</div>
+search["count"], search["items"][:2]</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Inspect the first item's assets and choose a visual or raster asset.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">search</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]:</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No STAC items found. Try a wider date range or bbox."</span><span class="p">)</span>
+
+<span class="n">first</span> <span class="o">=</span> <span class="n">search</span><span class="p">[</span><span class="s2">"items"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">assets</span> <span class="o">=</span> <span class="n">tool_payload</span><span class="p">(</span>
+    <span class="n">agent</span><span class="o">.</span><span class="n">tool</span><span class="o">.</span><span class="n">get_stac_item_assets</span><span class="p">(</span>
+        <span class="n">catalog_url</span><span class="o">=</span><span class="n">catalog_url</span><span class="p">,</span>
+        <span class="n">collection</span><span class="o">=</span><span class="n">first</span><span class="p">[</span><span class="s2">"collection"</span><span class="p">],</span>
+        <span class="n">item_id</span><span class="o">=</span><span class="n">first</span><span class="p">[</span><span class="s2">"id"</span><span class="p">],</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">asset_candidates</span> <span class="o">=</span> <span class="n">assets</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">]</span>
+<span class="n">asset</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+    <span class="p">(</span>
+        <span class="n">item</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">asset_candidates</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"key"</span><span class="p">]</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"visual"</span><span class="p">,</span> <span class="s2">"rendered_preview"</span><span class="p">,</span> <span class="s2">"B04"</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">}</span>
+        <span class="ow">or</span> <span class="s2">"tiff"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="p">),</span>
+    <span class="n">asset_candidates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">asset</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-5">if not search["items"]:
+    raise RuntimeError("No STAC items found. Try a wider date range or bbox.")
+
+first = search["items"][0]
+assets = tool_payload(
+    agent.tool.get_stac_item_assets(
+        catalog_url=catalog_url,
+        collection=first["collection"],
+        item_id=first["id"],
+    )
+)
+
+asset_candidates = assets["assets"]
+asset = next(
+    (
+        item
+        for item in asset_candidates
+        if item["key"] in {"visual", "rendered_preview", "B04", "red"}
+        or "tiff" in str(item.get("type", "")).lower()
+    ),
+    asset_candidates[0],
+)
+
+asset</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=10">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Load the selected asset URL into the mock QGIS project. In a real QGIS session, the same tool calls <code>iface.addRasterLayer(...)</code>; if QGIS cannot load the URL directly, GeoAgent returns the asset URL and a structured reason instead of pretending the layer was added.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=11">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">load_result</span> <span class="o">=</span> <span class="n">tool_payload</span><span class="p">(</span>
+    <span class="n">agent</span><span class="o">.</span><span class="n">tool</span><span class="o">.</span><span class="n">add_stac_asset_to_qgis</span><span class="p">(</span>
+        <span class="n">asset_href</span><span class="o">=</span><span class="n">asset</span><span class="p">[</span><span class="s2">"href"</span><span class="p">],</span>
+        <span class="n">layer_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">first</span><span class="p">[</span><span class="s1">'collection'</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">asset</span><span class="p">[</span><span class="s1">'key'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">loaded_layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">mapLayers</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+<span class="n">load_result</span><span class="p">,</span> <span class="n">loaded_layers</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-6">load_result = tool_payload(
+    agent.tool.add_stac_asset_to_qgis(
+        asset_href=asset["href"],
+        layer_name=f"{first['collection']} {asset['key']}",
+    )
+)
+
+loaded_layers = [layer.name() for layer in project.mapLayers().values()]
+load_result, loaded_layers</div>
 </div>
 </div>
 </div>
@@ -1982,7 +2241,7 @@ print("executed_tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 28, 2026 03:23:27 UTC"><span class="timeago" datetime="2026-04-28T03:23:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 28, 2026 03:23:27 UTC">2026-04-28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="May 1, 2026 03:47:56 UTC"><span class="timeago" datetime="2026-05-01T03:47:56+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 1, 2026 03:47:56 UTC">2026-05-01</span>
   </span>
 
     
@@ -1992,7 +2251,7 @@ print("executed_tools:", resp.executed_tools)</div>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="February 1, 2026 01:38:21 UTC"><span class="timeago" datetime="2026-02-01T01:38:21+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="February 1, 2026 01:38:21 UTC">2026-02-01</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="May 1, 2026 03:47:56 UTC"><span class="timeago" datetime="2026-05-01T03:47:56+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 1, 2026 03:47:56 UTC">2026-05-01</span>
   </span>
 
     

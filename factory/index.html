@@ -640,6 +640,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/stac_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stac workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -884,6 +912,17 @@
     <span class="md-ellipsis">
       
         for_qgis()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#geoagent.core.factory.for_stac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for_stac()
       
     </span>
   </a>
@@ -1312,6 +1351,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#geoagent.core.factory.for_stac" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        for_stac()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#geoagent.core.factory.for_whitebox" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1396,12 +1446,13 @@
 
 
 
+
   <div class="doc doc-object doc-function">
 
 
 
 <h4 id="geoagent.core.factory.assemble_tools" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">assemble_tools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_anymap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_earthdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_gee_data_catalogs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_whitebox</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nasa_earthdata_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gee_data_catalogs_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">permission_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">assemble_tools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_anymap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_earthdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_gee_data_catalogs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_whitebox</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_stac</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nasa_earthdata_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gee_data_catalogs_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">permission_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exclude_tool_names</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.factory.assemble_tools" class="headerlink" title="Permanent link">&para;</a></h4>
@@ -1423,11 +1474,13 @@
     <span class="n">include_nasa_opera</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_gee_data_catalogs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_whitebox</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">include_stac</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_image_generation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">nasa_earthdata_plugin</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">gee_data_catalogs_plugin</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exclude_tool_names</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">GeoToolRegistry</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect tools for a context and build a metadata registry.&quot;&quot;&quot;</span>
     <span class="n">registry</span> <span class="o">=</span> <span class="n">GeoToolRegistry</span><span class="p">()</span>
@@ -1475,6 +1528,12 @@
         <span class="p">)</span>
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">whitebox_tool_list</span><span class="p">)</span>
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">whitebox_tool_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_stac</span><span class="p">:</span>
+        <span class="n">stac_tool_list</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span>
+            <span class="n">stac_tools</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">qgis_iface</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">qgis_project</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">stac_tool_list</span><span class="p">)</span>
+        <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">stac_tool_list</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">include_image_generation</span><span class="p">:</span>
         <span class="n">image_tools</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span><span class="n">image_generation_tools</span><span class="p">())</span>
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">image_tools</span><span class="p">)</span>
@@ -1483,6 +1542,7 @@
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">extra_tools</span><span class="p">)</span>
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_tools</span><span class="p">)</span>
     <span class="n">collected</span> <span class="o">=</span> <span class="n">_filter_by_permission</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">permission_profile</span><span class="p">)</span>
+    <span class="n">collected</span> <span class="o">=</span> <span class="n">_drop_tools_by_name</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">exclude_tool_names</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">())</span>
     <span class="n">tools</span> <span class="o">=</span> <span class="n">collect_tools_for_context</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span> <span class="n">registry</span><span class="o">=</span><span class="n">registry</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span>
 </code></pre></div>
@@ -1970,6 +2030,80 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">confirm</span><span class="o">=</span><span class="n">confirm</span><span class="p">,</span>
         <span class="n">qgis_safe_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h4 id="geoagent.core.factory.for_stac" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">for_stac</span><span class="p">(</span><span class="n">iface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">confirm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">permission_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#geoagent.core.factory.for_stac" class="headerlink" title="Permanent link">&para;</a></h4>
+
+    <div class="doc doc-contents ">
+
+      <p>Bind an agent to STAC catalog workflows and optional QGIS loading.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>geoagent/core/factory.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">for_stac</span><span class="p">(</span>
+    <span class="n">iface</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">GeoAgentConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to STAC catalog workflows and optional QGIS loading.&quot;&quot;&quot;</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
+        <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
+        <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;stac&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">STAC_SYSTEM_PROMPT</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
+        <span class="n">include_qgis</span><span class="o">=</span><span class="n">include_qgis</span><span class="p">,</span>
+        <span class="n">include_stac</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+        <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>
+        <span class="n">exclude_tool_names</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;run_pyqgis_script&quot;</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
+        <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+        <span class="n">registry</span><span class="o">=</span><span class="n">registry</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+        <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+        <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+        <span class="n">confirm</span><span class="o">=</span><span class="n">confirm</span><span class="p">,</span>
+        <span class="n">qgis_safe_mode</span><span class="o">=</span><span class="n">iface</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div>
         </details>

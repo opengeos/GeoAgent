@@ -764,6 +764,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/stac_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stac workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1272,8 +1300,10 @@ surface.</p>
 from <code>qgis_geoagent/open_geoagent</code> into your QGIS plugin profile.</p>
 <p>Open the plugin from the QGIS toolbar or plugin menu, then use
 <strong>Settings &gt; Dependencies</strong> to install GeoAgent and provider clients into the
-plugin-managed environment. QGIS itself remains provided by your desktop QGIS
-installation.</p>
+plugin-managed environment. The dependency tab is workflow-aware: install Core
+Providers, WhiteboxTools, NASA Earthdata/OPERA, GEE Data Catalogs, STAC, or All
+depending on the modes you use. QGIS itself remains provided by your desktop
+QGIS installation. The QGIS Python runtime must be Python 3.11 or newer.</p>
 <h2 id="provider-setup">Provider Setup<a class="headerlink" href="#provider-setup" title="Permanent link">&para;</a></h2>
 <p>OpenGeoAgent supports the same provider families as GeoAgent:</p>
 <ul>
@@ -1293,6 +1323,24 @@ image inputs.</p>
 inspect project state, summarize layers, navigate the map canvas, add vector,
 raster, and XYZ tile layers, select features, run QGIS Processing algorithms,
 open attribute tables, and save projects.</p>
+<p>Agent modes expose workflow-specific tools. STAC mode can read the current map
+extent as a WGS84 search bbox, list catalog collections, search items, inspect
+item assets, and add concrete raster asset URLs to QGIS when QGIS accepts the
+asset directly. If the user does not name a catalog, STAC mode defaults to the
+Planetary Computer STAC API. When the selected asset is a remote COG, the tool
+passes the signed HTTP URL to QGIS through GDAL's <code>/vsicurl/</code> virtual filesystem
+and queues raster creation in a QGIS background task before adding the validated
+layer to the project and zooming to its extent. The QGIS status bar shows an
+in-progress loading message while the background task is active. This follows
+the loading pattern used by the qgis-stac plugin and avoids blocking the QGIS UI
+while GDAL probes the remote COG. Search results include cloud cover, spatial-fit
+metadata, and preferred raster asset URLs so common load workflows can skip an
+extra asset-inspection turn. The full asset URL is recorded in the transcript.
+STAC load task start, success, failure, and termination messages are also
+written to the QGIS message log under <code>OpenGeoAgent STAC</code>. STAC mode hides the
+generated PyQGIS script fallback so common search setup stays on dedicated
+read-only tools. The chat dock's tool availability line shows which tools are
+active for the selected mode and permission profile.</p>
 <p>Examples:</p>
 <ul>
 <li>"Summarize all layers in this project."</li>
@@ -1346,7 +1394,9 @@ debugging, and sharing workflows outside the plugin.</p>
 <p>OpenGeoAgent uses GeoAgent's confirmation hook for destructive, persistent, or
 long-running operations. Actions such as deleting layers, saving projects,
 running processing jobs, and executing fallback PyQGIS scripts require user
-approval before they run.</p>
+approval before they run unless the selected permission profile is
+<strong>Trusted auto-approve</strong>, which is the first-run default. Select a narrower
+profile such as Inspect only when you want to restrict tool access.</p>
 
 
 
@@ -1369,7 +1419,7 @@ approval before they run.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="May 1, 2026 00:37:27 UTC"><span class="timeago" datetime="2026-05-01T00:37:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 1, 2026 00:37:27 UTC">2026-05-01</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="May 1, 2026 03:47:56 UTC"><span class="timeago" datetime="2026-05-01T03:47:56+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 1, 2026 03:47:56 UTC">2026-05-01</span>
   </span>
 
     
