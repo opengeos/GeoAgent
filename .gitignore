@@ -111,3 +111,4 @@ CLAUDE.md
 *.zip
 docs/examples/codex_example_map.png
 scripts/
+symbology-style.db

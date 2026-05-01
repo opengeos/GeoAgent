@@ -24,6 +24,7 @@ from open_geoagent.dialogs.chat_dock import (
     _parse_markdown_transcript,
     _permission_allows_tool,
     _project_history_key,
+    _images_from_trusted_tool_output_text,
 )
 
 
@@ -107,6 +108,23 @@ def test_message_images_html_uses_clickable_thumbnail() -> None:
     assert "/tmp/geoagent_images/cat.png" in html
 
 
+def test_message_images_html_supports_clickable_gif_thumbnail() -> None:
+    """Verify generated GIF output renders as a clickable thumbnail."""
+    html = _message_images_html(
+        [
+            {
+                "path": "/tmp/landsat_timelapse.gif",
+                "format": "gif",
+                "_href": "opengeoagent-image:0",
+            }
+        ]
+    )
+
+    assert "href='opengeoagent-image:0'" in html
+    assert "width='180'" in html
+    assert "/tmp/landsat_timelapse.gif" in html
+
+
 def test_prepare_output_images_writes_model_image_bytes() -> None:
     """Verify model image bytes become transcript-safe local artifacts."""
     prepared = _prepare_output_images(
@@ -139,6 +157,34 @@ def test_images_from_output_text_extracts_generated_path() -> None:
             "mime_type": "image/png",
         }
     ]
+
+
+def test_trusted_tool_output_text_extracts_timelapse_gif(tmp_path) -> None:
+    """Verify Timelapse GIF paths in successful answers become thumbnails."""
+    gif = tmp_path / "landsat_timelapse.gif"
+    gif.write_bytes(b"GIF89a")
+
+    images = _images_from_trusted_tool_output_text(
+        f"Output: {gif}\nElapsed: 46.27s",
+        [{"name": "create_timelapse", "args": {}}],
+    )
+
+    assert images == [
+        {
+            "path": str(gif),
+            "format": "gif",
+            "mime_type": "image/gif",
+        }
+    ]
+
+
+def test_untrusted_output_text_ignores_arbitrary_tmp_gif(tmp_path) -> None:
+    """Verify arbitrary local image paths are not trusted without a tool call."""
+    gif = tmp_path / "landsat_timelapse.gif"
+    gif.write_bytes(b"GIF89a")
+
+    assert _images_from_output_text(f"Output: {gif}") == []
+    assert _images_from_trusted_tool_output_text(f"Output: {gif}", []) == []
 
 
 def test_image_to_png_bytes_serializes_qimage() -> None:
@@ -247,6 +293,34 @@ def test_latest_executable_snippet_builds_signed_stac_loader_from_args() -> None
     assert "href = planetary_computer.sign(href)" in snippet["code"]
     assert "uri = f'/vsicurl/{uri}'" in snippet["code"]
     assert href in snippet["code"]
+
+
+def test_latest_executable_snippet_builds_timelapse_script_from_args() -> None:
+    """Verify Copy Script enables for Timelapse generation calls."""
+    snippet = _latest_executable_snippet(
+        [
+            {
+                "name": "create_timelapse",
+                "args": {
+                    "imagery_type": "Landsat",
+                    "bbox": "-115.45,35.95,-114.90,36.40",
+                    "start_year": 1990,
+                    "end_year": 2026,
+                    "frequency": "year",
+                    "add_bbox_to_map": True,
+                    "bbox_layer_name": "Las Vegas Timelapse BBOX",
+                },
+            }
+        ]
+    )
+
+    assert snippet["kind"] == "Python"
+    assert snippet["tool_name"] == "create_timelapse"
+    assert "from geoagent.tools.timelapse import timelapse_tools" in snippet["code"]
+    assert "imagery_type='Landsat'" in snippet["code"]
+    assert "bbox='-115.45,35.95,-114.90,36.40'" in snippet["code"]
+    assert "start_year=1990" in snippet["code"]
+    assert "create_timelapse_fn(" in snippet["code"]
 
 
 def test_image_model_from_settings_prefers_saved_then_env(monkeypatch) -> None:
@@ -560,6 +634,14 @@ def test_vantor_mode_is_available() -> None:
     assert WORKFLOW_PROMPTS["Vantor"]
 
 
+def test_timelapse_mode_is_available() -> None:
+    """Verify Timelapse appears in the OpenGeoAgent agent-mode list."""
+    from open_geoagent.dialogs.chat_dock import AGENT_MODES, WORKFLOW_PROMPTS
+
+    assert "Timelapse" in AGENT_MODES
+    assert WORKFLOW_PROMPTS["Timelapse"]
+
+
 def test_transcribed_prompt_moves_cursor_to_end() -> None:
     """Transcribed text should leave the prompt cursor at the end."""
     from open_geoagent.dialogs.chat_dock import ChatDockWidget
@@ -638,3 +720,16 @@ def test_run_processing_profile_allows_vantor_tools() -> None:
 
     assert not _permission_allows_tool("Inspect only", "load_vantor_cog", _Meta())
     assert _permission_allows_tool("Run processing", "load_vantor_cog", _Meta())
+
+
+def test_run_processing_profile_allows_timelapse_tools() -> None:
+    """Verify Timelapse mode can expose long-running generation tools."""
+
+    class _Meta:
+        category = "timelapse"
+        requires_confirmation = True
+        destructive = False
+        long_running = True
+
+    assert not _permission_allows_tool("Inspect only", "create_timelapse", _Meta())
+    assert _permission_allows_tool("Run processing", "create_timelapse", _Meta())
