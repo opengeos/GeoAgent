@@ -25,7 +25,8 @@ def test_generate_image_writes_openai_image_bytes(monkeypatch, tmp_path) -> None
             return types.SimpleNamespace(data=[item])
 
     class _Client:
-        def __init__(self) -> None:
+        def __init__(self, **kwargs) -> None:
+            calls["timeout"] = kwargs.get("timeout")
             self.images = _Images()
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
@@ -43,6 +44,7 @@ def test_generate_image_writes_openai_image_bytes(monkeypatch, tmp_path) -> None
     assert result["images"][0]["revised_prompt"] == "revised prompt"
     assert calls["model"] == "gpt-image-2"
     assert calls["prompt"] == "orange tabby cat"
+    assert calls["timeout"] == 180.0
     filename = result["images"][0]["path"].split("/")[-1]
     assert (tmp_path / filename).read_bytes() == b"fake-png"
 
@@ -81,7 +83,7 @@ def test_generate_image_falls_back_on_unverified_gpt_image_2(
             return types.SimpleNamespace(data=[item])
 
     class _Client:
-        def __init__(self) -> None:
+        def __init__(self, **kwargs) -> None:
             self.images = _Images()
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
@@ -95,3 +97,40 @@ def test_generate_image_falls_back_on_unverified_gpt_image_2(
     assert result["model"] == "gpt-image-1"
     assert "not verified" in result["fallback_reason"]
     assert models == ["gpt-image-2", "gpt-image-1"]
+
+
+def test_generate_image_uses_configured_model_and_timeout(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify QGIS image settings can steer direct tool defaults."""
+    image_payload = base64.b64encode(b"configured-png").decode("ascii")
+    calls = {}
+
+    class _Images:
+        def generate(self, **kwargs):
+            calls.update(kwargs)
+            item = types.SimpleNamespace(
+                b64_json=image_payload,
+                revised_prompt="configured prompt",
+                url=None,
+            )
+            return types.SimpleNamespace(data=[item])
+
+    class _Client:
+        def __init__(self, **kwargs) -> None:
+            calls["timeout"] = kwargs.get("timeout")
+            self.images = _Images()
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("GEOAGENT_IMAGE_MODEL", "gpt-image-1")
+    monkeypatch.setenv("GEOAGENT_IMAGE_TIMEOUT", "5")
+    monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(OpenAI=_Client))
+
+    tool = {item.tool_name: item for item in image_generation_tools()}["generate_image"]
+    result = tool.__wrapped__("satellite image of seattle", output_dir=str(tmp_path))
+
+    assert result["success"] is True
+    assert result["model"] == "gpt-image-1"
+    assert result["timeout"] == 5.0
+    assert calls["model"] == "gpt-image-1"
+    assert calls["timeout"] == 5.0

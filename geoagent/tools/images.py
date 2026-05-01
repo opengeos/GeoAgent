@@ -16,6 +16,7 @@ DEFAULT_IMAGE_MODEL = "gpt-image-2"
 FALLBACK_IMAGE_MODEL = "gpt-image-1"
 DEFAULT_IMAGE_SIZE = "1024x1024"
 DEFAULT_IMAGE_QUALITY = "low"
+DEFAULT_IMAGE_TIMEOUT = 180.0
 SUPPORTED_IMAGE_SIZES = {"1024x1024", "1024x1536", "1536x1024", "auto"}
 SUPPORTED_IMAGE_QUALITIES = {"low", "medium", "high", "auto"}
 
@@ -71,6 +72,18 @@ def _is_image_model_permission_error(exc: Exception) -> bool:
     )
 
 
+def _image_timeout() -> float:
+    """Return the image-generation request timeout in seconds."""
+    raw = os.environ.get("GEOAGENT_IMAGE_TIMEOUT", "").strip()
+    if not raw:
+        return DEFAULT_IMAGE_TIMEOUT
+    try:
+        timeout = float(raw)
+    except ValueError:
+        return DEFAULT_IMAGE_TIMEOUT
+    return timeout if timeout > 0 else DEFAULT_IMAGE_TIMEOUT
+
+
 def _generate_openai_image(
     client: Any,
     *,
@@ -106,7 +119,7 @@ def image_generation_tools() -> list[Any]:
         prompt: str,
         size: str = DEFAULT_IMAGE_SIZE,
         quality: str = DEFAULT_IMAGE_QUALITY,
-        model: str = DEFAULT_IMAGE_MODEL,
+        model: str = "",
         output_dir: str = "",
     ) -> dict[str, Any]:
         """Generate an image file from a text prompt.
@@ -115,7 +128,8 @@ def image_generation_tools() -> list[Any]:
             prompt: Visual description of the image to generate.
             size: One of 1024x1024, 1024x1536, 1536x1024, or auto.
             quality: One of low, medium, high, or auto.
-            model: OpenAI image model to use. Defaults to gpt-image-2.
+            model: OpenAI image model to use. Defaults to
+                ``GEOAGENT_IMAGE_MODEL`` when set, otherwise gpt-image-2.
             output_dir: Optional directory for the generated image.
 
         Returns:
@@ -141,14 +155,15 @@ def image_generation_tools() -> list[Any]:
         quality = str(quality or DEFAULT_IMAGE_QUALITY).strip()
         if quality not in SUPPORTED_IMAGE_QUALITIES:
             quality = DEFAULT_IMAGE_QUALITY
-        requested_model = (
-            str(model or DEFAULT_IMAGE_MODEL).strip() or DEFAULT_IMAGE_MODEL
-        )
+        configured_model = os.environ.get("GEOAGENT_IMAGE_MODEL", "").strip()
+        requested_model = str(model or configured_model or DEFAULT_IMAGE_MODEL).strip()
+        requested_model = requested_model or DEFAULT_IMAGE_MODEL
         model = requested_model
 
         from openai import OpenAI
 
-        client = OpenAI()
+        timeout = _image_timeout()
+        client = OpenAI(timeout=timeout)
         fallback_reason = ""
         try:
             response = _generate_openai_image(
@@ -172,8 +187,12 @@ def image_generation_tools() -> list[Any]:
             else:
                 return {
                     "success": False,
-                    "error": f"Image generation failed with {model}: {exc}",
+                    "error": (
+                        f"Image generation failed with {model} "
+                        f"within {timeout:g}s: {exc}"
+                    ),
                     "model": model,
+                    "timeout": timeout,
                 }
 
         out_dir = _output_dir(output_dir or None)
@@ -232,6 +251,7 @@ def image_generation_tools() -> list[Any]:
             "requested_model": requested_model,
             "size": size,
             "quality": quality,
+            "timeout": timeout,
             "images": images,
             "path": images[0].get("path", ""),
             "url": images[0].get("url", ""),
