@@ -1401,7 +1401,7 @@
 
 
 <h4 id="geoagent.core.factory.assemble_tools" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">assemble_tools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_anymap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_earthdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_gee_data_catalogs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_whitebox</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nasa_earthdata_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gee_data_catalogs_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">permission_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">assemble_tools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">extra_tools</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_anymap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_qgis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_earthdata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_gee_data_catalogs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_whitebox</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nasa_earthdata_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gee_data_catalogs_plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">permission_profile</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#geoagent.core.factory.assemble_tools" class="headerlink" title="Permanent link">&para;</a></h4>
@@ -1423,6 +1423,7 @@
     <span class="n">include_nasa_opera</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_gee_data_catalogs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">include_whitebox</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">include_image_generation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">nasa_earthdata_plugin</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">gee_data_catalogs_plugin</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1474,6 +1475,10 @@
         <span class="p">)</span>
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">whitebox_tool_list</span><span class="p">)</span>
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">whitebox_tool_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_image_generation</span><span class="p">:</span>
+        <span class="n">image_tools</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span><span class="n">image_generation_tools</span><span class="p">())</span>
+        <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">image_tools</span><span class="p">)</span>
+        <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">image_tools</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">extra_tools</span><span class="p">:</span>
         <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">extra_tools</span><span class="p">)</span>
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_tools</span><span class="p">)</span>
@@ -1577,6 +1582,7 @@
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_anymap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
     <span class="p">)</span>
@@ -1654,6 +1660,7 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_qgis</span><span class="o">=</span><span class="n">include_qgis</span><span class="p">,</span>
         <span class="n">include_gee_data_catalogs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">gee_data_catalogs_plugin</span><span class="o">=</span><span class="n">plugin</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
@@ -1716,6 +1723,7 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_leafmap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
     <span class="p">)</span>
@@ -1793,6 +1801,7 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_qgis</span><span class="o">=</span><span class="n">include_qgis</span><span class="p">,</span>
         <span class="n">include_nasa_earthdata</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">nasa_earthdata_plugin</span><span class="o">=</span><span class="n">plugin</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
@@ -1872,6 +1881,7 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_qgis</span><span class="o">=</span><span class="n">include_qgis</span><span class="p">,</span>
         <span class="n">include_nasa_opera</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>
@@ -1939,6 +1949,7 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_qgis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>
@@ -2017,6 +2028,7 @@ the general QGIS map/project tools used for inspection and navigation.</p>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">include_qgis</span><span class="o">=</span><span class="n">include_qgis</span><span class="p">,</span>
         <span class="n">include_whitebox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">include_image_generation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>

@@ -1314,6 +1314,19 @@ attach visual context from QGIS.</p>
 </ul>
 <p>Attached images appear as thumbnails in the chat. Click an image to open a
 larger preview, then use the save action or context menu to export it.</p>
+<p>When a multimodal model returns image content blocks, OpenGeoAgent writes those
+image artifacts to a local temporary output directory, renders them inline in
+the chat transcript, and includes Markdown image references when copying or
+exporting the conversation.</p>
+<p>OpenGeoAgent also exposes a <code>generate_image</code> tool for direct image creation
+requests such as "generate a cat image." This tool uses the OpenAI Images API
+and requires <code>OPENAI_API_KEY</code>; ChatGPT/Codex OAuth alone is not enough for this
+API call. The default image model is <code>gpt-image-2</code>; choose another image model
+in Settings &gt; Model &gt; Image Generation when needed. Generated files are saved
+locally and rendered inline in the chat.
+If verified image-model access belongs to a specific OpenAI organization or
+project, set the optional OpenAI org/project IDs in the plugin settings so the
+Images API request uses that verified context.</p>
 <h2 id="pyqgis-fallback">PyQGIS Fallback<a class="headerlink" href="#pyqgis-fallback" title="Permanent link">&para;</a></h2>
 <p>When a request needs QGIS API functionality that is not covered by a dedicated
 GeoAgent tool, the agent can use the confirmation-gated <code>run_pyqgis_script</code>
@@ -1356,7 +1369,7 @@ approval before they run.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 30, 2026 19:45:49 UTC"><span class="timeago" datetime="2026-04-30T19:45:49+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 30, 2026 19:45:49 UTC">2026-04-30</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="May 1, 2026 00:37:27 UTC"><span class="timeago" datetime="2026-05-01T00:37:27+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="May 1, 2026 00:37:27 UTC">2026-05-01</span>
   </span>
 
     
