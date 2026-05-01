@@ -484,7 +484,12 @@ def _loaded_gee_layer_records() -> list[dict[str, Any]]:
 
 
 def _get_loaded_gee_layer_payload(layer_name: str) -> tuple[str, Any, dict[str, Any]]:
-    """Return a registered Earth Engine layer by exact or case-insensitive name."""
+    """Return a registered Earth Engine layer by exact, case-insensitive, or unambiguous partial name.
+
+    Resolution checks an exact key match first, then a case-insensitive full-name
+    match, and finally a case-insensitive partial-name match. Raises ``KeyError``
+    when no layer matches or when the partial-name match is ambiguous.
+    """
     from gee_data_catalogs.core.ee_utils import get_ee_layers
 
     layers = get_ee_layers()
@@ -529,7 +534,12 @@ def _get_loaded_gee_layer_payload(layer_name: str) -> tuple[str, Any, dict[str, 
 
 
 def _get_loaded_gee_object(layer_name: str) -> Any:
-    """Return a registered Earth Engine object by exact or case-insensitive name."""
+    """Return a registered Earth Engine object by exact, case-insensitive, or unambiguous partial name.
+
+    Resolution mirrors :func:`_get_loaded_gee_layer_payload` and raises
+    ``KeyError`` when no layer matches or when the partial-name match is
+    ambiguous.
+    """
     return _get_loaded_gee_layer_payload(layer_name)[1]
 
 
@@ -2063,8 +2073,11 @@ def gee_data_catalogs_tools(
             max_value: Optional visualization maximum.
             palette: Optional comma-separated colors or common palette name,
                 such as terrain, viridis, or grayscale.
-            output_layer_name: Optional replacement layer name. When omitted,
-                the matched layer is replaced in place.
+            output_layer_name: Optional name for the styled layer. When
+                omitted, the matched layer is replaced in place. When set to
+                a different name, the styled output is added as a new layer
+                and the originally matched layer is left untouched in the
+                project and the EE layer registry.
         """
         try:
             matched_name, ee_object, current_vis = _get_loaded_gee_layer_payload(
