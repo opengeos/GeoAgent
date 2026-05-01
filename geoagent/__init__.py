@@ -37,6 +37,7 @@ from geoagent.core.factory import (
     for_nasa_opera,
     for_qgis,
     for_stac,
+    for_timelapse,
     for_vantor,
     for_whitebox,
 )
@@ -59,6 +60,7 @@ __all__ = [
     "for_nasa_opera",
     "for_qgis",
     "for_stac",
+    "for_timelapse",
     "for_vantor",
     "for_whitebox",
     "geo_tool",

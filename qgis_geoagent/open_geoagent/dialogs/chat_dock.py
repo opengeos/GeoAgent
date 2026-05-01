@@ -37,6 +37,7 @@ from qgis.PyQt.QtGui import (
     QGuiApplication,
     QIcon,
     QKeySequence,
+    QMovie,
     QPixmap,
     QTextCursor,
 )
@@ -143,6 +144,7 @@ AGENT_MODES = [
     "NASA OPERA",
     "GEE Data Catalogs",
     "STAC",
+    "Timelapse",
     "Vantor",
 ]
 DEFAULT_AGENT_MODE = "General QGIS"
@@ -195,6 +197,16 @@ WORKFLOW_PROMPTS = {
             "STAC raster layer in QGIS."
         ),
     ],
+    "Timelapse": [
+        (
+            "Create a Landsat timelapse for the current map extent from 1990 "
+            "to the present."
+        ),
+        (
+            "List the available timelapse imagery types and recommend one for "
+            "vegetation change."
+        ),
+    ],
     "Vantor": [
         "List available Vantor Open Data events and summarize the newest results.",
         (
@@ -236,6 +248,7 @@ def _permission_allows_tool(permission_profile, tool_name, meta=None):
         "nasa_earthdata",
         "nasa_opera",
         "gee_data_catalogs",
+        "timelapse",
         "vantor",
     }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
@@ -937,6 +950,39 @@ def _stac_load_asset_snippet(args, result=None):
     return "\n".join(lines)
 
 
+def _timelapse_create_snippet_from_args(args):
+    """Build a QGIS Python Console snippet for a Timelapse generation call."""
+    if not isinstance(args, dict):
+        return ""
+    cleaned = {
+        str(key): value for key, value in args.items() if value not in (None, "")
+    }
+    if not cleaned:
+        return ""
+    arg_lines = []
+    for key, value in sorted(cleaned.items()):
+        arg_lines.append(f"    {key}={_python_literal(value)},")
+    args_block = "\n".join(arg_lines)
+    return f"""from qgis.core import QgsProject
+from qgis.utils import iface
+
+from geoagent.tools.timelapse import timelapse_tools
+
+project = QgsProject.instance()
+tools = {{
+    getattr(tool, "tool_name", getattr(tool, "__name__", "")): tool
+    for tool in timelapse_tools(iface, project)
+}}
+create_timelapse = tools["create_timelapse"]
+create_timelapse_fn = getattr(create_timelapse, "__wrapped__", create_timelapse)
+
+result = create_timelapse_fn(
+{args_block}
+)
+print(result)
+"""
+
+
 def _script_from_tool_args(tool_name, args):
     """Return a copyable script derived from tool arguments alone."""
     if tool_name == "load_gee_dataset":
@@ -950,6 +996,12 @@ def _script_from_tool_args(tool_name, args):
             "kind": "PyQGIS",
             "tool_name": tool_name,
             "code": _stac_load_asset_snippet(args),
+        }
+    if tool_name == "create_timelapse":
+        return {
+            "kind": "Python",
+            "tool_name": tool_name,
+            "code": _timelapse_create_snippet_from_args(args),
         }
     return {}
 
@@ -1264,6 +1316,47 @@ def _images_from_output_text(text):
                 "mime_type": "image/jpeg" if ext == "jpg" else f"image/{ext}",
             }
         )
+    return _dedupe_output_images(images)
+
+
+def _local_image_metadata_from_path(path):
+    """Return image metadata for an existing local image path."""
+    path = str(path or "").strip().rstrip(".,);]")
+    if not path:
+        return None
+    try:
+        resolved = Path(path).expanduser().resolve()
+    except Exception:
+        return None
+    if not resolved.is_file():
+        return None
+    ext = resolved.suffix.lower().lstrip(".")
+    if ext not in {"png", "jpg", "jpeg", "webp", "gif"}:
+        return None
+    if ext == "jpeg":
+        ext = "jpg"
+    return {
+        "path": str(resolved),
+        "format": ext,
+        "mime_type": "image/jpeg" if ext == "jpg" else f"image/{ext}",
+    }
+
+
+def _images_from_trusted_tool_output_text(text, tool_calls):
+    """Extract local image paths from text when a trusted image tool ran."""
+    trusted_tools = {"create_timelapse", "generate_image"}
+    ran_trusted_tool = any(
+        isinstance(call, dict) and str(call.get("name") or "") in trusted_tools
+        for call in tool_calls or []
+    )
+    if not ran_trusted_tool:
+        return []
+
+    images = []
+    for match in OUTPUT_IMAGE_PATH_RE.finditer(str(text or "")):
+        image = _local_image_metadata_from_path(match.group("path"))
+        if image is not None:
+            images.append(image)
     return _dedupe_output_images(images)
 
 
@@ -1693,6 +1786,7 @@ class ChatWorker(QThread):
                 "NASA OPERA": "for_nasa_opera",
                 "GEE Data Catalogs": "for_gee_data_catalogs",
                 "STAC": "for_stac",
+                "Timelapse": "for_timelapse",
                 "Vantor": "for_vantor",
             }.get(self.agent_mode, "for_qgis")
             factory = getattr(geoagent, factory_name)
@@ -2624,6 +2718,7 @@ class ChatDockWidget(QDockWidget):
                 "include_nasa_opera": mode == "NASA OPERA",
                 "include_gee_data_catalogs": mode == "GEE Data Catalogs",
                 "include_stac": mode == "STAC",
+                "include_timelapse": mode == "Timelapse",
                 "include_vantor": mode == "Vantor",
                 "permission_profile": profile,
                 "fast": self.fast_check.isChecked(),
@@ -2853,6 +2948,79 @@ class ChatDockWidget(QDockWidget):
                 f"Could not preview this image:\n\n{path}",
             )
             return
+
+        is_gif = (
+            path.lower().endswith(".gif")
+            or str(image.get("format") or "").lower() == "gif"
+        )
+        movie = None
+        if is_gif:
+            movie = QMovie(path)
+            if movie.isValid():
+                movie.jumpToFrame(0)
+                rect = movie.frameRect()
+                width = rect.width()
+                height = rect.height()
+                if width <= 0 or height <= 0:
+                    first_frame = movie.currentPixmap()
+                    width = first_frame.width()
+                    height = first_frame.height()
+                dialog = QDialog(self)
+                dialog.setWindowTitle(f"GIF Preview ({width} x {height})")
+                available = _screen_for_widget(self).availableGeometry()
+                dialog.resize(
+                    max(480, int(available.width() * 0.75)),
+                    max(360, int(available.height() * 0.75)),
+                )
+
+                layout = QVBoxLayout(dialog)
+                scroll = QScrollArea(dialog)
+                scroll.setWidgetResizable(False)
+                image_label = QLabel()
+                image_label.setAlignment(_qt_value("AlignmentFlag", "AlignCenter"))
+                image_label.setMovie(movie)
+                image_label._opengeoagent_movie = movie
+                scroll.setWidget(image_label)
+                layout.addWidget(scroll)
+                movie.start()
+
+                def save_image():
+                    """Save a copy of the generated GIF file."""
+                    default_name = os.path.basename(path) or "opengeoagent-image.gif"
+                    default_path = os.path.join(os.path.expanduser("~"), default_name)
+                    selected, _selected_filter = QFileDialog.getSaveFileName(
+                        dialog,
+                        "Save Image",
+                        default_path,
+                        "Images (*.png *.jpg *.jpeg *.webp *.gif);;All Files (*)",
+                    )
+                    if not selected:
+                        return
+                    try:
+                        with open(path, "rb") as src, open(selected, "wb") as dst:
+                            dst.write(src.read())
+                    except Exception as exc:
+                        QMessageBox.warning(
+                            dialog,
+                            "OpenGeoAgent",
+                            f"Could not save image:\n\n{exc}",
+                        )
+                        return
+                    self.status_label.setText(f"Saved image to {selected}")
+                    self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+                button_layout = QHBoxLayout()
+                save_btn = QPushButton("Save Image")
+                save_btn.clicked.connect(save_image)
+                button_layout.addWidget(save_btn)
+                button_layout.addStretch(1)
+                close_btn = QPushButton("Close")
+                close_btn.clicked.connect(dialog.accept)
+                button_layout.addWidget(close_btn)
+                layout.addLayout(button_layout)
+                _exec_dialog(dialog)
+                movie.stop()
+                return
 
         dialog = QDialog(self)
         dialog.setWindowTitle(f"Image Preview ({pixmap.width()} x {pixmap.height()})")
@@ -3615,7 +3783,11 @@ class ChatDockWidget(QDockWidget):
             if details:
                 answer = f"{answer}\n\n" + "\n".join(details)
             output_images = _dedupe_output_images(
-                output_images + _prepare_output_images(_images_from_output_text(answer))
+                output_images
+                + _prepare_output_images(_images_from_output_text(answer))
+                + _prepare_output_images(
+                    _images_from_trusted_tool_output_text(answer, tool_calls)
+                )
             )
             if result.get("streamed") and self._streaming_message_index is not None:
                 self._update_message(
