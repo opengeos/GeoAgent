@@ -143,6 +143,7 @@ AGENT_MODES = [
     "NASA OPERA",
     "GEE Data Catalogs",
     "STAC",
+    "Vantor",
 ]
 DEFAULT_AGENT_MODE = "General QGIS"
 PERMISSION_PROFILES = [
@@ -194,6 +195,13 @@ WORKFLOW_PROMPTS = {
             "STAC raster layer in QGIS."
         ),
     ],
+    "Vantor": [
+        "List available Vantor Open Data events and summarize the newest results.",
+        (
+            "Search Vantor imagery for the current map extent and display "
+            "matching footprints."
+        ),
+    ],
 }
 
 
@@ -223,7 +231,13 @@ def _permission_allows_tool(permission_profile, tool_name, meta=None):
         return False
     if profile == "Run processing":
         return True
-    if category in {"whitebox", "nasa_earthdata", "nasa_opera", "gee_data_catalogs"}:
+    if category in {
+        "whitebox",
+        "nasa_earthdata",
+        "nasa_opera",
+        "gee_data_catalogs",
+        "vantor",
+    }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
         return not destructive and name != "run_processing_algorithm"
@@ -1679,6 +1693,7 @@ class ChatWorker(QThread):
                 "NASA OPERA": "for_nasa_opera",
                 "GEE Data Catalogs": "for_gee_data_catalogs",
                 "STAC": "for_stac",
+                "Vantor": "for_vantor",
             }.get(self.agent_mode, "for_qgis")
             factory = getattr(geoagent, factory_name)
             kwargs = {
@@ -2609,6 +2624,7 @@ class ChatDockWidget(QDockWidget):
                 "include_nasa_opera": mode == "NASA OPERA",
                 "include_gee_data_catalogs": mode == "GEE Data Catalogs",
                 "include_stac": mode == "STAC",
+                "include_vantor": mode == "Vantor",
                 "permission_profile": profile,
                 "fast": self.fast_check.isChecked(),
             }

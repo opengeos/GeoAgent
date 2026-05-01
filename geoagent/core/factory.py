@@ -21,6 +21,7 @@ from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
 from geoagent.tools.stac import stac_tools
+from geoagent.tools.vantor import vantor_tools
 from geoagent.tools.whitebox import whitebox_tools
 
 NASA_EARTHDATA_SYSTEM_PROMPT = """\
@@ -126,6 +127,28 @@ Workflow guidance:
 - Keep responses concise and include asset ids, layer names, and filters used.
 - If load_gee_dataset returns a bbox field, include the bbox coordinates in the
   response in west,south,east,north order.
+"""
+
+VANTOR_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS for the Vantor Open Data plugin.
+Use the Vantor tools to list event collections, inspect event metadata, search
+STAC items, display footprints, and load COG imagery into the current QGIS
+project.
+
+Workflow guidance:
+- List Vantor events first when the user names a disaster, place, or event
+  imprecisely.
+- Search a specific event collection before displaying footprints or loading
+  imagery.
+- If the user asks for the current map area, call
+  get_current_vantor_search_extent and pass the returned bbox to
+  search_vantor_items.
+- Use the phase filter for pre-event or post-event requests.
+- For raster display, use a specific item id from search results or a concrete
+  COG URL. Loading rasters and displaying footprints change the QGIS project
+  and require user confirmation.
+- Keep responses concise and include event names, item counts, item ids, phase,
+  acquisition date, sensor, and loaded layer names when available.
 """
 
 QGIS_SYSTEM_PROMPT = """\
@@ -258,7 +281,13 @@ def _permission_allows_tool(permission_profile: str | None, tool: Any) -> bool:
         return False
     if profile == "Run processing":
         return True
-    if category in {"whitebox", "nasa_earthdata", "nasa_opera", "gee_data_catalogs"}:
+    if category in {
+        "whitebox",
+        "nasa_earthdata",
+        "nasa_opera",
+        "gee_data_catalogs",
+        "vantor",
+    }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
         return not destructive and name != "run_processing_algorithm"
@@ -308,11 +337,13 @@ def assemble_tools(
     include_nasa_earthdata: bool = False,
     include_nasa_opera: bool = False,
     include_gee_data_catalogs: bool = False,
+    include_vantor: bool = False,
     include_whitebox: bool = False,
     include_stac: bool = False,
     include_image_generation: bool = False,
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
+    vantor_plugin: Any | None = None,
     fast: bool = False,
     permission_profile: str | None = None,
     exclude_tool_names: set[str] | None = None,
@@ -357,6 +388,16 @@ def assemble_tools(
         )
         register_all_tools(registry, gee_tools)
         collected.extend(gee_tools)
+    if include_vantor:
+        vantor_tool_list = _filter_by_imports(
+            vantor_tools(
+                context.qgis_iface,
+                context.qgis_project,
+                plugin=vantor_plugin,
+            )
+        )
+        register_all_tools(registry, vantor_tool_list)
+        collected.extend(vantor_tool_list)
     if include_whitebox:
         whitebox_tool_list = _filter_by_imports(
             whitebox_tools(context.qgis_iface, context.qgis_project)
@@ -708,6 +749,64 @@ def for_gee_data_catalogs(
     )
 
 
+def for_vantor(
+    iface: Any,
+    project: Any = None,
+    *,
+    plugin: Any | None = None,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+    permission_profile: str | None = None,
+) -> GeoAgent:
+    """Bind an agent to the QGIS Vantor plugin runtime.
+
+    The factory exposes native Vantor Open Data STAC tools and, by default,
+    the general QGIS map/project tools used for navigation and layer
+    management.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "vantor",
+            "system_prompt": VANTOR_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_vantor=True,
+        include_image_generation=True,
+        vantor_plugin=plugin,
+        extra_tools=extra_tools,
+        fast=fast,
+        permission_profile=permission_profile,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 def for_whitebox(
     iface: Any,
     project: Any = None,
@@ -825,6 +924,7 @@ __all__ = [
     "for_nasa_opera",
     "for_qgis",
     "for_stac",
+    "for_vantor",
     "for_whitebox",
     "register_all_tools",
 ]
