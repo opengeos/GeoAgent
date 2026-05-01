@@ -1795,6 +1795,7 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>
+        <span class="n">exclude_tool_names</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;set_layer_symbology&quot;</span><span class="p">}</span> <span class="k">if</span> <span class="n">include_qgis</span> <span class="k">else</span> <span class="nb">set</span><span class="p">(),</span>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
