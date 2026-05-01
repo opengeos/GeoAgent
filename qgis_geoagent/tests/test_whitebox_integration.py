@@ -31,15 +31,16 @@ def _install_fake_geoagent(monkeypatch, captured):
     module.for_nasa_earthdata = _factory("for_nasa_earthdata")
     module.for_nasa_opera = _factory("for_nasa_opera")
     module.for_gee_data_catalogs = _factory("for_gee_data_catalogs")
+    module.for_stac = _factory("for_stac")
     monkeypatch.setitem(sys.modules, "geoagent", module)
     return module
 
 
 def test_dependencies_include_whitebox() -> None:
     """Verify the plugin dependency installer checks Whitebox."""
-    from open_geoagent.deps_manager import REQUIRED_PACKAGES
+    from open_geoagent.deps_manager import DEPENDENCY_GROUPS
 
-    assert ("whitebox", "whitebox>=2.3.6") in REQUIRED_PACKAGES
+    assert ("whitebox", "whitebox>=2.3.6") in DEPENDENCY_GROUPS["WhiteboxTools"]
 
 
 def test_chat_worker_uses_whitebox_factory(monkeypatch) -> None:
@@ -201,3 +202,51 @@ def test_chat_worker_routes_agent_modes(monkeypatch) -> None:
 
     assert captured["factory"] == "for_nasa_opera"
     assert captured["kwargs"]["permission_profile"] == "Inspect only"
+
+
+def test_chat_worker_uses_stac_factory(monkeypatch) -> None:
+    """STAC mode should use the dedicated GeoAgent STAC factory."""
+    from open_geoagent.dialogs.chat_dock import ChatWorker
+
+    captured: dict[str, Any] = {}
+
+    class _StubResponse:
+        success = True
+        answer_text = "ok"
+        error_message = ""
+        executed_tools: list = []
+        tool_calls: list = []
+        cancelled_tools: list = []
+        execution_time = 0.0
+
+    class _StubAgent:
+        def chat(self, prompt: str) -> _StubResponse:
+            captured["prompt"] = prompt
+            return _StubResponse()
+
+    captured["agent"] = _StubAgent()
+    _install_fake_geoagent(monkeypatch, captured)
+    monkeypatch.setitem(
+        sys.modules,
+        "qgis.core",
+        types.SimpleNamespace(QgsProject=types.SimpleNamespace(instance=lambda: None)),
+    )
+
+    worker = ChatWorker(
+        iface=object(),
+        prompt="search stac",
+        provider="anthropic",
+        model_id="claude-x",
+        fast=False,
+        max_tokens=1024,
+        auto_approve_tools=False,
+        agent_mode="STAC",
+        permission_profile="Trusted auto-approve",
+    )
+    worker.finished.connect(lambda _payload: None)
+    worker.run()
+
+    assert captured["factory"] == "for_stac"
+    assert captured["kwargs"]["permission_profile"] == "Trusted auto-approve"
+    assert worker.auto_approve_tools is True
+    assert "STAC mode" in captured["prompt"]

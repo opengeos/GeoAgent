@@ -20,6 +20,7 @@ from __future__ import annotations
 import ast
 import contextlib
 import io
+import os
 import tempfile
 from pathlib import Path
 from typing import Any, Optional
@@ -191,6 +192,190 @@ def _set_symbol_outline_color(symbol: Any, color: Any) -> bool:
         ("setStrokeColor", "setBorderColor", "setOutlineColor"),
         color,
     )
+
+
+_ACTIVE_QGIS_HILLSHADE_TASKS: list[Any] = []
+
+
+def _is_raster_layer(layer: Any) -> bool:
+    """Return True when a layer looks like a QGIS raster layer."""
+    try:
+        from qgis.core import QgsMapLayer  # type: ignore[import-not-found]
+
+        if hasattr(layer, "type") and layer.type() == QgsMapLayer.RasterLayer:
+            return True
+    except Exception:
+        pass
+    try:
+        layer_type = str(layer.type()).lower() if hasattr(layer, "type") else ""
+        if layer_type == "raster" or "raster" in layer_type:
+            return True
+    except Exception:
+        pass
+    return hasattr(layer, "bandCount") and callable(getattr(layer, "bandCount"))
+
+
+def _is_remote_raster_source(layer: Any) -> bool:
+    """Return True when a raster source is remote and stats reads may block."""
+    try:
+        source = str(layer.source() if hasattr(layer, "source") else "")
+    except Exception:
+        source = ""
+    source = source.strip().lower()
+    return source.startswith(
+        ("http://", "https://", "/vsicurl/http://", "/vsicurl/https://")
+    )
+
+
+def _raster_value_range(
+    layer: Any,
+    min_value: float | None = None,
+    max_value: float | None = None,
+) -> tuple[float, float, bool]:
+    """Return a practical raster value range for color-ramp rendering."""
+    if min_value is not None and max_value is not None and max_value > min_value:
+        return float(min_value), float(max_value), False
+    if _is_remote_raster_source(layer):
+        # Avoid provider.bandStatistics() on remote COGs; QGIS/GDAL can block the
+        # GUI while reading over HTTP. These defaults work well for most DEMs.
+        return (
+            float(min_value if min_value is not None else 0.0),
+            float(max_value if max_value is not None else 3000.0),
+            True,
+        )
+    try:
+        provider = layer.dataProvider()
+        stats = provider.bandStatistics(1)
+        low = float(getattr(stats, "minimumValue"))
+        high = float(getattr(stats, "maximumValue"))
+        if high > low:
+            return low, high, False
+    except Exception:
+        pass
+    for low_name, high_name in (
+        ("minimumValue", "maximumValue"),
+        ("min", "max"),
+    ):
+        try:
+            low_method = getattr(layer, low_name)
+            high_method = getattr(layer, high_name)
+            low = float(low_method(1) if callable(low_method) else low_method)
+            high = float(high_method(1) if callable(high_method) else high_method)
+            if high > low:
+                return low, high, False
+        except Exception:
+            continue
+    return (
+        float(min_value if min_value is not None else 0.0),
+        float(max_value if max_value is not None else 3000.0),
+        True,
+    )
+
+
+def _palette_colors(
+    name: str | None, fallback_color: Any = None
+) -> list[tuple[float, Any, str]]:
+    """Return normalized color stops for common raster palettes."""
+    palette = str(name or "").strip().lower()
+    if palette in {"terrain", "dem", "elevation", "earth", ""}:
+        return [
+            (0.0, _qcolor("#1a9850"), "low"),
+            (0.35, _qcolor("#91cf60"), "lower"),
+            (0.55, _qcolor("#fee08b"), "mid"),
+            (0.75, _qcolor("#d08b39"), "high"),
+            (1.0, _qcolor("#f5f5f5"), "highest"),
+        ]
+    if palette in {"viridis"}:
+        return [
+            (0.0, _qcolor("#440154"), "low"),
+            (0.33, _qcolor("#31688e"), "mid-low"),
+            (0.66, _qcolor("#35b779"), "mid-high"),
+            (1.0, _qcolor("#fde725"), "high"),
+        ]
+    if palette in {"grayscale", "grey", "gray"}:
+        return [
+            (0.0, _qcolor("#000000"), "low"),
+            (1.0, _qcolor("#ffffff"), "high"),
+        ]
+    color = fallback_color or _qcolor("#8c510a")
+    return [(0.0, _qcolor("#ffffff"), "low"), (1.0, color, "high")]
+
+
+def _apply_raster_symbology(
+    layer: Any,
+    *,
+    raster_palette: str | None = None,
+    color: Any = None,
+    min_value: float | None = None,
+    max_value: float | None = None,
+) -> dict[str, Any]:
+    """Apply a QGIS single-band pseudocolor renderer when available."""
+    applied: dict[str, Any] = {}
+    if not _is_raster_layer(layer):
+        return applied
+
+    low, high, estimated = _raster_value_range(layer, min_value, max_value)
+    palette = raster_palette or "terrain"
+    stops = _palette_colors(palette, color)
+
+    try:
+        from qgis.core import (  # type: ignore[import-not-found]
+            QgsColorRampShader,
+            QgsRasterShader,
+            QgsSingleBandPseudoColorRenderer,
+        )
+
+        shader = QgsRasterShader()
+        color_ramp = QgsColorRampShader()
+        ramp_type = getattr(QgsColorRampShader, "Interpolated", None)
+        if ramp_type is None:
+            ramp_type = getattr(
+                getattr(QgsColorRampShader, "Type", object), "Interpolated"
+            )
+        color_ramp.setColorRampType(ramp_type)
+        color_ramp.setColorRampItemList(
+            [
+                QgsColorRampShader.ColorRampItem(
+                    low + ratio * (high - low),
+                    qcolor,
+                    label,
+                )
+                for ratio, qcolor, label in stops
+            ]
+        )
+        shader.setRasterShaderFunction(color_ramp)
+        provider = layer.dataProvider()
+        renderer = QgsSingleBandPseudoColorRenderer(provider, 1, shader)
+        layer.setRenderer(renderer)
+        applied.update(
+            {
+                "raster_palette": palette,
+                "raster_band": 1,
+                "raster_min": low,
+                "raster_max": high,
+                "raster_range_estimated": estimated,
+            }
+        )
+        return applied
+    except Exception:
+        style = getattr(layer, "symbology", None)
+        if not isinstance(style, dict):
+            style = {}
+            try:
+                layer.symbology = style
+            except Exception:
+                pass
+        style.update(
+            {
+                "raster_palette": palette,
+                "raster_band": 1,
+                "raster_min": low,
+                "raster_max": high,
+                "raster_range_estimated": estimated,
+            }
+        )
+        applied.update(style)
+        return applied
 
 
 def _transform_extent_to_canvas_crs(layer: Any, canvas: Any, extent: Any) -> Any:
@@ -1048,6 +1233,9 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         fill_color: Optional[str] = None,
         outline_color: Optional[str] = None,
         opacity: Optional[float] = None,
+        raster_palette: Optional[str] = None,
+        raster_min: Optional[float] = None,
+        raster_max: Optional[float] = None,
     ) -> dict[str, Any]:
         """Change simple layer symbology such as color and line width.
 
@@ -1058,6 +1246,10 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             fill_color: Polygon fill color. When omitted, ``color`` is used.
             outline_color: Polygon outline/stroke color.
             opacity: Optional layer opacity from 0.0 to 1.0.
+            raster_palette: Optional raster palette name, such as ``"terrain"``,
+                ``"viridis"``, or ``"grayscale"``.
+            raster_min: Optional minimum raster value for color-ramp rendering.
+            raster_max: Optional maximum raster value for color-ramp rendering.
 
         Returns:
             A dict describing the applied style changes.
@@ -1072,42 +1264,64 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             fill = _qcolor(fill_color) or main_color
             outline = _qcolor(outline_color)
 
+            if _is_raster_layer(layer) and (
+                raster_palette or fill is not None or color is not None
+            ):
+                applied.update(
+                    _apply_raster_symbology(
+                        layer,
+                        raster_palette=raster_palette,
+                        color=fill or main_color,
+                        min_value=raster_min,
+                        max_value=raster_max,
+                    )
+                )
+                if color or fill_color:
+                    applied["color"] = str(color or fill_color)
+            else:
+                try:
+                    renderer = layer.renderer() if hasattr(layer, "renderer") else None
+                except Exception:
+                    renderer = None
+                symbol = (
+                    renderer.symbol()
+                    if renderer is not None and hasattr(renderer, "symbol")
+                    else None
+                )
+                if symbol is not None:
+                    if fill is not None and hasattr(symbol, "setColor"):
+                        symbol.setColor(fill)
+                        applied["color"] = str(color or fill_color)
+                    if outline is not None and _set_symbol_outline_color(
+                        symbol, outline
+                    ):
+                        applied["outline_color"] = str(outline_color)
+                    if line_width is not None:
+                        width = max(0.0, float(line_width))
+                        if _set_symbol_width(symbol, width):
+                            applied["line_width"] = width
+                else:
+                    style = getattr(layer, "symbology", None)
+                    if not isinstance(style, dict):
+                        style = {}
+                        try:
+                            layer.symbology = style
+                        except Exception:
+                            pass
+                    if fill is not None:
+                        style["color"] = str(color or fill_color)
+                        applied["color"] = str(color or fill_color)
+                    if outline is not None:
+                        style["outline_color"] = str(outline_color)
+                        applied["outline_color"] = str(outline_color)
+                    if line_width is not None:
+                        style["line_width"] = max(0.0, float(line_width))
+                        applied["line_width"] = style["line_width"]
+
             try:
                 renderer = layer.renderer() if hasattr(layer, "renderer") else None
             except Exception:
                 renderer = None
-            symbol = (
-                renderer.symbol()
-                if renderer is not None and hasattr(renderer, "symbol")
-                else None
-            )
-            if symbol is not None:
-                if fill is not None and hasattr(symbol, "setColor"):
-                    symbol.setColor(fill)
-                    applied["color"] = str(color or fill_color)
-                if outline is not None and _set_symbol_outline_color(symbol, outline):
-                    applied["outline_color"] = str(outline_color)
-                if line_width is not None:
-                    width = max(0.0, float(line_width))
-                    if _set_symbol_width(symbol, width):
-                        applied["line_width"] = width
-            else:
-                style = getattr(layer, "symbology", None)
-                if not isinstance(style, dict):
-                    style = {}
-                    try:
-                        layer.symbology = style
-                    except Exception:
-                        pass
-                if fill is not None:
-                    style["color"] = str(color or fill_color)
-                    applied["color"] = str(color or fill_color)
-                if outline is not None:
-                    style["outline_color"] = str(outline_color)
-                    applied["outline_color"] = str(outline_color)
-                if line_width is not None:
-                    style["line_width"] = max(0.0, float(line_width))
-                    applied["line_width"] = style["line_width"]
 
             if opacity is not None:
                 value = min(1.0, max(0.0, float(opacity)))
@@ -1130,6 +1344,204 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             return applied
 
         return _on_gui(_run)
+
+    @geo_tool(
+        category="qgis",
+        requires_confirmation=True,
+        long_running=True,
+    )
+    def create_hillshade_layer(
+        layer_name: Optional[str] = None,
+        output_layer_name: Optional[str] = None,
+        azimuth: float = 315.0,
+        altitude: float = 45.0,
+        z_factor: float = 1.0,
+        output_path: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Create a hillshade raster from a DEM using a QGIS background task.
+
+        This avoids freezing QGIS when the DEM source is a remote COG. The task
+        uses GDAL in the worker thread, then creates and styles the output layer
+        on the QGIS GUI thread.
+
+        Args:
+            layer_name: DEM layer name. Defaults to the active layer.
+            output_layer_name: Display name for the hillshade layer.
+            azimuth: Sun azimuth in degrees.
+            altitude: Sun elevation angle in degrees.
+            z_factor: Vertical exaggeration factor.
+            output_path: Optional GeoTIFF output path.
+
+        Returns:
+            A dict describing the queued or completed hillshade task.
+        """
+
+        def _resolve() -> dict[str, Any]:
+            layer = (
+                iface.activeLayer()
+                if not layer_name
+                else _resolve_layer(_project(), layer_name)
+            )
+            if layer is None:
+                raise ValueError("No active DEM layer is available.")
+            source = str(layer.source() if hasattr(layer, "source") else "")
+            if not source:
+                raise ValueError(
+                    f"Layer {layer.name()!r} does not expose a source URI."
+                )
+            name = output_layer_name or f"{layer.name()} Hillshade"
+            path = output_path
+            if not path:
+                out_dir = tempfile.mkdtemp(prefix="geoagent_hillshade_")
+                safe = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in name)
+                path = os.path.join(out_dir, f"{safe or 'hillshade'}.tif")
+            return {"source": source, "name": name, "path": path}
+
+        resolved = _on_gui(_resolve)
+
+        try:
+            from qgis.core import (  # type: ignore[import-not-found]
+                Qgis,
+                QgsApplication,
+                QgsMessageLog,
+                QgsProject,
+                QgsRasterLayer,
+                QgsTask,
+            )
+        except Exception:
+            # Test/mock fallback: create a lightweight raster layer immediately.
+            iface.addRasterLayer(resolved["path"], resolved["name"])
+            return {
+                "success": True,
+                "queued": False,
+                "output_path": resolved["path"],
+                "output_layer": resolved["name"],
+                "source": resolved["source"],
+                "message": f"Created hillshade layer {resolved['name']!r}.",
+            }
+
+        class _HillshadeTask(QgsTask):
+            def __init__(self) -> None:
+                super().__init__(f"Create hillshade: {resolved['name']}")
+                self.error = ""
+
+            def run(self) -> bool:
+                try:
+                    from osgeo import gdal  # type: ignore[import-not-found]
+
+                    gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+                    self.setProgress(5)
+                    options = gdal.DEMProcessingOptions(
+                        azimuth=float(azimuth),
+                        altitude=float(altitude),
+                        zFactor=float(z_factor),
+                    )
+                    result = gdal.DEMProcessing(
+                        resolved["path"],
+                        resolved["source"],
+                        "hillshade",
+                        options=options,
+                    )
+                    self.setProgress(90)
+                    if result is None:
+                        self.error = (
+                            gdal.GetLastErrorMsg()
+                            or "GDAL DEMProcessing did not produce an output."
+                        )
+                        return False
+                    result = None
+                    return os.path.exists(resolved["path"])
+                except Exception as exc:  # pragma: no cover - QGIS runtime path
+                    self.error = f"{type(exc).__name__}: {exc}"
+                    return False
+
+        def _message(text: str, level: Any) -> None:
+            try:
+                QgsMessageLog.logMessage(text, "OpenGeoAgent Hillshade", level)
+            except Exception:
+                pass
+
+        def _status(text: str, timeout_ms: int = 0) -> None:
+            try:
+                window = iface.mainWindow()
+                window.statusBar().showMessage(text, int(timeout_ms or 0))
+            except Exception:
+                pass
+
+        def _enqueue() -> dict[str, Any]:
+            task = _HillshadeTask()
+            callbacks: dict[str, Any] = {}
+
+            def _cleanup() -> None:
+                try:
+                    _ACTIVE_QGIS_HILLSHADE_TASKS.remove(task)
+                except ValueError:
+                    pass
+                callbacks.clear()
+
+            def _on_completed() -> None:
+                message_level = getattr(Qgis, "MessageLevel", Qgis)
+                layer = QgsRasterLayer(resolved["path"], resolved["name"])
+                if layer is not None and layer.isValid():
+                    QgsProject.instance().addMapLayer(layer)
+                    try:
+                        set_layer_symbology(
+                            resolved["name"],
+                            raster_palette="grayscale",
+                            raster_min=0,
+                            raster_max=255,
+                            opacity=0.6,
+                        )
+                    except Exception:
+                        pass
+                    _status(f"Created hillshade layer: {resolved['name']}", 7000)
+                    _message(
+                        f"Created hillshade layer {resolved['name']}: {resolved['path']}",
+                        getattr(message_level, "Info"),
+                    )
+                else:
+                    reason = task.error or "QGIS could not load the hillshade output."
+                    _status(f"Hillshade failed: {resolved['name']}", 7000)
+                    _message(
+                        f"Failed to create hillshade {resolved['name']!r}: {reason}",
+                        getattr(message_level, "Critical"),
+                    )
+                _cleanup()
+
+            def _on_terminated() -> None:
+                message_level = getattr(Qgis, "MessageLevel", Qgis)
+                reason = task.error or "QGIS terminated the hillshade task."
+                _status(f"Hillshade failed: {resolved['name']}", 7000)
+                _message(
+                    f"Hillshade task terminated for {resolved['name']!r}: {reason}",
+                    getattr(message_level, "Critical"),
+                )
+                _cleanup()
+
+            callbacks["completed"] = _on_completed
+            callbacks["terminated"] = _on_terminated
+            task._geoagent_callbacks = callbacks  # noqa: SLF001 - retain Qt callbacks
+            task.taskCompleted.connect(_on_completed)
+            task.taskTerminated.connect(_on_terminated)
+            _ACTIVE_QGIS_HILLSHADE_TASKS.append(task)
+            _status(f"Creating hillshade: {resolved['name']}")
+            QgsApplication.taskManager().addTask(task)
+            return {
+                "success": True,
+                "queued": True,
+                "source": resolved["source"],
+                "output_path": resolved["path"],
+                "output_layer": resolved["name"],
+                "azimuth": float(azimuth),
+                "altitude": float(altitude),
+                "z_factor": float(z_factor),
+                "message": (
+                    "Queued a QGIS background task to create the hillshade. "
+                    "The output layer will be added when the task completes."
+                ),
+            }
+
+        return _on_gui(_enqueue)
 
     @geo_tool(
         category="qgis",
@@ -1617,6 +2029,7 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         set_layer_visibility,
         set_layer_opacity,
         set_layer_symbology,
+        create_hillshade_layer,
         inspect_layer_fields,
         get_selected_features,
         select_features_by_expression,

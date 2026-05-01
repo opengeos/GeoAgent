@@ -94,6 +94,9 @@ replace = '__version__ = "{new_version}"'
 line-length = 88
 exclude = ["docs"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests", "qgis_geoagent/tests"]
+
 [project.urls]
 Homepage = "https://github.com/opengeos/GeoAgent"
 

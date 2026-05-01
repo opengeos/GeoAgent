@@ -24,8 +24,8 @@ def test_all_dependencies_met_uses_lightweight_spec_checks(monkeypatch) -> None:
 
     monkeypatch.setattr(
         deps_manager,
-        "REQUIRED_PACKAGES",
-        [("geoagent", "GeoAgent[providers]>=1.3.0"), ("openai", "openai>=1.0")],
+        "CORE_RUNTIME_PACKAGES",
+        [("geoagent", "GeoAgent[providers]>=1.3.0"), ("strands", "strands-agents")],
     )
     monkeypatch.setattr(deps_manager, "ensure_venv_packages_available", lambda: True)
 
@@ -42,7 +42,7 @@ def test_all_dependencies_met_uses_lightweight_spec_checks(monkeypatch) -> None:
     monkeypatch.setattr(deps_manager.importlib, "import_module", fail_import_module)
 
     assert deps_manager.all_dependencies_met() is True
-    assert checked == ["geoagent", "openai"]
+    assert checked == ["geoagent", "strands"]
 
 
 def test_required_dependencies_include_core_runtime_packages() -> None:
@@ -52,3 +52,26 @@ def test_required_dependencies_include_core_runtime_packages() -> None:
     assert ("geoagent", "GeoAgent[providers]>=1.3.0") in REQUIRED_PACKAGES
     assert ("strands", "strands-agents>=1.37") in REQUIRED_PACKAGES
     assert ("pydantic", "pydantic>=2.0") in REQUIRED_PACKAGES
+
+
+def test_dependency_groups_include_optional_workflow_packages() -> None:
+    """Optional workflow stacks should be grouped instead of globally required."""
+    from open_geoagent.deps_manager import DEPENDENCY_GROUPS, REQUIRED_PACKAGES
+
+    assert ("whitebox", "whitebox>=2.3.6") not in REQUIRED_PACKAGES
+    assert ("whitebox", "whitebox>=2.3.6") in DEPENDENCY_GROUPS["WhiteboxTools"]
+    assert ("pystac_client", "pystac-client>=0.8") in DEPENDENCY_GROUPS["STAC"]
+    assert ("gee_data_catalogs", "gee-data-catalogs") not in DEPENDENCY_GROUPS[
+        "GEE Data Catalogs"
+    ]
+    assert ("ee", "earthengine-api>=1.0") in DEPENDENCY_GROUPS["GEE Data Catalogs"]
+
+
+def test_python_runtime_error_mentions_required_version(monkeypatch) -> None:
+    """The installer should fail clearly on unsupported QGIS Python versions."""
+    from open_geoagent import deps_manager
+
+    monkeypatch.setattr(deps_manager, "MIN_PYTHON_VERSION", (99, 0))
+
+    assert deps_manager.python_runtime_supported() is False
+    assert "Python 99.0 or newer" in deps_manager.python_runtime_error()

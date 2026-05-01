@@ -20,14 +20,16 @@ about=OpenGeoAgent provides a dockable multimodal chatbot interface for QGIS tha
     - Clickable image previews with save/export actions
     - Copy Markdown transcript and copy executed PyQGIS script actions
     - Sample prompts, prompt history with Up/Down, and Ctrl+Enter sending
-    - Settings panel for API keys, hosts, model defaults, and dependency status
+    - Settings panel for API keys, hosts, model defaults, and workflow dependency status
     - One-click dependency installer using uv with an isolated virtual environment
+    - STAC mode for collection listing, item search, asset inspection, and QGIS raster loading
     - Lazy startup checks to keep opening the chat dock responsive
     - GitHub update checker
     - Local installation and packaging scripts
 
     Requirements:
-    - GeoAgent and provider clients, installable from Settings > Dependencies
+    - GeoAgent and provider/workflow clients, installable from Settings > Dependencies
+    - QGIS Python 3.11 or newer
     - OPENAI_API_KEY for voice transcription, which uses the OpenAI transcription API and may incur API costs
 
 tracker=https://github.com/opengeos/GeoAgent/issues

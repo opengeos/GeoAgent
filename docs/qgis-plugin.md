@@ -18,8 +18,10 @@ from `qgis_geoagent/open_geoagent` into your QGIS plugin profile.
 
 Open the plugin from the QGIS toolbar or plugin menu, then use
 **Settings > Dependencies** to install GeoAgent and provider clients into the
-plugin-managed environment. QGIS itself remains provided by your desktop QGIS
-installation.
+plugin-managed environment. The dependency tab is workflow-aware: install Core
+Providers, WhiteboxTools, NASA Earthdata/OPERA, GEE Data Catalogs, STAC, or All
+depending on the modes you use. QGIS itself remains provided by your desktop
+QGIS installation. The QGIS Python runtime must be Python 3.11 or newer.
 
 ## Provider Setup
 
@@ -43,6 +45,25 @@ The chat dock is aware of the current QGIS project and active layer. It can
 inspect project state, summarize layers, navigate the map canvas, add vector,
 raster, and XYZ tile layers, select features, run QGIS Processing algorithms,
 open attribute tables, and save projects.
+
+Agent modes expose workflow-specific tools. STAC mode can read the current map
+extent as a WGS84 search bbox, list catalog collections, search items, inspect
+item assets, and add concrete raster asset URLs to QGIS when QGIS accepts the
+asset directly. If the user does not name a catalog, STAC mode defaults to the
+Planetary Computer STAC API. When the selected asset is a remote COG, the tool
+passes the signed HTTP URL to QGIS through GDAL's `/vsicurl/` virtual filesystem
+and queues raster creation in a QGIS background task before adding the validated
+layer to the project and zooming to its extent. The QGIS status bar shows an
+in-progress loading message while the background task is active. This follows
+the loading pattern used by the qgis-stac plugin and avoids blocking the QGIS UI
+while GDAL probes the remote COG. Search results include cloud cover, spatial-fit
+metadata, and preferred raster asset URLs so common load workflows can skip an
+extra asset-inspection turn. The full asset URL is recorded in the transcript.
+STAC load task start, success, failure, and termination messages are also
+written to the QGIS message log under `OpenGeoAgent STAC`. STAC mode hides the
+generated PyQGIS script fallback so common search setup stays on dedicated
+read-only tools. The chat dock's tool availability line shows which tools are
+active for the selected mode and permission profile.
 
 Examples:
 
@@ -109,4 +130,6 @@ debugging, and sharing workflows outside the plugin.
 OpenGeoAgent uses GeoAgent's confirmation hook for destructive, persistent, or
 long-running operations. Actions such as deleting layers, saving projects,
 running processing jobs, and executing fallback PyQGIS scripts require user
-approval before they run.
+approval before they run unless the selected permission profile is
+**Trusted auto-approve**, which is the first-run default. Select a narrower
+profile such as Inspect only when you want to restrict tool access.

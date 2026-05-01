@@ -13,6 +13,7 @@ instead of failing collection. CI installs PyQt6 explicitly.
 
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
@@ -20,6 +21,10 @@ PyQtCore = pytest.importorskip("PyQt6.QtCore")
 PyQtGui = pytest.importorskip("PyQt6.QtGui")
 PyQtNetwork = pytest.importorskip("PyQt6.QtNetwork")
 PyQtWidgets = pytest.importorskip("PyQt6.QtWidgets")
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+if str(PLUGIN_ROOT) not in sys.path:
+    sys.path.insert(0, str(PLUGIN_ROOT))
 
 
 def _make_strict_module(name: str, attrs: dict) -> types.ModuleType:

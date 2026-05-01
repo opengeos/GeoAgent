@@ -7,6 +7,7 @@ from geoagent.tools.leafmap import leafmap_tools
 from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
+from geoagent.tools.stac import stac_tools
 from geoagent.tools.whitebox import whitebox_tools
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "leafmap_tools",
     "nasa_opera_tools",
     "qgis_tools",
+    "stac_tools",
     "whitebox_tools",
 ]
