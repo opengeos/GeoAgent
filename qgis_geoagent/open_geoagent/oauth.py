@@ -29,8 +29,8 @@ OPENAI_CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"
 OPENAI_CODEX_CALLBACK_PORT = 1455
 OPENAI_CODEX_CALLBACK_PATH = "/auth/callback"
 # OAuth authorize-request flag values below are protocol parameters, not credentials.
-OPENAI_CODEX_AUTH_EXTRA_PARAMS = {  # nosec B105
-    "id_token_add_organizations": "true",
+OPENAI_CODEX_AUTH_EXTRA_PARAMS = {
+    "id_token_add_organizations": "true",  # nosec B105
     "codex_cli_simplified_flow": "true",
     "originator": "pi",
 }

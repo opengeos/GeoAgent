@@ -464,8 +464,12 @@ def _markdown_image_target_to_html_src(target):
         path = Path(target).expanduser()
         if path.exists():
             return path.resolve().as_uri()
-    except Exception:
-        pass
+    except Exception as exc:
+        QgsMessageLog.logMessage(
+            f"Could not resolve image target {target!r}: {exc}",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Info,
+        )
     return target
 
 
@@ -961,8 +965,12 @@ def _allowed_output_image_roots():
     for candidate in candidates:
         try:
             roots.append(candidate.resolve())
-        except Exception:
-            continue
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Could not resolve output image root {candidate}: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Info,
+            )
     return roots
 
 
