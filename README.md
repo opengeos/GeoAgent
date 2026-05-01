@@ -357,6 +357,19 @@ Natural-language OPERA chat is intentionally disabled inside QGIS for now.
 Use direct tools or `submit_nasa_opera_search_task(...)` so QGIS task/thread
 ownership remains explicit.
 
+### Vantor Open Data
+
+`for_vantor(iface, project=None, plugin=None)` exposes native tools for the
+QGIS Vantor plugin's public Open Data STAC catalog:
+
+- browse event collections: `list_vantor_events`, `get_vantor_event_info`;
+- search imagery: `get_current_vantor_search_extent`, `search_vantor_items`;
+- display results in QGIS: `display_vantor_footprints`, `load_vantor_cog`;
+- open the plugin UI when a plugin instance is supplied: `open_vantor_panel`.
+
+Footprint display and COG loading are confirmation-gated because they add
+layers to the current QGIS project.
+
 ## Direct Tool Calls
 
 Every GeoAgent exposes the underlying Strands tool caller. This is useful for

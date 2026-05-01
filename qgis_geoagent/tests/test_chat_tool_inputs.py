@@ -552,6 +552,14 @@ def test_agent_mode_load_guard_does_not_seed_prompt() -> None:
     assert dock.prompt_input.toPlainText() == ""
 
 
+def test_vantor_mode_is_available() -> None:
+    """Verify Vantor appears in the OpenGeoAgent agent-mode list."""
+    from open_geoagent.dialogs.chat_dock import AGENT_MODES, WORKFLOW_PROMPTS
+
+    assert "Vantor" in AGENT_MODES
+    assert WORKFLOW_PROMPTS["Vantor"]
+
+
 def test_transcribed_prompt_moves_cursor_to_end() -> None:
     """Transcribed text should leave the prompt cursor at the end."""
     from open_geoagent.dialogs.chat_dock import ChatDockWidget
@@ -617,3 +625,16 @@ def test_execute_scripts_profile_allows_gee_snippet_tool() -> None:
         "Inspect only", "run_gee_python_snippet", _Meta()
     )
     assert _permission_allows_tool("Execute Scripts", "run_gee_python_snippet", _Meta())
+
+
+def test_run_processing_profile_allows_vantor_tools() -> None:
+    """Verify Vantor mode can expose confirmation-gated project tools."""
+
+    class _Meta:
+        category = "vantor"
+        requires_confirmation = True
+        destructive = False
+        long_running = False
+
+    assert not _permission_allows_tool("Inspect only", "load_vantor_cog", _Meta())
+    assert _permission_allows_tool("Run processing", "load_vantor_cog", _Meta())
