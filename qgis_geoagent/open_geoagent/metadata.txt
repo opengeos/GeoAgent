@@ -3,7 +3,7 @@ name=OpenGeoAgent
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
 description=GeoAgent-powered multimodal AI chatbot for QGIS projects.
-version=1.1.0
+version=1.2.0
 author=Qiusheng Wu
 email=giswqs@gmail.com
 
@@ -45,6 +45,12 @@ experimental=False
 deprecated=False
 
 changelog=
+    1.2.0 - Added direct image generation support
+        - Added OpenAI Images API tool integration for direct image generation
+        - Added clickable generated-image thumbnails with full-resolution preview
+        - Added image model selection and optional OpenAI org/project settings
+        - Improved voice/API-key environment fallback handling
+
     1.1.0 - Improved voice input controls
         - Added configurable OpenAI transcription model selection
         - Added microphone button, voice shortcut, and recording/transcription indicators

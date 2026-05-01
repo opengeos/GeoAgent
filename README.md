@@ -482,4 +482,4 @@ GeoAgent is released under the MIT License. See `LICENSE`.
 - Documentation: <https://geoagent.gishub.org>
 - Repository: <https://github.com/opengeos/GeoAgent>
 - Issues: <https://github.com/opengeos/GeoAgent/issues>
-- Strands Agents: <https://strandsagents.com/>
+- Strands Agents: <https://strandsagents.com>
