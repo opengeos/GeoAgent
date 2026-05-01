@@ -359,13 +359,11 @@ def _apply_environment_from_settings(settings):
     }
     for key, env_names in env_map.items():
         value = _setting(settings, key, "").strip()
-        if isinstance(env_names, str):
-            env_names = (env_names,)
-        for env_name in env_names:
-            if value:
+        if value:
+            if isinstance(env_names, str):
+                env_names = (env_names,)
+            for env_name in env_names:
                 os.environ[env_name] = value
-            else:
-                os.environ.pop(env_name, None)
 
 
 def _transcription_model_from_settings(settings):

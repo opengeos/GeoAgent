@@ -1,11 +1,13 @@
 """Tests for OpenGeoAgent voice input helpers."""
 
+import os
 import sys
 import types
 
 from open_geoagent.dialogs.chat_dock import (
     SETTINGS_PREFIX,
     VoiceTranscriptionWorker,
+    _apply_environment_from_settings,
 )
 
 
@@ -37,6 +39,15 @@ def test_voice_transcription_requires_openai_api_key(monkeypatch, tmp_path) -> N
     assert results
     assert results[0]["success"] is False
     assert "Voice transcription requires an OpenAI API key" in results[0]["error"]
+
+
+def test_apply_environment_preserves_openai_api_key_fallback(monkeypatch) -> None:
+    """Empty QSettings should not erase an existing OPENAI_API_KEY fallback."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-env")
+
+    _apply_environment_from_settings(_EmptySettings())
+
+    assert os.environ["OPENAI_API_KEY"] == "sk-env"
 
 
 def test_voice_transcription_uses_saved_model(monkeypatch, tmp_path) -> None:
