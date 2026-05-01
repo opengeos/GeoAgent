@@ -59,6 +59,7 @@ def test_gee_data_catalogs_tools_expose_catalog_surface() -> None:
     assert "load_gee_dataset" in tools
     assert "calculate_gee_normalized_difference" in tools
     assert "list_loaded_gee_layers" in tools
+    assert "set_gee_layer_visualization" in tools
     assert "run_gee_python_snippet" in tools
     assert "calculate_gee_layer_statistics" in tools
     assert "open_gee_catalog_panel" in tools
@@ -81,9 +82,11 @@ def test_for_gee_data_catalogs_registers_catalog_and_qgis_tools(monkeypatch) -> 
     assert "open_gee_catalog_panel" in names
     assert "configure_gee_dataset_load" in names
     assert "list_loaded_gee_layers" in names
+    assert "set_gee_layer_visualization" in names
     assert "run_gee_python_snippet" in names
     assert "calculate_gee_layer_statistics" in names
     assert "list_project_layers" in names
+    assert "set_layer_symbology" not in names
     assert agent.context.metadata["integration"] == "gee_data_catalogs"
 
 
@@ -92,6 +95,8 @@ def test_gee_data_catalogs_prompt_mentions_generated_ee_snippets() -> None:
     from geoagent.core.factory import GEE_DATA_CATALOGS_SYSTEM_PROMPT
 
     assert "run_gee_python_snippet" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "set_gee_layer_visualization" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+    assert "set_layer_symbology" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "ee.Terrain.hillshade" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "list_loaded_gee_layers" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "calculate_gee_layer_statistics" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
@@ -100,6 +105,76 @@ def test_gee_data_catalogs_prompt_mentions_generated_ee_snippets() -> None:
     assert "computationally intensive" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "specifically asks to clip" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
     assert "bounds_collection_asset_id" in GEE_DATA_CATALOGS_SYSTEM_PROMPT
+
+
+def test_set_gee_layer_visualization_updates_registered_ee_layer(
+    monkeypatch,
+) -> None:
+    """Verify EE layer palette/range changes use Earth Engine vis params."""
+
+    class _Canvas:
+        def __init__(self) -> None:
+            self.refreshed = False
+
+        def refresh(self) -> None:
+            self.refreshed = True
+
+    class _Iface:
+        def __init__(self) -> None:
+            self.canvas = _Canvas()
+
+        def mapCanvas(self) -> _Canvas:
+            return self.canvas
+
+    captured = {}
+
+    def get_ee_layers():
+        return {
+            "Global NASADEM elevation": (
+                "image-object",
+                {"bands": ["elevation"], "min": -500.0, "max": 9000.0},
+            )
+        }
+
+    def add_ee_layer(ee_object, vis_params, name):
+        captured["ee_object"] = ee_object
+        captured["vis_params"] = vis_params
+        captured["name"] = name
+        return object()
+
+    ee_utils = ModuleType("gee_data_catalogs.core.ee_utils")
+    ee_utils.get_ee_layers = get_ee_layers
+    ee_utils.add_ee_layer = add_ee_layer
+
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs", ModuleType("gee_data_catalogs")
+    )
+    monkeypatch.setitem(
+        sys.modules, "gee_data_catalogs.core", ModuleType("gee_data_catalogs.core")
+    )
+    monkeypatch.setitem(sys.modules, "gee_data_catalogs.core.ee_utils", ee_utils)
+    monkeypatch.setitem(sys.modules, "qgis", None)
+
+    iface = _Iface()
+    tools = {t.tool_name: t for t in gee_data_catalogs_tools(iface)}
+    result = tools["set_gee_layer_visualization"].__wrapped__(
+        layer_name="NASADEM",
+        max_value=4000,
+        palette="terrain",
+    )
+
+    assert result["success"] is True
+    assert result["layer_name"] == "Global NASADEM elevation"
+    assert captured["ee_object"] == "image-object"
+    assert captured["name"] == "Global NASADEM elevation"
+    assert captured["vis_params"] == {
+        "bands": ["elevation"],
+        "min": -500.0,
+        "max": 4000.0,
+        "palette": ["#1a9850", "#91cf60", "#fee08b", "#d08b39", "#f5f5f5"],
+    }
+    assert result["vis_params"] == captured["vis_params"]
+    assert iface.canvas.refreshed is True
 
 
 def test_load_gee_dataset_clips_raster_to_feature_collection(monkeypatch) -> None:
