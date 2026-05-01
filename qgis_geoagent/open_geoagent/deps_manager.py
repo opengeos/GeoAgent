@@ -27,18 +27,66 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from qgis.PyQt.QtCore import QThread, pyqtSignal
 
-# Required packages: (import_name, pip_install_name)
-REQUIRED_PACKAGES = [
+# Dependency specs: (import_name, pip_install_name)
+MIN_PYTHON_VERSION = (3, 11)
+CORE_RUNTIME_PACKAGES = [
     ("geoagent", "GeoAgent[providers]>=1.3.0"),
     ("strands", "strands-agents>=1.37"),
     ("pydantic", "pydantic>=2.0"),
-    ("whitebox", "whitebox>=2.3.6"),
+]
+PROVIDER_PACKAGES = [
     ("openai", "openai>=1.0"),
     ("anthropic", "anthropic>=0.40"),
     ("google.genai", "google-genai>=1.0"),
     ("ollama", "ollama>=0.3"),
     ("litellm", "strands-agents[litellm]>=1.37"),
 ]
+WHITEBOX_PACKAGES = [("whitebox", "whitebox>=2.3.6")]
+NASA_PACKAGES = [("earthaccess", "earthaccess>=0.10")]
+GEE_PACKAGES = [
+    ("ee", "earthengine-api>=1.0"),
+    ("geemap", "geemap"),
+]
+STAC_PACKAGES = [
+    ("pystac_client", "pystac-client>=0.8"),
+    ("planetary_computer", "planetary-computer>=1.0"),
+]
+
+DEPENDENCY_GROUPS = {
+    "Core Providers": CORE_RUNTIME_PACKAGES + PROVIDER_PACKAGES,
+    "WhiteboxTools": CORE_RUNTIME_PACKAGES + WHITEBOX_PACKAGES,
+    "NASA Earthdata/OPERA": CORE_RUNTIME_PACKAGES + NASA_PACKAGES,
+    "GEE Data Catalogs": CORE_RUNTIME_PACKAGES + GEE_PACKAGES,
+    "STAC": CORE_RUNTIME_PACKAGES + STAC_PACKAGES,
+}
+
+
+def _dedupe_packages(packages: List[Tuple[str, str]]) -> List[Tuple[str, str]]:
+    """Return dependency specs with duplicate import names removed."""
+    seen = set()
+    out = []
+    for import_name, pip_name in packages:
+        if import_name in seen:
+            continue
+        seen.add(import_name)
+        out.append((import_name, pip_name))
+    return out
+
+
+DEPENDENCY_GROUPS["All"] = _dedupe_packages(
+    [
+        *CORE_RUNTIME_PACKAGES,
+        *PROVIDER_PACKAGES,
+        *WHITEBOX_PACKAGES,
+        *NASA_PACKAGES,
+        *GEE_PACKAGES,
+        *STAC_PACKAGES,
+    ]
+)
+
+# Backwards-compatible name used by tests and settings UI. These are the
+# packages needed for the default provider surface, not every optional mode.
+REQUIRED_PACKAGES = DEPENDENCY_GROUPS["Core Providers"]
 
 CACHE_DIR = os.path.join(os.path.expanduser("~"), ".open_geoagent")
 PYTHON_VERSION = f"py{sys.version_info.major}.{sys.version_info.minor}"
@@ -168,7 +216,36 @@ def _dependency_version(pip_name: str) -> Optional[str]:
         return None
 
 
-def check_dependencies() -> List[Dict]:
+def python_runtime_supported() -> bool:
+    """Return True when the current Python can install/run GeoAgent."""
+    return sys.version_info >= MIN_PYTHON_VERSION
+
+
+def python_runtime_error() -> str:
+    """Return a clear unsupported-runtime message for QGIS users."""
+    required = ".".join(str(part) for part in MIN_PYTHON_VERSION)
+    current = (
+        f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    )
+    return (
+        f"OpenGeoAgent requires Python {required} or newer because GeoAgent "
+        f"requires Python >=3.11. This QGIS session is using Python {current}. "
+        "Install a newer QGIS build, or use a QGIS Python environment based on "
+        f"Python {required}+."
+    )
+
+
+def dependency_group_names() -> List[str]:
+    """Return dependency group names in UI order."""
+    return list(DEPENDENCY_GROUPS.keys())
+
+
+def packages_for_group(group_name: str = "Core Providers") -> List[Tuple[str, str]]:
+    """Return dependency specs for one named group."""
+    return list(DEPENDENCY_GROUPS.get(group_name, REQUIRED_PACKAGES))
+
+
+def check_dependencies(group_name: str = "Core Providers") -> List[Dict]:
     """Check if required Python packages are discoverable.
 
     This intentionally avoids importing provider modules so opening the
@@ -180,7 +257,7 @@ def check_dependencies() -> List[Dict]:
     """
     ensure_venv_packages_available()
     results = []
-    for import_name, pip_name in REQUIRED_PACKAGES:
+    for import_name, pip_name in packages_for_group(group_name):
         info: Dict = {
             "name": import_name,
             "pip_name": pip_name,
@@ -199,29 +276,34 @@ def check_dependencies() -> List[Dict]:
 
 
 def all_dependencies_met() -> bool:
-    """Return True if every required package is discoverable.
+    """Return True if core runtime packages are discoverable.
 
     This is used on the chat-dock opening path, so it must avoid importing
-    heavy provider packages. Full imports happen later when the user sends a
-    chat request, where any provider-specific import error can be reported in
-    the chat panel.
+    heavy provider packages or optional workflow stacks. Full imports happen
+    later when the user sends a chat request, where provider/mode-specific
+    import errors can be reported in the chat panel.
 
     Returns:
-        True if all dependencies are discoverable on ``sys.path``.
+        True if core dependencies are discoverable on ``sys.path``.
     """
     ensure_venv_packages_available()
     return all(
-        _dependency_discoverable(import_name)[0] for import_name, _ in REQUIRED_PACKAGES
+        _dependency_discoverable(import_name)[0]
+        for import_name, _ in CORE_RUNTIME_PACKAGES
     )
 
 
-def get_missing_packages() -> List[str]:
+def get_missing_packages(group_name: str = "Core Providers") -> List[str]:
     """Return pip install names of missing packages.
 
     Returns:
         List of pip package names that are not currently importable.
     """
-    return [dep["pip_name"] for dep in check_dependencies() if not dep["installed"]]
+    return [
+        dep["pip_name"]
+        for dep in check_dependencies(group_name)
+        if not dep["installed"]
+    ]
 
 
 def _get_clean_env() -> dict:
@@ -486,6 +568,9 @@ def create_venv(venv_dir: str) -> str:
     """
     from .uv_manager import get_uv_path
 
+    if not python_runtime_supported():
+        raise RuntimeError(python_runtime_error())
+
     os.makedirs(os.path.dirname(venv_dir), exist_ok=True)
 
     python_path = get_venv_python_path(venv_dir)
@@ -659,10 +744,18 @@ class DepsInstallWorker(QThread):
     progress = pyqtSignal(int, str)
     finished = pyqtSignal(bool, str)
 
+    def __init__(self, group_name: str = "Core Providers", parent=None):
+        super().__init__(parent)
+        self.group_name = group_name or "Core Providers"
+
     def run(self):
         """Execute uv download, venv creation, and dependency installation."""
         try:
             from .uv_manager import download_uv
+
+            if not python_runtime_supported():
+                self.finished.emit(False, python_runtime_error())
+                return
 
             start_time = time.time()
             venv_dir = get_venv_dir()
@@ -718,9 +811,12 @@ class DepsInstallWorker(QThread):
             self.progress.emit(15, "Package installer ready.")
 
             # Step 3: Install missing packages
-            missing = get_missing_packages()
+            missing = get_missing_packages(self.group_name)
             if not missing:
-                self.finished.emit(True, "All dependencies are already installed.")
+                self.finished.emit(
+                    True,
+                    f"All {self.group_name} dependencies are already installed.",
+                )
                 return
 
             self.progress.emit(20, f"Installing: {', '.join(missing)}...")
@@ -742,7 +838,7 @@ class DepsInstallWorker(QThread):
 
             # Step 5: Verify imports
             self.progress.emit(95, "Verifying installations...")
-            still_missing = get_missing_packages()
+            still_missing = get_missing_packages(self.group_name)
 
             elapsed = time.time() - start_time
             if elapsed >= 60:
@@ -762,7 +858,7 @@ class DepsInstallWorker(QThread):
                 self.progress.emit(100, f"All dependencies installed in {elapsed_str}!")
                 self.finished.emit(
                     True,
-                    f"All dependencies installed successfully in {elapsed_str}!",
+                    f"All {self.group_name} dependencies installed in {elapsed_str}!",
                 )
 
         except subprocess.TimeoutExpired:

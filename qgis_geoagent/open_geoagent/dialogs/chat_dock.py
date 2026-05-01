@@ -14,6 +14,7 @@ import time
 import traceback
 import wave
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import (
@@ -145,11 +146,11 @@ AGENT_MODES = [
 ]
 DEFAULT_AGENT_MODE = "General QGIS"
 PERMISSION_PROFILES = [
+    "Trusted auto-approve",
     "Inspect only",
     "Edit layers",
     "Run processing",
     "Execute Scripts",
-    "Trusted auto-approve",
 ]
 PERMISSION_PROFILE_ALIASES = {
     "Execute PyQGIS": "Execute Scripts",
@@ -649,6 +650,63 @@ def _clean_tool_display_args(args):
     return cleaned
 
 
+_SENSITIVE_QUERY_PARAMS = {
+    "sig",
+    "signature",
+    "sv",
+    "se",
+    "st",
+    "sp",
+    "sas",
+    "token",
+    "access_token",
+    "x-amz-signature",
+    "x-amz-credential",
+    "x-amz-security-token",
+    "x-goog-signature",
+    "x-goog-credential",
+    "key",
+    "api_key",
+    "apikey",
+}
+
+
+def _redact_url_for_display(url):
+    """Redact bearer-like query parameters (e.g., SAS tokens) from a URL.
+
+    Signed Planetary Computer or cloud storage URLs embed credentials in the
+    query string. Persisting them in chat transcripts increases the leakage
+    risk when users copy or share logs.
+    """
+    if not url:
+        return url
+    try:
+        parts = urlsplit(url)
+    except (ValueError, TypeError):
+        return url
+    if not parts.query:
+        return url
+    redacted_pairs = []
+    changed = False
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        if key.lower() in _SENSITIVE_QUERY_PARAMS and value:
+            redacted_pairs.append((key, "REDACTED"))
+            changed = True
+        else:
+            redacted_pairs.append((key, value))
+    if not changed:
+        return url
+    return urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(redacted_pairs, doseq=True),
+            parts.fragment,
+        )
+    )
+
+
 def _format_tool_calls(tool_calls):
     """Return Markdown lines describing tool input parameters."""
     if not tool_calls:
@@ -656,6 +714,8 @@ def _format_tool_calls(tool_calls):
     lines = ["Tool inputs:"]
     grouped = []
     index_by_signature = {}
+    stac_asset_urls = []
+    seen_stac_urls = set()
     for call in tool_calls:
         if not isinstance(call, dict):
             continue
@@ -676,6 +736,15 @@ def _format_tool_calls(tool_calls):
             index_by_signature[signature] = len(grouped)
             grouped.append([label, args, 1])
 
+        result = call.get("result") if isinstance(call.get("result"), dict) else {}
+        if name == "add_stac_asset_to_qgis":
+            href = str(result.get("asset_href") or "").strip()
+            if href and href not in seen_stac_urls:
+                seen_stac_urls.add(href)
+                stac_asset_urls.append(
+                    (str(result.get("layer_name") or "STAC asset"), href)
+                )
+
     for label, args, count in grouped:
         suffix = f" (repeated {count} times)" if count > 1 else ""
         if args:
@@ -686,6 +755,18 @@ def _format_tool_calls(tool_calls):
             lines.append(f"- **`{label}`**{suffix}: {params}")
         else:
             lines.append(f"- **`{label}`**{suffix}")
+    if stac_asset_urls:
+        lines.append("")
+        lines.append("STAC asset URLs:")
+        lines.append(
+            "_Signed query parameters are redacted to avoid leaking "
+            "credentials when transcripts are shared._"
+        )
+        for layer_name, href in stac_asset_urls:
+            lines.append(f"- **{layer_name}:**")
+            lines.append("```text")
+            lines.append(_redact_url_for_display(href))
+            lines.append("```")
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
@@ -791,6 +872,57 @@ def _gee_load_dataset_snippet_from_args(args):
     return "\n".join(lines)
 
 
+def _stac_load_asset_snippet(args, result=None):
+    """Build a PyQGIS snippet for loading a STAC raster asset."""
+    args = args if isinstance(args, dict) else {}
+    result = result if isinstance(result, dict) else {}
+    qgis_uri = str(result.get("qgis_uri") or args.get("qgis_uri") or "").strip()
+    asset_href = str(result.get("asset_href") or args.get("asset_href") or "").strip()
+    if not qgis_uri and not asset_href:
+        return ""
+    sign_asset = args.get("sign_asset", True)
+    sign_asset = (
+        False if str(sign_asset).strip().lower() == "false" else bool(sign_asset)
+    )
+    layer_name = str(
+        result.get("layer_name") or args.get("layer_name") or "STAC raster"
+    ).strip()
+    lines = [
+        "from qgis.core import QgsProject, QgsRasterLayer",
+        "",
+        f"asset_href = {_python_literal(asset_href)}",
+        f"uri = {_python_literal(qgis_uri)}",
+        f"sign_asset = {_python_literal(sign_asset)}",
+        "if not uri:",
+        "    href = asset_href",
+        "    if sign_asset:",
+        "        try:",
+        "            import planetary_computer",
+        "            href = planetary_computer.sign(href)",
+        "        except Exception:",
+        "            pass",
+        "    uri = href",
+        "if uri.lower().startswith(('http://', 'https://')):",
+        "    uri = f'/vsicurl/{uri}'",
+        f"layer_name = {_python_literal(layer_name)}",
+        "layer = QgsRasterLayer(uri, layer_name)",
+        "if not layer.isValid():",
+        "    raise RuntimeError(f'Could not load raster: {uri}')",
+        "QgsProject.instance().addMapLayer(layer)",
+        "iface.setActiveLayer(layer)",
+        "canvas = iface.mapCanvas()",
+        "extent = layer.extent()",
+        "try:",
+        "    from geoagent.tools.qgis import _transform_extent_to_canvas_crs",
+        "    extent = _transform_extent_to_canvas_crs(layer, canvas, extent)",
+        "except Exception:",
+        "    pass",
+        "canvas.setExtent(extent)",
+        "canvas.refresh()",
+    ]
+    return "\n".join(lines)
+
+
 def _script_from_tool_args(tool_name, args):
     """Return a copyable script derived from tool arguments alone."""
     if tool_name == "load_gee_dataset":
@@ -798,6 +930,12 @@ def _script_from_tool_args(tool_name, args):
             "kind": "Earth Engine",
             "tool_name": tool_name,
             "code": _gee_load_dataset_snippet_from_args(args),
+        }
+    if tool_name == "add_stac_asset_to_qgis":
+        return {
+            "kind": "PyQGIS",
+            "tool_name": tool_name,
+            "code": _stac_load_asset_snippet(args),
         }
     return {}
 
@@ -831,6 +969,14 @@ def _latest_executable_snippet(tool_calls):
                     "code": code,
                 }
         result = call.get("result")
+        if name == "add_stac_asset_to_qgis":
+            code = _stac_load_asset_snippet(call.get("args"), result)
+            if code:
+                return {
+                    "kind": "PyQGIS",
+                    "tool_name": name,
+                    "code": code,
+                }
         if isinstance(result, dict):
             for key, kind in RESULT_SCRIPT_KEYS.items():
                 code = str(result.get(key) or "").strip()
@@ -1532,7 +1678,7 @@ class ChatWorker(QThread):
                 "NASA Earthdata": "for_nasa_earthdata",
                 "NASA OPERA": "for_nasa_opera",
                 "GEE Data Catalogs": "for_gee_data_catalogs",
-                "STAC": "for_qgis",
+                "STAC": "for_stac",
             }.get(self.agent_mode, "for_qgis")
             factory = getattr(geoagent, factory_name)
             kwargs = {
@@ -1553,10 +1699,10 @@ class ChatWorker(QThread):
             agent = _filter_tools_for_permission(agent, self.permission_profile)
             if self.agent_mode == "STAC":
                 self.prompt = (
-                    "You are in STAC guidance mode. The current GeoAgent STAC "
-                    "tool surface is limited, so provide dependency checks, "
-                    "catalog-search steps, and QGIS loading guidance without "
-                    "pretending to run missing STAC loader tools.\n\n"
+                    "You are in STAC mode. Use available STAC search, asset "
+                    "inspection, and QGIS loading tools when they fit the "
+                    "request. If loading is not possible, explain the selected "
+                    "asset URL and the reason clearly.\n\n"
                     f"{self.prompt}"
                 )
             if self.stream:
@@ -2089,6 +2235,9 @@ class ChatDockWidget(QDockWidget):
             _enum_value(QSizePolicy, "Policy", "Ignored"),
             _enum_value(QSizePolicy, "Policy", "Fixed"),
         )
+        self.permission_combo.currentTextChanged.connect(
+            self._on_permission_profile_changed
+        )
         model_layout.addRow("Permissions:", self.permission_combo)
 
         self.fast_check = QCheckBox("Fast mode")
@@ -2106,6 +2255,11 @@ class ChatDockWidget(QDockWidget):
         mode_layout.addWidget(self.auto_approve_tools_check)
         mode_layout.addStretch(1)
         model_layout.addRow("", mode_layout)
+
+        self.tool_availability_label = QLabel("Tool availability will appear here.")
+        self.tool_availability_label.setWordWrap(True)
+        self.tool_availability_label.setStyleSheet("font-size: 10px; color: gray;")
+        model_layout.addRow("Tools:", self.tool_availability_label)
 
         layout.addWidget(self.model_group)
 
@@ -2353,8 +2507,11 @@ class ChatDockWidget(QDockWidget):
             profile = PERMISSION_PROFILE_ALIASES.get(profile, profile)
             index = self.permission_combo.findText(profile)
             self.permission_combo.setCurrentIndex(index if index >= 0 else 0)
+            if profile == "Trusted auto-approve":
+                self.auto_approve_tools_check.setChecked(True)
         finally:
             self._loading_settings = False
+        self._refresh_tool_availability()
         self._load_project_history()
 
     def _save_model_settings(self):
@@ -2407,6 +2564,8 @@ class ChatDockWidget(QDockWidget):
 
     def _on_agent_mode_changed(self, mode):
         """Load a mode-specific workflow prompt when useful."""
+        if hasattr(self, "_refresh_tool_availability"):
+            self._refresh_tool_availability()
         if getattr(self, "_loading_settings", False):
             return
         if not hasattr(self, "prompt_input"):
@@ -2414,6 +2573,77 @@ class ChatDockWidget(QDockWidget):
         prompts = WORKFLOW_PROMPTS.get(mode, [])
         if prompts and not self.prompt_input.toPlainText().strip():
             self.prompt_input.setPlainText(prompts[0])
+
+    def _on_permission_profile_changed(self, profile):
+        """Keep trusted profile and tool diagnostics in sync."""
+        if profile == "Trusted auto-approve" and hasattr(
+            self, "auto_approve_tools_check"
+        ):
+            self.auto_approve_tools_check.setChecked(True)
+        self._refresh_tool_availability()
+
+    def _refresh_tool_availability(self):
+        """Show the tool surface for the selected mode and permission profile."""
+        if not hasattr(self, "tool_availability_label"):
+            return
+        try:
+            from geoagent import GeoAgentContext
+            from geoagent.core.factory import assemble_tools
+
+            try:
+                from qgis.core import QgsProject
+
+                project = QgsProject.instance()
+            except Exception:
+                project = None
+
+            mode = self.agent_mode_combo.currentText()
+            profile = self.permission_combo.currentText()
+            ctx = GeoAgentContext(qgis_iface=self.iface, qgis_project=project)
+            kwargs = {
+                "context": ctx,
+                "include_qgis": True,
+                "include_image_generation": True,
+                "include_whitebox": mode == "WhiteboxTools",
+                "include_nasa_earthdata": mode == "NASA Earthdata",
+                "include_nasa_opera": mode == "NASA OPERA",
+                "include_gee_data_catalogs": mode == "GEE Data Catalogs",
+                "include_stac": mode == "STAC",
+                "permission_profile": profile,
+                "fast": self.fast_check.isChecked(),
+            }
+            if mode == "STAC":
+                kwargs["exclude_tool_names"] = {"run_pyqgis_script"}
+            tools, registry = assemble_tools(**kwargs)
+            grouped = {}
+            for tool in tools:
+                name = (
+                    getattr(tool, "tool_name", "")
+                    or getattr(tool, "__name__", "")
+                    or getattr(tool, "name", "")
+                )
+                if not name:
+                    continue
+                meta = registry.get(str(name))
+                category = str(getattr(meta, "category", "") or "general")
+                grouped.setdefault(category, []).append(str(name))
+            if not grouped:
+                self.tool_availability_label.setText("No tools available.")
+                return
+            parts = []
+            for category in sorted(grouped):
+                names = sorted(grouped[category])
+                preview = ", ".join(names[:8])
+                if len(names) > 8:
+                    preview += f", +{len(names) - 8} more"
+                parts.append(f"{category}: {preview}")
+            self.tool_availability_label.setText(
+                f"{len(tools)} tools for {mode} / {profile}. " + " | ".join(parts)
+            )
+        except Exception as exc:
+            self.tool_availability_label.setText(
+                f"Tool availability unavailable: {type(exc).__name__}: {exc}"
+            )
 
     def _add_clipboard_image(self, image):
         """Attach an image pasted into the prompt editor."""

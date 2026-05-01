@@ -74,6 +74,7 @@ def test_factory_returns_tools_for_iface() -> None:
         "set_layer_visibility",
         "set_layer_opacity",
         "set_layer_symbology",
+        "create_hillshade_layer",
         "inspect_layer_fields",
         "get_selected_features",
         "select_features_by_expression",
@@ -97,6 +98,7 @@ def test_remove_layer_and_run_processing_require_confirmation() -> None:
     assert needs_confirmation(tools["remove_layer"]) is True
     assert needs_confirmation(tools["run_processing_algorithm"]) is True
     assert needs_confirmation(tools["buffer_active_layer"]) is True
+    assert needs_confirmation(tools["create_hillshade_layer"]) is True
     assert needs_confirmation(tools["save_project"]) is True
     assert needs_confirmation(tools["zoom_in"]) is False
     assert needs_confirmation(tools["list_project_layers"]) is False
@@ -546,6 +548,79 @@ def test_set_layer_symbology_updates_mock_layer() -> None:
     assert layer.opacity() == 0.75
     assert layer.repaint_count == 1
     assert iface.mapCanvas().refresh_count == 1
+
+
+def test_set_layer_symbology_applies_raster_terrain_palette_to_mock_layer() -> None:
+    """Verify DEM/raster palette requests change raster symbology."""
+    project = MockQGISProject()
+    layer = MockQGISLayer("Seattle DEM", "/tmp/dem.tif", "raster")
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    result = tools["set_layer_symbology"](
+        layer_name="Seattle DEM",
+        raster_palette="terrain",
+        opacity=0.8,
+    )
+
+    assert result["message"] == "Updated symbology for layer 'Seattle DEM'."
+    assert result["raster_palette"] == "terrain"
+    assert result["raster_band"] == 1
+    assert result["opacity"] == 0.8
+    assert layer.symbology["raster_palette"] == "terrain"
+    assert layer.opacity() == 0.8
+    assert layer.repaint_count == 1
+    assert iface.mapCanvas().refresh_count == 1
+
+
+def test_set_layer_symbology_avoids_remote_raster_statistics() -> None:
+    """Remote COG palette changes should not read blocking raster stats."""
+
+    class BlockingProvider:
+        def bandStatistics(self, *_args):
+            raise AssertionError("remote raster statistics should not be read")
+
+    project = MockQGISProject()
+    layer = MockQGISLayer(
+        "Seattle DEM",
+        "/vsicurl/https://example.com/dem.tif?sig=abc",
+        "raster",
+    )
+    layer.dataProvider = lambda: BlockingProvider()  # type: ignore[method-assign]
+    project.addMapLayer(layer)
+    iface = MockQGISIface(project=project)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    result = tools["set_layer_symbology"](
+        layer_name="Seattle DEM",
+        raster_palette="terrain",
+    )
+
+    assert result["raster_palette"] == "terrain"
+    assert result["raster_min"] == 0.0
+    assert result["raster_max"] == 3000.0
+    assert result["raster_range_estimated"] is True
+
+
+def test_create_hillshade_layer_adds_mock_output_without_qgis_task() -> None:
+    """The hillshade helper should expose a non-blocking tool surface."""
+    project = MockQGISProject()
+    dem = MockQGISLayer("Seattle DEM", "/vsicurl/https://example.com/dem.tif", "raster")
+    project.addMapLayer(dem)
+    iface = MockQGISIface(project=project)
+    iface.setActiveLayer(dem)
+    tools = {t.tool_name: t for t in qgis_tools(iface, project)}
+
+    result = tools["create_hillshade_layer"](
+        output_layer_name="Seattle Hillshade",
+        output_path="/tmp/seattle_hillshade.tif",
+    )
+
+    assert result["success"] is True
+    assert result["queued"] is False
+    assert result["output_layer"] == "Seattle Hillshade"
+    assert "Seattle Hillshade" in project.mapLayers()
 
 
 def test_set_layer_symbology_does_not_reassign_renderer_owned_symbol() -> None:

@@ -86,6 +86,16 @@ def _plugin_version(plugin_dir):
     return "Unknown"
 
 
+def _geoagent_version():
+    """Return the installed GeoAgent package version without importing it."""
+    try:
+        from importlib import metadata
+
+        return metadata.version("GeoAgent")
+    except Exception:
+        return "Unknown"
+
+
 def _model_requires_default_temperature(provider, model_id):
     """Return True when the selected model rejects non-default temperature."""
     normalized = str(model_id or "").lower()
@@ -111,6 +121,7 @@ def collect_diagnostics(
     """Return redacted OpenGeoAgent diagnostics as a JSON-friendly dict."""
     from ..deps_manager import (
         check_dependencies,
+        dependency_group_names,
         get_venv_dir,
         get_venv_site_packages,
         venv_exists,
@@ -128,6 +139,14 @@ def collect_diagnostics(
     except Exception:
         qgis_version = "Unknown"
 
+    def _check_dependencies(group_name=None):
+        try:
+            if group_name is None:
+                return check_dependencies()
+            return check_dependencies(group_name)
+        except TypeError:
+            return check_dependencies()
+
     credential_presence = {}
     for key, env_names in ENV_FALLBACKS.items():
         saved = settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str).strip()
@@ -139,6 +158,7 @@ def collect_diagnostics(
 
     return {
         "plugin_version": _plugin_version(plugin_dir),
+        "geoagent_version": _geoagent_version(),
         "qgis_version": qgis_version,
         "python": {
             "executable": sys.executable,
@@ -155,7 +175,10 @@ def collect_diagnostics(
             "verified": bool(uv_ok),
             "message": uv_message,
         },
-        "dependencies": check_dependencies(),
+        "dependencies": _check_dependencies(),
+        "dependency_groups": {
+            group: _check_dependencies(group) for group in dependency_group_names()
+        },
         "model": {
             "provider": settings.value(
                 f"{SETTINGS_PREFIX}provider", DEFAULT_PROVIDER, type=str
@@ -412,7 +435,7 @@ class SettingsDockWidget(QDockWidget):
 
     def _create_dependencies_tab(self):
         """Create the dependency status and installer tab."""
-        from ..deps_manager import REQUIRED_PACKAGES
+        from ..deps_manager import dependency_group_names
 
         widget = QWidget()
         layout = QVBoxLayout(widget)
@@ -425,24 +448,18 @@ class SettingsDockWidget(QDockWidget):
         info_label.setStyleSheet("font-size: 10px; padding: 5px;")
         layout.addWidget(info_label)
 
+        group_layout = QFormLayout()
+        self.dependency_group_combo = QComboBox()
+        self.dependency_group_combo.addItems(dependency_group_names())
+        self.dependency_group_combo.currentTextChanged.connect(
+            self._refresh_dependency_status
+        )
+        group_layout.addRow("Dependency set:", self.dependency_group_combo)
+        layout.addLayout(group_layout)
+
         deps_group = QGroupBox("Package Status")
-        deps_layout = QVBoxLayout(deps_group)
-
+        self.deps_layout = QVBoxLayout(deps_group)
         self.dep_status_labels = {}
-        for import_name, pip_name in REQUIRED_PACKAGES:
-            row_layout = QHBoxLayout()
-            name_label = QLabel(f"  {pip_name}")
-            name_label.setWordWrap(True)
-            name_label.setMinimumWidth(120)
-            name_label.setMaximumWidth(170)
-            status_label = QLabel("Checking...")
-            status_label.setStyleSheet("color: gray;")
-            row_layout.addWidget(name_label)
-            row_layout.addWidget(status_label)
-            row_layout.addStretch()
-            deps_layout.addLayout(row_layout)
-            self.dep_status_labels[import_name] = status_label
-
         layout.addWidget(deps_group)
 
         self.deps_overall_label = QLabel("Checking dependencies...")
@@ -672,11 +689,16 @@ class SettingsDockWidget(QDockWidget):
         layout.addStretch()
         return widget
 
-    def _refresh_dependency_status(self):
+    def _refresh_dependency_status(self, *_args):
         """Refresh dependency labels from the dependency checker."""
-        from ..deps_manager import check_dependencies
+        from ..deps_manager import check_dependencies, packages_for_group
 
-        deps = check_dependencies()
+        group_name = self.dependency_group_combo.currentText()
+        packages = packages_for_group(group_name)
+        if set(self.dep_status_labels) != {name for name, _ in packages}:
+            self._rebuild_dependency_rows(packages)
+
+        deps = check_dependencies(group_name)
         all_ok = True
 
         for dep in deps:
@@ -693,7 +715,9 @@ class SettingsDockWidget(QDockWidget):
                 all_ok = False
 
         if all_ok:
-            self.deps_overall_label.setText("All dependencies are installed.")
+            self.deps_overall_label.setText(
+                f"All {group_name} dependencies are installed."
+            )
             self.deps_overall_label.setStyleSheet(
                 "color: green; font-weight: bold; padding: 5px;"
             )
@@ -701,7 +725,8 @@ class SettingsDockWidget(QDockWidget):
         else:
             missing_count = sum(1 for d in deps if not d["installed"])
             self.deps_overall_label.setText(
-                f"{missing_count} package(s) missing. Click Install Dependencies."
+                f"{missing_count} {group_name} package(s) missing. "
+                "Click Install Dependencies."
             )
             self.deps_overall_label.setStyleSheet(
                 "color: #E65100; font-weight: bold; padding: 5px;"
@@ -709,10 +734,41 @@ class SettingsDockWidget(QDockWidget):
             self.install_deps_btn.setVisible(True)
             self.install_deps_btn.setEnabled(True)
 
+    def _rebuild_dependency_rows(self, packages):
+        """Rebuild package status rows for the selected dependency group."""
+        while self.deps_layout.count():
+            item = self.deps_layout.takeAt(0)
+            child_layout = item.layout()
+            widget = item.widget()
+            if child_layout is not None:
+                while child_layout.count():
+                    child = child_layout.takeAt(0)
+                    child_widget = child.widget()
+                    if child_widget is not None:
+                        child_widget.deleteLater()
+            if widget is not None:
+                widget.deleteLater()
+
+        self.dep_status_labels = {}
+        for import_name, pip_name in packages:
+            row_layout = QHBoxLayout()
+            name_label = QLabel(f"  {pip_name}")
+            name_label.setWordWrap(True)
+            name_label.setMinimumWidth(120)
+            name_label.setMaximumWidth(190)
+            status_label = QLabel("Checking...")
+            status_label.setStyleSheet("color: gray;")
+            row_layout.addWidget(name_label)
+            row_layout.addWidget(status_label)
+            row_layout.addStretch()
+            self.deps_layout.addLayout(row_layout)
+            self.dep_status_labels[import_name] = status_label
+
     def _install_dependencies(self):
         """Start background dependency installation."""
         from ..deps_manager import DepsInstallWorker
 
+        group_name = self.dependency_group_combo.currentText()
         self.install_deps_btn.setEnabled(False)
         self.install_deps_btn.setText("Installing...")
         self.refresh_deps_btn.setEnabled(False)
@@ -722,7 +778,7 @@ class SettingsDockWidget(QDockWidget):
         self.deps_progress_label.setVisible(True)
         self.deps_progress_label.setText("Starting installation...")
 
-        self._deps_worker = DepsInstallWorker()
+        self._deps_worker = DepsInstallWorker(group_name)
         self._deps_worker.progress.connect(self._on_deps_install_progress)
         self._deps_worker.finished.connect(self._on_deps_install_finished)
         self._deps_worker.start()

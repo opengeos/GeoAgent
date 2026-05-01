@@ -173,6 +173,82 @@ def test_build_chat_content_adds_image_blocks() -> None:
     ]
 
 
+def test_format_tool_calls_includes_full_stac_asset_url() -> None:
+    """Verify STAC signed URLs are preserved outside compact arg display."""
+    href = "https://example.blob.core.windows.net/container/path/file.tif?" + (
+        "sig=" + ("x" * 300)
+    )
+
+    text = _format_tool_calls(
+        [
+            {
+                "name": "add_stac_asset_to_qgis",
+                "args": {"asset_href": href, "layer_name": "Sentinel visual"},
+                "result": {
+                    "success": True,
+                    "loaded": True,
+                    "asset_href": href,
+                    "layer_name": "Sentinel visual",
+                },
+            }
+        ]
+    )
+
+    assert "STAC asset URLs:" in text
+    assert href in text
+    assert "..." in text
+
+
+def test_latest_executable_snippet_builds_stac_loader_script() -> None:
+    """Verify Copy Script enables for STAC raster loading calls."""
+    href = "https://example.blob.core.windows.net/container/dem.tif?sig=abc"
+    snippet = _latest_executable_snippet(
+        [
+            {
+                "name": "add_stac_asset_to_qgis",
+                "args": {"asset_href": href, "layer_name": "Seattle DEM"},
+                "result": {
+                    "success": True,
+                    "queued": True,
+                    "asset_href": href,
+                    "qgis_uri": f"/vsicurl/{href}",
+                    "layer_name": "Seattle DEM",
+                },
+            }
+        ]
+    )
+
+    assert snippet["kind"] == "PyQGIS"
+    assert snippet["tool_name"] == "add_stac_asset_to_qgis"
+    assert "QgsRasterLayer" in snippet["code"]
+    assert f"/vsicurl/{href}" in snippet["code"]
+    assert "canvas.setExtent(extent)" in snippet["code"]
+
+
+def test_latest_executable_snippet_builds_signed_stac_loader_from_args() -> None:
+    """Verify copied STAC scripts sign Planetary Computer hrefs when needed."""
+    href = "https://elevationeuwest.blob.core.windows.net/copernicus-dem/dem.tif"
+
+    snippet = _latest_executable_snippet(
+        [
+            {
+                "name": "add_stac_asset_to_qgis",
+                "args": {
+                    "asset_href": href,
+                    "layer_name": "Seattle DEM",
+                    "sign_asset": True,
+                },
+            }
+        ]
+    )
+
+    assert snippet["kind"] == "PyQGIS"
+    assert "import planetary_computer" in snippet["code"]
+    assert "href = planetary_computer.sign(href)" in snippet["code"]
+    assert "uri = f'/vsicurl/{uri}'" in snippet["code"]
+    assert href in snippet["code"]
+
+
 def test_image_model_from_settings_prefers_saved_then_env(monkeypatch) -> None:
     """Verify image generation model selection has a stable default path."""
     monkeypatch.setenv("GEOAGENT_IMAGE_MODEL", "gpt-image-1")
@@ -513,6 +589,7 @@ def test_transcribed_prompt_moves_cursor_to_end() -> None:
 
 def test_permission_profiles_filter_sensitive_tools() -> None:
     """Verify inspect-only mode hides mutating/long-running tools."""
+    from open_geoagent.dialogs.chat_dock import DEFAULT_PERMISSION_PROFILE
 
     class _Meta:
         category = "qgis"
@@ -520,6 +597,7 @@ def test_permission_profiles_filter_sensitive_tools() -> None:
         destructive = False
         long_running = False
 
+    assert DEFAULT_PERMISSION_PROFILE == "Trusted auto-approve"
     assert not _permission_allows_tool("Inspect only", "run_pyqgis_script", _Meta())
     assert _permission_allows_tool("Execute Scripts", "run_pyqgis_script", _Meta())
     assert _permission_allows_tool("Execute PyQGIS", "run_pyqgis_script", _Meta())

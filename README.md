@@ -55,6 +55,7 @@ own agent framework.
 | `for_anymap` | Factory that binds tools to an `anymap.Map`-compatible object. |
 | `for_qgis` | Factory that binds tools to `qgis.utils.iface` and an optional `QgsProject`. |
 | `for_nasa_opera` | Factory that binds NASA OPERA search/display tools plus QGIS tools. |
+| `for_stac` | Factory that binds STAC catalog search/asset tools plus optional QGIS loading. |
 | `create_agent` | Factory for custom tools or package-specific integrations. |
 
 ## Installation
@@ -441,6 +442,7 @@ Runnable notebooks live under `docs/examples/`:
 - `docs/examples/stream_chat_openai_codex.ipynb` — streamed ChatGPT/Codex output.
 - `docs/examples/live_mapping.ipynb` — live map workflow.
 - `docs/examples/qgis_agent.ipynb` — QGIS-oriented workflow using mocks.
+- `docs/examples/stac_workflow.ipynb` — STAC catalog search and mock QGIS loading.
 - `examples/nasa_opera_qgis.py` — NASA OPERA workflow for QGIS.
 
 Prompt ideas:

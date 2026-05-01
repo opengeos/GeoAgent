@@ -20,6 +20,7 @@ from geoagent.tools.leafmap import leafmap_tools
 from geoagent.tools.nasa_earthdata import earthdata_tools
 from geoagent.tools.nasa_opera import nasa_opera_tools
 from geoagent.tools.qgis import qgis_tools
+from geoagent.tools.stac import stac_tools
 from geoagent.tools.whitebox import whitebox_tools
 
 NASA_EARTHDATA_SYSTEM_PROMPT = """\
@@ -184,6 +185,39 @@ Workflow guidance:
   loaded layer names when available.
 """
 
+STAC_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS with access to STAC catalog tools.
+
+Workflow guidance:
+- If the user does not name a STAC catalog, use the Planetary Computer STAC
+  catalog: https://planetarycomputer.microsoft.com/api/stac/v1.
+- Use list_stac_collections when the user has a catalog URL but no collection.
+- Use search_stac_items for catalog search, including the current QGIS map
+  extent when the user asks for the current area. Use
+  get_current_stac_search_extent for the current QGIS map extent; do not use
+  run_pyqgis_script to calculate STAC search bounds.
+- When the user asks for cloud-free, clear-sky, or low-cloud imagery, pass
+  max_cloud_cover=10 to search_stac_items and select the returned item with the
+  best spatial fit and lowest cloud_cover rather than the newest item. Prefer
+  items where contains_query_center is true and bbox_overlap_ratio is high.
+  Mention cloud_cover in the response when available.
+- For DEM/elevation requests, do not pass max_cloud_cover. Prefer Planetary
+  Computer collection cop-dem-glo-30 and load the data/elevation asset rather
+  than a rendered preview.
+- Inspect item assets before loading. Prefer cloud-optimized raster assets
+  such as COG, GeoTIFF, visual, analytic, or band-specific raster assets.
+- If search_stac_items returns a suitable preferred_assets entry, use that href
+  directly with add_stac_asset_to_qgis instead of making a separate
+  get_stac_item_assets call.
+- Use add_stac_asset_to_qgis only for a concrete asset href. If QGIS cannot
+  load the asset directly, report the returned asset URL and reason instead of
+  claiming the layer was added. If the tool reports queued=True, tell the user
+  the QGIS background task has started and the layer will appear when QGIS
+  validates the raster.
+- Keep responses concise and include catalog URL, collection, item id, asset
+  key, and layer name when available.
+"""
+
 
 def _filter_by_imports(tools: list[Any]) -> list[Any]:
     """Drop tools whose declared optional packages are unavailable."""
@@ -240,6 +274,22 @@ def _filter_by_permission(
     return [tool for tool in tools if _permission_allows_tool(permission_profile, tool)]
 
 
+def _drop_tools_by_name(tools: list[Any], excluded: set[str]) -> list[Any]:
+    """Return tools except those whose Strands name is excluded."""
+    if not excluded:
+        return tools
+    out = []
+    for tool in tools:
+        name = (
+            getattr(tool, "tool_name", "")
+            or getattr(tool, "__name__", "")
+            or getattr(tool, "name", "")
+        )
+        if str(name) not in excluded:
+            out.append(tool)
+    return out
+
+
 def register_all_tools(registry: GeoToolRegistry, tools: Iterable[Any]) -> None:
     """Populate registry from decorated tools."""
     for t in tools:
@@ -259,11 +309,13 @@ def assemble_tools(
     include_nasa_opera: bool = False,
     include_gee_data_catalogs: bool = False,
     include_whitebox: bool = False,
+    include_stac: bool = False,
     include_image_generation: bool = False,
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     fast: bool = False,
     permission_profile: str | None = None,
+    exclude_tool_names: set[str] | None = None,
 ) -> tuple[list[Any], GeoToolRegistry]:
     """Collect tools for a context and build a metadata registry."""
     registry = GeoToolRegistry()
@@ -311,6 +363,12 @@ def assemble_tools(
         )
         register_all_tools(registry, whitebox_tool_list)
         collected.extend(whitebox_tool_list)
+    if include_stac:
+        stac_tool_list = _filter_by_imports(
+            stac_tools(context.qgis_iface, context.qgis_project)
+        )
+        register_all_tools(registry, stac_tool_list)
+        collected.extend(stac_tool_list)
     if include_image_generation:
         image_tools = _filter_by_imports(image_generation_tools())
         register_all_tools(registry, image_tools)
@@ -319,6 +377,7 @@ def assemble_tools(
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
     collected = _filter_by_permission(collected, permission_profile)
+    collected = _drop_tools_by_name(collected, exclude_tool_names or set())
     tools = collect_tools_for_context(collected, fast=fast, registry=registry)
     return tools, registry
 
@@ -704,6 +763,58 @@ def for_whitebox(
     )
 
 
+def for_stac(
+    iface: Any = None,
+    project: Any = None,
+    *,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+    permission_profile: str | None = None,
+) -> GeoAgent:
+    """Bind an agent to STAC catalog workflows and optional QGIS loading."""
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "stac",
+            "system_prompt": STAC_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_stac=True,
+        include_image_generation=True,
+        extra_tools=extra_tools,
+        fast=fast,
+        permission_profile=permission_profile,
+        exclude_tool_names={"run_pyqgis_script"},
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=iface is not None,
+    )
+
+
 __all__ = [
     "assemble_tools",
     "create_agent",
@@ -713,6 +824,7 @@ __all__ = [
     "for_nasa_earthdata",
     "for_nasa_opera",
     "for_qgis",
+    "for_stac",
     "for_whitebox",
     "register_all_tools",
 ]

@@ -19,14 +19,14 @@ GitHub update checker.
 - Built-in sample prompt picker for common QGIS workflows
 - Agent modes for General QGIS, WhiteboxTools, NASA Earthdata, NASA OPERA,
   GEE Data Catalogs, and STAC guidance workflows
-- Tool permission profiles, defaulting to inspect-only project access
+- Tool permission profiles, defaulting to trusted auto-approval
 - Project-scoped chat history with Markdown import/export
 - Compact jobs panel for active and completed GeoAgent requests
 - Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, and LiteLLM
 - Settings panel for model defaults, API keys, hosts, AWS region, provider
   smoke tests, and redacted diagnostics export
-- Dependency installer that installs `GeoAgent[providers]` into
-  `~/.open_geoagent/`
+- Dependency installer that installs core provider packages or selected
+  workflow packages into `~/.open_geoagent/`
 - QGIS 3.28+ and QGIS 4 compatible plugin structure
 - Local install and packaging scripts for development and release
 
@@ -72,14 +72,29 @@ Plugins...**.
 ## Dependencies
 
 Open the OpenGeoAgent settings panel and use the **Dependencies** tab to install
-required Python packages. The installer creates an isolated environment under
-`~/.open_geoagent/` and adds its site-packages directory when the plugin loads.
+required Python packages. Choose the dependency set for the workflow you need:
+Core Providers, WhiteboxTools, NASA Earthdata/OPERA, GEE Data Catalogs, STAC, or
+All. The installer creates an isolated environment under `~/.open_geoagent/` and
+adds its site-packages directory when the plugin loads.
 
 Manual fallback:
 
 ```bash
 pip install "GeoAgent[providers]>=1.3.0"
+pip install "GeoAgent[stac]>=1.3.0"
+pip install "GeoAgent[whitebox]>=1.3.0"
+pip install "GeoAgent[earthdata,nasa-opera]>=1.3.0"
+pip install "GeoAgent[earthengine]>=1.3.0"
 ```
+
+GEE Data Catalogs mode also expects the `gee_data_catalogs` Python module from
+the GEE Data Catalogs QGIS plugin/runtime. That module is not currently a PyPI
+package, so the OpenGeoAgent dependency installer only installs the PyPI-backed
+Earth Engine dependencies (`earthengine-api` and `geemap`).
+
+OpenGeoAgent requires the QGIS Python runtime to be Python 3.11 or newer,
+matching GeoAgent's core package requirement. Older QGIS Python runtimes show a
+clear installer error before any virtual environment is created.
 
 ## Provider Configuration
 
@@ -132,13 +147,13 @@ Default models:
   is **Ctrl+Alt+Space** and can be changed in **Settings > Model > Voice
   Transcription**. The shortcut is handled while keyboard focus is inside the
   chat dock.
-- Choose an **Agent mode** for the workflow you want. STAC mode provides
-  guided search/loading steps and dependency diagnostics; it does not add a
-  separate STAC loader beyond the current GeoAgent tool surface.
-- Choose a **Permissions** profile. The default **Inspect only** profile hides
-  mutating, long-running, and PyQGIS execution tools from the model. Use broader
-  profiles only when you want GeoAgent to edit layers, run processing, execute
-  PyQGIS/Earth Engine snippets, or auto-approve trusted actions.
+- Choose an **Agent mode** for the workflow you want. STAC mode can list
+  collections, search STAC items, inspect assets, and add concrete raster asset
+  URLs to QGIS when QGIS can load them directly.
+- Choose a **Permissions** profile. The default **Trusted auto-approve** profile
+  exposes and approves confirmation-gated tools. Select narrower profiles when
+  you want to restrict edits, processing, script execution, or long-running
+  workflow tools.
 - **Stream output** is enabled by default and shows model text as it arrives.
 - Press **Up** or **Down** in the prompt editor to cycle through previous prompts.
 - Choose a prompt from **Sample prompts...** and click **Insert** to load it into
@@ -155,9 +170,10 @@ The Settings panel includes:
 - **Test Provider** for a tiny no-tool model smoke test using the selected
   provider and model.
 - **Copy Diagnostics** and **Save Diagnostics** for redacted JSON containing
-  plugin version, QGIS/Python details, isolated environment paths, uv status,
-  dependency status, selected model settings, credential presence booleans, and
-  latest installer/provider-test status.
+  plugin version, installed GeoAgent version, QGIS/Python details, isolated
+  environment paths, uv status, dependency status by workflow, selected model
+  settings, credential presence booleans, and latest installer/provider-test
+  status.
 
 Diagnostics never include raw API keys, OAuth tokens, or passwords.
 
