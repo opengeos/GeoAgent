@@ -1,5 +1,10 @@
 # Response
 
-`GeoAgentResponse` is the dataclass returned by `GeoAgent.chat`. It preserves the v0.x field names (`plan`, `data`, `analysis`, `map`, `code`, `answer_text`, `success`, `error_message`, `execution_time`) and adds `executed_tools`, `cancelled_tools`, and the raw `messages` list for advanced inspection.
+`GeoAgentResponse` is the dataclass returned by `GeoAgent.chat`. It includes
+`answer_text`, `success`, `error_message`, `execution_time`, tool execution
+metadata, raw provider result access, and multimodal response artifacts. Image
+content blocks returned by supported models are exposed through `images`, while
+the original top-level assistant content blocks are available as
+`content_blocks`.
 
 ::: geoagent.core.result

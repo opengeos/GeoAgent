@@ -48,8 +48,11 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
             f"{SETTINGS_PREFIX}provider": "openai",
             f"{SETTINGS_PREFIX}model": "gpt-test",
             f"{SETTINGS_PREFIX}transcription_model": "gpt-4o-transcribe",
+            f"{SETTINGS_PREFIX}image_model": "gpt-image-2",
             f"{SETTINGS_PREFIX}{VOICE_SHORTCUT_SETTING}": "Alt+M",
             f"{SETTINGS_PREFIX}openai_api_key": "sk-secret",
+            f"{SETTINGS_PREFIX}openai_org_id": "org-secret",
+            f"{SETTINGS_PREFIX}openai_project_id": "proj-secret",
         }
     )
     (tmp_path / "metadata.txt").write_text("version=1.2.3\n", encoding="utf-8")
@@ -58,10 +61,15 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
     text = str(diagnostics)
 
     assert diagnostics["credential_presence"]["openai_api_key"]["saved"] is True
+    assert diagnostics["credential_presence"]["openai_org_id"]["saved"] is True
+    assert diagnostics["credential_presence"]["openai_project_id"]["saved"] is True
     assert diagnostics["model"]["provider"] == "openai"
     assert diagnostics["model"]["transcription_model"] == "gpt-4o-transcribe"
+    assert diagnostics["model"]["image_model"] == "gpt-image-2"
     assert diagnostics["model"]["voice_shortcut"] == "Alt+M"
     assert "sk-secret" not in text
+    assert "org-secret" not in text
+    assert "proj-secret" not in text
 
 
 def test_uv_usable_requires_successful_verification(monkeypatch) -> None:

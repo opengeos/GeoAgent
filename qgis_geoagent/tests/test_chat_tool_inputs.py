@@ -4,6 +4,7 @@ from qgis.PyQt.QtCore import QPoint, QRect, QSize
 from qgis.PyQt.QtGui import QColor, QImage
 
 from open_geoagent.dialogs.chat_dock import (
+    SETTINGS_PREFIX,
     _build_chat_content,
     _console_ready_pyqgis_script,
     _conversation_markdown,
@@ -11,13 +12,29 @@ from open_geoagent.dialogs.chat_dock import (
     _grab_screen_rect,
     _grab_widget_global_rect,
     _image_to_png_bytes,
+    _image_model_from_settings,
+    _images_from_output_text,
     _latest_executable_snippet,
     _latest_pyqgis_script,
+    _markdown_to_basic_html,
+    _message_images_html,
+    _message_images_markdown,
+    _prepare_output_images,
     _normalized_crop_rect,
     _parse_markdown_transcript,
     _permission_allows_tool,
     _project_history_key,
 )
+
+
+class _FakeSettings:
+    """Small QSettings stand-in for chat helper tests."""
+
+    def __init__(self, values=None):
+        self.values = dict(values or {})
+
+    def value(self, key, default="", type=str):  # noqa: A002
+        return self.values.get(key, default)
 
 
 def _qimage_format(name):
@@ -46,6 +63,82 @@ def test_conversation_markdown_includes_full_history() -> None:
     assert "## You\n\nrun flow accumulation" in text
     assert "Tool inputs:" in text
     assert text.count("## OpenGeoAgent") == 2
+
+
+def test_conversation_markdown_includes_output_images() -> None:
+    """Verify copied Markdown includes generated image references."""
+    text = _conversation_markdown(
+        [
+            {
+                "sender": "OpenGeoAgent",
+                "body": "Generated map",
+                "markdown": True,
+                "images": [{"path": "/tmp/open geoagent/map.png", "alt": "Map"}],
+            }
+        ]
+    )
+
+    assert "Generated map" in text
+    assert "![Map](</tmp/open geoagent/map.png>)" in text
+
+
+def test_markdown_renderer_supports_image_references() -> None:
+    """Verify Markdown image output is rendered as inline HTML."""
+    html = _markdown_to_basic_html("![Map](https://example.com/map.png)")
+
+    assert "<img " in html
+    assert "https://example.com/map.png" in html
+
+
+def test_message_images_html_uses_clickable_thumbnail() -> None:
+    """Verify generated image chat output renders as a clickable thumbnail."""
+    html = _message_images_html(
+        [
+            {
+                "path": "/tmp/geoagent_images/cat.png",
+                "format": "png",
+                "_href": "opengeoagent-image:0",
+            }
+        ]
+    )
+
+    assert "href='opengeoagent-image:0'" in html
+    assert "width='180'" in html
+    assert "/tmp/geoagent_images/cat.png" in html
+
+
+def test_prepare_output_images_writes_model_image_bytes() -> None:
+    """Verify model image bytes become transcript-safe local artifacts."""
+    prepared = _prepare_output_images(
+        [
+            {
+                "format": "png",
+                "mime_type": "image/png",
+                "bytes": b"\x89PNG\r\n\x1a\nfake",
+            }
+        ]
+    )
+
+    assert len(prepared) == 1
+    assert prepared[0]["path"].endswith(".png")
+    assert "bytes" not in prepared[0]
+    assert _message_images_markdown(prepared).startswith("![OpenGeoAgent image 1](")
+
+
+def test_images_from_output_text_extracts_generated_path() -> None:
+    """Verify generated-image output paths become renderable image metadata."""
+    images = _images_from_output_text(
+        "Output path: /tmp/geoagent_images/cat-20260430-163529-1.png\n"
+        "Elapsed: 18.95s"
+    )
+
+    assert images == [
+        {
+            "path": "/tmp/geoagent_images/cat-20260430-163529-1.png",
+            "format": "png",
+            "mime_type": "image/png",
+        }
+    ]
 
 
 def test_image_to_png_bytes_serializes_qimage() -> None:
@@ -78,6 +171,18 @@ def test_build_chat_content_adds_image_blocks() -> None:
         {"text": "Describe this map screenshot."},
         {"image": {"format": "png", "source": {"bytes": b"png-bytes"}}},
     ]
+
+
+def test_image_model_from_settings_prefers_saved_then_env(monkeypatch) -> None:
+    """Verify image generation model selection has a stable default path."""
+    monkeypatch.setenv("GEOAGENT_IMAGE_MODEL", "gpt-image-1")
+    saved_settings = _FakeSettings({f"{SETTINGS_PREFIX}image_model": "gpt-image-2"})
+
+    assert _image_model_from_settings(saved_settings) == "gpt-image-2"
+    assert _image_model_from_settings(_FakeSettings()) == "gpt-image-1"
+
+    monkeypatch.delenv("GEOAGENT_IMAGE_MODEL")
+    assert _image_model_from_settings(_FakeSettings()) == "gpt-image-2"
 
 
 def test_latest_pyqgis_script_extracts_last_run_script() -> None:

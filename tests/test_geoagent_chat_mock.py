@@ -11,6 +11,7 @@ from unittest.mock import MagicMock
 import threading
 
 from geoagent import for_leafmap, for_qgis
+from geoagent.core.agent import _tool_calls_to_images
 from geoagent.testing import MockLeafmap, MockQGISIface, MockQGISProject
 
 
@@ -157,6 +158,72 @@ def test_chat_passes_multimodal_content_blocks_to_strands() -> None:
     assert resp.success
     assert resp.answer_text == "image described"
     mock_agent.assert_called_once_with(content)
+
+
+def test_chat_preserves_image_output_blocks() -> None:
+    """Verify image content blocks are exposed on GeoAgentResponse."""
+    m = MockLeafmap()
+    agent = for_leafmap(m, model=_MockModel())
+
+    image_bytes = b"\x89PNG\r\n\x1a\nfake"
+    metrics = SimpleNamespace(tool_metrics={})
+    msg = {
+        "role": "assistant",
+        "content": [
+            {"text": "Here is the map."},
+            {"image": {"format": "png", "source": {"bytes": image_bytes}}},
+        ],
+    }
+    fake_result = SimpleNamespace(
+        stop_reason="end_turn",
+        metrics=metrics,
+        message=msg,
+    )
+    agent._strands = MagicMock(return_value=fake_result)  # noqa: SLF001
+
+    resp = agent.chat("generate a map image")
+
+    assert resp.success
+    assert resp.answer_text == "Here is the map."
+    assert resp.content_blocks == msg["content"]
+    assert resp.images == [
+        {"format": "png", "mime_type": "image/png", "bytes": image_bytes}
+    ]
+
+
+def test_tool_call_image_results_are_extractable() -> None:
+    """Verify generated-image tool results can feed response image artifacts."""
+    images = _tool_calls_to_images(
+        [
+            {
+                "name": "generate_image",
+                "result": {
+                    "success": True,
+                    "content": [
+                        {
+                            "json": {
+                                "images": [
+                                    {
+                                        "path": "/tmp/geoagent_images/cat.png",
+                                        "format": "png",
+                                        "mime_type": "image/png",
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                },
+            }
+        ]
+    )
+
+    assert images == [
+        {
+            "format": "png",
+            "mime_type": "image/png",
+            "path": "/tmp/geoagent_images/cat.png",
+        }
+    ]
 
 
 def test_chat_json_parse_error_returns_actionable_guidance() -> None:

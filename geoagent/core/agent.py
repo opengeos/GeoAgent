@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import queue
+import re
 import threading
 import time
 from typing import Any, AsyncIterator, Optional
@@ -20,16 +23,237 @@ from geoagent.core.result import GeoAgentResponse
 from geoagent.core.safety import ConfirmCallback, auto_approve_safe_only
 from geoagent.tools._qt_marshal import is_qt_gui_thread, process_qt_events
 
+_IMAGE_MIME_BY_FORMAT = {
+    "gif": "image/gif",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp",
+}
+_IMAGE_FORMAT_BY_MIME = {value: key for key, value in _IMAGE_MIME_BY_FORMAT.items()}
+_IMAGE_FORMAT_BY_MIME["image/jpeg"] = "jpg"
+_IMAGE_PATH_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+
+
+def _result_content_blocks(result: Any) -> list[dict[str, Any]]:
+    """Return top-level assistant content blocks from a Strands result."""
+    msg = getattr(result, "message", None)
+    if not isinstance(msg, dict):
+        return []
+    content = msg.get("content")
+    if not isinstance(content, list):
+        return []
+    return [block for block in content if isinstance(block, dict)]
+
+
+def _image_format_from_mime(mime_type: str | None) -> str:
+    """Return a compact image format name for a MIME type."""
+    return _IMAGE_FORMAT_BY_MIME.get(str(mime_type or "").lower(), "png")
+
+
+def _image_mime_from_format(format_name: str | None) -> str:
+    """Return a MIME type for a compact image format name."""
+    cleaned = str(format_name or "").lower().lstrip(".")
+    if "/" in cleaned:
+        return cleaned
+    return _IMAGE_MIME_BY_FORMAT.get(cleaned, "image/png")
+
+
+def _data_uri_parts(value: str) -> tuple[str, str] | None:
+    """Return MIME type and base64 payload for an image data URI."""
+    match = re.match(r"^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$", value, re.S)
+    if not match:
+        return None
+    return match.group(1).lower(), match.group(2)
+
+
+def _decode_image_bytes(value: Any) -> tuple[bytes | None, str | None]:
+    """Decode bytes or base64 image payloads into raw image bytes."""
+    if isinstance(value, bytes):
+        return value, None
+    if isinstance(value, bytearray):
+        return bytes(value), None
+    if not isinstance(value, str):
+        return None, None
+    text = value.strip()
+    if not text:
+        return None, None
+    data_uri = _data_uri_parts(text)
+    if data_uri is not None:
+        mime_type, payload = data_uri
+    else:
+        mime_type, payload = None, re.sub(r"\s+", "", text)
+    try:
+        return base64.b64decode(payload, validate=True), mime_type
+    except (binascii.Error, ValueError):
+        return None, mime_type
+
+
+def _image_artifact_from_block(block: dict[str, Any]) -> dict[str, Any] | None:
+    """Extract one image artifact from a common provider content block."""
+    image = block.get("image")
+    if not isinstance(image, dict) and block.get("type") in {
+        "image",
+        "output_image",
+        "input_image",
+    }:
+        image = block
+
+    if isinstance(image, dict):
+        source = image.get("source") if isinstance(image.get("source"), dict) else {}
+        mime_type = (
+            image.get("mime_type")
+            or image.get("media_type")
+            or source.get("mime_type")
+            or source.get("media_type")
+        )
+        format_name = image.get("format") or source.get("format")
+        raw = (
+            source.get("bytes")
+            or source.get("data")
+            or source.get("base64")
+            or image.get("bytes")
+            or image.get("data")
+            or image.get("base64")
+        )
+        image_bytes, data_mime_type = _decode_image_bytes(raw)
+        mime_type = data_mime_type or mime_type or _image_mime_from_format(format_name)
+        artifact = {
+            "format": str(format_name or _image_format_from_mime(mime_type)),
+            "mime_type": str(mime_type),
+        }
+        path = source.get("path") or image.get("path")
+        if isinstance(path, str) and path.strip():
+            artifact["path"] = path.strip()
+        if image_bytes:
+            artifact["bytes"] = image_bytes
+        url = source.get("url") or image.get("url") or image.get("image_url")
+        if isinstance(url, dict):
+            url = url.get("url")
+        if isinstance(url, str) and url.strip():
+            artifact["url"] = url.strip()
+        return (
+            artifact
+            if artifact.get("bytes") or artifact.get("url") or artifact.get("path")
+            else None
+        )
+
+    raw_url = block.get("image_url")
+    if isinstance(raw_url, dict):
+        raw_url = raw_url.get("url")
+    if isinstance(raw_url, str) and raw_url.strip():
+        text = raw_url.strip()
+        data_uri = _data_uri_parts(text)
+        if data_uri is not None:
+            image_bytes, mime_type = _decode_image_bytes(text)
+            if image_bytes:
+                return {
+                    "format": _image_format_from_mime(mime_type),
+                    "mime_type": mime_type or "image/png",
+                    "bytes": image_bytes,
+                }
+        return {"format": "url", "mime_type": "", "url": text}
+
+    if block.get("type") == "image_generation_call":
+        image_bytes, mime_type = _decode_image_bytes(block.get("result"))
+        if image_bytes:
+            return {
+                "format": _image_format_from_mime(mime_type),
+                "mime_type": mime_type or "image/png",
+                "bytes": image_bytes,
+            }
+
+    return None
+
+
+def _images_from_mapping(value: Any) -> list[dict[str, Any]]:
+    """Extract image artifacts from nested JSON-like tool results."""
+    if not isinstance(value, dict):
+        return []
+
+    images: list[dict[str, Any]] = []
+    nested = value.get("images")
+    if isinstance(nested, list):
+        for item in nested:
+            if isinstance(item, dict):
+                artifact = _image_artifact_from_block({"image": item})
+                if artifact is not None:
+                    images.append(artifact)
+    if images:
+        return images
+
+    artifact = _image_artifact_from_block({"image": value})
+    if artifact is not None:
+        images.append(artifact)
+
+    return images
+
+
+def _dedupe_images(images: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return images with duplicate path/url/bytes references removed."""
+    deduped: list[dict[str, Any]] = []
+    seen: set[Any] = set()
+    for image in images:
+        key = image.get("path") or image.get("url") or image.get("bytes")
+        if key is None:
+            key = tuple(sorted((k, str(v)) for k, v in image.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(image)
+    return deduped
+
+
+def _image_artifacts_from_value(value: Any) -> list[dict[str, Any]]:
+    """Recursively extract image artifacts from JSON-like values."""
+    if isinstance(value, dict):
+        images = _images_from_mapping(value)
+        for key, nested in value.items():
+            if key in {"bytes", "data", "base64", "b64_json"}:
+                continue
+            images.extend(_image_artifacts_from_value(nested))
+        return _dedupe_images(images)
+    if isinstance(value, (list, tuple)):
+        images: list[dict[str, Any]] = []
+        for item in value:
+            images.extend(_image_artifacts_from_value(item))
+        return _dedupe_images(images)
+    if isinstance(value, str):
+        text = value.strip()
+        if text.lower().endswith(_IMAGE_PATH_SUFFIXES):
+            return [{"format": text.rsplit(".", 1)[-1].lower(), "path": text}]
+    return []
+
+
+def _tool_calls_to_images(tool_calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Extract image artifacts returned by tool calls."""
+    images: list[dict[str, Any]] = []
+    for call in tool_calls or []:
+        if not isinstance(call, dict):
+            continue
+        images.extend(_image_artifacts_from_value(call.get("result")))
+    return _dedupe_images(images)
+
+
+def _result_to_images(result: Any) -> list[dict[str, Any]]:
+    """Extract image artifacts from a Strands result object."""
+    images: list[dict[str, Any]] = []
+    for block in _result_content_blocks(result):
+        artifact = _image_artifact_from_block(block)
+        if artifact is not None:
+            images.append(artifact)
+    return images
+
 
 def _result_to_text(result: Any) -> str:
     """Extract response text from a Strands result object."""
     if result is None:
         return ""
-    msg = getattr(result, "message", None)
-    if msg and isinstance(msg, dict):
+    blocks = _result_content_blocks(result)
+    if blocks:
         parts: list[str] = []
-        for block in msg.get("content", []):
-            if isinstance(block, dict) and "text" in block:
+        for block in blocks:
+            if "text" in block:
                 parts.append(str(block["text"]))
         extracted = "\n".join(parts).strip()
         if extracted:
@@ -236,6 +460,8 @@ class GeoAgent:
             elapsed = time.time() - t0
             exec_names = list(getattr(result.metrics, "tool_metrics", {}).keys())
             answer = _result_to_text(result)
+            content_blocks = _result_content_blocks(result)
+            images = _result_to_images(result) + _tool_calls_to_images(self._tool_calls)
             stop = str(getattr(result, "stop_reason", "end_turn"))
             success = stop not in ("cancelled", "guardrail_intervened")
             err = None if success else f"stop_reason={stop}"
@@ -244,6 +470,8 @@ class GeoAgent:
                 success=success,
                 error_message=err,
                 execution_time=elapsed,
+                content_blocks=content_blocks,
+                images=images,
                 executed_tools=exec_names,
                 tool_calls=list(self._tool_calls),
                 cancelled_tools=list(self._cancelled),

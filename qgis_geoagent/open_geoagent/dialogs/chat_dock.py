@@ -1,6 +1,7 @@
 """Dockable OpenGeoAgent chat interface."""
 
 import asyncio
+import base64
 import hashlib
 import os
 import html
@@ -12,6 +13,7 @@ import tempfile
 import time
 import traceback
 import wave
+from pathlib import Path
 
 from qgis.core import Qgis, QgsMessageLog
 from qgis.PyQt.QtCore import (
@@ -60,7 +62,7 @@ from qgis.PyQt.QtWidgets import (
     QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
-    QTextEdit,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
@@ -90,9 +92,20 @@ MAX_CONTEXT_CHARS = 12000
 MAX_IMAGE_ATTACHMENTS = 4
 MAX_IMAGE_EDGE = 1568
 IMAGE_THUMBNAIL_SIZE = 72
+MAX_OUTPUT_IMAGE_DISPLAY_EDGE = 480
+OUTPUT_IMAGE_THUMBNAIL_EDGE = 180
+OUTPUT_IMAGE_PATH_RE = re.compile(
+    r"(?P<path>(?:[A-Za-z]:[\\/]|/|~/?)[^\s`'\"<>]+\.(?:png|jpe?g|webp|gif))",
+    re.IGNORECASE,
+)
 DEFAULT_TRANSCRIPTION_MODEL = "gpt-4o-mini-transcribe"
 DEFAULT_VOICE_SHORTCUT = "Ctrl+Alt+Space"
 VOICE_SHORTCUT_SETTING = "voice_shortcut_v2"
+DEFAULT_IMAGE_MODEL = "gpt-image-2"
+IMAGE_MODELS = [
+    "gpt-image-2",
+    "gpt-image-1",
+]
 TRANSCRIPTION_MODELS = [
     "gpt-4o-mini-transcribe",
     "gpt-4o-transcribe",
@@ -334,6 +347,9 @@ def _apply_environment_from_settings(settings):
     # heuristics on lines that contain "api_key" / "API_KEY".
     env_map = {
         "openai_api_key": "OPENAI_API_KEY",  # pragma: allowlist secret
+        "openai_org_id": "OPENAI_ORG_ID",
+        "openai_project_id": "OPENAI_PROJECT_ID",
+        "image_model": "GEOAGENT_IMAGE_MODEL",
         "anthropic_api_key": "ANTHROPIC_API_KEY",  # pragma: allowlist secret
         "gemini_api_key": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
         "aws_region": "AWS_REGION",
@@ -357,6 +373,15 @@ def _transcription_model_from_settings(settings):
         return saved
     env_model = os.environ.get("OPENAI_TRANSCRIPTION_MODEL", "").strip()
     return env_model or DEFAULT_TRANSCRIPTION_MODEL
+
+
+def _image_model_from_settings(settings):
+    """Return the configured OpenAI image-generation model."""
+    saved = _setting(settings, "image_model", "", str).strip()
+    if saved:
+        return saved
+    env_model = os.environ.get("GEOAGENT_IMAGE_MODEL", "").strip()
+    return env_model or DEFAULT_IMAGE_MODEL
 
 
 def _qt_value(enum_name, member_name):
@@ -425,6 +450,49 @@ def _plain_text_to_html(text):
     return html.escape(text).replace("\n", "<br>")
 
 
+def _markdown_image_target_to_html_src(target):
+    """Return a safe HTML image source for a Markdown image target."""
+    target = str(target or "").strip()
+    if not target:
+        return ""
+    lower = target.lower()
+    if lower.startswith(("http://", "https://", "data:image/", "file://")):
+        return target
+    if re.match(r"^[a-z][a-z0-9+.-]*:", lower):
+        return ""
+    try:
+        path = Path(target).expanduser()
+        if path.exists():
+            return path.resolve().as_uri()
+    except Exception as exc:
+        QgsMessageLog.logMessage(
+            f"Could not resolve image target {target!r}: {exc}",
+            "OpenGeoAgent",
+            Qgis.MessageLevel.Info,
+        )
+    return target
+
+
+def _image_html(src, alt="image", width=None, height=None):
+    """Return a constrained HTML image tag."""
+    src = _markdown_image_target_to_html_src(src)
+    if not src:
+        return ""
+    attrs = [f"src='{html.escape(src, quote=True)}'"]
+    attrs.append(f"alt='{html.escape(str(alt or 'image'), quote=True)}'")
+    if width and height:
+        attrs.append(f"width='{int(width)}'")
+        attrs.append(f"height='{int(height)}'")
+    elif width:
+        attrs.append(f"width='{int(width)}'")
+    elif height:
+        attrs.append(f"height='{int(height)}'")
+    attrs.append(
+        "style='max-width: 100%; border: 1px solid #d0d7de; border-radius: 4px;'"
+    )
+    return f"<img {' '.join(attrs)}>"
+
+
 def _inline_markdown_to_html(text):
     """Convert inline Markdown spans to HTML."""
     text = html.escape(text)
@@ -473,6 +541,16 @@ def _markdown_to_basic_html(markdown):
         if not stripped:
             close_lists()
             html_lines.append("")
+            continue
+
+        image = re.match(r"^!\[([^\]]*)\]\((?:<([^>]+)>|([^)]+))\)$", stripped)
+        if image:
+            close_lists()
+            alt = image.group(1) or "image"
+            target = image.group(2) or image.group(3) or ""
+            img = _image_html(target, alt=alt)
+            if img:
+                html_lines.append(f"<p>{img}</p>")
             continue
 
         heading = re.match(r"^(#{1,3})\s+(.+)$", stripped)
@@ -828,6 +906,9 @@ def _conversation_markdown(messages):
     for msg in messages:
         sender = str(msg.get("sender") or "").strip()
         body = str(msg.get("display_body") or msg.get("body") or "").strip()
+        image_body = _message_images_markdown(msg.get("images"))
+        if image_body:
+            body = f"{body}\n\n{image_body}".strip()
         if not sender or not body:
             continue
         blocks.append(f"## {sender}\n\n{body}")
@@ -862,6 +943,222 @@ def _image_to_png_bytes(image):
     finally:
         buffer.close()
     return bytes(data.data()), image.width(), image.height()
+
+
+def _output_image_dir():
+    """Return the directory used for model-generated image artifacts."""
+    path = Path(tempfile.gettempdir()) / "open_geoagent_outputs"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _allowed_output_image_roots():
+    """Return resolved directories where extracted output paths may live."""
+    roots: list[Path] = []
+    candidates = [
+        Path(tempfile.gettempdir()) / "open_geoagent_outputs",
+        Path(tempfile.gettempdir()) / "geoagent_images",
+    ]
+    env_dir = os.environ.get("GEOAGENT_IMAGE_OUTPUT_DIR", "").strip()
+    if env_dir:
+        candidates.append(Path(env_dir).expanduser())
+    for candidate in candidates:
+        try:
+            roots.append(candidate.resolve())
+        except Exception as exc:
+            QgsMessageLog.logMessage(
+                f"Could not resolve output image root {candidate}: {exc}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Info,
+            )
+    return roots
+
+
+def _path_under_allowed_output_root(path):
+    """Return True when the given path resolves under an allowlisted root."""
+    try:
+        resolved = Path(path).expanduser().resolve()
+    except Exception:
+        return False
+    for root in _allowed_output_image_roots():
+        try:
+            resolved.relative_to(root)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def _output_image_extension(image):
+    """Return a safe file extension for a model-generated image."""
+    format_name = str(image.get("format") or "").lower().lstrip(".")
+    mime_type = str(image.get("mime_type") or "").lower()
+    if format_name in {"png", "jpg", "jpeg", "webp", "gif"}:
+        return "jpg" if format_name == "jpeg" else format_name
+    if mime_type == "image/jpeg":
+        return "jpg"
+    if mime_type.startswith("image/"):
+        candidate = mime_type.split("/", 1)[1].split("+", 1)[0]
+        if candidate in {"png", "jpg", "jpeg", "webp", "gif"}:
+            return "jpg" if candidate == "jpeg" else candidate
+    return "png"
+
+
+def _decode_output_image_bytes(value):
+    """Decode model image bytes that may arrive as bytes or base64 text."""
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, bytearray):
+        return bytes(value)
+    if isinstance(value, str):
+        text = value.strip()
+        data_uri = re.match(r"^data:image/[a-zA-Z0-9.+-]+;base64,(.+)$", text, re.S)
+        if data_uri:
+            text = data_uri.group(1)
+        try:
+            return base64.b64decode(re.sub(r"\s+", "", text), validate=True)
+        except Exception:
+            return b""
+    return b""
+
+
+def _display_size_for_image(width, height, max_edge=MAX_OUTPUT_IMAGE_DISPLAY_EDGE):
+    """Return a constrained display size preserving aspect ratio."""
+    try:
+        width = int(width or 0)
+        height = int(height or 0)
+    except (TypeError, ValueError):
+        return None, None
+    if width <= 0 or height <= 0:
+        return None, None
+    scale = min(1.0, float(max_edge) / float(max(width, height)))
+    return max(1, int(width * scale)), max(1, int(height * scale))
+
+
+def _prepare_output_images(images):
+    """Persist model-generated image bytes and return transcript-safe metadata."""
+    prepared = []
+    for index, image in enumerate(images or []):
+        if not isinstance(image, dict):
+            continue
+        entry = {
+            key: image.get(key)
+            for key in ("format", "mime_type", "width", "height", "url", "path")
+            if image.get(key) not in (None, "")
+        }
+        image_bytes = _decode_output_image_bytes(image.get("bytes"))
+        if image_bytes:
+            digest = hashlib.sha1(  # noqa: S324 - non-security artifact name
+                image_bytes, usedforsecurity=False
+            ).hexdigest()[:16]
+            ext = _output_image_extension(image)
+            path = _output_image_dir() / f"opengeoagent-image-{digest}.{ext}"
+            if not path.exists():
+                with open(path, "wb") as f:
+                    f.write(image_bytes)
+            entry["path"] = str(path)
+
+            if QGuiApplication.instance() is not None:
+                pixmap = QPixmap()
+                if pixmap.loadFromData(image_bytes):
+                    entry["width"] = pixmap.width()
+                    entry["height"] = pixmap.height()
+        elif not entry.get("url") and not entry.get("path"):
+            continue
+        entry.setdefault("alt", f"OpenGeoAgent image {index + 1}")
+        prepared.append(entry)
+    return prepared
+
+
+def _dedupe_output_images(images):
+    """Return image metadata with duplicate path/url entries removed."""
+    deduped = []
+    seen = set()
+    for image in images or []:
+        if not isinstance(image, dict):
+            continue
+        key = image.get("path") or image.get("url")
+        if not key:
+            key = tuple(sorted((str(k), str(v)) for k, v in image.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(image)
+    return deduped
+
+
+def _images_from_output_text(text):
+    """Extract local image paths mentioned in model/tool output text."""
+    images = []
+    for match in OUTPUT_IMAGE_PATH_RE.finditer(str(text or "")):
+        path = match.group("path").rstrip(".,);]")
+        if not _path_under_allowed_output_root(path):
+            continue
+        ext = path.rsplit(".", 1)[-1].lower()
+        if ext == "jpeg":
+            ext = "jpg"
+        images.append(
+            {
+                "path": path,
+                "format": ext,
+                "mime_type": "image/jpeg" if ext == "jpg" else f"image/{ext}",
+            }
+        )
+    return _dedupe_output_images(images)
+
+
+def _image_markdown_target(image):
+    """Return the Markdown target for one transcript image."""
+    target = str(image.get("url") or image.get("path") or "").strip()
+    if not target:
+        return ""
+    if " " in target or target.startswith("/"):
+        return f"<{target}>"
+    return target
+
+
+def _message_images_markdown(images):
+    """Return Markdown image references for a message image list."""
+    lines = []
+    for image in images or []:
+        if not isinstance(image, dict):
+            continue
+        target = _image_markdown_target(image)
+        if not target:
+            continue
+        alt = str(image.get("alt") or "OpenGeoAgent image").replace("]", "")
+        lines.append(f"![{alt}]({target})")
+    return "\n\n".join(lines)
+
+
+def _message_images_html(images):
+    """Return inline HTML for a message image list."""
+    parts = []
+    for image in images or []:
+        if not isinstance(image, dict):
+            continue
+        target = image.get("url") or image.get("path") or ""
+        width, height = _display_size_for_image(
+            image.get("width"),
+            image.get("height"),
+            max_edge=OUTPUT_IMAGE_THUMBNAIL_EDGE,
+        )
+        if width is None:
+            width = OUTPUT_IMAGE_THUMBNAIL_EDGE
+        img = _image_html(
+            target,
+            alt=image.get("alt") or "OpenGeoAgent image",
+            width=width,
+            height=height,
+        )
+        if not img:
+            continue
+        label = html.escape(str(image.get("path") or image.get("url") or "image"))
+        href = image.get("_href")
+        if href:
+            img = f"<a href='{html.escape(str(href), quote=True)}'>{img}</a>"
+        parts.append(f"<p>{img}<br><small>{label}</small></p>")
+    return "\n".join(parts)
 
 
 def _attachment_to_content_block(attachment):
@@ -1274,6 +1571,7 @@ class ChatWorker(QThread):
                         "success": False,
                         "answer": "",
                         "error": "",
+                        "images": getattr(response, "images", []) or [],
                         "tools": ", ".join(response.executed_tools or []),
                         "tool_calls": response.tool_calls or [],
                         "cancelled": ", ".join(response.cancelled_tools or []),
@@ -1288,6 +1586,7 @@ class ChatWorker(QThread):
                     "success": bool(response.success),
                     "answer": response.answer_text or "",
                     "error": response.error_message or "",
+                    "images": getattr(response, "images", []) or [],
                     "tools": ", ".join(response.executed_tools or []),
                     "tool_calls": response.tool_calls or [],
                     "cancelled": ", ".join(response.cancelled_tools or []),
@@ -1301,6 +1600,7 @@ class ChatWorker(QThread):
                     "success": False,
                     "answer": "",
                     "error": f"{exc}\n\n{traceback.format_exc()}",
+                    "images": [],
                     "tools": "",
                     "cancelled": "",
                     "elapsed": "",
@@ -1333,6 +1633,20 @@ class ChatWorker(QThread):
         tool_metrics = getattr(
             getattr(final_result, "metrics", None), "tool_metrics", {}
         )
+        try:
+            from geoagent.core.agent import (
+                _result_to_images,
+                _result_to_text,
+                _tool_calls_to_images,
+            )
+
+            tool_calls = list(getattr(agent, "_tool_calls", []) or [])
+            images = _result_to_images(final_result) + _tool_calls_to_images(tool_calls)
+            final_text = _result_to_text(final_result)
+        except Exception:
+            images = []
+            final_text = ""
+            tool_calls = list(getattr(agent, "_tool_calls", []) or [])
         executed_tools = (
             list(tool_metrics.keys()) if isinstance(tool_metrics, dict) else []
         )
@@ -1344,10 +1658,11 @@ class ChatWorker(QThread):
         self.finished.emit(
             {
                 "success": success,
-                "answer": "".join(chunks),
+                "answer": "".join(chunks) or final_text,
                 "error": "" if success else f"stop_reason={stop_reason}",
+                "images": images,
                 "tools": ", ".join(executed_tools),
-                "tool_calls": list(getattr(agent, "_tool_calls", []) or []),
+                "tool_calls": tool_calls,
                 "cancelled": ", ".join(getattr(agent, "_cancelled", []) or []),
                 "elapsed": f"{time.time() - started_at:.2f}s",
                 "cancelled_by_user": self.isInterruptionRequested(),
@@ -1689,6 +2004,7 @@ class ChatDockWidget(QDockWidget):
         self._messages = []
         self._last_script_snippet = {}
         self._image_attachments = []
+        self._transcript_image_links = {}
         self._streaming_message_index = None
         self._streaming_answer = ""
         self._status_started_at = None
@@ -1854,9 +2170,12 @@ class ChatDockWidget(QDockWidget):
         jobs_layout.addWidget(self.jobs_controls)
         layout.addWidget(self.jobs_group)
 
-        self.transcript = QTextEdit()
+        self.transcript = QTextBrowser()
         self.transcript.setReadOnly(True)
         self.transcript.setAcceptRichText(True)
+        self.transcript.setOpenLinks(False)
+        self.transcript.setOpenExternalLinks(False)
+        self.transcript.anchorClicked.connect(self._on_transcript_anchor_clicked)
         self.transcript.setPlaceholderText("Conversation will appear here.")
         layout.addWidget(self.transcript, 1)
 
@@ -2269,6 +2588,79 @@ class ChatDockWidget(QDockWidget):
         layout.addLayout(button_layout)
         _exec_dialog(dialog)
 
+    def _preview_output_image(self, image):
+        """Show a full-resolution preview for a generated transcript image."""
+        path = str(image.get("path") or "").strip()
+        if not path:
+            QMessageBox.information(
+                self,
+                "OpenGeoAgent",
+                "This image is remote and cannot be previewed locally.",
+            )
+            return
+        path = os.path.expanduser(path)
+        pixmap = QPixmap(path)
+        if pixmap.isNull():
+            QMessageBox.warning(
+                self,
+                "OpenGeoAgent",
+                f"Could not preview this image:\n\n{path}",
+            )
+            return
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Image Preview ({pixmap.width()} x {pixmap.height()})")
+        available = _screen_for_widget(self).availableGeometry()
+        dialog.resize(
+            max(480, int(available.width() * 0.75)),
+            max(360, int(available.height() * 0.75)),
+        )
+
+        layout = QVBoxLayout(dialog)
+        scroll = QScrollArea(dialog)
+        scroll.setWidgetResizable(False)
+        image_label = QLabel()
+        image_label.setAlignment(_qt_value("AlignmentFlag", "AlignCenter"))
+        image_label.setPixmap(pixmap)
+        scroll.setWidget(image_label)
+        layout.addWidget(scroll)
+
+        def save_image():
+            """Save a copy of the generated image file."""
+            default_name = os.path.basename(path) or "opengeoagent-image.png"
+            default_path = os.path.join(os.path.expanduser("~"), default_name)
+            selected, _selected_filter = QFileDialog.getSaveFileName(
+                dialog,
+                "Save Image",
+                default_path,
+                "Images (*.png *.jpg *.jpeg *.webp *.gif);;All Files (*)",
+            )
+            if not selected:
+                return
+            try:
+                with open(path, "rb") as src, open(selected, "wb") as dst:
+                    dst.write(src.read())
+            except Exception as exc:
+                QMessageBox.warning(
+                    dialog,
+                    "OpenGeoAgent",
+                    f"Could not save image:\n\n{exc}",
+                )
+                return
+            self.status_label.setText(f"Saved image to {selected}")
+            self.status_label.setStyleSheet("color: green; font-size: 10px;")
+
+        button_layout = QHBoxLayout()
+        save_btn = QPushButton("Save Image")
+        save_btn.clicked.connect(save_image)
+        button_layout.addWidget(save_btn)
+        button_layout.addStretch(1)
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(dialog.accept)
+        button_layout.addWidget(close_btn)
+        layout.addLayout(button_layout)
+        _exec_dialog(dialog)
+
     def _remove_image_attachment(self, index):
         """Remove one pending image attachment."""
         if 0 <= index < len(self._image_attachments):
@@ -2474,10 +2866,18 @@ class ChatDockWidget(QDockWidget):
         if permission_profile == "Trusted auto-approve":
             auto_approve_tools = True
         max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
+        image_model = _image_model_from_settings(self.settings)
         if not prompt:
             prompt = "Describe the attached image."
         self._record_prompt(prompt)
         prompt_with_context = self._build_prompt_with_context(prompt)
+        if image_model:
+            prompt_with_context = (
+                f"{prompt_with_context}\n\n"
+                "Image generation setting: when calling generate_image, use "
+                f"model={image_model} unless the user explicitly asks for a "
+                "different image model."
+            )
         attachments = [dict(item) for item in self._image_attachments]
         chat_payload = _build_chat_content(prompt_with_context, attachments)
 
@@ -2506,6 +2906,7 @@ class ChatDockWidget(QDockWidget):
                 "prompt": prompt,
                 "provider": provider,
                 "model": model_id,
+                "image_model": image_model,
                 "mode": agent_mode,
                 "permission_profile": permission_profile,
                 "status": "Running",
@@ -2744,7 +3145,7 @@ class ChatDockWidget(QDockWidget):
             "QProgressBar { border: 1px solid #b0bec5; border-radius: 3px; "
             "background: #eceff1; } "
             f"QProgressBar::chunk {{ background-color: {chunk_color}; "
-            "border-radius: 2px; }}"
+            "border-radius: 2px; }"
         )
 
     def _set_voice_level_recording(self):
@@ -2948,7 +3349,10 @@ class ChatDockWidget(QDockWidget):
             self.status_label.setStyleSheet("color: gray; font-size: 10px;")
             self._finish_active_job("Cancelled", result)
         elif result.get("success"):
-            answer = result.get("answer") or "(No text response.)"
+            output_images = _prepare_output_images(result.get("images") or [])
+            answer = result.get("answer") or (
+                "(Image output.)" if output_images else "(No text response.)"
+            )
             details = []
             tool_calls = result.get("tool_calls") or []
             snippet = _latest_executable_snippet(tool_calls)
@@ -2964,14 +3368,23 @@ class ChatDockWidget(QDockWidget):
                 details.append(f"Elapsed: {result['elapsed']}")
             if details:
                 answer = f"{answer}\n\n" + "\n".join(details)
+            output_images = _dedupe_output_images(
+                output_images + _prepare_output_images(_images_from_output_text(answer))
+            )
             if result.get("streamed") and self._streaming_message_index is not None:
                 self._update_message(
                     self._streaming_message_index,
                     answer,
                     markdown=True,
+                    images=output_images,
                 )
             else:
-                self._append_message("OpenGeoAgent", answer, markdown=True)
+                self._append_message(
+                    "OpenGeoAgent",
+                    answer,
+                    markdown=True,
+                    images=output_images,
+                )
             self.status_label.setText("Ready")
             self.status_label.setStyleSheet("color: gray; font-size: 10px;")
             self._finish_active_job("Succeeded", result)
@@ -3067,7 +3480,9 @@ class ChatDockWidget(QDockWidget):
             f"{spinner} {self._status_base_text}{dots} {elapsed}s - {suffix}"
         )
 
-    def _append_message(self, sender, message, markdown=False, display_body=None):
+    def _append_message(
+        self, sender, message, markdown=False, display_body=None, images=None
+    ):
         """Append a chat message and refresh the transcript.
 
         ``body`` holds the canonical prompt or response text used for context
@@ -3075,21 +3490,28 @@ class ChatDockWidget(QDockWidget):
         UI and copied transcripts so that ephemeral metadata (such as image
         attachment markers) does not bleed into later conversation history.
         """
-        body = message.strip()
+        body = str(message or "").strip()
         entry = {"sender": sender, "body": body, "markdown": markdown}
         if display_body is not None:
             entry["display_body"] = display_body.strip()
+        if images:
+            entry["images"] = images
         self._messages.append(entry)
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
         self._save_project_history()
 
-    def _update_message(self, index, message, markdown=False):
+    def _update_message(self, index, message, markdown=False, images=None):
         """Update an existing chat message and refresh the transcript."""
         if index < 0 or index >= len(self._messages):
             return
-        self._messages[index]["body"] = message
+        self._messages[index]["body"] = str(message or "")
         self._messages[index]["markdown"] = markdown
+        if images is not None:
+            if images:
+                self._messages[index]["images"] = images
+            else:
+                self._messages[index].pop("images", None)
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
         self._save_project_history()
@@ -3097,6 +3519,8 @@ class ChatDockWidget(QDockWidget):
     def _render_transcript(self):
         """Render the stored chat messages as HTML."""
         blocks = []
+        image_links = {}
+        image_index = 0
         for msg in self._messages:
             sender = html.escape(msg["sender"])
             display = msg.get("display_body") or msg["body"]
@@ -3104,16 +3528,38 @@ class ChatDockWidget(QDockWidget):
                 body = _markdown_to_basic_html(display)
             else:
                 body = f"<p>{_plain_text_to_html(display)}</p>"
+            images = []
+            for image in msg.get("images") or []:
+                if not isinstance(image, dict):
+                    continue
+                href = f"opengeoagent-image:{image_index}"
+                linked = dict(image)
+                linked["_href"] = href
+                image_links[href] = linked
+                image_index += 1
+                images.append(linked)
+            image_html = _message_images_html(images)
+            if image_html:
+                body = f"{body}\n{image_html}"
             blocks.append(
                 "<div style='margin-bottom: 12px;'>"
                 f"<p style='font-weight: 600; margin-bottom: 4px;'>{sender}</p>"
                 f"{body}"
                 "</div>"
             )
+        self._transcript_image_links = image_links
         blocks.append("<div style='height: 1em;'>&nbsp;</div>")
         self.transcript.setHtml("\n".join(blocks))
         end_cursor = getattr(getattr(QTextCursor, "MoveOperation", QTextCursor), "End")
         self.transcript.moveCursor(end_cursor)
+
+    def _on_transcript_anchor_clicked(self, url):
+        """Open generated image thumbnails in a full-size preview dialog."""
+        href = url.toString() if hasattr(url, "toString") else str(url)
+        image = self._transcript_image_links.get(href)
+        if image is None:
+            return
+        self._preview_output_image(image)
 
     def _copy_transcript_markdown(self):
         """Copy the full chat transcript to the clipboard as Markdown."""
@@ -3205,7 +3651,9 @@ class ChatDockWidget(QDockWidget):
         self._messages = [
             item
             for item in messages
-            if isinstance(item, dict) and item.get("sender") and item.get("body")
+            if isinstance(item, dict)
+            and item.get("sender")
+            and (item.get("body") or item.get("images"))
         ]
         self.copy_md_btn.setEnabled(bool(self._messages))
         self._render_transcript()
