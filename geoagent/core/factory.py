@@ -109,6 +109,10 @@ Workflow guidance:
   calculate_gee_layer_statistics. Do not use run_gee_python_snippet with
   reduceRegion/getInfo for those requests. For large regions, use the default
   coarse best-effort scale and report that the result is approximate.
+- When the user asks to change symbology, colors, palette, bands, or min/max
+  display range for an existing Earth Engine layer, use
+  set_gee_layer_visualization. Do not use the QGIS set_layer_symbology tool for
+  Earth Engine layers.
 - When the user refers to an existing Earth Engine layer, call
   list_loaded_gee_layers and reuse it with get_ee_layer(name) inside
   run_gee_python_snippet instead of reloading data when possible.
@@ -761,6 +765,7 @@ def for_gee_data_catalogs(
         extra_tools=extra_tools,
         fast=fast,
         permission_profile=permission_profile,
+        exclude_tool_names={"set_layer_symbology"} if include_qgis else set(),
     )
     cfg = config or GeoAgentConfig()
     if provider is not None:

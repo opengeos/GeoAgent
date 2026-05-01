@@ -73,6 +73,28 @@ def _parse_list(value: str | list[str] | None) -> list[str] | None:
     return [part.strip() for part in str(value).split(",") if part.strip()]
 
 
+def _gee_palette_colors(palette: str | list[str] | None) -> list[str] | None:
+    """Return Earth Engine visualization colors for common palette names."""
+    parsed = _parse_list(palette)
+    if not parsed:
+        return None
+    if len(parsed) > 1:
+        return parsed
+
+    name = parsed[0].strip().lower()
+    common_palettes = {
+        "terrain": ["#1a9850", "#91cf60", "#fee08b", "#d08b39", "#f5f5f5"],
+        "dem": ["#1a9850", "#91cf60", "#fee08b", "#d08b39", "#f5f5f5"],
+        "elevation": ["#1a9850", "#91cf60", "#fee08b", "#d08b39", "#f5f5f5"],
+        "earth": ["#1a9850", "#91cf60", "#fee08b", "#d08b39", "#f5f5f5"],
+        "viridis": ["#440154", "#31688e", "#35b779", "#fde725"],
+        "grayscale": ["#000000", "#ffffff"],
+        "grey": ["#000000", "#ffffff"],
+        "gray": ["#000000", "#ffffff"],
+    }
+    return common_palettes.get(name, parsed)
+
+
 def _parse_bbox(
     bbox: str | list[float] | tuple[float, ...] | None,
 ) -> list[float] | None:
@@ -105,7 +127,7 @@ def _build_vis_params(
         vis_params["min"] = float(min_value)
     if max_value is not None and not for_feature_collection:
         vis_params["max"] = float(max_value)
-    parsed_palette = _parse_list(palette)
+    parsed_palette = _gee_palette_colors(palette)
     if parsed_palette:
         if for_feature_collection:
             vis_params["color"] = parsed_palette[0]
@@ -461,37 +483,64 @@ def _loaded_gee_layer_records() -> list[dict[str, Any]]:
     return records
 
 
-def _get_loaded_gee_object(layer_name: str) -> Any:
-    """Return a registered Earth Engine object by exact or case-insensitive name."""
+def _get_loaded_gee_layer_payload(layer_name: str) -> tuple[str, Any, dict[str, Any]]:
+    """Return a registered Earth Engine layer by exact, case-insensitive, or unambiguous partial name.
+
+    Resolution checks an exact key match first, then a case-insensitive full-name
+    match, and finally a case-insensitive partial-name match. Raises ``KeyError``
+    when no layer matches or when the partial-name match is ambiguous.
+    """
     from gee_data_catalogs.core.ee_utils import get_ee_layers
 
     layers = get_ee_layers()
     if layer_name in layers:
+        name = layer_name
         payload = layers[layer_name]
-        return payload[0] if isinstance(payload, tuple) else payload
-
-    requested = layer_name.strip().lower()
-    matches = [
-        (name, payload)
-        for name, payload in layers.items()
-        if str(name).strip().lower() == requested
-    ]
-    if not matches:
+    else:
+        requested = layer_name.strip().lower()
         matches = [
             (name, payload)
             for name, payload in layers.items()
-            if requested and requested in str(name).strip().lower()
+            if str(name).strip().lower() == requested
         ]
-    if not matches:
-        available = ", ".join(str(name) for name in layers) or "(none)"
-        raise KeyError(
-            f"Earth Engine layer not found: {layer_name}. Available layers: {available}"
+        if not matches:
+            matches = [
+                (name, payload)
+                for name, payload in layers.items()
+                if requested and requested in str(name).strip().lower()
+            ]
+        if not matches:
+            available = ", ".join(str(name) for name in layers) or "(none)"
+            raise KeyError(
+                f"Earth Engine layer not found: {layer_name}. "
+                f"Available layers: {available}"
+            )
+        if len(matches) > 1:
+            names = ", ".join(str(name) for name, _payload in matches)
+            raise KeyError(
+                f"Earth Engine layer name is ambiguous: {layer_name}. {names}"
+            )
+        name, payload = matches[0]
+
+    if isinstance(payload, tuple):
+        ee_object = payload[0] if payload else None
+        vis_params = (
+            payload[1] if len(payload) > 1 and isinstance(payload[1], dict) else {}
         )
-    if len(matches) > 1:
-        names = ", ".join(str(name) for name, _payload in matches)
-        raise KeyError(f"Earth Engine layer name is ambiguous: {layer_name}. {names}")
-    payload = matches[0][1]
-    return payload[0] if isinstance(payload, tuple) else payload
+    else:
+        ee_object = payload
+        vis_params = {}
+    return str(name), ee_object, dict(vis_params)
+
+
+def _get_loaded_gee_object(layer_name: str) -> Any:
+    """Return a registered Earth Engine object by exact, case-insensitive, or unambiguous partial name.
+
+    Resolution mirrors :func:`_get_loaded_gee_layer_payload` and raises
+    ``KeyError`` when no layer matches or when the partial-name match is
+    ambiguous.
+    """
+    return _get_loaded_gee_layer_payload(layer_name)[1]
 
 
 @contextlib.contextmanager
@@ -1997,6 +2046,78 @@ def gee_data_catalogs_tools(
 
     @geo_tool(
         category="gee_data_catalogs",
+        name="set_gee_layer_visualization",
+        available_in=("full", "fast"),
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("gee_data_catalogs", "ee"),
+    )
+    def set_gee_layer_visualization(
+        layer_name: str,
+        bands: Optional[str] = None,
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        palette: Optional[str] = None,
+        output_layer_name: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Update visualization params for a loaded Earth Engine layer.
+
+        This re-renders the registered Earth Engine object with Earth Engine
+        ``vis_params`` instead of applying local QGIS raster symbology.
+
+        Args:
+            layer_name: Registered Earth Engine layer name. Partial,
+                case-insensitive matches are accepted when unambiguous.
+            bands: Optional comma-separated visualization bands.
+            min_value: Optional visualization minimum.
+            max_value: Optional visualization maximum.
+            palette: Optional comma-separated colors or common palette name,
+                such as terrain, viridis, or grayscale.
+            output_layer_name: Optional name for the styled layer. When
+                omitted, the matched layer is replaced in place. When set to
+                a different name, the styled output is added as a new layer
+                and the originally matched layer is left untouched in the
+                project and the EE layer registry.
+        """
+        try:
+            matched_name, ee_object, current_vis = _get_loaded_gee_layer_payload(
+                layer_name
+            )
+            new_vis = dict(current_vis)
+            requested_vis = _build_vis_params(
+                bands=bands,
+                min_value=min_value,
+                max_value=max_value,
+                palette=palette,
+            )
+            new_vis.update(requested_vis)
+            display_name = (output_layer_name or matched_name)[:50]
+            layer = _add_ee_layer_nonblocking(
+                iface=iface,
+                ee_object=ee_object,
+                vis_params=new_vis,
+                name=display_name,
+            )
+            _validate_added_layer(layer, display_name)
+            try:
+                _on_gui(lambda: iface.mapCanvas().refresh())
+            except Exception:
+                pass
+            return {
+                "success": True,
+                "layer_name": display_name,
+                "source_layer_name": matched_name,
+                "vis_params": new_vis,
+            }
+        except Exception as exc:
+            return {
+                "success": False,
+                "layer_name": layer_name,
+                "error": str(exc),
+            }
+
+    @geo_tool(
+        category="gee_data_catalogs",
         name="run_gee_python_snippet",
         requires_confirmation=True,
         long_running=True,
@@ -2177,6 +2298,7 @@ def gee_data_catalogs_tools(
         load_gee_dataset,
         calculate_gee_normalized_difference,
         list_loaded_gee_layers,
+        set_gee_layer_visualization,
         run_gee_python_snippet,
         calculate_gee_layer_statistics,
         open_gee_catalog_panel,
