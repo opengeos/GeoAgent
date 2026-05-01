@@ -766,7 +766,7 @@ class SettingsDockWidget(QDockWidget):
                 self,
                 "Installation Failed",
                 f"Failed to install dependencies:\n\n{message}\n\n"
-                'Manual fallback: pip install "GeoAgent[providers]>=1.2.0"',
+                'Manual fallback: pip install "GeoAgent[providers]>=1.3.0"',
             )
 
         self._deps_worker = None

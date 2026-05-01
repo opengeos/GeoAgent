@@ -78,7 +78,7 @@ required Python packages. The installer creates an isolated environment under
 Manual fallback:
 
 ```bash
-pip install "GeoAgent[providers]>=1.2.0"
+pip install "GeoAgent[providers]>=1.3.0"
 ```
 
 ## Provider Configuration
