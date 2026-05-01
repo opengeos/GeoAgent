@@ -9,8 +9,10 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import uuid
 from typing import Any, Optional
-from urllib.parse import urljoin
+from urllib.error import URLError
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from geoagent.core.decorators import geo_tool
@@ -31,16 +33,28 @@ VANTOR_HTTP_TIMEOUT = 30
 
 def _fetch_json(url: str) -> dict[str, Any]:
     """Fetch and parse JSON from the Vantor static STAC catalog."""
+    if not str(url).lower().startswith("https://"):
+        raise ValueError("Vantor catalog URLs must use HTTPS.")
     req = Request(url, headers={"User-Agent": "GeoAgent-Vantor/1.0"})
-    with urlopen(req, timeout=VANTOR_HTTP_TIMEOUT) as response:  # nosec B310
+    with urlopen(
+        req, timeout=VANTOR_HTTP_TIMEOUT
+    ) as response:  # nosec B310 - HTTPS enforced above
         return json.loads(response.read().decode("utf-8"))
 
 
 def _resolve_href(base_url: str, href: str) -> str:
-    """Resolve a STAC href against its parent document URL."""
-    if href.startswith(("http://", "https://")):
-        return href
-    return urljoin(base_url, href)
+    """Resolve a STAC href against its parent document URL.
+
+    Only HTTPS URLs are accepted. Non-HTTPS schemes such as ``http://``,
+    ``file://`` or ``ftp://`` are rejected so a malicious or compromised
+    catalog cannot trigger local file reads or unexpected protocol access.
+    """
+    resolved = (
+        href if href.startswith(("http://", "https://")) else urljoin(base_url, href)
+    )
+    if urlparse(resolved).scheme.lower() != "https":
+        raise ValueError(f"Refusing non-HTTPS Vantor URL: {resolved!r}")
+    return resolved
 
 
 def _event_id_from_href(href: str) -> str:
@@ -74,14 +88,11 @@ def _resolve_event_href(event: str) -> str:
         raise ValueError("event is required.")
 
     normalized = value.lower()
-    for item in _catalog_events():
-        if normalized in {
-            item["id"].lower(),
-            item["title"].lower(),
-            os.path.basename(item["href"]).lower(),
-        }:
+    events = _catalog_events()
+    for item in events:
+        if normalized in {item["id"].lower(), item["title"].lower()}:
             return item["href"]
-    for item in _catalog_events():
+    for item in events:
         if normalized in item["id"].lower() or normalized in item["title"].lower():
             return item["href"]
     raise ValueError(f"No Vantor event matched {event!r}.")
@@ -97,21 +108,31 @@ def _collection_item_urls(collection_url: str) -> list[str]:
     return urls
 
 
-def _fetch_items(collection_url: str) -> list[dict[str, Any]]:
-    """Fetch all STAC items for a collection."""
-    items = []
+def _fetch_items(
+    collection_url: str,
+) -> tuple[list[dict[str, Any]], int, str | None]:
+    """Fetch all STAC items for a collection.
+
+    Returns the items list along with the count of item URLs that failed to
+    fetch and the last error message so callers can surface partial results.
+    """
+    items: list[dict[str, Any]] = []
     seen: set[str] = set()
+    failures = 0
+    last_error: str | None = None
     for item_url in _collection_item_urls(collection_url):
         try:
             item = _fetch_json(item_url)
-        except Exception:
+        except (URLError, json.JSONDecodeError, ValueError) as exc:
+            failures += 1
+            last_error = f"{type(exc).__name__}: {exc}"
             continue
         item_id = str(item.get("id") or item_url)
         if item_id in seen:
             continue
         seen.add(item_id)
         items.append(item)
-    return items
+    return items, failures, last_error
 
 
 def _bbox_intersects(item_bbox: Any, query_bbox: list[float]) -> bool:
@@ -384,7 +405,7 @@ def vantor_tools(
             limit: Maximum number of item summaries to return.
         """
         href = _resolve_event_href(event)
-        items = _fetch_items(href)
+        items, failures, last_error = _fetch_items(href)
         filtered = _filter_items(
             items,
             bbox=bbox,
@@ -404,6 +425,8 @@ def vantor_tools(
             "query_text": query_text or None,
             "count": len(filtered),
             "items": [_item_summary(item) for item in filtered[:max_items]],
+            "fetch_failures": failures,
+            "last_fetch_error": last_error,
         }
 
     @geo_tool(
@@ -422,8 +445,9 @@ def vantor_tools(
         """Display Vantor STAC item footprints in the current QGIS project."""
         if event:
             href = _resolve_event_href(event)
+            fetched, _, _ = _fetch_items(href)
             items = _filter_items(
-                _fetch_items(href),
+                fetched,
                 bbox=bbox,
                 phase=phase,
                 query_text=query_text,
@@ -448,7 +472,8 @@ def vantor_tools(
                             pass
 
             path = os.path.join(
-                tempfile.gettempdir(), "geoagent_vantor_footprints.geojson"
+                tempfile.gettempdir(),
+                f"geoagent_vantor_footprints_{uuid.uuid4().hex}.geojson",
             )
             feature_count = _write_footprints_geojson(items, path)
             if feature_count == 0:
@@ -510,7 +535,7 @@ def vantor_tools(
         if not href:
             items = list(state.get("last_search_items") or [])
             if event:
-                items = _fetch_items(_resolve_event_href(event))
+                items, _, _ = _fetch_items(_resolve_event_href(event))
             item = _find_item_by_id(items, item_id)
             if item is None:
                 return {
@@ -529,7 +554,8 @@ def vantor_tools(
             }
         name = (
             layer_name
-            or (str(item.get("id")) if item else os.path.basename(href))
+            or (item.get("id") if item else None)
+            or os.path.basename(href)
             or "Vantor COG"
         )
         qgis_uri = _qgis_raster_uri(href)
