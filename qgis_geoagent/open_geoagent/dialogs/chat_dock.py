@@ -394,6 +394,45 @@ def _apply_environment_from_settings(settings):
                 os.environ[env_name] = value
 
 
+def _format_chat_worker_error(exc, provider="", agent_mode=""):
+    """Return an actionable UI error for chat worker exceptions."""
+    raw = str(exc) or exc.__class__.__name__
+    lower = raw.lower()
+    provider_label = provider or "the selected provider"
+    mode_label = agent_mode or "this mode"
+
+    if (
+        "tlsv1_alert_decode_error" in lower
+        or "api connection error" in lower
+        or "connection error" == lower.strip()
+        or "httpx.connecterror" in lower
+        or "httpcore.connecterror" in lower
+    ):
+        advice = (
+            "The model provider connection failed while OpenGeoAgent was "
+            f"running {mode_label}. The NASA OPERA tools were not the source "
+            "of this TLS error; the failing request was the model call."
+        )
+        if provider == "openai-codex":
+            advice += (
+                "\n\nYou are using openai-codex, which talks to the ChatGPT/Codex "
+                "backend. For longer OPERA tool workflows, switch Settings > "
+                "Model to provider=openai with an OPENAI_API_KEY, or try again "
+                "with streaming disabled. For OPERA searches that do not need "
+                "natural language, use the direct "
+                "submit_nasa_opera_search_task(...) helper."
+            )
+        else:
+            advice += (
+                f"\n\nCheck network/proxy/TLS access for {provider_label}, then "
+                "try again. If streaming is enabled, try disabling it once to "
+                "reduce the number of provider requests."
+            )
+        return f"{advice}\n\nOriginal error: {raw}"
+
+    return raw
+
+
 def _transcription_model_from_settings(settings):
     """Return the configured OpenAI speech-to-text model."""
     saved = _setting(settings, "transcription_model", "", str).strip()
@@ -1853,11 +1892,21 @@ class ChatWorker(QThread):
                 }
             )
         except Exception as exc:
+            formatted_error = _format_chat_worker_error(
+                exc,
+                provider=self.provider,
+                agent_mode=self.agent_mode,
+            )
+            QgsMessageLog.logMessage(
+                f"Chat worker failed:\n{traceback.format_exc()}",
+                "OpenGeoAgent",
+                Qgis.MessageLevel.Critical,
+            )
             self.finished.emit(
                 {
                     "success": False,
                     "answer": "",
-                    "error": f"{exc}\n\n{traceback.format_exc()}",
+                    "error": formatted_error,
                     "images": [],
                     "tools": "",
                     "cancelled": "",

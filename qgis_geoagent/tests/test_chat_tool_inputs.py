@@ -9,6 +9,7 @@ from open_geoagent.dialogs.chat_dock import (
     _console_ready_pyqgis_script,
     _conversation_markdown,
     _format_tool_calls,
+    _format_chat_worker_error,
     _grab_screen_rect,
     _grab_widget_global_rect,
     _image_to_png_bytes,
@@ -217,6 +218,23 @@ def test_build_chat_content_adds_image_blocks() -> None:
         {"text": "Describe this map screenshot."},
         {"image": {"format": "png", "source": {"bytes": b"png-bytes"}}},
     ]
+
+
+def test_format_chat_worker_error_explains_codex_tls_failure() -> None:
+    """Verify provider TLS failures produce actionable plugin guidance."""
+    error = _format_chat_worker_error(
+        RuntimeError(
+            "[SSL: TLSV1_ALERT_DECODE_ERROR] tlsv1 alert decode error (_ssl.c:1010)"
+        ),
+        provider="openai-codex",
+        agent_mode="NASA OPERA",
+    )
+
+    assert "model provider connection failed" in error
+    assert "NASA OPERA tools were not the source" in error
+    assert "provider=openai" in error
+    assert "streaming disabled" in error
+    assert "submit_nasa_opera_search_task" in error
 
 
 def test_format_tool_calls_includes_full_stac_asset_url() -> None:
