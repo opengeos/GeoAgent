@@ -218,6 +218,18 @@ agent = for_anymap(m)
 agent.chat("Change the basemap and list the current layers.")
 ```
 
+Launch the browser workspace:
+
+```bash
+pip install "GeoAgent[ui,anymap,openai]"
+geoagent ui
+```
+
+The Solara UI opens directly to a map chat workspace with provider/model
+controls, fast mode, session chat history, compact tool-call results, and a
+conservative confirmation policy. Confirmation-required tools are denied by
+default unless you enable auto-approve in the UI.
+
 Use GeoAgent inside QGIS:
 
 ```python

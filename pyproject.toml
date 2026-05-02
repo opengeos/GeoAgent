@@ -55,7 +55,7 @@ stac = ["pystac-client>=0.8", "planetary-computer>=1.0"]
 earthdata = ["earthaccess>=0.10"]
 nasa-opera = ["earthaccess>=0.10"]
 whitebox = ["whitebox>=2.3.6"]
-ui = ["solara>=1.35"]
+ui = ["solara>=1.35", "starlette<1.0"]
 qgis = []
 providers = ["GeoAgent[openai,anthropic,gemini,ollama,litellm]"]
 all = [
