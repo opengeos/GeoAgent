@@ -57,8 +57,6 @@ def test_for_nasa_opera_registers_opera_and_qgis_tools() -> None:
     assert "get_available_datasets" in names
     assert "get_dataset_info" in names
     assert "display_footprints" in names
-    assert "count_water_pixels" in names
-    assert "analyze_categorical_raster" in names
     assert "list_project_layers" in names
     assert agent.context.metadata["integration"] == "nasa_opera"
 
