@@ -58,6 +58,10 @@ Workflow guidance:
 - Search before displaying footprints or rasters.
 - If the user gives no location, use the current QGIS map extent.
 - For raster display, choose a specific data link from search results.
+- When the user asks how many water pixels are in a loaded OPERA raster or
+  mosaic, use count_water_pixels rather than generating a PyQGIS script.
+- For other categorical raster questions, use analyze_categorical_raster to
+  count class values and percentages.
 - Keep responses concise and include result counts, date range, and relevant
   first-result identifiers when available.
 """

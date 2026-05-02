@@ -224,6 +224,146 @@ def _add_qgis_raster_layer(
     return _on_gui(_run)
 
 
+def _parse_class_values(values: Any, *, fallback: tuple[int, ...]) -> list[int]:
+    """Parse a class-value argument into integer raster class values."""
+    if values is None or values == "":
+        return list(fallback)
+    if isinstance(values, str):
+        raw_items = re.split(r"[,;\s]+", values.strip())
+    elif isinstance(values, (list, tuple, set)):
+        raw_items = list(values)
+    else:
+        raw_items = [values]
+
+    parsed: list[int] = []
+    for item in raw_items:
+        if item in (None, ""):
+            continue
+        value = int(float(str(item).strip()))
+        if value not in parsed:
+            parsed.append(value)
+    return parsed or list(fallback)
+
+
+def _resolve_raster_layer_source(
+    iface: Any,
+    project_getter: Callable[[], Any],
+    layer_name: Optional[str],
+) -> dict[str, Any]:
+    """Resolve a QGIS raster layer name to a source URI on the GUI thread."""
+
+    def _run() -> dict[str, Any]:
+        proj = project_getter()
+        candidates: list[Any] = []
+        if layer_name:
+            candidates.extend(proj.mapLayersByName(layer_name))
+            if not candidates:
+                needle = layer_name.lower()
+                candidates.extend(
+                    layer
+                    for layer in proj.mapLayers().values()
+                    if needle in str(layer.name()).lower()
+                )
+        else:
+            active = getattr(iface, "activeLayer", lambda: None)()
+            if active is not None:
+                candidates.append(active)
+            candidates.extend(proj.mapLayersByName("OPERA Mosaic"))
+
+        for layer in candidates:
+            source = str(layer.source() or "")
+            if source:
+                return {"layer_name": str(layer.name()), "source": source}
+        return {"error": "No matching raster layer with a readable source was found."}
+
+    return _on_gui(_run)
+
+
+def _count_raster_class_values(
+    source: str,
+    *,
+    band: int,
+    class_values: Optional[list[int]] = None,
+    max_categories: int = 50,
+) -> dict[str, Any]:
+    """Count categorical raster pixels for selected or discovered values."""
+    from osgeo import gdal  # type: ignore[import-not-found]
+    import numpy as np
+
+    ds = gdal.Open(source)
+    if ds is None:
+        return {"error": f"GDAL could not open raster source: {source}"}
+    try:
+        raster_band = ds.GetRasterBand(int(band))
+        if raster_band is None:
+            return {"error": f"Raster band {band} is not available."}
+
+        width = int(ds.RasterXSize)
+        height = int(ds.RasterYSize)
+        nodata = raster_band.GetNoDataValue()
+        selected_values = (
+            {int(value) for value in class_values}
+            if class_values is not None
+            else None
+        )
+        counts: dict[int, int] = (
+            {int(value): 0 for value in class_values}
+            if class_values is not None
+            else {}
+        )
+        valid_pixels = 0
+        chunk_size = 1024
+
+        for yoff in range(0, height, chunk_size):
+            ysize = min(chunk_size, height - yoff)
+            for xoff in range(0, width, chunk_size):
+                xsize = min(chunk_size, width - xoff)
+                arr = raster_band.ReadAsArray(xoff, yoff, xsize, ysize)
+                if arr is None:
+                    continue
+                if nodata is not None:
+                    mask = arr != nodata
+                    valid_pixels += int(np.count_nonzero(mask))
+                    data = arr[mask]
+                else:
+                    valid_pixels += int(arr.size)
+                    data = arr
+                if selected_values is None:
+                    unique, unique_counts = np.unique(data, return_counts=True)
+                    for value, count in zip(unique, unique_counts):
+                        key = int(value)
+                        counts[key] = counts.get(key, 0) + int(count)
+                else:
+                    for value in counts:
+                        counts[value] += int(np.count_nonzero(data == value))
+
+        sorted_counts = dict(
+            sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+        )
+        category_count = len(sorted_counts)
+        limit = max(1, int(max_categories))
+        truncated = category_count > limit
+        if truncated:
+            sorted_counts = dict(list(sorted_counts.items())[:limit])
+
+        return {
+            "success": True,
+            "band": int(band),
+            "width": width,
+            "height": height,
+            "total_pixels": width * height,
+            "valid_pixels": valid_pixels,
+            "class_counts": sorted_counts,
+            "matched_pixel_count": sum(sorted_counts.values()),
+            "category_count": category_count,
+            "returned_category_count": len(sorted_counts),
+            "truncated": truncated,
+            "nodata": nodata,
+        }
+    finally:
+        ds = None
+
+
 def _granule_links(granule: Any) -> list[str]:
     """Return data links from an earthaccess granule."""
     if hasattr(granule, "data_links"):
@@ -624,6 +764,113 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
             result["source_count"] = len(accessible)
         return result
 
+    @geo_tool(
+        category="nasa_opera",
+        name="count_water_pixels",
+        long_running=True,
+        requires_packages=("osgeo", "numpy"),
+    )
+    def count_water_pixels(
+        layer_name: Optional[str] = "OPERA Mosaic",
+        band: int = 1,
+        water_values: Any = "1,2",
+    ) -> dict[str, Any]:
+        """Count DSWx water pixels in a loaded OPERA raster or mosaic.
+
+        Args:
+            layer_name: QGIS raster layer name or unique substring. Defaults to
+                ``OPERA Mosaic``.
+            band: Raster band number to inspect, normally band 1 for DSWx WTR.
+            water_values: Water class values to count. The default ``1,2``
+                counts open water and partial surface water classes.
+        """
+        values = _parse_class_values(water_values, fallback=(1, 2))
+        resolved = _resolve_raster_layer_source(iface, _project, layer_name)
+        if resolved.get("error"):
+            return resolved
+
+        result = _count_raster_class_values(
+            resolved["source"],
+            band=int(band),
+            class_values=values,
+        )
+        if result.get("success"):
+            result["layer_name"] = resolved["layer_name"]
+            result["source"] = resolved["source"]
+            result["water_values"] = values
+            result["water_pixel_count"] = result.pop("matched_pixel_count")
+            result["note"] = (
+                "Default DSWx water classes are 1=open water and "
+                "2=partial surface water."
+            )
+        return result
+
+    @geo_tool(
+        category="nasa_opera",
+        name="analyze_categorical_raster",
+        long_running=True,
+        requires_packages=("osgeo", "numpy"),
+    )
+    def analyze_categorical_raster(
+        layer_name: Optional[str] = None,
+        band: int = 1,
+        category_values: Any = None,
+        category_labels: Optional[dict[str, str]] = None,
+        max_categories: int = 50,
+    ) -> dict[str, Any]:
+        """Summarize category pixel counts for a loaded raster layer.
+
+        Args:
+            layer_name: QGIS raster layer name or unique substring. When
+                omitted, the active layer is used, then ``OPERA Mosaic``.
+            band: Raster band number to inspect.
+            category_values: Optional category values to count. Omit to count
+                every category found in the raster band.
+            category_labels: Optional mapping from category value to label.
+            max_categories: Maximum category rows returned when discovering
+                all categories.
+        """
+        values = (
+            _parse_class_values(category_values, fallback=())
+            if category_values not in (None, "")
+            else None
+        )
+        resolved = _resolve_raster_layer_source(iface, _project, layer_name)
+        if resolved.get("error"):
+            return resolved
+
+        result = _count_raster_class_values(
+            resolved["source"],
+            band=int(band),
+            class_values=values,
+            max_categories=max_categories,
+        )
+        if not result.get("success"):
+            return result
+
+        labels = category_labels or {}
+        categories: list[dict[str, Any]] = []
+        for value, count in result["class_counts"].items():
+            percent = (
+                (count / result["valid_pixels"] * 100.0)
+                if result["valid_pixels"]
+                else 0.0
+            )
+            categories.append(
+                {
+                    "value": value,
+                    "label": str(labels.get(str(value), labels.get(value, ""))),
+                    "pixel_count": count,
+                    "percent_of_valid_pixels": round(percent, 4),
+                }
+            )
+
+        result["layer_name"] = resolved["layer_name"]
+        result["source"] = resolved["source"]
+        result["category_values"] = values
+        result["categories"] = categories
+        return result
+
     return [
         get_available_datasets,
         get_dataset_info,
@@ -631,6 +878,8 @@ def nasa_opera_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
         display_footprints,
         display_raster,
         create_mosaic,
+        count_water_pixels,
+        analyze_categorical_raster,
     ]
 
 
