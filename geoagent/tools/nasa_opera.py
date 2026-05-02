@@ -302,9 +302,7 @@ def _count_raster_class_values(
         height = int(ds.RasterYSize)
         nodata = raster_band.GetNoDataValue()
         selected_values = (
-            {int(value) for value in class_values}
-            if class_values is not None
-            else None
+            {int(value) for value in class_values} if class_values is not None else None
         )
         counts: dict[int, int] = (
             {int(value): 0 for value in class_values}

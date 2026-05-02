@@ -110,9 +110,7 @@ def test_count_water_pixels_uses_loaded_mosaic_source(monkeypatch) -> None:
 def test_analyze_categorical_raster_adds_labels_and_percentages(monkeypatch) -> None:
     """Verify categorical raster summaries include labels and percentages."""
     project = MockQGISProject()
-    project.addMapLayer(
-        MockQGISLayer("Classification", "/tmp/classes.tif", "raster")
-    )
+    project.addMapLayer(MockQGISLayer("Classification", "/tmp/classes.tif", "raster"))
     iface = MockQGISIface(project)
     tools = {t.tool_name: t for t in nasa_opera_tools(iface, project)}
     captured = {}
