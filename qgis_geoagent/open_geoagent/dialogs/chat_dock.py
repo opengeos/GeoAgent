@@ -398,20 +398,29 @@ def _format_chat_worker_error(exc, provider="", agent_mode=""):
     """Return an actionable UI error for chat worker exceptions."""
     raw = str(exc) or exc.__class__.__name__
     lower = raw.lower()
+    cls_name = exc.__class__.__name__.lower()
     provider_label = provider or "the selected provider"
     mode_label = agent_mode or "this mode"
+    is_opera_mode = "opera" in agent_mode.lower()
 
     if (
         "tlsv1_alert_decode_error" in lower
         or "api connection error" in lower
-        or "connection error" == lower.strip()
-        or "httpx.connecterror" in lower
-        or "httpcore.connecterror" in lower
+        or "connection error" in lower
+        or "connecterror" in lower
+        or "connecterror" in cls_name
+        or "connectionerror" in cls_name
+        or "ssl" in cls_name
     ):
+        tool_attribution = (
+            "The NASA OPERA tools were not the source of this TLS error; "
+            if is_opera_mode
+            else "OpenGeoAgent tools were not the source of this error; "
+        )
         advice = (
             "The model provider connection failed while OpenGeoAgent was "
-            f"running {mode_label}. The NASA OPERA tools were not the source "
-            "of this TLS error; the failing request was the model call."
+            f"running {mode_label}. {tool_attribution}"
+            "the failing request was the model call."
         )
         if provider == "openai-codex":
             advice += (

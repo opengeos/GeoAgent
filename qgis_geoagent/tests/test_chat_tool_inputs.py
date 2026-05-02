@@ -237,6 +237,24 @@ def test_format_chat_worker_error_explains_codex_tls_failure() -> None:
     assert "submit_nasa_opera_search_task" in error
 
 
+def test_format_chat_worker_error_detects_httpx_connect_error_by_class() -> None:
+    """Class-name-based detection should catch httpx.ConnectError-style failures."""
+
+    class ConnectError(Exception):
+        """Mimic httpx.ConnectError so str(exc) lacks the module path."""
+
+    error = _format_chat_worker_error(
+        ConnectError("All connection attempts failed"),
+        provider="openai",
+        agent_mode="General QGIS",
+    )
+
+    assert "model provider connection failed" in error
+    assert "OpenGeoAgent tools were not the source" in error
+    assert "NASA OPERA" not in error
+    assert "Check network/proxy/TLS access for openai" in error
+
+
 def test_format_tool_calls_includes_full_stac_asset_url() -> None:
     """Verify STAC signed URLs are preserved outside compact arg display."""
     href = "https://example.blob.core.windows.net/container/path/file.tif?" + (
