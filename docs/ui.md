@@ -25,11 +25,16 @@ Launch the UI:
 geoagent ui
 ```
 
-Or run Solara directly:
+Or run Solara directly. The UI's pages directory is shipped inside the
+installed `geoagent` package, so resolve it dynamically rather than relying on
+a relative path that only exists in a source checkout:
 
 ```bash
-solara run geoagent/ui/pages
+solara run "$(python -c 'from geoagent.ui import PAGES_DIR; print(PAGES_DIR)')"
 ```
+
+If you are working from a source checkout you can also run
+`solara run geoagent/ui/pages` directly from the repository root.
 
 ## Workspace
 

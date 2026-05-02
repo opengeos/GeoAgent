@@ -10,17 +10,45 @@ from geoagent import __version__
 from geoagent.ui.app import (
     PROVIDER_NAMES,
     compact_tool_call,
-    create_bound_agent,
     create_ui_map_binding,
     default_model_for_provider,
+    default_provider,
+    dispatch_prompt,
 )
 
 
+def _fenced_block(text: str) -> str:
+    """Wrap arbitrary text in a Markdown code fence that survives backticks.
+
+    Uses the smallest run of backticks longer than any backtick run in the
+    text, so user prompts containing ````` characters still render
+    verbatim instead of being interpreted as Markdown.
+    """
+    longest = 0
+    current = 0
+    for ch in text:
+        if ch == "`":
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+    fence = "`" * max(3, longest + 1)
+    return f"{fence}\n{text}\n{fence}"
+
+
 def _message_markdown(message: dict[str, Any]) -> str:
-    """Render one chat-history message as Markdown."""
+    """Render one chat-history message as Markdown.
+
+    User text is rendered inside a fenced code block so prompts containing
+    Markdown syntax, links, or raw HTML do not change meaning in the
+    transcript. Assistant messages are rendered as Markdown so tool results
+    keep their formatting.
+    """
     role = str(message.get("role") or "assistant").title()
     status = str(message.get("status") or "")
     text = str(message.get("text") or "")
+    if message.get("role") == "user":
+        return f"**{role}**\n\n{_fenced_block(text)}"
     if status == "error":
         return f"**{role} error**\n\n{text}"
     return f"**{role}**\n\n{text}"
@@ -37,7 +65,7 @@ def _safe_create_binding() -> tuple[Any | None, str]:
 @solara.component
 def WorkspacePage() -> None:
     """Render the map chat workspace."""
-    provider = solara.use_reactive("openai-codex")
+    provider = solara.use_reactive(default_provider())
     model_id = solara.use_reactive(default_model_for_provider(provider.value))
     prompt = solara.use_reactive("")
     fast = solara.use_reactive(False)
@@ -57,57 +85,22 @@ def WorkspacePage() -> None:
             return
         prompt.set("")
         busy.set(True)
-        last_tool_calls.set([])
-        next_history = [*history.value, {"role": "user", "text": text}]
-        history.set(next_history)
         try:
-            if not isinstance(binding_state, tuple):
-                raise RuntimeError("Map binding did not initialize correctly.")
-            binding, binding_error = binding_state
-            if binding_error:
-                raise RuntimeError(binding_error)
-            agent = create_bound_agent(
-                binding,
+            binding_obj, binding_error = (
+                binding_state if isinstance(binding_state, tuple) else (None, "")
+            )
+            new_history, tool_calls = dispatch_prompt(
+                text,
+                history=history.value,
+                binding=binding_obj,
+                binding_error=binding_error,
                 provider=provider.value,
                 model_id=model_id.value,
                 fast=fast.value,
                 auto_approve=auto_approve.value,
             )
-            response = agent.chat(text)
-            last_tool_calls.set(list(response.tool_calls))
-            details: list[str] = []
-            if response.executed_tools:
-                details.append("Executed tools: " + ", ".join(response.executed_tools))
-            if response.cancelled_tools:
-                details.append(
-                    "Cancelled tools: " + ", ".join(response.cancelled_tools)
-                )
-            if response.error_message:
-                details.append(response.error_message)
-            answer = response.answer_text or "\n".join(details) or "No text response."
-            if details and response.answer_text:
-                answer = answer + "\n\n" + "\n".join(details)
-            history.set(
-                [
-                    *next_history,
-                    {
-                        "role": "assistant",
-                        "text": answer,
-                        "status": "error" if not response.success else "ok",
-                    },
-                ]
-            )
-        except Exception as exc:
-            history.set(
-                [
-                    *next_history,
-                    {
-                        "role": "assistant",
-                        "text": str(exc),
-                        "status": "error",
-                    },
-                ]
-            )
+            history.set(new_history)
+            last_tool_calls.set(tool_calls)
         finally:
             busy.set(False)
 
