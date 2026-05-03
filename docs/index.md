@@ -95,7 +95,10 @@ GeoAgent can infer a provider from environment variables:
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
-| Bedrock             | AWS credentials and Bedrock model access, optional `BEDROCK_MODEL` |
+
+Bedrock is not auto-detected. Pass `provider="bedrock"` explicitly; it then
+uses the AWS credential chain, configured region, and Bedrock model access,
+with optional `BEDROCK_MODEL`.
 
 Explicit configuration is also supported:
 

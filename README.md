@@ -119,7 +119,10 @@ specified:
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
-| Bedrock             | AWS credential chain and model access, optional `BEDROCK_MODEL`    |
+
+Bedrock is not auto-detected. Pass `provider="bedrock"` explicitly; it then
+uses the AWS credential chain, configured region, and Bedrock model access,
+with optional `BEDROCK_MODEL`.
 
 ChatGPT/Codex OAuth uses the Codex browser login flow and the Codex Responses
 backend.
