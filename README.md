@@ -14,17 +14,22 @@
 [![image](https://img.shields.io/badge/YouTube-Channel-red)](https://youtube.com/@giswqs)
 
 **GeoAgent** is a shared AI agent layer for geospatial Python packages, live
-map widgets, and QGIS plugins. It gives projects such as **leafmap**,
-**anymap**, **geoai**, **geemap**, STAC workflows, NASA Earthdata workflows,
-and QGIS plugins one consistent way to expose geospatial tools to large
-language models.
+map widgets, and QGIS plugins. With one consistent interface, projects such
+as **leafmap**, **anymap**, **geoai**, **geemap**, STAC, and NASA Earthdata
+can expose their tools to large language models, so each library no longer
+needs to build and maintain its own agent stack.
 
-GeoAgent is built on **[Strands Agents](https://strandsagents.com/)**. It
-wraps Strands with geospatial context, tool metadata, optional package
-adapters, provider configuration, and confirmation hooks for operations that
-should not run silently.
+Built on **[Strands Agents](https://strandsagents.com/)**, GeoAgent adds
+geospatial context, structured tool metadata, optional package adapters,
+provider configuration, and confirmation hooks that pause the agent before
+destructive, expensive, or otherwise irreversible operations.
 
-[![](https://img.youtube.com/vi/5zkXQlHUsu8/maxresdefault.jpg)](https://youtu.be/5zkXQlHUsu8)
+See it in action:
+
+- Short demo: [QGIS OpenGeoAgent Plugin Demo](https://youtu.be/1me0ecJ5kfk)
+- Full tutorial: [OpenGeoAgent: A Multimodal AI Agent for Automated Geospatial Analysis and Visualization](https://youtu.be/5zkXQlHUsu8)
+
+[![OpenGeoAgent video tutorial](https://img.youtube.com/vi/5zkXQlHUsu8/maxresdefault.jpg)](https://youtu.be/5zkXQlHUsu8)
 
 ## Why GeoAgent?
 
@@ -46,19 +51,19 @@ own agent framework.
 
 ## Core Concepts
 
-| Concept | Purpose |
-| --- | --- |
-| `GeoAgent` | High-level facade around a Strands `Agent`. |
-| `GeoAgentConfig` | Provider, model, temperature, token, and client settings. |
-| `GeoAgentContext` | Runtime objects bound to the agent, such as a map or QGIS iface. |
-| `@geo_tool` | Decorator that turns a Python function into a Strands tool with GeoAgent metadata. |
-| `GeoToolRegistry` | Registry for tool metadata, safety flags, categories, and fast-mode filtering. |
-| `for_leafmap` | Factory that binds tools to a `leafmap.Map`-compatible object. |
-| `for_anymap` | Factory that binds tools to an `anymap.Map`-compatible object. |
-| `for_qgis` | Factory that binds tools to `qgis.utils.iface` and an optional `QgsProject`. |
-| `for_nasa_opera` | Factory that binds NASA OPERA search/display tools plus QGIS tools. |
-| `for_stac` | Factory that binds STAC catalog search/asset tools plus optional QGIS loading. |
-| `create_agent` | Factory for custom tools or package-specific integrations. |
+| Concept           | Purpose                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `GeoAgent`        | High-level facade around a Strands `Agent`.                                        |
+| `GeoAgentConfig`  | Provider, model, temperature, token, and client settings.                          |
+| `GeoAgentContext` | Runtime objects bound to the agent, such as a map or QGIS iface.                   |
+| `@geo_tool`       | Decorator that turns a Python function into a Strands tool with GeoAgent metadata. |
+| `GeoToolRegistry` | Registry for tool metadata, safety flags, categories, and fast-mode filtering.     |
+| `for_leafmap`     | Factory that binds tools to a `leafmap.Map`-compatible object.                     |
+| `for_anymap`      | Factory that binds tools to an `anymap.Map`-compatible object.                     |
+| `for_qgis`        | Factory that binds tools to `qgis.utils.iface` and an optional `QgsProject`.       |
+| `for_nasa_opera`  | Factory that binds NASA OPERA search/display tools plus QGIS tools.                |
+| `for_stac`        | Factory that binds STAC catalog search/asset tools plus optional QGIS loading.     |
+| `create_agent`    | Factory for custom tools or package-specific integrations.                         |
 
 ## Installation
 
@@ -71,23 +76,23 @@ pip install GeoAgent
 Core installs only the agent framework dependencies, mainly `strands-agents`
 and `pydantic`. Geospatial packages and provider clients are optional extras:
 
-| Extra | Purpose |
-| --- | --- |
-| `GeoAgent[openai]` | OpenAI model support through Strands. |
-| `GeoAgent[anthropic]` | Anthropic Claude model support through Strands. |
-| `GeoAgent[gemini]` | Google Gemini model support through Strands. |
-| `GeoAgent[ollama]` | Local Ollama model support. |
-| `GeoAgent[litellm]` | LiteLLM model support for many hosted and proxy providers. |
-| `GeoAgent[leafmap]` | leafmap live map integration. |
-| `GeoAgent[anymap]` | anymap live map integration. |
-| `GeoAgent[stac]` | STAC client dependencies. |
-| `GeoAgent[earthdata]` | NASA Earthdata dependencies. |
-| `GeoAgent[nasa-opera]` | NASA OPERA search dependencies. |
-| `GeoAgent[geoai]` | geoai integration dependencies. |
-| `GeoAgent[earthengine]` | Google Earth Engine dependencies. |
-| `GeoAgent[ui]` | Solara UI dependencies. |
-| `GeoAgent[providers]` | OpenAI, Anthropic, Gemini, Ollama, and LiteLLM provider clients. |
-| `GeoAgent[all]` | Most optional integrations. QGIS itself remains system-installed. |
+| Extra                   | Purpose                                                           |
+| ----------------------- | ----------------------------------------------------------------- |
+| `GeoAgent[openai]`      | OpenAI model support through Strands.                             |
+| `GeoAgent[anthropic]`   | Anthropic Claude model support through Strands.                   |
+| `GeoAgent[gemini]`      | Google Gemini model support through Strands.                      |
+| `GeoAgent[ollama]`      | Local Ollama model support.                                       |
+| `GeoAgent[litellm]`     | LiteLLM model support for many hosted and proxy providers.        |
+| `GeoAgent[leafmap]`     | leafmap live map integration.                                     |
+| `GeoAgent[anymap]`      | anymap live map integration.                                      |
+| `GeoAgent[stac]`        | STAC client dependencies.                                         |
+| `GeoAgent[earthdata]`   | NASA Earthdata dependencies.                                      |
+| `GeoAgent[nasa-opera]`  | NASA OPERA search dependencies.                                   |
+| `GeoAgent[geoai]`       | geoai integration dependencies.                                   |
+| `GeoAgent[earthengine]` | Google Earth Engine dependencies.                                 |
+| `GeoAgent[ui]`          | Solara UI dependencies.                                           |
+| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, and LiteLLM provider clients.  |
+| `GeoAgent[all]`         | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
 
@@ -106,15 +111,15 @@ application or system package manager.
 GeoAgent selects a provider from environment variables when no provider is
 specified:
 
-| Provider | Environment |
-| --- | --- |
-| OpenAI | `OPENAI_API_KEY`, optional `OPENAI_MODEL` |
-| ChatGPT/Codex OAuth | `OPENAI_CODEX_ACCESS_TOKEN`, optional `OPENAI_CODEX_MODEL` |
-| Anthropic | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` |
-| Google Gemini | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL` |
-| LiteLLM | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
-| Ollama | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL` |
-| Bedrock | AWS credential chain and model access, optional `BEDROCK_MODEL` |
+| Provider            | Environment                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| OpenAI              | `OPENAI_API_KEY`, optional `OPENAI_MODEL`                          |
+| ChatGPT/Codex OAuth | `OPENAI_CODEX_ACCESS_TOKEN`, optional `OPENAI_CODEX_MODEL`         |
+| Anthropic           | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL`                    |
+| Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
+| LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
+| Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
+| Bedrock             | AWS credential chain and model access, optional `BEDROCK_MODEL`    |
 
 ChatGPT/Codex OAuth uses the Codex browser login flow and the Codex Responses
 backend.
