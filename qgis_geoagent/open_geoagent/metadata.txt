@@ -3,7 +3,7 @@ name=OpenGeoAgent
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
 description=GeoAgent-powered multimodal AI chatbot for QGIS projects.
-version=1.4.1
+version=1.5.0
 author=Qiusheng Wu
 email=giswqs@gmail.com
 
@@ -47,6 +47,10 @@ experimental=False
 deprecated=False
 
 changelog=
+    1.5.0 - Minor update for macOS dependency installation
+        - Improved dependency installer Python detection for macOS QGIS app bundles
+        - Raised the plugin dependency guidance to GeoAgent 1.5.0
+
     1.4.1 - Patch update for GEE Data Catalogs styling
         - Raised the plugin dependency guidance to GeoAgent 1.4.1
 
