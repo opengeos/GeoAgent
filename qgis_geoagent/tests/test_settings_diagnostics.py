@@ -93,6 +93,90 @@ def test_uv_usable_requires_successful_verification(monkeypatch) -> None:
     assert deps_manager._uv_usable() is False
 
 
+def test_find_python_executable_uses_macos_base_executable(
+    monkeypatch, tmp_path
+) -> None:
+    """macOS QGIS exposes the GUI binary as sys.executable in some builds."""
+    import sys
+
+    from open_geoagent import deps_manager
+
+    macos_dir = tmp_path / "QGIS.app" / "Contents" / "MacOS"
+    macos_dir.mkdir(parents=True)
+    qgis_binary = macos_dir / "QGIS"
+    python_binary = macos_dir / (
+        f"python{sys.version_info.major}.{sys.version_info.minor}"
+    )
+    qgis_binary.write_text("", encoding="utf-8")
+    python_binary.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(deps_manager.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(deps_manager.sys, "platform", "darwin")
+    monkeypatch.setattr(deps_manager.sys, "executable", str(qgis_binary))
+    monkeypatch.setattr(
+        deps_manager.sys, "_base_executable", str(python_binary), raising=False
+    )
+
+    assert deps_manager._find_python_executable() == str(python_binary)
+
+
+def test_find_python_executable_finds_macos_bundle_python(
+    monkeypatch, tmp_path
+) -> None:
+    """The resolver should find Python inside QGIS.app, not return QGIS."""
+    import sys
+
+    from open_geoagent import deps_manager
+
+    macos_dir = tmp_path / "QGIS.app" / "Contents" / "MacOS"
+    macos_dir.mkdir(parents=True)
+    qgis_binary = macos_dir / "QGIS"
+    python_binary = macos_dir / (
+        f"python{sys.version_info.major}.{sys.version_info.minor}"
+    )
+    qgis_binary.write_text("", encoding="utf-8")
+    python_binary.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(deps_manager.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(deps_manager.sys, "platform", "darwin")
+    monkeypatch.setattr(deps_manager.sys, "executable", str(qgis_binary))
+    monkeypatch.setattr(
+        deps_manager.sys, "_base_executable", str(qgis_binary), raising=False
+    )
+    monkeypatch.setattr(deps_manager.sys, "_base_prefix", str(macos_dir), raising=False)
+    monkeypatch.setattr(deps_manager.sys, "prefix", str(macos_dir))
+    monkeypatch.setattr(deps_manager.shutil, "which", lambda _name: None)
+
+    assert deps_manager._find_python_executable() == str(python_binary)
+
+
+def test_find_python_executable_refuses_non_python_without_candidate(
+    monkeypatch, tmp_path
+) -> None:
+    """The installer must fail clearly instead of running a QGIS binary."""
+    from open_geoagent import deps_manager
+
+    qgis_binary = tmp_path / "QGIS"
+    qgis_binary.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(deps_manager.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(deps_manager.sys, "platform", "darwin")
+    monkeypatch.setattr(deps_manager.sys, "executable", str(qgis_binary))
+    monkeypatch.setattr(
+        deps_manager.sys, "_base_executable", str(qgis_binary), raising=False
+    )
+    monkeypatch.setattr(deps_manager.sys, "_base_prefix", str(tmp_path), raising=False)
+    monkeypatch.setattr(deps_manager.sys, "prefix", str(tmp_path))
+    monkeypatch.setattr(deps_manager.shutil, "which", lambda _name: None)
+
+    try:
+        deps_manager._find_python_executable()
+    except RuntimeError as exc:
+        assert "cannot safely run QGIS itself" in str(exc)
+    else:
+        raise AssertionError("Expected RuntimeError")
+
+
 def test_provider_test_worker_uses_ollama_safe_smoke_prompt(monkeypatch) -> None:
     """Ollama smoke tests should avoid GeoAgent's full prompt/token budget."""
     import sys

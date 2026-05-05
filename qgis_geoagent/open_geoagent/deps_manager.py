@@ -19,6 +19,7 @@ import importlib.metadata
 import importlib.util
 import os
 import platform
+import re
 import shutil
 import subprocess  # nosec B404
 import sys
@@ -354,26 +355,178 @@ def _uv_usable() -> bool:
         return False
 
 
+def _python_executable_names() -> List[str]:
+    """Return expected Python executable names for the current runtime."""
+    versioned = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    names = [versioned, f"python{sys.version_info.major}", "python3", "python"]
+    if sys.platform == "win32":
+        return [f"{name}.exe" for name in names]
+    return names
+
+
+def _looks_like_python_executable(path: Optional[str]) -> bool:
+    """Return True when *path* names a Python interpreter binary."""
+    if not path:
+        return False
+    name = os.path.basename(path).lower()
+    if sys.platform == "win32" and name.endswith(".exe"):
+        name = name[:-4]
+    return bool(re.fullmatch(r"python(?:\d+(?:\.\d+)?)?", name))
+
+
+def _add_existing_python_candidate(
+    candidates: List[str], seen: set, path: Optional[str]
+) -> None:
+    """Append *path* when it exists and looks like a Python interpreter."""
+    if not path or not _looks_like_python_executable(path):
+        return
+    normalized = os.path.abspath(path)
+    if normalized in seen or not os.path.isfile(normalized):
+        return
+    candidates.append(normalized)
+    seen.add(normalized)
+
+
+def _macos_bundle_dirs(path: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    """Return ``(Contents/MacOS, Contents)`` dirs for paths inside a macOS app."""
+    if not path:
+        return None, None
+    normalized = os.path.abspath(path)
+    marker = os.path.join("Contents", "MacOS")
+    parts = normalized.split(os.sep)
+    for idx in range(len(parts) - 1):
+        if parts[idx] == "Contents" and parts[idx + 1] == "MacOS":
+            macos_dir = os.sep.join(parts[: idx + 2])
+            if normalized.startswith(os.sep):
+                macos_dir = os.sep + macos_dir.lstrip(os.sep)
+            contents_dir = os.path.dirname(macos_dir)
+            return macos_dir, contents_dir
+    if normalized.endswith(marker):
+        return normalized, os.path.dirname(normalized)
+    return None, None
+
+
+def _add_macos_python_candidates(candidates: List[str], seen: set) -> None:
+    """Add Python candidates from common QGIS.app bundle layouts."""
+    roots = [
+        getattr(sys, "_base_executable", None),
+        sys.executable,
+        getattr(sys, "_base_prefix", None),
+        sys.prefix,
+    ]
+    names = _python_executable_names()
+
+    for root in roots:
+        macos_dir, contents_dir = _macos_bundle_dirs(root)
+        if not macos_dir or not contents_dir:
+            continue
+
+        for name in names:
+            _add_existing_python_candidate(
+                candidates, seen, os.path.join(macos_dir, name)
+            )
+            _add_existing_python_candidate(
+                candidates, seen, os.path.join(macos_dir, "bin", name)
+            )
+
+        framework_versions = [
+            f"{sys.version_info.major}.{sys.version_info.minor}",
+            "Current",
+        ]
+        for version in framework_versions:
+            framework_bin = os.path.join(
+                contents_dir,
+                "Frameworks",
+                "Python.framework",
+                "Versions",
+                version,
+                "bin",
+            )
+            for name in names:
+                _add_existing_python_candidate(
+                    candidates, seen, os.path.join(framework_bin, name)
+                )
+
+        _add_existing_python_candidate(
+            candidates,
+            seen,
+            os.path.join(
+                contents_dir,
+                "Resources",
+                "Python.app",
+                "Contents",
+                "MacOS",
+                "Python",
+            ),
+        )
+
+
 def _find_python_executable() -> str:
     """Find a working Python executable for subprocess calls.
 
-    On QGIS Windows, ``sys.executable`` may point to ``qgis-bin.exe`` rather
-    than a Python interpreter, which would launch another QGIS instance when
-    used in subprocess calls. This function searches for the actual Python
-    executable using multiple strategies.
+    In QGIS, ``sys.executable`` can point to the QGIS application binary
+    instead of a Python interpreter. On macOS this is commonly
+    ``.../QGIS.app/Contents/MacOS/QGIS``; using it with ``uv`` or
+    ``python -m venv`` launches a second QGIS instance and causes flags such as
+    ``-I`` and ``-c`` to be treated as data sources. This function searches for
+    the actual Python executable using multiple platform-specific strategies.
 
     Returns:
-        Path to a Python executable, or ``sys.executable`` as fallback.
-    """
-    if platform.system() != "Windows":
-        return sys.executable
+        Path to a Python executable.
 
-    # Strategy 1: Check if sys.executable is already Python
+    Raises:
+        RuntimeError: If no Python interpreter can be found.
+    """
+    candidates: List[str] = []
+    seen = set()
+
+    # Strategy 1: Python may expose the real interpreter separately from the
+    # GUI application executable.
+    _add_existing_python_candidate(
+        candidates, seen, getattr(sys, "_base_executable", None)
+    )
+    _add_existing_python_candidate(candidates, seen, sys.executable)
+    if candidates:
+        return candidates[0]
+
+    if platform.system() == "Darwin" or sys.platform == "darwin":
+        _add_macos_python_candidates(candidates, seen)
+        if candidates:
+            return candidates[0]
+
+    if platform.system() != "Windows":
+        for prefix in (getattr(sys, "_base_prefix", None), sys.prefix):
+            for name in _python_executable_names():
+                _add_existing_python_candidate(
+                    candidates, seen, os.path.join(str(prefix), "bin", name)
+                )
+                _add_existing_python_candidate(
+                    candidates, seen, os.path.join(str(prefix), name)
+                )
+
+        exe_dir = os.path.dirname(sys.executable)
+        for name in _python_executable_names():
+            _add_existing_python_candidate(
+                candidates, seen, os.path.join(exe_dir, name)
+            )
+
+        for name in _python_executable_names():
+            _add_existing_python_candidate(candidates, seen, shutil.which(name))
+        if candidates:
+            return candidates[0]
+
+        raise RuntimeError(
+            "Could not find a Python interpreter for dependency installation.\n"
+            f"sys.executable is not Python: {sys.executable}\n"
+            "OpenGeoAgent cannot safely run QGIS itself as a Python executable."
+        )
+
+    # Strategy 2: Check if sys.executable is already Python
     exe_name = os.path.basename(sys.executable).lower()
     if exe_name in ("python.exe", "python3.exe"):
         return sys.executable
 
-    # Strategy 2: Use sys._base_prefix to find the Python installation.
+    # Strategy 3: Use sys._base_prefix to find the Python installation.
     # On QGIS Windows, sys._base_prefix typically points to
     # C:\Program Files\QGIS 3.x\apps\Python3x\
     base_prefix = getattr(sys, "_base_prefix", None) or sys.prefix
@@ -381,14 +534,14 @@ def _find_python_executable() -> str:
     if os.path.isfile(python_in_prefix):
         return python_in_prefix
 
-    # Strategy 3: Look for python.exe next to sys.executable
+    # Strategy 4: Look for python.exe next to sys.executable
     exe_dir = os.path.dirname(sys.executable)
     for name in ("python.exe", "python3.exe"):
         candidate = os.path.join(exe_dir, name)
         if os.path.isfile(candidate):
             return candidate
 
-    # Strategy 4: Walk up from sys.executable to find apps/Python3x/python.exe
+    # Strategy 5: Walk up from sys.executable to find apps/Python3x/python.exe
     # Typical QGIS layout: .../QGIS 3.x/bin/qgis-bin.exe
     #                       .../QGIS 3.x/apps/Python3x/python.exe
     parent = os.path.dirname(exe_dir)
@@ -415,12 +568,16 @@ def _find_python_executable() -> str:
         if best_candidate:
             return best_candidate
 
-    # Strategy 5: Use shutil.which as last resort
+    # Strategy 6: Use shutil.which as last resort
     which_python = shutil.which("python")
     if which_python:
         return which_python
 
-    return sys.executable
+    raise RuntimeError(
+        "Could not find a Python interpreter for dependency installation.\n"
+        f"sys.executable is not Python: {sys.executable}\n"
+        "OpenGeoAgent cannot safely run QGIS itself as a Python executable."
+    )
 
 
 def _create_venv_with_env_builder(venv_dir: str) -> bool:
@@ -429,10 +586,10 @@ def _create_venv_with_env_builder(venv_dir: str) -> bool:
     .. warning::
         ``EnvBuilder`` internally uses ``sys.executable`` to copy the Python
         binary into the venv.  On QGIS Windows ``sys.executable`` is
-        ``qgis-bin.exe``, so this would copy QGIS itself and later subprocess
-        calls would launch a new QGIS instance.  Therefore this function is
-        **skipped** when ``sys.executable`` does not look like a Python
-        interpreter.
+        ``qgis-bin.exe`` and on macOS it may be the ``QGIS`` app binary, so
+        this would copy QGIS itself and later subprocess calls would launch a
+        new QGIS instance. Therefore this function is **skipped** when
+        ``sys.executable`` does not look like a Python interpreter.
 
     Args:
         venv_dir: Path where the venv should be created.
@@ -441,8 +598,7 @@ def _create_venv_with_env_builder(venv_dir: str) -> bool:
         True if the venv was created and the Python executable exists.
     """
     # Guard: only safe when sys.executable is actually Python.
-    exe_name = os.path.basename(sys.executable).lower()
-    if exe_name not in ("python.exe", "python3.exe", "python", "python3"):
+    if not _looks_like_python_executable(sys.executable):
         return False
 
     try:
@@ -546,12 +702,12 @@ def create_venv(venv_dir: str) -> str:
     require pip to be bootstrapped inside the venv.
 
     Otherwise uses a multi-strategy approach to handle embedded Python
-    environments (e.g. QGIS on Windows) where ``sys.executable`` may point
-    to ``qgis-bin.exe`` rather than ``python.exe``.
+    environments where ``sys.executable`` may point to the QGIS application
+    binary rather than a Python interpreter.
 
     Pip fallback strategy order:
         1. Subprocess using the real Python executable found by
-           ``_find_python_executable()`` (primary, works on Windows QGIS).
+           ``_find_python_executable()`` (primary for QGIS app bundles).
         2. In-process ``venv.EnvBuilder`` (fallback, only when
            ``sys.executable`` is already a Python interpreter).
         3. Recovery: copy the real Python executable into the venv when the
