@@ -166,6 +166,10 @@ def test_find_python_executable_refuses_non_python_without_candidate(
         deps_manager.sys, "_base_executable", str(qgis_binary), raising=False
     )
     monkeypatch.setattr(deps_manager.sys, "_base_prefix", str(tmp_path), raising=False)
+    monkeypatch.setattr(deps_manager.sys, "base_prefix", str(tmp_path), raising=False)
+    monkeypatch.setattr(
+        deps_manager.sys, "base_exec_prefix", str(tmp_path), raising=False
+    )
     monkeypatch.setattr(deps_manager.sys, "prefix", str(tmp_path))
     monkeypatch.setattr(deps_manager.shutil, "which", lambda _name: None)
 

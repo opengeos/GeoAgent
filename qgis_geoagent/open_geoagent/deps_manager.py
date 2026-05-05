@@ -495,13 +495,21 @@ def _find_python_executable() -> str:
             return candidates[0]
 
     if platform.system() != "Windows":
-        for prefix in (getattr(sys, "_base_prefix", None), sys.prefix):
+        prefix_candidates = (
+            getattr(sys, "base_prefix", None),
+            getattr(sys, "base_exec_prefix", None),
+            getattr(sys, "_base_prefix", None),
+            sys.prefix,
+        )
+        for prefix in prefix_candidates:
+            if not prefix:
+                continue
             for name in _python_executable_names():
                 _add_existing_python_candidate(
-                    candidates, seen, os.path.join(str(prefix), "bin", name)
+                    candidates, seen, os.path.join(prefix, "bin", name)
                 )
                 _add_existing_python_candidate(
-                    candidates, seen, os.path.join(str(prefix), name)
+                    candidates, seen, os.path.join(prefix, name)
                 )
 
         exe_dir = os.path.dirname(sys.executable)
