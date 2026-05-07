@@ -7,6 +7,8 @@ from typing import Any
 
 from geoagent.core.config import GeoAgentConfig, ProviderName
 
+GEMINI_MIN_MAX_OUTPUT_TOKENS = 8192
+
 
 def _openai_token_params(model_id: str, max_tokens: int) -> dict[str, int]:
     """Return the token-limit parameter supported by the OpenAI model family."""
@@ -40,6 +42,11 @@ def _model_uses_default_temperature_only(model_id: str) -> bool:
             "openai/o4",
         )
     )
+
+
+def _gemini_max_output_tokens(max_tokens: int) -> int:
+    """Return a practical Gemini output cap for agentic tool workflows."""
+    return max(int(max_tokens), GEMINI_MIN_MAX_OUTPUT_TOKENS)
 
 
 def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any:
@@ -149,7 +156,7 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             model_id=model_id,
             params={
                 "temperature": cfg.temperature,
-                "max_output_tokens": cfg.max_tokens,
+                "max_output_tokens": _gemini_max_output_tokens(cfg.max_tokens),
             },
         )
 

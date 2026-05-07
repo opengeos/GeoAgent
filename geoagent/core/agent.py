@@ -275,9 +275,36 @@ def _looks_like_json_parse_failure(exc: Exception) -> bool:
     return any(marker in text for marker in markers)
 
 
+def _looks_like_max_tokens_reached(exc: Exception) -> bool:
+    """Return True when Strands stopped because model output hit its cap."""
+    text = f"{type(exc).__name__}: {exc}".lower()
+    markers = (
+        "maxtokensreachedexception",
+        "max_tokens limit",
+        "stop_reason=max_tokens",
+        "stop reason: max_tokens",
+        "maximum token limit reached",
+        "exceeded the maximum output token limit",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _format_chat_exception(exc: Exception) -> str:
     """Convert low-level provider/tool-call exceptions into user guidance."""
     original = str(exc).strip() or type(exc).__name__
+    if _looks_like_max_tokens_reached(exc):
+        return (
+            "The model hit its configured output-token limit before the agent "
+            "loop could finish. This usually means the model spent too many "
+            "tokens deciding or forming a tool call, or the accumulated tool "
+            "context became too large.\n\n"
+            f"Original error: {original}\n\n"
+            "How to correct it:\n"
+            "- Increase the model max tokens in settings.\n"
+            "- Retry with a more specific request, including the dataset, "
+            "region, date range, and layer name.\n"
+            "- Break long workflows into smaller steps if it keeps failing."
+        )
     if not _looks_like_json_parse_failure(exc):
         return original
     return (

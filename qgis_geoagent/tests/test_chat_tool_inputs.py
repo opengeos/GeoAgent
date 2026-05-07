@@ -84,6 +84,22 @@ def test_conversation_markdown_includes_output_images() -> None:
     assert "![Map](</tmp/open geoagent/map.png>)" in text
 
 
+def test_format_chat_worker_error_explains_gemini_token_limit() -> None:
+    """Verify Gemini max-token stops are reported as model budget failures."""
+
+    error = _format_chat_worker_error(
+        RuntimeError(
+            "Agent has reached an unrecoverable state due to max_tokens limit."
+        ),
+        provider="gemini",
+        agent_mode="GEE Data Catalogs",
+    )
+
+    assert "output-token limit" in error
+    assert "not a QGIS or Earth Engine load failure" in error
+    assert "16384 or 32768" in error
+
+
 def test_markdown_renderer_supports_image_references() -> None:
     """Verify Markdown image output is rendered as inline HTML."""
     html = _markdown_to_basic_html("![Map](https://example.com/map.png)")

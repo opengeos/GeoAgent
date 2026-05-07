@@ -417,6 +417,32 @@ def _format_chat_worker_error(exc, provider="", agent_mode=""):
     is_opera_mode = "opera" in agent_mode.lower()
 
     if (
+        "maxtokensreachedexception" in cls_name
+        or "max_tokens limit" in lower
+        or "stop_reason=max_tokens" in lower
+        or "maximum token limit reached" in lower
+        or "exceeded the maximum output token limit" in lower
+    ):
+        advice = (
+            "The model hit its output-token limit before OpenGeoAgent could "
+            f"finish the {mode_label} tool workflow. This is a model budget "
+            "stop, not a QGIS or Earth Engine load failure."
+        )
+        if provider == "gemini":
+            advice += (
+                "\n\nFor Gemini, increase Settings > Model > Max tokens to "
+                "16384 or 32768 if this persists. Gemini thinking/tool-call "
+                "turns can consume more output tokens than the final visible "
+                "answer."
+            )
+        else:
+            advice += (
+                f"\n\nIncrease Settings > Model > Max tokens for "
+                f"{provider_label}, or retry with a narrower request."
+            )
+        return f"{advice}\n\nOriginal error: {raw}"
+
+    if (
         "tlsv1_alert_decode_error" in lower
         or "api connection error" in lower
         or "connection error" in lower
