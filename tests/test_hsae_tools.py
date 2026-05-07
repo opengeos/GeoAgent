@@ -30,21 +30,27 @@ import pytest
 
 def test_hsae_module_imports_without_hydrosovereign() -> None:
     """Verify the HSAE adapter is import-safe when hydrosovereign is absent."""
-    assert "geoagent.tools.hsae" in sys.modules or True   # will import below
-    import geoagent.tools.hsae  # noqa: F401 — must not raise
+    import importlib
+    import geoagent.tools.hsae  # noqa: F401
     assert "geoagent.tools.hsae" in sys.modules
 
 
 def test_hsae_module_import_does_not_trigger_hydrosovereign() -> None:
-    """Verify importing the module does not import hydrosovereign eagerly."""
-    # hydrosovereign may or may not be installed; the adapter must not import
-    # it at module level regardless.
-    import importlib
-    spec = importlib.util.find_spec("hydrosovereign")
-    if spec is not None:
-        pytest.skip("hydrosovereign is installed — lazy-import test not applicable")
-    # Module already imported above; hydrosovereign should still be absent
-    assert "hydrosovereign" not in sys.modules
+    """Importing geoagent.tools.hsae must not eagerly import hydrosovereign."""
+    # Remove from sys.modules so we get a clean import
+    sys.modules.pop("geoagent.tools.hsae", None)
+    # Also remove hydrosovereign if present so we can detect a fresh import
+    was_present = sys.modules.pop("hydrosovereign", None)
+    try:
+        import importlib
+        importlib.import_module("geoagent.tools.hsae")
+        assert "hydrosovereign" not in sys.modules, (
+            "hydrosovereign was eagerly imported by geoagent.tools.hsae"
+        )
+    finally:
+        # Restore hydrosovereign if it was previously imported
+        if was_present is not None:
+            sys.modules["hydrosovereign"] = was_present
 
 
 # ---------------------------------------------------------------------------
@@ -323,8 +329,5 @@ def test_all_indices_in_valid_range(basin: str) -> None:
 
 def test_hsae_tools_exportable_from_tools_package() -> None:
     """Verify hsae_tools is importable from geoagent.tools after registration."""
-    try:
-        from geoagent.tools import hsae_tools as _ht  # noqa: F401
-        assert callable(_ht)
-    except ImportError:
-        pytest.skip("geoagent.tools.__init__ not yet updated — expected before PR merge")
+    from geoagent.tools import hsae_tools as _ht
+    assert callable(_ht)
