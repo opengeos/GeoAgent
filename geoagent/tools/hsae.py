@@ -125,9 +125,9 @@ _BASIN_ALIASES: dict[str, str] = {
 }
 
 # Legal threshold constants (from hsae_tdi canonical values)
-_ATDI_ART5_THR = 25.0   # Art.5 equitable utilisation risk
-_ATDI_ART7_THR = 40.0   # Art.7 significant harm
-_ATDI_ART9_THR = 55.0   # Art.9 data-withholding concern
+_ATDI_ART5_THR = 25.0  # Art.5 equitable utilisation risk
+_ATDI_ART7_THR = 40.0  # Art.7 significant harm
+_ATDI_ART9_THR = 55.0  # Art.9 data-withholding concern
 
 
 def _resolve_basin_id(basin_name: str) -> str:
@@ -180,6 +180,7 @@ def _legal_status(atdi_pct: float) -> dict[str, str]:
 # Tool factory
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def hsae_tools() -> list[Any]:
     """Return GeoAgent tools for HSAE transboundary water compliance workflows.
 
@@ -226,18 +227,18 @@ def hsae_tools() -> list[Any]:
             from hydrosovereign import analyze_basin  # type: ignore[import-not-found]
 
             result = analyze_basin(basin_id)
-            atdi  = float(result.get("ATDI",  0))
+            atdi = float(result.get("ATDI", 0))
             ahifd = float(result.get("AHIFD", 0))
-            atci  = float(result.get("ATCI",  0))
-            ci    = float(result.get("CI",    0))
+            atci = float(result.get("ATCI", 0))
+            ci = float(result.get("CI", 0))
             # Use library values for AFSF/ADTS when available
-            afsf  = float(result.get("AFSF",  min(atdi * 1.35, 100.0)))
-            adts  = float(result.get("ADTS",  round(100.0 - atdi, 2)))
+            afsf = float(result.get("AFSF", min(atdi * 1.35, 100.0)))
+            adts = float(result.get("ADTS", round(100.0 - atdi, 2)))
             source = result.get("source", "hydrosovereign")
         except ImportError:
             atdi, ahifd, atci, ci = _compute_fallback_indices(basin_id)
-            afsf   = min(atdi * 1.35, 100.0)
-            adts   = round(100.0 - atdi, 2)
+            afsf = min(atdi * 1.35, 100.0)
+            adts = round(100.0 - atdi, 2)
             source = "ERA5 fallback via Open-Meteo"
 
         legal = _legal_status(atdi)
@@ -246,17 +247,17 @@ def hsae_tools() -> list[Any]:
             "basin": basin_name,
             "basin_id": basin_id,
             "indices": {
-                "ATDI_pct":  round(atdi,  2),
-                "AFSF_pct":  round(afsf,  2),
+                "ATDI_pct": round(atdi, 2),
+                "AFSF_pct": round(afsf, 2),
                 "AHIFD_pct": round(ahifd, 2),
-                "ATCI_pct":  round(atci,  2),
-                "CI_score":  round(ci,    1),
-                "ADTS_pct":  round(adts,  2),
+                "ATCI_pct": round(atci, 2),
+                "CI_score": round(ci, 1),
+                "ADTS_pct": round(adts, 2),
             },
-            "legal_status":       legal["status"],
+            "legal_status": legal["status"],
             "triggered_articles": legal["triggered_articles"],
-            "recommendation":     legal["recommendation"],
-            "source":    source,
+            "recommendation": legal["recommendation"],
+            "source": source,
             "reference": "SOFTX-D-26-00442 · doi:10.5281/zenodo.19180160",
         }
 
@@ -350,8 +351,10 @@ def hsae_tools() -> list[Any]:
         """
         basin_id = _resolve_basin_id(basin_name)
         ahifd = _get_single_index(basin_id, "AHIFD")
-        status = "🟠 Significant" if ahifd > 25 else (
-            "🟡 Moderate" if ahifd > 15 else "🟢 Low"
+        status = (
+            "🟠 Significant"
+            if ahifd > 25
+            else ("🟡 Moderate" if ahifd > 15 else "🟢 Low")
         )
         return {
             "basin": basin_name,
@@ -390,11 +393,7 @@ def hsae_tools() -> list[Any]:
         """
         basin_id = _resolve_basin_id(basin_name)
         atci = _get_single_index(basin_id, "ATCI")
-        level = (
-            "Strong" if atci >= 80
-            else "Partial" if atci >= 50
-            else "Weak"
-        )
+        level = "Strong" if atci >= 80 else "Partial" if atci >= 50 else "Weak"
         return {
             "basin": basin_name,
             "ATCI_pct": round(atci, 2),
@@ -444,10 +443,9 @@ def hsae_tools() -> list[Any]:
         except ImportError:
             ci = _get_single_index(basin_id, "CI")
             level = (
-                "CRITICAL" if ci >= 70
-                else "HIGH" if ci >= 50
-                else "MEDIUM" if ci >= 30
-                else "LOW"
+                "CRITICAL"
+                if ci >= 70
+                else "HIGH" if ci >= 50 else "MEDIUM" if ci >= 30 else "LOW"
             )
             components = {}
             cases = []
@@ -497,9 +495,11 @@ def hsae_tools() -> list[Any]:
             "formula": "ADTS = 100 − ATDI",
             "interpretation": (
                 f"{adts:.1f} % data transparency achieved. "
-                + ("Art. 9 data exchange obligations appear met."
-                   if art9_compliant
-                   else "Art. 9 data exchange obligations may need review.")
+                + (
+                    "Art. 9 data exchange obligations appear met."
+                    if art9_compliant
+                    else "Art. 9 data exchange obligations may need review."
+                )
             ),
         }
 
@@ -534,38 +534,46 @@ def hsae_tools() -> list[Any]:
 
         findings = []
         if atdi >= _ATDI_ART5_THR:
-            findings.append({
-                "article": "Art. 5",
-                "title": "Equitable and Reasonable Utilisation",
-                "status": "⚠️ At risk",
-                "value": f"ATDI = {atdi:.1f}% (threshold ≥ {_ATDI_ART5_THR}%)",
-            })
+            findings.append(
+                {
+                    "article": "Art. 5",
+                    "title": "Equitable and Reasonable Utilisation",
+                    "status": "⚠️ At risk",
+                    "value": f"ATDI = {atdi:.1f}% (threshold ≥ {_ATDI_ART5_THR}%)",
+                }
+            )
         if atdi >= _ATDI_ART7_THR or ahifd > 25:
-            findings.append({
-                "article": "Art. 7",
-                "title": "No Significant Harm",
-                "status": "🚨 Triggered",
-                "value": f"ATDI = {atdi:.1f}%, AHIFD = {ahifd:.1f}%",
-            })
+            findings.append(
+                {
+                    "article": "Art. 7",
+                    "title": "No Significant Harm",
+                    "status": "🚨 Triggered",
+                    "value": f"ATDI = {atdi:.1f}%, AHIFD = {ahifd:.1f}%",
+                }
+            )
         if adts < 70:
-            findings.append({
-                "article": "Art. 9",
-                "title": "Data and Information Exchange",
-                "status": "⚠️ Insufficient",
-                "value": f"ADTS = {adts:.1f}% (target ≥ 70%)",
-            })
+            findings.append(
+                {
+                    "article": "Art. 9",
+                    "title": "Data and Information Exchange",
+                    "status": "⚠️ Insufficient",
+                    "value": f"ADTS = {adts:.1f}% (target ≥ 70%)",
+                }
+            )
         if ci >= 50:
-            findings.append({
-                "article": "Art. 33",
-                "title": "Dispute Settlement",
-                "status": "🔔 Recommended",
-                "value": f"CI = {ci:.1f} ({('HIGH' if ci < 70 else 'CRITICAL')})",
-            })
+            findings.append(
+                {
+                    "article": "Art. 33",
+                    "title": "Dispute Settlement",
+                    "status": "🔔 Recommended",
+                    "value": f"CI = {ci:.1f} ({('HIGH' if ci < 70 else 'CRITICAL')})",
+                }
+            )
 
         overall = (
-            "Non-compliant" if atdi >= _ATDI_ART7_THR
-            else "Partial" if atdi >= _ATDI_ART5_THR
-            else "Compliant"
+            "Non-compliant"
+            if atdi >= _ATDI_ART7_THR
+            else "Partial" if atdi >= _ATDI_ART5_THR else "Compliant"
         )
 
         return {
@@ -665,6 +673,7 @@ def hsae_tools() -> list[Any]:
 # Internal helpers
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def _get_single_index(basin_id: str, index_name: str) -> float:
     """Fetch a single HSAE index, falling back to ERA5 simulation.
 
@@ -704,10 +713,10 @@ def _compute_fallback_indices(
 
     # Deterministic offline fallback — basin-seeded, always available in CI
     seed = sum(ord(c) for c in basin_id) % 100
-    atdi  = round(20.0 + seed * 0.4, 1)
+    atdi = round(20.0 + seed * 0.4, 1)
     ahifd = round(atdi * 0.46, 1)
-    atci  = round(max(0.0, 85.0 - atdi * 0.5), 1)
-    ci    = round(atdi * 0.8, 1)
+    atci = round(max(0.0, 85.0 - atdi * 0.5), 1)
+    ci = round(atdi * 0.8, 1)
     return atdi, ahifd, atci, ci
 
 
@@ -723,15 +732,15 @@ def _compute_fallback_indices_network(
     import json
 
     _CENTROIDS: dict[str, tuple[float, float]] = {
-        "blue_nile_gerd":    (10.5,  35.5),
-        "nile_aswan":        (23.9,  32.9),
-        "euphrates_ataturk": (37.8,  38.3),
-        "tigris_mosul":      (36.5,  43.1),
-        "mekong_lancang":    (16.5, 101.5),
-        "indus_tarbela":     (34.1,  72.7),
-        "ganges_farakka":    (24.8,  87.9),
-        "rhine_ijssel":      (52.0,   6.5),
-        "danube_gabcikovo":  (47.9,  18.0),
+        "blue_nile_gerd": (10.5, 35.5),
+        "nile_aswan": (23.9, 32.9),
+        "euphrates_ataturk": (37.8, 38.3),
+        "tigris_mosul": (36.5, 43.1),
+        "mekong_lancang": (16.5, 101.5),
+        "indus_tarbela": (34.1, 72.7),
+        "ganges_farakka": (24.8, 87.9),
+        "rhine_ijssel": (52.0, 6.5),
+        "danube_gabcikovo": (47.9, 18.0),
     }
     lat, lon = _CENTROIDS.get(basin_id, (15.0, 32.0))
 
@@ -746,23 +755,23 @@ def _compute_fallback_indices_network(
         data = json.loads(resp.read())
 
     daily = data.get("daily", {})
-    P_mm  = [v or 0.0 for v in daily.get("precipitation_sum",         [])]
-    ET_mm = [v or 2.5  for v in daily.get("et0_fao_evapotranspiration", [])]
+    P_mm = [v or 0.0 for v in daily.get("precipitation_sum", [])]
+    ET_mm = [v or 2.5 for v in daily.get("et0_fao_evapotranspiration", [])]
     n = len(P_mm)
     if n == 0:
         raise ValueError("empty Open-Meteo response")
 
     # Canonical ATDI formula: I_adj = max(0, P − α·ET),  α = 0.30
     alpha = 0.30
-    eps   = 0.001
+    eps = 0.001
     tdi_sum = 0.0
     for i in range(n):
-        i_adj = max(0.0, P_mm[i] - alpha * ET_mm[i])   # α applied once
+        i_adj = max(0.0, P_mm[i] - alpha * ET_mm[i])  # α applied once
         q_out = i_adj * 0.80
         tdi_sum += max(0.0, (i_adj - q_out) / (i_adj + eps))
 
-    atdi  = round((tdi_sum / n) * 100, 2)
+    atdi = round((tdi_sum / n) * 100, 2)
     ahifd = round(atdi * 0.46, 2)
-    atci  = round(max(0.0, min(100.0, 85.0 - atdi * 0.5)), 1)
-    ci    = round(atdi * 0.40 + 25 * 0.20 + 55 * 0.25 + 3 / 9 * 100 * 0.15, 1)
+    atci = round(max(0.0, min(100.0, 85.0 - atdi * 0.5)), 1)
+    ci = round(atdi * 0.40 + 25 * 0.20 + 55 * 0.25 + 3 / 9 * 100 * 0.15, 1)
     return atdi, ahifd, atci, ci

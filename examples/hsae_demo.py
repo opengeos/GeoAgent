@@ -46,18 +46,24 @@ r_afsf = tools["compute_afsf"]("Blue Nile")
 print(f"    compute_afsf   → AFSF = {r_afsf['AFSF_pct']}%  (30-day peak)")
 
 r_ahifd = tools["compute_ahifd"]("Blue Nile")
-print(f"    compute_ahifd  → AHIFD = {r_ahifd['AHIFD_pct']}%  "
-      f"(Art.7 triggered: {r_ahifd['art7_triggered']})")
+print(
+    f"    compute_ahifd  → AHIFD = {r_ahifd['AHIFD_pct']}%  "
+    f"(Art.7 triggered: {r_ahifd['art7_triggered']})"
+)
 
 r_atci = tools["compute_atci"]("Blue Nile")
-print(f"    compute_atci   → ATCI = {r_atci['ATCI_pct']}%  ({r_atci['compliance_level']} compliance)")
+print(
+    f"    compute_atci   → ATCI = {r_atci['ATCI_pct']}%  ({r_atci['compliance_level']} compliance)"
+)
 
 r_ci = tools["compute_conflict_index"]("Blue Nile")
 print(f"    compute_ci     → CI = {r_ci['CI_score']}  ({r_ci['level']})")
 
 r_adts = tools["compute_adts"]("Blue Nile")
-print(f"    compute_adts   → ADTS = {r_adts['ADTS_pct']}%  "
-      f"(Art.9: {r_adts['art9_data_sharing']})")
+print(
+    f"    compute_adts   → ADTS = {r_adts['ADTS_pct']}%  "
+    f"(Art.9: {r_adts['art9_data_sharing']})"
+)
 
 # ── 3. UNWC compliance screen ─────────────────────────────────────────────────
 print("\n[3] run_unwc_compliance('Blue Nile')")
@@ -79,8 +85,14 @@ print(f"\n[5] Multi-basin ATDI scan")
 print(f"    {'Basin':<20} {'ATDI':>6}  Legal status")
 print(f"    {'-'*20} {'-'*6}  {'-'*28}")
 for basin in [
-    "Blue Nile", "Mekong", "Euphrates", "Tigris",
-    "Indus", "Danube", "Rhine", "Zambezi",
+    "Blue Nile",
+    "Mekong",
+    "Euphrates",
+    "Tigris",
+    "Indus",
+    "Danube",
+    "Rhine",
+    "Zambezi",
 ]:
     r = tools["compute_atdi"](basin)
     print(f"    {basin:<20} {r['ATDI_pct']:>5.1f}%  {r['legal_status']}")

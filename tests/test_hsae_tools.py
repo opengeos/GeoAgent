@@ -28,10 +28,12 @@ import pytest
 # Import safety — module must load without hydrosovereign or QGIS
 # ---------------------------------------------------------------------------
 
+
 def test_hsae_module_imports_without_hydrosovereign() -> None:
     """Verify the HSAE adapter is import-safe when hydrosovereign is absent."""
     import importlib
     import geoagent.tools.hsae  # noqa: F401
+
     assert "geoagent.tools.hsae" in sys.modules
 
 
@@ -43,10 +45,11 @@ def test_hsae_module_import_does_not_trigger_hydrosovereign() -> None:
     was_present = sys.modules.pop("hydrosovereign", None)
     try:
         import importlib
+
         importlib.import_module("geoagent.tools.hsae")
-        assert "hydrosovereign" not in sys.modules, (
-            "hydrosovereign was eagerly imported by geoagent.tools.hsae"
-        )
+        assert (
+            "hydrosovereign" not in sys.modules
+        ), "hydrosovereign was eagerly imported by geoagent.tools.hsae"
     finally:
         # Restore hydrosovereign if it was previously imported
         if was_present is not None:
@@ -91,6 +94,7 @@ def test_hsae_tools_expose_expected_surface() -> None:
 # Safety metadata
 # ---------------------------------------------------------------------------
 
+
 def test_negotiation_tool_requires_confirmation() -> None:
     tools = {t.tool_name: t for t in hsae_tools()}
     meta = tools["get_negotiation_recommendation"]._geoagent_meta
@@ -122,9 +126,7 @@ def test_fast_mode_tools_are_subset() -> None:
     }
     for name in fast_expected:
         meta = tools[name]._geoagent_meta
-        assert "fast" in meta.available_in, (
-            f"{name} should be available_in 'fast' mode"
-        )
+        assert "fast" in meta.available_in, f"{name} should be available_in 'fast' mode"
 
 
 def test_heavy_tools_not_in_fast_mode() -> None:
@@ -133,33 +135,35 @@ def test_heavy_tools_not_in_fast_mode() -> None:
     not_fast = {"analyze_basin_compliance", "get_negotiation_recommendation"}
     for name in not_fast:
         meta = tools[name]._geoagent_meta
-        assert "fast" not in meta.available_in, (
-            f"{name} should NOT be in fast mode"
-        )
+        assert "fast" not in meta.available_in, f"{name} should NOT be in fast mode"
 
 
 def test_all_tools_have_hydrology_category() -> None:
     for tool in hsae_tools():
         meta = tool._geoagent_meta
-        assert meta.category == "hydrology", (
-            f"{tool.tool_name} has category {meta.category!r}, expected 'hydrology'"
-        )
+        assert (
+            meta.category == "hydrology"
+        ), f"{tool.tool_name} has category {meta.category!r}, expected 'hydrology'"
 
 
 # ---------------------------------------------------------------------------
 # Basin name resolution
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("alias,expected_id", [
-    ("Blue Nile", "blue_nile_gerd"),
-    ("blue nile gerd", "blue_nile_gerd"),
-    ("GERD", "blue_nile_gerd"),
-    ("النيل الأزرق", "blue_nile_gerd"),
-    ("Mekong", "mekong_lancang"),
-    ("euphrates", "euphrates_ataturk"),
-    ("Danube", "danube_gabcikovo"),
-    ("Rhine", "rhine_ijssel"),
-])
+
+@pytest.mark.parametrize(
+    "alias,expected_id",
+    [
+        ("Blue Nile", "blue_nile_gerd"),
+        ("blue nile gerd", "blue_nile_gerd"),
+        ("GERD", "blue_nile_gerd"),
+        ("النيل الأزرق", "blue_nile_gerd"),
+        ("Mekong", "mekong_lancang"),
+        ("euphrates", "euphrates_ataturk"),
+        ("Danube", "danube_gabcikovo"),
+        ("Rhine", "rhine_ijssel"),
+    ],
+)
 def test_basin_alias_resolution(alias: str, expected_id: str) -> None:
     assert _resolve_basin_id(alias) == expected_id
 
@@ -180,18 +184,22 @@ def test_basin_resolution_is_case_insensitive() -> None:
 # Legal status thresholds
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("atdi,expected_status_fragment", [
-    (10.0, "Compliant"),
-    (25.0, "Equitable Use Risk"),
-    (40.0, "Significant Harm"),
-    (55.0, "Critical"),
-    (43.5, "Significant Harm"),   # Blue Nile validated value
-])
+
+@pytest.mark.parametrize(
+    "atdi,expected_status_fragment",
+    [
+        (10.0, "Compliant"),
+        (25.0, "Equitable Use Risk"),
+        (40.0, "Significant Harm"),
+        (55.0, "Critical"),
+        (43.5, "Significant Harm"),  # Blue Nile validated value
+    ],
+)
 def test_legal_status_thresholds(atdi: float, expected_status_fragment: str) -> None:
     status = _legal_status(atdi)
-    assert expected_status_fragment in status["status"], (
-        f"ATDI={atdi} → {status['status']!r}, expected fragment {expected_status_fragment!r}"
-    )
+    assert (
+        expected_status_fragment in status["status"]
+    ), f"ATDI={atdi} → {status['status']!r}, expected fragment {expected_status_fragment!r}"
 
 
 def test_legal_status_returns_triggered_articles() -> None:
@@ -207,6 +215,7 @@ def test_legal_status_compliant_no_articles() -> None:
 # ---------------------------------------------------------------------------
 # Individual tool schemas
 # ---------------------------------------------------------------------------
+
 
 def test_compute_atdi_schema() -> None:
     tools = {t.tool_name: t for t in hsae_tools()}
@@ -276,6 +285,7 @@ def test_adts_atdi_complement_identity() -> None:
 # Composite tools
 # ---------------------------------------------------------------------------
 
+
 def test_run_unwc_compliance_schema() -> None:
     tools = {t.tool_name: t for t in hsae_tools()}
     result = tools["run_unwc_compliance"]("Blue Nile")
@@ -293,7 +303,14 @@ def test_analyze_basin_compliance_full_schema() -> None:
     result = tools["analyze_basin_compliance"]("Blue Nile")
     assert "indices" in result
     indices = result["indices"]
-    for key in ("ATDI_pct", "AFSF_pct", "AHIFD_pct", "ATCI_pct", "CI_score", "ADTS_pct"):
+    for key in (
+        "ATDI_pct",
+        "AFSF_pct",
+        "AHIFD_pct",
+        "ATCI_pct",
+        "CI_score",
+        "ADTS_pct",
+    ):
         assert key in indices, f"Missing index {key}"
     assert 0.0 <= indices["ATDI_pct"] <= 100.0
 
@@ -312,22 +329,23 @@ def test_get_negotiation_recommendation_schema() -> None:
 # Numeric range guards (all indices must be in [0, 100])
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("basin", ["Blue Nile", "Mekong", "Euphrates", "Rhine"])
 def test_all_indices_in_valid_range(basin: str) -> None:
     tools = {t.tool_name: t for t in hsae_tools()}
     result = tools["analyze_basin_compliance"](basin)
     indices = result["indices"]
     for k, v in indices.items():
-        assert 0.0 <= float(v) <= 100.0, (
-            f"{k} = {v} out of [0, 100] for basin {basin}"
-        )
+        assert 0.0 <= float(v) <= 100.0, f"{k} = {v} out of [0, 100] for basin {basin}"
 
 
 # ---------------------------------------------------------------------------
 # __init__.py registration smoke test
 # ---------------------------------------------------------------------------
 
+
 def test_hsae_tools_exportable_from_tools_package() -> None:
     """Verify hsae_tools is importable from geoagent.tools after registration."""
     from geoagent.tools import hsae_tools as _ht
+
     assert callable(_ht)
