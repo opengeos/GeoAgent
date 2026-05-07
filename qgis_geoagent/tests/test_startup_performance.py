@@ -56,7 +56,11 @@ def test_required_dependencies_include_core_runtime_packages() -> None:
 
 def test_dependency_groups_include_optional_workflow_packages() -> None:
     """Optional workflow stacks should be grouped instead of globally required."""
-    from open_geoagent.deps_manager import DEPENDENCY_GROUPS, REQUIRED_PACKAGES
+    from open_geoagent.deps_manager import (
+        CORE_RUNTIME_PACKAGES,
+        DEPENDENCY_GROUPS,
+        REQUIRED_PACKAGES,
+    )
 
     assert ("whitebox", "whitebox>=2.3.6") not in REQUIRED_PACKAGES
     assert ("whitebox", "whitebox>=2.3.6") in DEPENDENCY_GROUPS["WhiteboxTools"]
@@ -65,7 +69,7 @@ def test_dependency_groups_include_optional_workflow_packages() -> None:
         "GEE Data Catalogs"
     ]
     assert ("ee", "earthengine-api>=1.0") in DEPENDENCY_GROUPS["GEE Data Catalogs"]
-    assert DEPENDENCY_GROUPS["GeoAI"] == DEPENDENCY_GROUPS["Core Providers"][:3]
+    assert DEPENDENCY_GROUPS["GeoAI"] == list(CORE_RUNTIME_PACKAGES)
 
 
 def test_python_runtime_error_mentions_required_version(monkeypatch) -> None:

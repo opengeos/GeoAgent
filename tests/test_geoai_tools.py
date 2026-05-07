@@ -360,6 +360,7 @@ def test_regularize_and_smooth_vector_tools_use_geoai_tasks(monkeypatch, tmp_pat
         {
             "mask_path": "/tmp/mask.tif",
             "output_path": str(tmp_path / "regularized.gpkg"),
+            "output_format": "gpkg",
             "epsilon": 1.5,
             "min_area": 10.0,
         },
@@ -369,6 +370,7 @@ def test_regularize_and_smooth_vector_tools_use_geoai_tasks(monkeypatch, tmp_pat
         {
             "mask_path": "/tmp/mask.tif",
             "output_path": str(tmp_path / "smooth.geojson"),
+            "output_format": "gpkg",
             "smooth_iterations": 5,
             "min_area": None,
             "simplify_tolerance": 0.25,

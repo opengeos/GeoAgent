@@ -400,12 +400,12 @@ def _vectorize_mask(
     params: dict[str, Any] = {
         "mask_path": mask_path,
         "output_path": output_path,
+        "output_format": output_format,
     }
     min_area_value = float(min_area or 0)
     simplify_value = float(simplify_tolerance or 0)
     if cleaned_mode in {"simple", "plain", "vector"}:
         params["min_area"] = min_area_value
-        params["output_format"] = output_format
         if simplify_value > 0:
             params["simplify_tolerance"] = simplify_value
         result = _run_geoai_task(plugin, "raster_to_vector", params)
@@ -480,7 +480,9 @@ def geoai_tools(
         return []
 
     get_project = _project_getter(project)
-    recent_segmentations: dict[tuple[str, str, str, str, str, str], dict[str, Any]] = {}
+    recent_segmentations: dict[
+        tuple[str, str, str, str, str, str, str], dict[str, Any]
+    ] = {}
 
     @geo_tool(
         category="geoai",
@@ -513,7 +515,11 @@ def geoai_tools(
         """
         text_prompt = str(prompt or "").strip()
         if not text_prompt:
-            raise ValueError("prompt is required.")
+            return {
+                "success": False,
+                "prompt": "",
+                "error": "prompt is required.",
+            }
 
         resolved_plugin = _resolve_geoai_plugin(plugin)
         if resolved_plugin is None:
@@ -539,7 +545,8 @@ def geoai_tools(
             )
             rgb_bands = _parse_bands(bands)
 
-            out_path = str(output_path or "").strip()
+            requested_output_path = str(output_path or "").strip()
+            out_path = requested_output_path
             output_kind, vector_format = _normalize_output_format(
                 output_format, out_path
             )
@@ -558,6 +565,7 @@ def geoai_tools(
                 vector_format,
                 str(vector_mode or "simple").strip().lower(),
                 layer_name,
+                requested_output_path,
             )
             if cache_key in recent_segmentations:
                 cached = dict(recent_segmentations[cache_key])
