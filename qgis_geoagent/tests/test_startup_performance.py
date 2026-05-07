@@ -65,6 +65,7 @@ def test_dependency_groups_include_optional_workflow_packages() -> None:
         "GEE Data Catalogs"
     ]
     assert ("ee", "earthengine-api>=1.0") in DEPENDENCY_GROUPS["GEE Data Catalogs"]
+    assert DEPENDENCY_GROUPS["GeoAI"] == DEPENDENCY_GROUPS["Core Providers"][:3]
 
 
 def test_python_runtime_error_mentions_required_version(monkeypatch) -> None:

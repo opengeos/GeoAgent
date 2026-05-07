@@ -135,6 +135,7 @@ SAMPLE_PROMPTS = [
     "Find a WhiteboxTools command for calculating slope from the active DEM layer.",
     "Run a WhiteboxTools hillshade analysis on a local DEM and add the result to QGIS.",
     "Search WhiteboxTools for watershed or flow accumulation tools.",
+    "Use GeoAI SamGeo to segment buildings in the active raster layer.",
     "Create a concise map QA checklist for this project before I export it.",
 ]
 AGENT_MODES = [
@@ -146,6 +147,7 @@ AGENT_MODES = [
     "STAC",
     "Timelapse",
     "Vantor",
+    "GeoAI",
 ]
 DEFAULT_AGENT_MODE = "General QGIS"
 PERMISSION_PROFILES = [
@@ -214,6 +216,16 @@ WORKFLOW_PROMPTS = {
             "matching footprints."
         ),
     ],
+    "GeoAI": [
+        (
+            "Segment buildings in the active raster layer with GeoAI SamGeo "
+            "and add the mask to QGIS."
+        ),
+        (
+            "Use GeoAI to segment trees from the raster layer named Imagery "
+            "and add the raster mask to QGIS."
+        ),
+    ],
 }
 
 
@@ -250,6 +262,7 @@ def _permission_allows_tool(permission_profile, tool_name, meta=None):
         "gee_data_catalogs",
         "timelapse",
         "vantor",
+        "geoai",
     }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
@@ -1811,6 +1824,8 @@ class ChatWorker(QThread):
         self.stream = bool(stream)
         self.agent_mode = agent_mode or DEFAULT_AGENT_MODE
         self.permission_profile = permission_profile or DEFAULT_PERMISSION_PROFILE
+        if self.permission_profile == "Trusted auto-approve":
+            self.auto_approve_tools = True
 
     def run(self):
         """Create a GeoAgent QGIS agent and execute one chat turn."""
@@ -1839,6 +1854,7 @@ class ChatWorker(QThread):
                 "STAC": "for_stac",
                 "Timelapse": "for_timelapse",
                 "Vantor": "for_vantor",
+                "GeoAI": "for_geoai",
             }.get(self.agent_mode, "for_qgis")
             factory = getattr(geoagent, factory_name)
             kwargs = {
@@ -2781,6 +2797,7 @@ class ChatDockWidget(QDockWidget):
                 "include_stac": mode == "STAC",
                 "include_timelapse": mode == "Timelapse",
                 "include_vantor": mode == "Vantor",
+                "include_geoai": mode == "GeoAI",
                 "permission_profile": profile,
                 "fast": self.fast_check.isChecked(),
             }

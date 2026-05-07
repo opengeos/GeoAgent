@@ -1,6 +1,7 @@
 """Environment-specific tool factories."""
 
 from geoagent.tools.anymap import anymap_tools
+from geoagent.tools.geoai import geoai_tools
 from geoagent.tools.gee_data_catalogs import gee_data_catalogs_tools
 from geoagent.tools.images import image_generation_tools
 from geoagent.tools.leafmap import leafmap_tools
@@ -15,6 +16,7 @@ from geoagent.tools.whitebox import whitebox_tools
 __all__ = [
     "anymap_tools",
     "earthdata_tools",
+    "geoai_tools",
     "gee_data_catalogs_tools",
     "image_generation_tools",
     "leafmap_tools",

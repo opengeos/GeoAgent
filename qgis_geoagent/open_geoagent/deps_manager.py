@@ -59,6 +59,10 @@ DEPENDENCY_GROUPS = {
     "NASA Earthdata/OPERA": CORE_RUNTIME_PACKAGES + NASA_PACKAGES,
     "GEE Data Catalogs": CORE_RUNTIME_PACKAGES + GEE_PACKAGES,
     "STAC": CORE_RUNTIME_PACKAGES + STAC_PACKAGES,
+    # GeoAI SamGeo runs through the separate GeoAI QGIS plugin runtime. Keep
+    # OpenGeoAgent's dependency set lightweight and let the GeoAI plugin manage
+    # PyTorch/SamGeo installation in its own venv.
+    "GeoAI": CORE_RUNTIME_PACKAGES,
 }
 
 

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from geoagent import GeoAgentContext, create_agent, for_leafmap
-from geoagent.testing import MockLeafmap
+from geoagent import GeoAgentContext, create_agent, for_geoai, for_leafmap
+from geoagent.testing import MockLeafmap, MockQGISIface, MockQGISProject
 
 
 class _MockModel:
@@ -63,3 +63,41 @@ def test_factory_accepts_litellm_provider() -> None:
     )
     assert a.config.provider == "litellm"
     assert a.config.model == "openai/gpt-5.5"
+
+
+def test_for_geoai_registers_qgis_and_geoai_tools() -> None:
+    """Verify the GeoAI factory combines QGIS and GeoAI tool surfaces."""
+    iface = MockQGISIface()
+    project = MockQGISProject()
+
+    a = for_geoai(iface, project=project, model=_MockModel())
+    names = set(a.strands_agent.tool_names)
+
+    assert "list_project_layers" in names
+    assert "segment_image_with_text_prompt" in names
+    assert "regularize_segmentation_mask_to_vector" in names
+    assert "smooth_segmentation_mask_to_vector" in names
+    assert a.context.metadata["integration"] == "geoai"
+    assert "SamGeo text-prompt segmentation" in a.context.metadata["system_prompt"]
+
+
+def test_for_geoai_permission_profiles_filter_segmentation_tool() -> None:
+    """Verify Inspect-only hides long-running GeoAI segmentation."""
+    iface = MockQGISIface()
+    project = MockQGISProject()
+
+    inspect = for_geoai(
+        iface,
+        project=project,
+        model=_MockModel(),
+        permission_profile="Inspect only",
+    )
+    processing = for_geoai(
+        iface,
+        project=project,
+        model=_MockModel(),
+        permission_profile="Run processing",
+    )
+
+    assert "segment_image_with_text_prompt" not in inspect.strands_agent.tool_names
+    assert "segment_image_with_text_prompt" in processing.strands_agent.tool_names

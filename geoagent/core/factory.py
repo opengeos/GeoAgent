@@ -14,6 +14,7 @@ from geoagent.core.registry import (
 from geoagent.core.safety import ConfirmCallback
 from geoagent.core.agent import GeoAgent
 from geoagent.tools.anymap import anymap_tools
+from geoagent.tools.geoai import geoai_tools
 from geoagent.tools.gee_data_catalogs import gee_data_catalogs_tools
 from geoagent.tools.images import image_generation_tools
 from geoagent.tools.leafmap import leafmap_tools
@@ -136,6 +137,33 @@ Workflow guidance:
 - Keep responses concise and include asset ids, layer names, and filters used.
 - If load_gee_dataset returns a bbox field, include the bbox coordinates in the
   response in west,south,east,north order.
+"""
+
+GEOAI_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS for GeoAI image segmentation.
+Use the GeoAI SamGeo text-prompt segmentation tool when the user asks to
+segment objects such as buildings, trees, roads, cars, water, or other
+visible features from a raster image using natural language.
+
+Workflow guidance:
+- Use the active raster layer when the user does not name an input layer or
+  image path.
+- If the user names a QGIS layer, pass that layer name rather than its display
+  description.
+- The segmentation output is a GeoTIFF raster mask and is added back to QGIS
+  by default. If the user simply asks to segment or extract objects from an
+  image and does not explicitly ask for vector output, keep output_format as
+  raster.
+- If the user asks for vector output, use GeoPackage by default unless they
+  explicitly ask for GeoJSON or Shapefile. Keep vector_mode simple unless the
+  user explicitly asks to regularize/orthogonalize building footprints or to
+  smooth natural-feature boundaries.
+- Call segment_image_with_text_prompt at most once per user request. If it
+  succeeds, do not rerun it with slightly different size filters.
+- SamGeo model loading and inference can take a while and requires user
+  confirmation.
+- Keep responses concise and include the prompt, output path, mask count, and
+  output layer name when available.
 """
 
 VANTOR_SYSTEM_PROMPT = """\
@@ -315,6 +343,7 @@ def _permission_allows_tool(permission_profile: str | None, tool: Any) -> bool:
         "gee_data_catalogs",
         "timelapse",
         "vantor",
+        "geoai",
     }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
@@ -369,11 +398,13 @@ def assemble_tools(
     include_vantor: bool = False,
     include_whitebox: bool = False,
     include_stac: bool = False,
+    include_geoai: bool = False,
     include_image_generation: bool = False,
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     timelapse_plugin: Any | None = None,
     vantor_plugin: Any | None = None,
+    geoai_plugin: Any | None = None,
     fast: bool = False,
     permission_profile: str | None = None,
     exclude_tool_names: set[str] | None = None,
@@ -450,6 +481,16 @@ def assemble_tools(
         )
         register_all_tools(registry, stac_tool_list)
         collected.extend(stac_tool_list)
+    if include_geoai:
+        geoai_tool_list = _filter_by_imports(
+            geoai_tools(
+                context.qgis_iface,
+                context.qgis_project,
+                plugin=geoai_plugin,
+            )
+        )
+        register_all_tools(registry, geoai_tool_list)
+        collected.extend(geoai_tool_list)
     if include_image_generation:
         image_tools = _filter_by_imports(image_generation_tools())
         register_all_tools(registry, image_tools)
@@ -1012,11 +1053,70 @@ def for_stac(
     )
 
 
+def for_geoai(
+    iface: Any,
+    project: Any = None,
+    *,
+    plugin: Any | None = None,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+    permission_profile: str | None = None,
+) -> GeoAgent:
+    """Bind an agent to QGIS with GeoAI SamGeo segmentation support.
+
+    The factory exposes GeoAI plugin-backed SamGeo text-prompt segmentation
+    and, by default, the general QGIS map/project tools used for inspection
+    and navigation.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "geoai",
+            "system_prompt": GEOAI_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_geoai=True,
+        include_image_generation=True,
+        geoai_plugin=plugin,
+        extra_tools=extra_tools,
+        fast=fast,
+        permission_profile=permission_profile,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 __all__ = [
     "assemble_tools",
     "create_agent",
     "for_anymap",
     "for_gee_data_catalogs",
+    "for_geoai",
     "for_leafmap",
     "for_nasa_earthdata",
     "for_nasa_opera",

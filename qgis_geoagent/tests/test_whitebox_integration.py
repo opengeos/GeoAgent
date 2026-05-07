@@ -33,6 +33,7 @@ def _install_fake_geoagent(monkeypatch, captured):
     module.for_gee_data_catalogs = _factory("for_gee_data_catalogs")
     module.for_stac = _factory("for_stac")
     module.for_vantor = _factory("for_vantor")
+    module.for_geoai = _factory("for_geoai")
     monkeypatch.setitem(sys.modules, "geoagent", module)
     return module
 
@@ -298,3 +299,51 @@ def test_chat_worker_uses_vantor_factory(monkeypatch) -> None:
     assert captured["factory"] == "for_vantor"
     assert captured["kwargs"]["permission_profile"] == "Run processing"
     assert captured["prompt"] == "search vantor"
+
+
+def test_chat_worker_uses_geoai_factory(monkeypatch) -> None:
+    """GeoAI mode should use the dedicated GeoAgent GeoAI factory."""
+    from open_geoagent.dialogs.chat_dock import ChatWorker, SAMPLE_PROMPTS
+
+    captured: dict[str, Any] = {}
+
+    class _StubResponse:
+        success = True
+        answer_text = "ok"
+        error_message = ""
+        executed_tools: list = []
+        tool_calls: list = []
+        cancelled_tools: list = []
+        execution_time = 0.0
+
+    class _StubAgent:
+        def chat(self, prompt: str) -> _StubResponse:
+            captured["prompt"] = prompt
+            return _StubResponse()
+
+    captured["agent"] = _StubAgent()
+    _install_fake_geoagent(monkeypatch, captured)
+    monkeypatch.setitem(
+        sys.modules,
+        "qgis.core",
+        types.SimpleNamespace(QgsProject=types.SimpleNamespace(instance=lambda: None)),
+    )
+
+    worker = ChatWorker(
+        iface=object(),
+        prompt="segment buildings",
+        provider="anthropic",
+        model_id="claude-x",
+        fast=False,
+        max_tokens=1024,
+        auto_approve_tools=True,
+        agent_mode="GeoAI",
+        permission_profile="Run processing",
+    )
+    worker.finished.connect(lambda _payload: None)
+    worker.run()
+
+    assert captured["factory"] == "for_geoai"
+    assert captured["kwargs"]["permission_profile"] == "Run processing"
+    assert captured["prompt"] == "segment buildings"
+    assert any("GeoAI SamGeo" in prompt for prompt in SAMPLE_PROMPTS)
