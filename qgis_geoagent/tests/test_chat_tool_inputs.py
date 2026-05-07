@@ -100,6 +100,25 @@ def test_format_chat_worker_error_explains_gemini_token_limit() -> None:
     assert "16384 or 32768" in error
 
 
+def test_format_chat_worker_error_matches_streaming_stop_reason_phrasings() -> None:
+    """Verify both ``stop_reason=max_tokens`` and ``stop reason: max_tokens`` match.
+
+    The QGIS UI must catch every max-token phrasing the core agent recognizes,
+    so the streaming path and exception path stay in sync.
+    """
+
+    for raw in (
+        "stop_reason=max_tokens",
+        "Stop reason: max_tokens",
+    ):
+        error = _format_chat_worker_error(
+            RuntimeError(raw),
+            provider="gemini",
+            agent_mode="STAC",
+        )
+        assert "output-token limit" in error, raw
+
+
 def test_markdown_renderer_supports_image_references() -> None:
     """Verify Markdown image output is rendered as inline HTML."""
     html = _markdown_to_basic_html("![Map](https://example.com/map.png)")

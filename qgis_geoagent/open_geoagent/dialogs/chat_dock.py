@@ -416,12 +416,13 @@ def _format_chat_worker_error(exc, provider="", agent_mode=""):
     mode_label = agent_mode or "this mode"
     is_opera_mode = "opera" in agent_mode.lower()
 
-    if (
-        "maxtokensreachedexception" in cls_name
-        or "max_tokens limit" in lower
-        or "stop_reason=max_tokens" in lower
-        or "maximum token limit reached" in lower
-        or "exceeded the maximum output token limit" in lower
+    try:
+        from geoagent.core.agent import _looks_like_max_tokens_reached
+    except Exception:
+        _looks_like_max_tokens_reached = None
+
+    if _looks_like_max_tokens_reached is not None and _looks_like_max_tokens_reached(
+        exc
     ):
         advice = (
             "The model hit its output-token limit before OpenGeoAgent could "
@@ -2009,15 +2010,25 @@ class ChatWorker(QThread):
             list(tool_metrics.keys()) if isinstance(tool_metrics, dict) else []
         )
         stop_reason = str(getattr(final_result, "stop_reason", "end_turn"))
-        success = stop_reason not in ("cancelled", "guardrail_intervened")
+        failure_stop_reasons = ("cancelled", "guardrail_intervened", "max_tokens")
+        success = stop_reason not in failure_stop_reasons
         if self.isInterruptionRequested():
             success = False
+
+        if success:
+            error_text = ""
+        else:
+            error_text = _format_chat_worker_error(
+                RuntimeError(f"stop_reason={stop_reason}"),
+                provider=self.provider,
+                agent_mode=self.agent_mode,
+            )
 
         self.finished.emit(
             {
                 "success": success,
                 "answer": "".join(chunks) or final_text,
-                "error": "" if success else f"stop_reason={stop_reason}",
+                "error": error_text,
                 "images": images,
                 "tools": ", ".join(executed_tools),
                 "tool_calls": tool_calls,
