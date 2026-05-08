@@ -60,17 +60,19 @@ class BrowserMapSession:
             "command": command,
             "args": args or {},
         }
+        wait_timeout = (
+            self.timeout_seconds if timeout_seconds is None else float(timeout_seconds)
+        )
         future = asyncio.run_coroutine_threadsafe(
             self.websocket.send_json(payload),
             self.loop,
         )
         try:
-            future.result(timeout=timeout_seconds or self.timeout_seconds)
+            future.result(timeout=wait_timeout)
         except Exception:
             self._drop_pending(command_id)
             raise
 
-        wait_timeout = timeout_seconds or self.timeout_seconds
         if not event.wait(wait_timeout):
             self._drop_pending(command_id)
             raise BrowserMapTimeoutError(

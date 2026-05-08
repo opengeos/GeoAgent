@@ -9,6 +9,7 @@ from uuid import uuid4
 from geoagent.browser.session import BrowserMapSession
 from geoagent.core.factory import for_browser_maplibre
 from geoagent.core.safety import auto_approve_safe_only
+from geoagent.ui.app import build_prompt_with_context
 
 
 async def _send_json(websocket: Any, payload: dict[str, Any]) -> None:
@@ -26,6 +27,7 @@ async def _run_chat_turn(
     message: str,
     provider: str | None,
     model_id: str | None,
+    history: list[dict[str, Any]] | None = None,
 ) -> None:
     """Run one GeoAgent chat turn in a worker thread."""
     try:
@@ -36,7 +38,8 @@ async def _run_chat_turn(
             model_id=model_id,
             confirm=auto_approve_safe_only,
         )
-        response = await asyncio.to_thread(agent.chat, message)
+        prompt = build_prompt_with_context(history, message) if history else message
+        response = await asyncio.to_thread(agent.chat, prompt)
         payload: dict[str, Any] = {
             "type": "chat_result",
             "ok": bool(response.success),
@@ -140,6 +143,11 @@ def create_browser_app(
                     )
                     continue
 
+                raw_history = message.get("history")
+                history: list[dict[str, Any]] | None = None
+                if isinstance(raw_history, list):
+                    history = [item for item in raw_history if isinstance(item, dict)]
+
                 active_chat = asyncio.create_task(
                     _run_chat_turn(
                         websocket=websocket,
@@ -147,17 +155,20 @@ def create_browser_app(
                         message=chat_message,
                         provider=provider,
                         model_id=model_id,
+                        history=history,
                     )
                 )
         except WebSocketDisconnect:
             session.fail_all("Browser WebSocket disconnected.")
-            if active_chat is not None:
-                active_chat.cancel()
         except Exception as exc:
             session.fail_all(str(exc))
-            if active_chat is not None:
-                active_chat.cancel()
             raise
+        finally:
+            # ``active_chat`` runs ``agent.chat`` inside ``asyncio.to_thread``;
+            # the worker thread is not actually cancellable, so ``cancel()`` would
+            # only mark the wrapping task while the provider call kept running.
+            # Drop the reference and let the task finish quietly instead.
+            active_chat = None
 
     return app
 
