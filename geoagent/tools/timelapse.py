@@ -45,6 +45,16 @@ TIMELAPSE_IMAGERY_TYPES: dict[str, dict[str, Any]] = {
         "default_bands": ["R", "G", "B"],
         "supports_frequency": False,
     },
+    "ESRI Wayback": {
+        "description": (
+            "High-resolution Esri World Imagery Wayback timelapses rendered "
+            "from historical XYZ/WMTS tiles without Earth Engine."
+        ),
+        "default_start_year": 2014,
+        "default_date_window": ["01-01", "12-31"],
+        "supports_frequency": False,
+        "requires_earth_engine": False,
+    },
     "MODIS NDVI": {
         "description": "Vegetation index phenology timelapses from MODIS.",
         "default_start_year": 2010,
@@ -146,6 +156,35 @@ def _load_timelapse_core(plugin: Any = None) -> Any:
     if not runtime_ready:
         raise RuntimeError(reason)
     return timelapse_core
+
+
+def _load_timelapse_external_sources(plugin: Any = None) -> Any:
+    """Import Timelapse external-source support without requiring Earth Engine."""
+    _add_plugin_parent_to_path(plugin)
+    _ensure_plugin_deps(plugin)
+    try:
+        from timelapse.core import external_sources
+    except Exception as exc:
+        raise RuntimeError(
+            "Could not import timelapse.core.external_sources. Make sure the "
+            "QGIS Timelapse plugin is installed, loaded, and up to date."
+        ) from exc
+
+    core = getattr(external_sources, "timelapse_core", None)
+    if core is not None:
+        try:
+            reload_deps = getattr(core, "reload_dependencies", None)
+            deps = reload_deps() if callable(reload_deps) else core.check_dependencies()
+        except Exception as exc:
+            raise RuntimeError(
+                f"Could not check Timelapse external-source dependencies: {exc}"
+            ) from exc
+        if not deps.get("Pillow", True):
+            raise RuntimeError(
+                "Timelapse external-source dependencies are not importable: "
+                "Pillow. Open the Timelapse settings panel and install dependencies."
+            )
+    return external_sources
 
 
 def _parse_list(value: Any) -> list[str] | None:
@@ -292,6 +331,14 @@ def _normalise_imagery_type(imagery_type: str) -> str:
         "modis ndvi": "MODIS NDVI",
         "ndvi": "MODIS NDVI",
         "goes": "GOES",
+        "esri": "ESRI Wayback",
+        "esri wayback": "ESRI Wayback",
+        "arcgis wayback": "ESRI Wayback",
+        "world imagery wayback": "ESRI Wayback",
+        "wayback": "ESRI Wayback",
+        "high resolution": "ESRI Wayback",
+        "high res": "ESRI Wayback",
+        "highres": "ESRI Wayback",
     }
     try:
         return aliases[key]
@@ -629,11 +676,15 @@ def timelapse_tools(
         goes_scan: str = "full_disk",
         goes_band_combination: str = "true_color",
         goes_custom_bands: Any = None,
+        external_max_frames: int | None = None,
+        loop: int = 0,
     ) -> dict[str, Any]:
         """Create a Timelapse GIF from a bbox or the current QGIS extent.
 
         Args:
-            imagery_type: Landsat, Sentinel-2, Sentinel-1, NAIP, MODIS NDVI, or GOES.
+            imagery_type: Landsat, Sentinel-2, Sentinel-1, NAIP, ESRI Wayback,
+                MODIS NDVI, or GOES. Use ESRI Wayback for high-resolution
+                timelapse or Esri Wayback requests.
             bbox: Optional west,south,east,north WGS84 bbox. Uses current map
                 extent when omitted.
             output_path: Optional output GIF path.
@@ -652,6 +703,8 @@ def timelapse_tools(
             create_mp4: Also create MP4 when supported by the plugin core.
             add_bbox_to_map: Add the timelapse bbox as a QGIS polygon layer.
             bbox_layer_name: Optional QGIS layer name for the bbox layer.
+            external_max_frames: Optional cap for ESRI Wayback frames.
+            loop: GIF loop count for external sources.
         """
         try:
             imagery = _normalise_imagery_type(imagery_type)
@@ -662,102 +715,139 @@ def timelapse_tools(
                     return extent_result
                 parsed_bbox = list(extent_result["bbox"])
 
-            core = _load_timelapse_core(plugin)
-            if not core.is_ee_initialized():
-                if not core.initialize_ee(project=gee_project):
-                    return {
-                        "success": False,
-                        "error": "Failed to initialize Earth Engine.",
-                        "imagery_type": imagery,
-                        "bbox": parsed_bbox,
-                    }
-
             west, south, east, north = parsed_bbox
-            roi = core.bbox_to_ee_geometry(west, south, east, north)
             output = os.path.abspath(
                 os.path.expanduser(output_path or _default_output_path(imagery))
             )
             os.makedirs(os.path.dirname(output), exist_ok=True)
             current_year = datetime.now().year
             parsed_bands = _parse_list(bands)
-            common = {
-                "roi": roi,
-                "out_gif": output,
-                "dimensions": int(dimensions),
-                "frames_per_second": int(fps),
-                "title": title,
-                "add_text": bool(add_text),
-                "font_size": int(font_size),
-                "font_color": font_color,
-                "add_progress_bar": bool(add_progress_bar),
-                "progress_bar_color": progress_bar_color,
-                "progress_bar_height": int(progress_bar_height),
-                "mp4": bool(create_mp4),
-            }
 
-            if imagery == "NAIP":
-                result = core.create_naip_timelapse(
-                    **common,
-                    start_year=start_year or 2010,
-                    end_year=end_year or current_year,
-                    bands=parsed_bands or ["R", "G", "B"],
-                    step=int(step),
+            if imagery == "ESRI Wayback":
+                external_sources = _load_timelapse_external_sources(plugin)
+                max_frames = (
+                    int(external_max_frames)
+                    if external_max_frames is not None and int(external_max_frames) > 0
+                    else None
                 )
-            elif imagery == "Sentinel-2":
-                result = core.create_sentinel2_timelapse(
-                    **common,
-                    start_year=start_year or 2018,
+                frames = external_sources.esri_wayback_frames(
+                    start_year=start_year or 2014,
                     end_year=end_year or current_year,
-                    start_date=start_date or "06-10",
-                    end_date=end_date or "09-20",
-                    bands=parsed_bands or ["NIR", "Red", "Green"],
-                    apply_fmask=bool(apply_fmask),
-                    cloud_pct=int(cloud_pct),
-                    frequency=frequency,
                     step=int(step),
+                    max_frames=max_frames,
                 )
-            elif imagery == "Sentinel-1":
-                result = core.create_sentinel1_timelapse(
-                    **common,
-                    start_year=start_year or 2018,
-                    end_year=end_year or current_year,
-                    start_date=start_date or "01-01",
-                    end_date=end_date or "12-31",
-                    bands=parsed_bands or ["VV"],
-                    orbit=_parse_list(orbit) or ["ascending", "descending"],
-                    frequency=frequency,
-                    step=int(step),
-                )
-            elif imagery == "Landsat":
-                result = core.create_landsat_timelapse(
-                    **common,
-                    start_year=start_year or 1990,
-                    end_year=end_year or current_year,
-                    start_date=start_date or "06-10",
-                    end_date=end_date or "09-20",
-                    bands=parsed_bands or ["NIR", "Red", "Green"],
-                    apply_fmask=bool(apply_fmask),
-                    frequency=frequency,
-                    step=int(step),
-                )
-            elif imagery == "MODIS NDVI":
-                result = core.create_modis_ndvi_timelapse(
-                    **common,
-                    data=modis_satellite,
-                    band=modis_band,
-                    start_date=start_date or f"{start_year or 2010}-01-01",
-                    end_date=end_date or f"{end_year or current_year}-12-31",
+                bbox_dict = {
+                    "xmin": west,
+                    "ymin": south,
+                    "xmax": east,
+                    "ymax": north,
+                }
+                result = external_sources.create_external_timelapse(
+                    frames=frames,
+                    bbox=bbox_dict,
+                    out_gif=output,
+                    dimensions=int(dimensions),
+                    frames_per_second=int(fps),
+                    title=title,
+                    add_text=bool(add_text),
+                    font_size=int(font_size),
+                    font_color=font_color,
+                    add_progress_bar=bool(add_progress_bar),
+                    progress_bar_color=progress_bar_color,
+                    progress_bar_height=int(progress_bar_height),
+                    loop=int(loop),
+                    mp4=bool(create_mp4),
                 )
             else:
-                result = core.create_goes_timelapse(
-                    **common,
-                    start_date=start_date or "2021-10-24T14:00:00",
-                    end_date=end_date or "2021-10-25T01:00:00",
-                    data=goes_satellite,
-                    scan=goes_scan,
-                    band_combination=goes_band_combination,
-                    custom_bands=_parse_list(goes_custom_bands),
-                )
+                core = _load_timelapse_core(plugin)
+                if not core.is_ee_initialized():
+                    if not core.initialize_ee(project=gee_project):
+                        return {
+                            "success": False,
+                            "error": "Failed to initialize Earth Engine.",
+                            "imagery_type": imagery,
+                            "bbox": parsed_bbox,
+                        }
+
+                roi = core.bbox_to_ee_geometry(west, south, east, north)
+                common = {
+                    "roi": roi,
+                    "out_gif": output,
+                    "dimensions": int(dimensions),
+                    "frames_per_second": int(fps),
+                    "title": title,
+                    "add_text": bool(add_text),
+                    "font_size": int(font_size),
+                    "font_color": font_color,
+                    "add_progress_bar": bool(add_progress_bar),
+                    "progress_bar_color": progress_bar_color,
+                    "progress_bar_height": int(progress_bar_height),
+                    "mp4": bool(create_mp4),
+                }
+
+                if imagery == "NAIP":
+                    result = core.create_naip_timelapse(
+                        **common,
+                        start_year=start_year or 2010,
+                        end_year=end_year or current_year,
+                        bands=parsed_bands or ["R", "G", "B"],
+                        step=int(step),
+                    )
+                elif imagery == "Sentinel-2":
+                    result = core.create_sentinel2_timelapse(
+                        **common,
+                        start_year=start_year or 2018,
+                        end_year=end_year or current_year,
+                        start_date=start_date or "06-10",
+                        end_date=end_date or "09-20",
+                        bands=parsed_bands or ["NIR", "Red", "Green"],
+                        apply_fmask=bool(apply_fmask),
+                        cloud_pct=int(cloud_pct),
+                        frequency=frequency,
+                        step=int(step),
+                    )
+                elif imagery == "Sentinel-1":
+                    result = core.create_sentinel1_timelapse(
+                        **common,
+                        start_year=start_year or 2018,
+                        end_year=end_year or current_year,
+                        start_date=start_date or "01-01",
+                        end_date=end_date or "12-31",
+                        bands=parsed_bands or ["VV"],
+                        orbit=_parse_list(orbit) or ["ascending", "descending"],
+                        frequency=frequency,
+                        step=int(step),
+                    )
+                elif imagery == "Landsat":
+                    result = core.create_landsat_timelapse(
+                        **common,
+                        start_year=start_year or 1990,
+                        end_year=end_year or current_year,
+                        start_date=start_date or "06-10",
+                        end_date=end_date or "09-20",
+                        bands=parsed_bands or ["NIR", "Red", "Green"],
+                        apply_fmask=bool(apply_fmask),
+                        frequency=frequency,
+                        step=int(step),
+                    )
+                elif imagery == "MODIS NDVI":
+                    result = core.create_modis_ndvi_timelapse(
+                        **common,
+                        data=modis_satellite,
+                        band=modis_band,
+                        start_date=start_date or f"{start_year or 2010}-01-01",
+                        end_date=end_date or f"{end_year or current_year}-12-31",
+                    )
+                else:
+                    result = core.create_goes_timelapse(
+                        **common,
+                        start_date=start_date or "2021-10-24T14:00:00",
+                        end_date=end_date or "2021-10-25T01:00:00",
+                        data=goes_satellite,
+                        scan=goes_scan,
+                        band_combination=goes_band_combination,
+                        custom_bands=_parse_list(goes_custom_bands),
+                    )
 
             result_path = os.path.abspath(os.path.expanduser(str(result or output)))
             bbox_layer = None

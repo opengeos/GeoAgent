@@ -52,6 +52,23 @@ class _FakeTimelapseCore:
         return kwargs["out_gif"]
 
 
+class _FakeExternalSources:
+    """Small external-source stand-in for ESRI Wayback dispatch tests."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict]] = []
+
+    def esri_wayback_frames(self, **kwargs):
+        """Record ESRI Wayback frame selection."""
+        self.calls.append(("esri_wayback_frames", kwargs))
+        return [{"label": "2024-01-01"}]
+
+    def create_external_timelapse(self, **kwargs):
+        """Record external timelapse rendering."""
+        self.calls.append(("create_external_timelapse", kwargs))
+        return kwargs["out_gif"]
+
+
 def test_timelapse_module_imports_without_qgis_or_plugin() -> None:
     """Verify Timelapse tools are import-safe outside QGIS."""
     assert "geoagent.tools.timelapse" in sys.modules
@@ -85,6 +102,20 @@ def test_timelapse_tools_expose_expected_surface() -> None:
     assert tools["create_timelapse"]._geoagent_meta.long_running
     assert tools["open_timelapse_panel"]._geoagent_meta.requires_confirmation
     assert tools["open_timelapse_settings"]._geoagent_meta.requires_confirmation
+
+
+def test_list_timelapse_imagery_types_includes_esri_wayback() -> None:
+    """Verify ESRI Wayback is advertised for high-resolution timelapses."""
+    tools = {tool.tool_name: tool for tool in timelapse_tools(object())}
+
+    result = tools["list_timelapse_imagery_types"].__wrapped__()
+
+    esri = next(
+        item for item in result["imagery_types"] if item["name"] == "ESRI Wayback"
+    )
+    assert esri["default_start_year"] == 2014
+    assert esri["requires_earth_engine"] is False
+    assert "High-resolution" in esri["description"]
 
 
 def test_get_current_timelapse_extent_uses_canvas_extent() -> None:
@@ -212,6 +243,66 @@ def test_create_timelapse_dispatches_to_landsat_core(monkeypatch, tmp_path) -> N
     assert kwargs["start_year"] == 2001
     assert kwargs["end_year"] == 2003
     assert kwargs["bands"] == ["NIR", "Red", "Green"]
+
+
+def test_create_timelapse_dispatches_high_resolution_to_esri_wayback(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify high-resolution requests use ESRI Wayback external rendering."""
+    external = _FakeExternalSources()
+    monkeypatch.setattr(
+        timelapse,
+        "_load_timelapse_external_sources",
+        lambda plugin=None: external,
+    )
+    monkeypatch.setattr(
+        timelapse,
+        "_load_timelapse_core",
+        lambda plugin=None: pytest.fail("ESRI Wayback must not load EE core"),
+    )
+    output = tmp_path / "wayback.gif"
+    project = MockQGISProject()
+    iface = MockQGISIface(project)
+    tools = {tool.tool_name: tool for tool in timelapse_tools(iface, project)}
+
+    result = tools["create_timelapse"].__wrapped__(
+        imagery_type="high-resolution",
+        bbox="-85,34,-83,36",
+        output_path=str(output),
+        start_year=2018,
+        end_year=2024,
+        step=2,
+        external_max_frames=10,
+        create_mp4=True,
+        bbox_layer_name="Wayback BBOX",
+    )
+
+    assert result["success"] is True
+    assert result["imagery_type"] == "ESRI Wayback"
+    assert result["output_path"] == str(output)
+    assert result["mp4_path"] == str(Path(tmp_path / "wayback.mp4"))
+    assert result["images"][0]["alt"] == "ESRI Wayback timelapse"
+    assert result["bbox_layer"]["layer_name"] == "Wayback BBOX"
+    frames_call, render_call = external.calls
+    assert frames_call == (
+        "esri_wayback_frames",
+        {
+            "start_year": 2018,
+            "end_year": 2024,
+            "step": 2,
+            "max_frames": 10,
+        },
+    )
+    assert render_call[0] == "create_external_timelapse"
+    assert render_call[1]["frames"] == [{"label": "2024-01-01"}]
+    assert render_call[1]["bbox"] == {
+        "xmin": -85.0,
+        "ymin": 34.0,
+        "xmax": -83.0,
+        "ymax": 36.0,
+    }
+    assert render_call[1]["out_gif"] == str(output)
+    assert render_call[1]["mp4"] is True
 
 
 def test_open_timelapse_panels_use_plugin_instance() -> None:

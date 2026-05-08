@@ -202,8 +202,8 @@ WORKFLOW_PROMPTS = {
     ],
     "Timelapse": [
         (
-            "Create a Landsat timelapse for the current map extent from 1990 "
-            "to the present."
+            "Create a high-resolution ESRI Wayback timelapse for the current "
+            "map extent from 2014 to the present."
         ),
         (
             "List the available timelapse imagery types and recommend one for "

@@ -199,8 +199,10 @@ Workflow guidance:
 - Confirm the imagery type and time window before launching long timelapse
   generation unless the request already provides them clearly.
 - Prefer Landsat for long historical change, Sentinel-2 for recent optical
-  detail, Sentinel-1 for radar/cloud-tolerant change, NAIP for US aerial
+  detail, Sentinel-1 for radar/cloud-tolerant change, ESRI Wayback for
+  high-resolution timelapse or Esri Wayback requests, NAIP for US aerial
   detail, MODIS NDVI for vegetation phenology, and GOES for weather animation.
+- ESRI Wayback does not require Earth Engine initialization.
 - Timelapse generation can take a while and requires user confirmation.
 - Keep responses concise and include imagery type, bbox, time window, and
   output path when available.
