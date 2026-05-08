@@ -119,7 +119,7 @@ def test_find_python_executable_uses_macos_base_executable(
     monkeypatch.setattr(
         deps_manager,
         "_python_executable_usable",
-        lambda path: (path == str(python_binary), "broken"),
+        lambda path: ((True, "") if path == str(python_binary) else (False, "broken")),
     )
 
     assert deps_manager._find_python_executable() == str(python_binary)
@@ -154,7 +154,7 @@ def test_find_python_executable_finds_macos_bundle_python(
     monkeypatch.setattr(
         deps_manager,
         "_python_executable_usable",
-        lambda path: (path == str(python_binary), "broken"),
+        lambda path: ((True, "") if path == str(python_binary) else (False, "broken")),
     )
 
     assert deps_manager._find_python_executable() == str(python_binary)

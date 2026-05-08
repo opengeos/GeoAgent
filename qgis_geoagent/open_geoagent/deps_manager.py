@@ -592,7 +592,7 @@ def _find_python_executable() -> str:
 
         raise RuntimeError(
             "Could not find a Python interpreter for dependency installation.\n"
-            f"sys.executable is not Python: {sys.executable}\n"
+            f"sys.executable is not a usable Python interpreter: {sys.executable}\n"
             "OpenGeoAgent cannot safely run QGIS itself as a Python executable."
             + (f"\nRejected Python candidates:\n{details}" if details else "")
         )
