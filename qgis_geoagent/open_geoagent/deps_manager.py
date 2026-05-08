@@ -417,6 +417,19 @@ def _add_existing_python_candidate(
     seen.add(normalized)
 
 
+def _is_macos_qgis_app_bundle_python(path: str) -> bool:
+    """Return True for Python binaries inside a QGIS macOS .app bundle."""
+    if not (platform.system() == "Darwin" or sys.platform == "darwin"):
+        return False
+    parts = os.path.abspath(path).split(os.sep)
+    for idx, part in enumerate(parts):
+        lower = part.lower()
+        if not (lower.startswith("qgis") and lower.endswith(".app")):
+            continue
+        return idx + 1 < len(parts) and parts[idx + 1] == "Contents"
+    return False
+
+
 def _python_executable_usable(path: str) -> Tuple[bool, str]:
     """Return whether *path* can run as the current QGIS Python version.
 
@@ -443,6 +456,12 @@ def _python_executable_usable(path: str) -> Tuple[bool, str]:
         return False, f"{type(exc).__name__}: {exc}"
 
     if result.returncode == 0:
+        if _is_macos_qgis_app_bundle_python(path):
+            return (
+                False,
+                "QGIS app-bundle Python is not safe for creating virtual "
+                "environments; use uv-managed Python instead.",
+            )
         return True, ""
     if result.returncode == 3:
         return False, f"wrong Python version; need {_python_version_spec()}"

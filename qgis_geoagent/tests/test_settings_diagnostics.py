@@ -160,6 +160,34 @@ def test_find_python_executable_finds_macos_bundle_python(
     assert deps_manager._find_python_executable() == str(python_binary)
 
 
+def test_python_executable_usable_rejects_qgis_app_bundle_python(
+    monkeypatch, tmp_path
+) -> None:
+    """A startable QGIS.app Python wrapper still should not be used for venv."""
+    from open_geoagent import deps_manager
+
+    python_binary = (
+        tmp_path / "QGIS-final-4_0_2.app" / "Contents" / "MacOS" / "python"
+    )
+    python_binary.parent.mkdir(parents=True)
+    python_binary.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(deps_manager.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(deps_manager.sys, "platform", "darwin")
+    monkeypatch.setattr(
+        deps_manager.subprocess,
+        "run",
+        lambda *_args, **_kwargs: types.SimpleNamespace(
+            returncode=0, stdout="", stderr=""
+        ),
+    )
+
+    usable, reason = deps_manager._python_executable_usable(str(python_binary))
+
+    assert usable is False
+    assert "QGIS app-bundle Python" in reason
+
+
 def test_find_python_executable_skips_unstartable_macos_bundle_python(
     monkeypatch, tmp_path
 ) -> None:
