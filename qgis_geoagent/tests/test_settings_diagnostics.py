@@ -166,9 +166,7 @@ def test_python_executable_usable_rejects_qgis_app_bundle_python(
     """A startable QGIS.app Python wrapper still should not be used for venv."""
     from open_geoagent import deps_manager
 
-    python_binary = (
-        tmp_path / "QGIS-final-4_0_2.app" / "Contents" / "MacOS" / "python"
-    )
+    python_binary = tmp_path / "QGIS-final-4_0_2.app" / "Contents" / "MacOS" / "python"
     python_binary.parent.mkdir(parents=True)
     python_binary.write_text("", encoding="utf-8")
 
