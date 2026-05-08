@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from geoagent import GeoAgentContext, create_agent, for_geoai, for_leafmap
+from geoagent import (
+    GeoAgentContext,
+    create_agent,
+    for_browser_maplibre,
+    for_geoai,
+    for_leafmap,
+)
 from geoagent.testing import MockLeafmap, MockQGISIface, MockQGISProject
 
 
@@ -37,6 +43,17 @@ def test_for_leafmap_accepts_provider_and_model_id() -> None:
     )
     assert a.config.provider == "anthropic"
     assert a.config.model == "claude-sonnet-4-6"
+
+
+def test_for_browser_maplibre_registers_tools() -> None:
+    """Verify the browser MapLibre factory registers browser tools."""
+    session = object()
+    a = for_browser_maplibre(session, model=_MockModel())
+    names = set(a.strands_agent.tool_names)
+    assert "get_map_state" in names
+    assert "add_marker" in names
+    assert a.context.metadata["integration"] == "browser_maplibre"
+    assert "live\nMapLibre map" in a.context.metadata["system_prompt"]
 
 
 def test_factory_accepts_gemini_provider() -> None:

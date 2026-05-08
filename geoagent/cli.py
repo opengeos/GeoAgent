@@ -2,6 +2,7 @@
 
 Commands:
   geoagent ui              Launch the Solara UI
+  geoagent browser         Launch the browser WebSocket backend
   geoagent codex login     Login with ChatGPT/Codex OAuth
   geoagent --help          Show help
 """
@@ -44,6 +45,24 @@ def _run_codex_login(args: argparse.Namespace) -> int:
         return 0
     except Exception as exc:
         print(f"Codex login failed: {exc}")
+        return 1
+
+
+def _run_browser_server(args: argparse.Namespace) -> int:
+    """Run the embedded browser GeoAgent WebSocket backend."""
+    try:
+        from geoagent.browser.server import run_browser_server
+
+        run_browser_server(
+            host=args.host,
+            port=args.port,
+            provider=args.provider,
+            model_id=args.model,
+            command_timeout_seconds=args.command_timeout,
+        )
+        return 0
+    except Exception as exc:
+        print(f"Browser server failed: {exc}")
         return 1
 
 
@@ -97,6 +116,22 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
     subparsers.add_parser("ui", help="Launch the Solara UI")
+    browser_parser = subparsers.add_parser(
+        "browser",
+        help="Launch the browser WebSocket backend",
+    )
+    browser_parser.add_argument("--host", default="127.0.0.1")
+    browser_parser.add_argument("--port", type=int, default=8765)
+    browser_parser.add_argument("--provider", default=None)
+    browser_parser.add_argument("--model", default=None, help="Override model id")
+    browser_parser.add_argument(
+        "--command-timeout",
+        type=float,
+        default=30.0,
+        help="Seconds to wait for browser map command results",
+    )
+    browser_parser.set_defaults(func=_run_browser_server)
+
     codex_parser = subparsers.add_parser(
         "codex",
         help="Manage ChatGPT/Codex OAuth login",
@@ -151,6 +186,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "ui":
         return _run_solara_app()
+    if args.command == "browser":
+        return args.func(args)
     if args.command == "codex":
         if hasattr(args, "func"):
             return args.func(args)

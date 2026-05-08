@@ -57,10 +57,11 @@ nasa-opera = ["earthaccess>=0.10"]
 whitebox = ["whitebox>=2.3.6"]
 hsae = ["hydrosovereign>=6.0.7"]
 ui = ["solara>=1.35", "starlette<2.0"]
+browser = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 qgis = []
 providers = ["GeoAgent[openai,anthropic,gemini,ollama,litellm]"]
 all = [
-    "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,nasa-opera,whitebox,ui]",
+    "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,nasa-opera,whitebox,ui,browser]",
 ]
 dev = [
     "pytest>=8.0",

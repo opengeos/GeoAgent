@@ -31,6 +31,7 @@ from geoagent.core.safety import (
 from geoagent.core.factory import (
     create_agent,
     for_anymap,
+    for_browser_maplibre,
     for_gee_data_catalogs,
     for_geoai,
     for_leafmap,
@@ -55,6 +56,7 @@ __all__ = [
     "GeoToolRegistry",
     "create_agent",
     "for_anymap",
+    "for_browser_maplibre",
     "for_gee_data_catalogs",
     "for_geoai",
     "for_leafmap",
