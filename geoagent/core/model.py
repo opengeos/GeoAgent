@@ -7,6 +7,7 @@ from typing import Any
 
 from geoagent.core.config import GeoAgentConfig, ProviderName
 
+
 def _openai_token_params(model_id: str, max_tokens: int | None) -> dict[str, int]:
     """Return the token-limit parameter supported by the OpenAI model family."""
     if max_tokens is None:
