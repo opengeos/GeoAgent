@@ -3,7 +3,7 @@ name=OpenGeoAgent
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
 description=GeoAgent-powered multimodal AI chatbot for QGIS projects.
-version=1.7.0
+version=1.7.1
 author=Qiusheng Wu
 email=giswqs@gmail.com
 
@@ -47,6 +47,10 @@ experimental=False
 deprecated=False
 
 changelog=
+    1.7.1 - Patch release
+        - Raised package and plugin version metadata to 1.7.1
+        - Raised the plugin dependency guidance to GeoAgent 1.7.1
+
     1.7.0 - Minor update for Timelapse ESRI Wayback support
         - Added Timelapse agent routing for high-resolution and ESRI Wayback requests
         - Raised the plugin dependency guidance to GeoAgent 1.7.0
