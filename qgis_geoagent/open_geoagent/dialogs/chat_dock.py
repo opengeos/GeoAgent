@@ -395,14 +395,21 @@ def _max_tokens_from_settings(settings):
 
 
 def _max_tokens_to_setting(value):
-    """Return the QSettings value for an optional max-token selection."""
+    """Return the QSettings value for an optional max-token selection.
+
+    Positive values below the historical 256-token minimum are clamped up to
+    256 so that the new Auto sentinel (0) does not silently allow tiny limits
+    that the spinbox previously disallowed.
+    """
     if value is None:
         return ""
     try:
         parsed = int(value)
     except (TypeError, ValueError):
         return ""
-    return parsed if parsed > 0 else ""
+    if parsed <= 0:
+        return ""
+    return max(parsed, 256)
 
 
 def _max_tokens_to_display(value):

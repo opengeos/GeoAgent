@@ -18,6 +18,7 @@ from open_geoagent.dialogs.chat_dock import (
     _latest_executable_snippet,
     _latest_pyqgis_script,
     _markdown_to_basic_html,
+    _max_tokens_to_setting,
     _message_images_html,
     _message_images_markdown,
     _prepare_output_images,
@@ -98,6 +99,23 @@ def test_format_chat_worker_error_explains_gemini_token_limit() -> None:
     assert "output-token limit" in error
     assert "not a QGIS or Earth Engine load failure" in error
     assert "16384 or 32768" in error
+
+
+def test_max_tokens_to_setting_clamps_below_minimum() -> None:
+    """Verify positive values below 256 are normalized to the historical floor.
+
+    The spinbox now allows 0 to expose the Auto sentinel, which incidentally
+    lets users type 1-255. Those should snap to 256 on save so the saved
+    config never holds a value the spinbox previously disallowed.
+    """
+
+    assert _max_tokens_to_setting(0) == ""
+    assert _max_tokens_to_setting(None) == ""
+    assert _max_tokens_to_setting(1) == 256
+    assert _max_tokens_to_setting(255) == 256
+    assert _max_tokens_to_setting(256) == 256
+    assert _max_tokens_to_setting(4096) == 4096
+    assert _max_tokens_to_setting(32768) == 32768
 
 
 def test_format_chat_worker_error_matches_streaming_stop_reason_phrasings() -> None:
