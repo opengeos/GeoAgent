@@ -150,15 +150,36 @@ def get_venv_site_packages(venv_dir: Optional[str] = None) -> str:
     return os.path.join(venv_dir, "lib", py_ver, "site-packages")
 
 
-def venv_exists() -> bool:
+def venv_exists(venv_dir: Optional[str] = None) -> bool:
     """Check if the plugin's virtual environment exists and has a Python executable.
+
+    Args:
+        venv_dir: Path to the venv directory. Defaults to get_venv_dir().
 
     Returns:
         True if the venv directory and Python executable exist.
     """
-    venv_dir = get_venv_dir()
+    if venv_dir is None:
+        venv_dir = get_venv_dir()
     python_path = get_venv_python_path(venv_dir)
     return os.path.isdir(venv_dir) and os.path.isfile(python_path)
+
+
+def venv_python_usable(venv_dir: Optional[str] = None) -> Tuple[bool, str]:
+    """Return whether the venv Python starts with the expected stdlib.
+
+    ``venv_exists`` intentionally stays cheap because it is used by settings
+    diagnostics and startup path checks. The installer calls this stronger
+    validation before reusing an existing venv for pip operations.
+    """
+    if venv_dir is None:
+        venv_dir = get_venv_dir()
+    python_path = get_venv_python_path(venv_dir)
+    if not os.path.isdir(venv_dir):
+        return False, f"Virtual environment does not exist: {venv_dir}"
+    if not os.path.isfile(python_path):
+        return False, f"Virtual environment Python is missing: {python_path}"
+    return _python_executable_usable(python_path)
 
 
 def ensure_venv_packages_available() -> bool:
@@ -739,6 +760,14 @@ def _verify_pip_and_return(python_path: str) -> str:
     Raises:
         RuntimeError: If pip cannot be made available.
     """
+    usable, reason = _python_executable_usable(python_path)
+    if not usable:
+        raise RuntimeError(
+            "Virtual environment Python is not usable.\n"
+            f"Python path: {python_path}\n"
+            f"Error: {reason}"
+        )
+
     env = _get_clean_env()
     kwargs = _get_subprocess_kwargs()
 
@@ -769,6 +798,35 @@ def _verify_pip_and_return(python_path: str) -> str:
         )
 
     return python_path
+
+
+def _truncated_subprocess_output(result) -> str:
+    """Return compact stderr/stdout text from a subprocess result."""
+    output = result.stderr or result.stdout or "Unknown error"
+    if len(output) > 1500:
+        output = output[:500] + "\n...\n" + output[-1000:]
+    return output
+
+
+def _ensure_usable_venv(
+    venv_dir: str,
+    progress_callback: Optional[Callable[[int, str], None]] = None,
+) -> str:
+    """Return a usable venv Python, recreating stale broken venvs when needed."""
+    if venv_exists(venv_dir):
+        usable, reason = venv_python_usable(venv_dir)
+        if usable:
+            return get_venv_python_path(venv_dir)
+        if progress_callback:
+            progress_callback(
+                5,
+                "Existing virtual environment is unusable; recreating it...",
+            )
+        _cleanup_partial_venv(venv_dir)
+
+    if progress_callback:
+        progress_callback(5, "Creating virtual environment...")
+    return create_venv(venv_dir)
 
 
 def create_venv(venv_dir: str) -> str:
@@ -816,13 +874,19 @@ def create_venv(venv_dir: str) -> str:
     except RuntimeError as exc:
         python_lookup_error = str(exc)
 
+    uv_error = ""
+
     # Strategy 0: Use uv venv when available (fastest, no pip needed). If the
     # official macOS QGIS bundle exposes only an unstartable python3.x binary,
-    # ask uv for the matching Python version instead of passing that path.
+    # require uv-managed Python for the matching version instead of letting uv
+    # reuse the broken app-bundle interpreter.
     if _uv_usable():
         uv_path = get_uv_path()
         uv_python = python_exe or _python_version_spec()
-        cmd = [uv_path, "venv", "--python", uv_python, venv_dir]
+        cmd = [uv_path, "venv"]
+        if python_exe is None:
+            cmd.append("--managed-python")
+        cmd += ["--python", uv_python, venv_dir]
         result = subprocess.run(  # nosec B603
             cmd,
             capture_output=True,
@@ -832,7 +896,15 @@ def create_venv(venv_dir: str) -> str:
             **kwargs,
         )
         if result.returncode == 0 and os.path.isfile(python_path):
-            return python_path
+            usable, reason = _python_executable_usable(python_path)
+            if usable:
+                return python_path
+            uv_error = (
+                "uv created a virtual environment, but its Python could not "
+                f"start: {reason}"
+            )
+        elif result.returncode != 0:
+            uv_error = result.stderr or result.stdout or ""
         # uv venv failed — clean up and fall through to pip strategies
         _cleanup_partial_venv(venv_dir)
 
@@ -843,7 +915,8 @@ def create_venv(venv_dir: str) -> str:
             "Could not create a virtual environment because no working Python "
             "interpreter was found. uv was either unavailable or could not "
             f"create one from the {_python_version_spec()} version request.\n\n"
-            f"{python_lookup_error}"
+            + (f"uv error: {uv_error}\n\n" if uv_error else "")
+            + python_lookup_error
         )
 
     cmd = [python_exe, "-m", "venv", venv_dir]
@@ -902,6 +975,8 @@ def create_venv(venv_dir: str) -> str:
     ]
     if subprocess_error:
         details.append(f"Subprocess error: {subprocess_error}")
+    if uv_error:
+        details.append(f"uv error: {uv_error}")
     if strategy3_error:
         details.append(f"Strategy 3 error: {strategy3_error}")
 
@@ -939,7 +1014,25 @@ def install_packages(
     env = _get_clean_env()
     kwargs = _get_subprocess_kwargs()
 
+    usable, reason = venv_python_usable(venv_dir)
+    if not usable:
+        return (
+            False,
+            "Virtual environment Python is not usable. Re-run dependency "
+            f"installation to recreate it.\nPython path: {python_path}\n"
+            f"Error: {reason}",
+        )
+
     use_uv = _uv_usable()
+    pip_cmd = [
+        python_path,
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "--disable-pip-version-check",
+        "--prefer-binary",
+    ] + packages
     if use_uv:
         uv_path = get_uv_path()
         cmd = [
@@ -951,15 +1044,7 @@ def install_packages(
             "--upgrade",
         ] + packages
     else:
-        cmd = [
-            python_path,
-            "-m",
-            "pip",
-            "install",
-            "--upgrade",
-            "--disable-pip-version-check",
-            "--prefer-binary",
-        ] + packages
+        cmd = pip_cmd
 
     if progress_callback:
         installer = "uv" if use_uv else "pip"
@@ -974,15 +1059,41 @@ def install_packages(
         **kwargs,
     )
 
-    if result.returncode != 0:
-        error_output = result.stderr or result.stdout or "Unknown error"
-        # Truncate long error messages
-        if len(error_output) > 1000:
-            error_output = "..." + error_output[-1000:]
-        installer = "uv pip" if use_uv else "pip"
-        return False, f"{installer} install failed:\n{error_output}"
+    if result.returncode == 0:
+        return True, "Packages installed successfully."
 
-    return True, "Packages installed successfully."
+    error_output = _truncated_subprocess_output(result)
+
+    if use_uv:
+        if progress_callback:
+            progress_callback(45, "uv install failed, retrying with pip...")
+        try:
+            _verify_pip_and_return(python_path)
+        except RuntimeError as exc:
+            return (
+                False,
+                "uv pip install failed and pip fallback is unavailable.\n\n"
+                f"uv error:\n{error_output}\n\npip bootstrap error:\n{exc}",
+            )
+
+        pip_result = subprocess.run(  # nosec B603
+            pip_cmd,
+            capture_output=True,
+            text=True,
+            timeout=600,
+            env=env,
+            **kwargs,
+        )
+        if pip_result.returncode == 0:
+            return True, "Packages installed successfully."
+        return (
+            False,
+            "uv pip install failed, and pip fallback also failed.\n\n"
+            f"uv error:\n{error_output}\n\n"
+            f"pip error:\n{_truncated_subprocess_output(pip_result)}",
+        )
+
+    return False, f"pip install failed:\n{error_output}"
 
 
 class DepsInstallWorker(QThread):
@@ -1021,14 +1132,15 @@ class DepsInstallWorker(QThread):
                 else:
                     self.progress.emit(5, "uv ready.")
 
-            # Step 1: Create venv if needed
-            if not venv_exists():
-                self.progress.emit(5, "Creating virtual environment...")
-                try:
-                    create_venv(venv_dir)
-                except RuntimeError as e:
-                    self.finished.emit(False, str(e))
-                    return
+            # Step 1: Create venv if needed, or recreate stale broken venvs
+            try:
+                _ensure_usable_venv(
+                    venv_dir,
+                    progress_callback=lambda p, m: self.progress.emit(p, m),
+                )
+            except RuntimeError as e:
+                self.finished.emit(False, str(e))
+                return
             self.progress.emit(10, "Virtual environment ready.")
 
             # Step 2: Verify pip (only needed when not using uv)
