@@ -71,6 +71,7 @@ from qgis.PyQt.QtWidgets import (
 
 SETTINGS_PREFIX = "OpenGeoAgent/"
 DEFAULT_PROVIDER = "openai-codex"
+MAX_TOKENS_AUTO_VALUE = 0
 DEFAULT_MODELS = {
     "bedrock": "us.anthropic.claude-sonnet-4-6",
     "openai": "gpt-5.5",
@@ -378,6 +379,35 @@ def _default_model_for_provider(provider):
 def _setting(settings, key, default="", value_type=str):
     """Read a plugin setting value."""
     return settings.value(f"{SETTINGS_PREFIX}{key}", default, type=value_type)
+
+
+def _max_tokens_from_settings(settings):
+    """Read the optional max-token setting; blank/auto means provider default."""
+    value = settings.value(f"{SETTINGS_PREFIX}max_tokens", "", type=str)
+    text = str(value or "").strip()
+    if not text or text.lower() in {"auto", "none", "null"}:
+        return None
+    try:
+        parsed = int(text)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
+def _max_tokens_to_setting(value):
+    """Return the QSettings value for an optional max-token selection."""
+    if value is None:
+        return ""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return ""
+    return parsed if parsed > 0 else ""
+
+
+def _max_tokens_to_display(value):
+    """Return a diagnostics-friendly display value for optional max tokens."""
+    return value if value is not None else "Auto"
 
 
 def _apply_environment_from_settings(settings):
@@ -3394,7 +3424,7 @@ class ChatDockWidget(QDockWidget):
         permission_profile = self.permission_combo.currentText()
         if permission_profile == "Trusted auto-approve":
             auto_approve_tools = True
-        max_tokens = self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
+        max_tokens = _max_tokens_from_settings(self.settings)
         image_model = _image_model_from_settings(self.settings)
         if not prompt:
             prompt = "Describe the attached image."

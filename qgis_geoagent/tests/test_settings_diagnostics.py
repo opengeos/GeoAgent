@@ -221,7 +221,7 @@ def test_provider_test_worker_uses_ollama_safe_smoke_prompt(monkeypatch) -> None
     worker.run()
 
     assert emitted["result"]["success"] is True
-    assert captured["config"]["max_tokens"] == 4096
+    assert captured["config"]["max_tokens"] == 256
     assert captured["agent_kwargs"]["tools"] == []
     assert "provider connectivity test" in captured["agent_kwargs"]["system_prompt"]
     assert captured["prompt"].startswith("/no_think")

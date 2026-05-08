@@ -40,6 +40,11 @@ def test_litellm_config_is_valid() -> None:
     assert cfg.model == "openai/gpt-5.5"
 
 
+def test_max_tokens_defaults_to_provider_auto() -> None:
+    """Verify default config leaves output token limits to the provider."""
+    assert GeoAgentConfig().max_tokens is None
+
+
 def test_openai_codex_config_is_valid() -> None:
     """Verify that OpenAI Codex OAuth is accepted as a provider."""
     cfg = GeoAgentConfig(provider="openai-codex", model="gpt-5.5")
@@ -167,8 +172,8 @@ def test_openai_codex_requires_token(monkeypatch) -> None:
         resolve_model(GeoAgentConfig(provider="openai-codex"))
 
 
-def test_resolve_gemini_uses_agentic_token_floor(monkeypatch) -> None:
-    """Verify Gemini gets enough output budget for multi-step tool calls."""
+def test_resolve_gemini_auto_omits_max_output_tokens(monkeypatch) -> None:
+    """Verify Gemini auto mode leaves max output tokens to the provider."""
 
     class FakeGeminiModel:
         """Capture Gemini constructor arguments."""
@@ -192,7 +197,6 @@ def test_resolve_gemini_uses_agentic_token_floor(monkeypatch) -> None:
             provider="gemini",
             model="gemini-3.1-pro-preview",
             temperature=0,
-            max_tokens=4096,
         )
     )
 
@@ -200,12 +204,12 @@ def test_resolve_gemini_uses_agentic_token_floor(monkeypatch) -> None:
     assert model.kwargs == {
         "client_args": {"api_key": "test-key"},
         "model_id": "gemini-3.1-pro-preview",
-        "params": {"temperature": 0, "max_output_tokens": 8192},
+        "params": {"temperature": 0},
     }
 
 
-def test_resolve_gemini_preserves_larger_token_limit(monkeypatch) -> None:
-    """Verify explicit large Gemini limits are preserved."""
+def test_resolve_gemini_preserves_explicit_token_limit(monkeypatch) -> None:
+    """Verify explicit Gemini token limits are preserved."""
 
     class FakeGeminiModel:
         """Capture Gemini constructor arguments."""

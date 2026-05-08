@@ -344,7 +344,7 @@ class GeoAgent:
             cfg = cfg.model_copy(update={"provider": provider})
         if model_id is not None:
             cfg = cfg.model_copy(update={"model": model_id})
-        if fast and cfg.max_tokens > 2048:
+        if fast and cfg.max_tokens is not None and cfg.max_tokens > 2048:
             cfg = cfg.model_copy(update={"max_tokens": 2048})
         self._config = cfg
         self._fast = fast

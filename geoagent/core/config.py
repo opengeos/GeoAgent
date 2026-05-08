@@ -54,7 +54,8 @@ class GeoAgentConfig(BaseModel):
         provider: Model provider id.
         model: Model id for the provider. If omitted, a provider default is used.
         temperature: Sampling temperature.
-        max_tokens: Maximum tokens in the model response.
+        max_tokens: Optional maximum tokens in the model response. ``None``
+            leaves the output limit to the provider or Strands default.
         ollama_host: Ollama server base URL (e.g. ``http://127.0.0.1:11434``).
         openai_codex_base_url: ChatGPT/Codex backend base URL.
         litellm_base_url: Optional LiteLLM proxy or OpenAI-compatible base URL.
@@ -65,7 +66,7 @@ class GeoAgentConfig(BaseModel):
     provider: ProviderName = Field(default_factory=_default_provider_from_env)
     model: Optional[str] = None
     temperature: float = 0.0
-    max_tokens: int = 4096
+    max_tokens: Optional[int] = None
     ollama_host: Optional[str] = Field(
         default=None, description="Ollama base URL, e.g. http://127.0.0.1:11434"
     )

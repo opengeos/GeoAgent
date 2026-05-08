@@ -35,10 +35,14 @@ from .chat_dock import (
     DEFAULT_TRANSCRIPTION_MODEL,
     DEFAULT_VOICE_SHORTCUT,
     IMAGE_MODELS,
+    MAX_TOKENS_AUTO_VALUE,
     PROVIDERS,
     SETTINGS_PREFIX,
     TRANSCRIPTION_MODELS,
     VOICE_SHORTCUT_SETTING,
+    _max_tokens_from_settings,
+    _max_tokens_to_display,
+    _max_tokens_to_setting,
 )
 from ..oauth import (
     CODEX_DEFAULT_CONFIG,
@@ -202,9 +206,7 @@ def collect_diagnostics(
                 type=str,
             )
             or DEFAULT_VOICE_SHORTCUT,
-            "max_tokens": settings.value(
-                f"{SETTINGS_PREFIX}max_tokens", 4096, type=int
-            ),
+            "max_tokens": _max_tokens_to_display(_max_tokens_from_settings(settings)),
         },
         "credential_presence": credential_presence,
         "latest_install_status": latest_install_status,
@@ -236,7 +238,6 @@ class ProviderTestWorker(QThread):
             from geoagent.core.model import resolve_model
             from strands import Agent
 
-            token_floor = 4096 if self.provider == "ollama" else 1024
             cfg = GeoAgentConfig(
                 provider=self.provider,
                 model=self.model_id or None,
@@ -245,7 +246,7 @@ class ProviderTestWorker(QThread):
                     if _model_requires_default_temperature(self.provider, self.model_id)
                     else 0
                 ),
-                max_tokens=max(int(self.max_tokens or token_floor), token_floor),
+                max_tokens=self.max_tokens,
             )
             model = resolve_model(cfg)
             agent = Agent(
@@ -538,8 +539,9 @@ class SettingsDockWidget(QDockWidget):
         form.addRow("", self.fast_check)
 
         self.max_tokens_spin = QSpinBox()
-        self.max_tokens_spin.setRange(256, 32768)
-        self.max_tokens_spin.setValue(4096)
+        self.max_tokens_spin.setRange(MAX_TOKENS_AUTO_VALUE, 32768)
+        self.max_tokens_spin.setSpecialValueText("Auto")
+        self.max_tokens_spin.setValue(MAX_TOKENS_AUTO_VALUE)
         self.max_tokens_spin.setSingleStep(256)
         form.addRow("Max tokens:", self.max_tokens_spin)
 
@@ -973,7 +975,7 @@ class SettingsDockWidget(QDockWidget):
             self.settings.value(f"{SETTINGS_PREFIX}fast_mode", False, type=bool)
         )
         self.max_tokens_spin.setValue(
-            self.settings.value(f"{SETTINGS_PREFIX}max_tokens", 4096, type=int)
+            _max_tokens_from_settings(self.settings) or MAX_TOKENS_AUTO_VALUE
         )
         transcription_model = (
             self.settings.value(
@@ -1052,7 +1054,8 @@ class SettingsDockWidget(QDockWidget):
             f"{SETTINGS_PREFIX}fast_mode", self.fast_check.isChecked()
         )
         self.settings.setValue(
-            f"{SETTINGS_PREFIX}max_tokens", self.max_tokens_spin.value()
+            f"{SETTINGS_PREFIX}max_tokens",
+            _max_tokens_to_setting(self.max_tokens_spin.value()),
         )
         self.settings.setValue(
             f"{SETTINGS_PREFIX}transcription_model",
@@ -1097,7 +1100,7 @@ class SettingsDockWidget(QDockWidget):
         self._provider_test_worker = ProviderTestWorker(
             provider,
             model_id,
-            self.max_tokens_spin.value(),
+            _max_tokens_from_settings(self.settings),
             self.settings,
             self,
         )
