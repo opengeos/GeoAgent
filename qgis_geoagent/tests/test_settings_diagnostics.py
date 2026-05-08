@@ -116,6 +116,11 @@ def test_find_python_executable_uses_macos_base_executable(
     monkeypatch.setattr(
         deps_manager.sys, "_base_executable", str(python_binary), raising=False
     )
+    monkeypatch.setattr(
+        deps_manager,
+        "_python_executable_usable",
+        lambda path: (path == str(python_binary), "broken"),
+    )
 
     assert deps_manager._find_python_executable() == str(python_binary)
 
@@ -146,8 +151,68 @@ def test_find_python_executable_finds_macos_bundle_python(
     monkeypatch.setattr(deps_manager.sys, "_base_prefix", str(macos_dir), raising=False)
     monkeypatch.setattr(deps_manager.sys, "prefix", str(macos_dir))
     monkeypatch.setattr(deps_manager.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(
+        deps_manager,
+        "_python_executable_usable",
+        lambda path: (path == str(python_binary), "broken"),
+    )
 
     assert deps_manager._find_python_executable() == str(python_binary)
+
+
+def test_find_python_executable_skips_unstartable_macos_bundle_python(
+    monkeypatch, tmp_path
+) -> None:
+    """The official macOS app python may exist but fail before importing encodings."""
+    import sys
+
+    from open_geoagent import deps_manager
+
+    macos_dir = tmp_path / "QGIS.app" / "Contents" / "MacOS"
+    macos_dir.mkdir(parents=True)
+    qgis_binary = macos_dir / "QGIS"
+    broken_python = macos_dir / (
+        f"python{sys.version_info.major}.{sys.version_info.minor}"
+    )
+    path_python = (
+        tmp_path / "bin" / (f"python{sys.version_info.major}.{sys.version_info.minor}")
+    )
+    path_python.parent.mkdir()
+    qgis_binary.write_text("", encoding="utf-8")
+    broken_python.write_text("", encoding="utf-8")
+    path_python.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(deps_manager.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(deps_manager.sys, "platform", "darwin")
+    monkeypatch.setattr(deps_manager.sys, "executable", str(qgis_binary))
+    monkeypatch.setattr(
+        deps_manager.sys, "_base_executable", str(broken_python), raising=False
+    )
+    monkeypatch.setattr(deps_manager.sys, "_base_prefix", str(macos_dir), raising=False)
+    monkeypatch.setattr(deps_manager.sys, "base_prefix", str(tmp_path), raising=False)
+    monkeypatch.setattr(
+        deps_manager.sys, "base_exec_prefix", str(tmp_path), raising=False
+    )
+    monkeypatch.setattr(deps_manager.sys, "prefix", str(tmp_path))
+    monkeypatch.setattr(
+        deps_manager.shutil,
+        "which",
+        lambda name: (
+            str(path_python)
+            if name == f"python{sys.version_info.major}.{sys.version_info.minor}"
+            else None
+        ),
+    )
+    monkeypatch.setattr(
+        deps_manager,
+        "_python_executable_usable",
+        lambda path: (
+            path == str(path_python),
+            "No module named 'encodings'" if path == str(broken_python) else "",
+        ),
+    )
+
+    assert deps_manager._find_python_executable() == str(path_python)
 
 
 def test_find_python_executable_refuses_non_python_without_candidate(
@@ -179,6 +244,44 @@ def test_find_python_executable_refuses_non_python_without_candidate(
         assert "cannot safely run QGIS itself" in str(exc)
     else:
         raise AssertionError("Expected RuntimeError")
+
+
+def test_create_venv_lets_uv_resolve_python_version_when_bundle_python_is_broken(
+    monkeypatch, tmp_path
+) -> None:
+    """uv can create the matching venv when app-bundle Python cannot start."""
+    from open_geoagent import deps_manager
+    import open_geoagent.uv_manager as uv_manager
+
+    commands = []
+    venv_dir = str(tmp_path / "venv")
+    expected_python = deps_manager.get_venv_python_path(venv_dir)
+
+    def fake_run(cmd, **_kwargs):
+        commands.append(cmd)
+        if cmd[:2] == ["/tmp/uv", "venv"]:
+            Path(expected_python).parent.mkdir(parents=True, exist_ok=True)
+            Path(expected_python).write_text("", encoding="utf-8")
+        return types.SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(deps_manager, "python_runtime_supported", lambda: True)
+    monkeypatch.setattr(deps_manager, "_uv_usable", lambda: True)
+    monkeypatch.setattr(uv_manager, "get_uv_path", lambda: "/tmp/uv")
+    monkeypatch.setattr(
+        deps_manager,
+        "_find_python_executable",
+        lambda: (_ for _ in ()).throw(RuntimeError("No module named 'encodings'")),
+    )
+    monkeypatch.setattr(deps_manager.subprocess, "run", fake_run)
+
+    assert deps_manager.create_venv(venv_dir) == expected_python
+    assert commands[0] == [
+        "/tmp/uv",
+        "venv",
+        "--python",
+        deps_manager._python_version_spec(),
+        venv_dir,
+    ]
 
 
 def test_provider_test_worker_uses_ollama_safe_smoke_prompt(monkeypatch) -> None:

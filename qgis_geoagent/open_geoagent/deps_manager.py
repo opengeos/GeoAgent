@@ -368,6 +368,11 @@ def _python_executable_names() -> List[str]:
     return names
 
 
+def _python_version_spec() -> str:
+    """Return the Python major.minor version required by this QGIS session."""
+    return f"{sys.version_info.major}.{sys.version_info.minor}"
+
+
 def _looks_like_python_executable(path: Optional[str]) -> bool:
     """Return True when *path* names a Python interpreter binary."""
     if not path:
@@ -389,6 +394,54 @@ def _add_existing_python_candidate(
         return
     candidates.append(normalized)
     seen.add(normalized)
+
+
+def _python_executable_usable(path: str) -> Tuple[bool, str]:
+    """Return whether *path* can run as the current QGIS Python version.
+
+    Some official macOS QGIS app bundles include a ``python3.x`` binary whose
+    embedded prefix still points at the QGIS build machine. The file exists and
+    looks correct, but a subprocess fails before startup with ``No module named
+    encodings``. Validate candidates before using them for ``venv`` or ``uv``.
+    """
+    code = (
+        "import encodings, sys; "
+        f"raise SystemExit(0 if sys.version_info[:2] == "
+        f"({sys.version_info.major}, {sys.version_info.minor}) else 3)"
+    )
+    try:
+        result = subprocess.run(  # nosec B603
+            [path, "-c", code],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=_get_clean_env(),
+            **_get_subprocess_kwargs(),
+        )
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+
+    if result.returncode == 0:
+        return True, ""
+    if result.returncode == 3:
+        return False, f"wrong Python version; need {_python_version_spec()}"
+
+    error = (result.stderr or result.stdout or f"exit code {result.returncode}").strip()
+    if len(error) > 500:
+        error = "..." + error[-500:]
+    return False, error
+
+
+def _first_usable_python_candidate(
+    candidates: List[str], rejected: List[str]
+) -> Optional[str]:
+    """Return the first candidate that starts successfully."""
+    for candidate in candidates:
+        usable, reason = _python_executable_usable(candidate)
+        if usable:
+            return candidate
+        rejected.append(f"{candidate}: {reason}")
+    return None
 
 
 def _macos_bundle_dirs(path: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
@@ -483,6 +536,7 @@ def _find_python_executable() -> str:
     """
     candidates: List[str] = []
     seen = set()
+    rejected: List[str] = []
 
     # Strategy 1: Python may expose the real interpreter separately from the
     # GUI application executable.
@@ -490,15 +544,19 @@ def _find_python_executable() -> str:
         candidates, seen, getattr(sys, "_base_executable", None)
     )
     _add_existing_python_candidate(candidates, seen, sys.executable)
-    if candidates:
-        return candidates[0]
+    python_exe = _first_usable_python_candidate(candidates, rejected)
+    if python_exe:
+        return python_exe
 
     if platform.system() == "Darwin" or sys.platform == "darwin":
+        start = len(candidates)
         _add_macos_python_candidates(candidates, seen)
-        if candidates:
-            return candidates[0]
+        python_exe = _first_usable_python_candidate(candidates[start:], rejected)
+        if python_exe:
+            return python_exe
 
     if platform.system() != "Windows":
+        start = len(candidates)
         prefix_candidates = (
             getattr(sys, "base_prefix", None),
             getattr(sys, "base_exec_prefix", None),
@@ -524,13 +582,19 @@ def _find_python_executable() -> str:
 
         for name in _python_executable_names():
             _add_existing_python_candidate(candidates, seen, shutil.which(name))
-        if candidates:
-            return candidates[0]
+        python_exe = _first_usable_python_candidate(candidates[start:], rejected)
+        if python_exe:
+            return python_exe
+
+        details = "\n".join(f"  {item}" for item in rejected[:8])
+        if len(rejected) > 8:
+            details += f"\n  ... {len(rejected) - 8} more rejected candidates"
 
         raise RuntimeError(
             "Could not find a Python interpreter for dependency installation.\n"
             f"sys.executable is not Python: {sys.executable}\n"
             "OpenGeoAgent cannot safely run QGIS itself as a Python executable."
+            + (f"\nRejected Python candidates:\n{details}" if details else "")
         )
 
     # Strategy 2: Check if sys.executable is already Python
@@ -745,11 +809,20 @@ def create_venv(venv_dir: str) -> str:
     env = _get_clean_env()
     kwargs = _get_subprocess_kwargs()
 
-    # Strategy 0: Use uv venv when available (fastest, no pip needed)
+    python_exe: Optional[str] = None
+    python_lookup_error = ""
+    try:
+        python_exe = _find_python_executable()
+    except RuntimeError as exc:
+        python_lookup_error = str(exc)
+
+    # Strategy 0: Use uv venv when available (fastest, no pip needed). If the
+    # official macOS QGIS bundle exposes only an unstartable python3.x binary,
+    # ask uv for the matching Python version instead of passing that path.
     if _uv_usable():
         uv_path = get_uv_path()
-        python_exe = _find_python_executable()
-        cmd = [uv_path, "venv", "--python", python_exe, venv_dir]
+        uv_python = python_exe or _python_version_spec()
+        cmd = [uv_path, "venv", "--python", uv_python, venv_dir]
         result = subprocess.run(  # nosec B603
             cmd,
             capture_output=True,
@@ -764,8 +837,14 @@ def create_venv(venv_dir: str) -> str:
         _cleanup_partial_venv(venv_dir)
 
     # Strategy 1: Subprocess with the real Python executable
-    python_exe = _find_python_executable()
     subprocess_error = ""
+    if python_exe is None:
+        raise RuntimeError(
+            "Could not create a virtual environment because no working Python "
+            "interpreter was found. uv was either unavailable or could not "
+            f"create one from the {_python_version_spec()} version request.\n\n"
+            f"{python_lookup_error}"
+        )
 
     cmd = [python_exe, "-m", "venv", venv_dir]
     result = subprocess.run(  # nosec B603
