@@ -7,8 +7,15 @@ import sys
 import time
 
 from qgis.PyQt.QtCore import Qt, QSettings, QThread, QTimer, QUrl, pyqtSignal
-from qgis.PyQt.QtGui import QDesktopServices, QFont, QGuiApplication, QKeySequence
+from qgis.PyQt.QtGui import (
+    QDesktopServices,
+    QFont,
+    QGuiApplication,
+    QKeySequence,
+    QValidator,
+)
 from qgis.PyQt.QtWidgets import (
+    QAbstractSpinBox,
     QCheckBox,
     QComboBox,
     QDockWidget,
@@ -268,6 +275,37 @@ def _enum_value(cls, enum_name, member_name):
     """Return an enum member from either scoped or legacy Qt APIs."""
     container = getattr(cls, enum_name, cls)
     return getattr(container, member_name)
+
+
+class _OptionalMaxTokensSpinBox(QSpinBox):
+    """Spin box that treats blank or Auto text as provider-default tokens."""
+
+    def validate(self, text, pos):
+        """Accept blank/Auto text so users can clear the field."""
+        cleaned = str(text or "").strip()
+        if not cleaned or "auto".startswith(cleaned.lower()):
+            state = _enum_value(QValidator, "State", "Acceptable")
+            return state, text, pos
+        return super().validate(text, pos)
+
+    def valueFromText(self, text):
+        """Convert blank/Auto text to the Auto sentinel."""
+        cleaned = str(text or "").strip()
+        if not cleaned or "auto".startswith(cleaned.lower()):
+            return MAX_TOKENS_AUTO_VALUE
+        return super().valueFromText(text)
+
+    def textFromValue(self, value):
+        """Display the Auto sentinel as text instead of ``0``."""
+        if int(value) <= MAX_TOKENS_AUTO_VALUE:
+            return "Auto"
+        return super().textFromValue(value)
+
+    def fixup(self, text):
+        """Normalize blank text to Auto during spinbox correction."""
+        if not str(text or "").strip():
+            return "Auto"
+        return super().fixup(text)
 
 
 def _key_sequence_text(sequence):
@@ -538,9 +576,12 @@ class SettingsDockWidget(QDockWidget):
         self.fast_check = QCheckBox("Use fast GeoAgent prompt")
         form.addRow("", self.fast_check)
 
-        self.max_tokens_spin = QSpinBox()
+        self.max_tokens_spin = _OptionalMaxTokensSpinBox()
         self.max_tokens_spin.setRange(MAX_TOKENS_AUTO_VALUE, 32768)
         self.max_tokens_spin.setSpecialValueText("Auto")
+        self.max_tokens_spin.setCorrectionMode(
+            _enum_value(QAbstractSpinBox, "CorrectionMode", "CorrectToNearestValue")
+        )
         self.max_tokens_spin.setValue(MAX_TOKENS_AUTO_VALUE)
         self.max_tokens_spin.setSingleStep(256)
         form.addRow("Max tokens:", self.max_tokens_spin)
