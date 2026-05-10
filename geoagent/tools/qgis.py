@@ -195,6 +195,7 @@ def _set_symbol_outline_color(symbol: Any, color: Any) -> bool:
 
 
 _ACTIVE_QGIS_HILLSHADE_TASKS: list[Any] = []
+_QGIS_XYZ_URL_SAFE_CHARS = ":/{}"
 
 
 def _is_raster_layer(layer: Any) -> bool:
@@ -376,6 +377,24 @@ def _apply_raster_symbology(
         )
         applied.update(style)
         return applied
+
+
+def _xyz_tile_uri(
+    url: str,
+    *,
+    zmin: Optional[int] = None,
+    zmax: Optional[int] = None,
+    attribution: Optional[str] = None,
+) -> str:
+    """Return a QGIS XYZ datasource URI for a tile URL template."""
+    # ``attribution`` is a display credit, not QGIS's HTTP ``referer`` field.
+    # Keep the argument for tool compatibility but do not send it to the provider.
+    parts = ["type=xyz", f"url={quote(url, safe=_QGIS_XYZ_URL_SAFE_CHARS)}"]
+    if zmin is not None:
+        parts.append(f"zmin={int(zmin)}")
+    if zmax is not None:
+        parts.append(f"zmax={int(zmax)}")
+    return "&".join(parts)
 
 
 def _transform_extent_to_canvas_crs(layer: Any, canvas: Any, extent: Any) -> Any:
@@ -1097,14 +1116,12 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
 
         def _run() -> str:
             """Run the worker body."""
-            parts = ["type=xyz", f"url={quote(url, safe='')}"]
-            if zmin is not None:
-                parts.append(f"zmin={int(zmin)}")
-            if zmax is not None:
-                parts.append(f"zmax={int(zmax)}")
-            if attribution:
-                parts.append(f"referer={quote(attribution, safe='')}")
-            uri = "&".join(parts)
+            uri = _xyz_tile_uri(
+                url,
+                zmin=zmin,
+                zmax=zmax,
+                attribution=attribution,
+            )
 
             layer: Any | None = None
             try:
@@ -1127,6 +1144,17 @@ def qgis_tools(iface: Any, project: Optional[Any] = None) -> list[Any]:
 
             if layer is None or (hasattr(layer, "isValid") and not layer.isValid()):
                 return f"Failed to load XYZ tile layer from {url!r}."
+            if hasattr(iface, "setActiveLayer"):
+                try:
+                    iface.setActiveLayer(layer)
+                except Exception:
+                    pass
+            try:
+                canvas = iface.mapCanvas()
+                if hasattr(canvas, "refresh"):
+                    canvas.refresh()
+            except Exception:
+                pass
             return f"Added XYZ tile layer {name!r}."
 
         return _on_gui(_run)

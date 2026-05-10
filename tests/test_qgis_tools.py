@@ -14,7 +14,7 @@ import pytest
 
 from geoagent.core.decorators import needs_confirmation
 from geoagent.testing import MockQGISIface, MockQGISLayer, MockQGISProject
-from geoagent.tools.qgis import qgis_tools
+from geoagent.tools.qgis import _xyz_tile_uri, qgis_tools
 
 
 def _color_matches(actual, expected: str) -> bool:
@@ -442,6 +442,51 @@ def test_add_xyz_tile_layer_uses_raster_fallback() -> None:
     )
     assert "Added XYZ" in out
     assert "Tiles" in project.mapLayers()
+    assert (
+        project.mapLayersByName("Tiles")[0].source()
+        == "type=xyz&url=https://example.com/{z}/{x}/{y}.png"
+    )
+    assert iface.activeLayer() is project.mapLayersByName("Tiles")[0]
+    assert iface.mapCanvas().refresh_count == 1
+
+
+def test_xyz_tile_uri_keeps_template_url_readable() -> None:
+    """Verify QGIS XYZ URIs do not encode the whole tile URL."""
+    uri = _xyz_tile_uri(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        zmin=0,
+        zmax=19,
+        attribution="OpenStreetMap contributors",
+    )
+
+    assert "url=https://tile.openstreetmap.org/{z}/{x}/{y}.png" in uri
+    assert "https%3A%2F%2Ftile.openstreetmap.org" not in uri
+    assert "referer=" not in uri
+    assert "zmin=0" in uri
+    assert "zmax=19" in uri
+
+
+def test_xyz_tile_uri_for_openstreetmap() -> None:
+    """Verify the standard OSM tile URI works with QGIS's XYZ provider."""
+    uri = _xyz_tile_uri(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        zmin=0,
+        zmax=19,
+        attribution="© OpenStreetMap contributors",
+    )
+
+    assert uri == (
+        "type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png" "&zmin=0&zmax=19"
+    )
+
+
+def test_xyz_tile_uri_encodes_nested_query_parameters() -> None:
+    """Verify tile URL query params stay inside QGIS's url parameter."""
+    uri = _xyz_tile_uri("https://example.com/{z}/{x}/{y}.png?token=abc&v=1")
+
+    assert uri == (
+        "type=xyz&url=https://example.com/{z}/{x}/{y}.png" "%3Ftoken%3Dabc%26v%3D1"
+    )
 
 
 def test_buffer_active_layer_runs_processing_and_loads_output(
