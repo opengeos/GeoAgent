@@ -26,6 +26,14 @@ The app passes API keys directly to browser clients, including
 `dangerouslyAllowBrowser: true` for OpenAI and Anthropic. Use this only for local
 development or behind a trusted model proxy.
 
+API keys you type into the panel are persisted in the browser's `sessionStorage`
+so the page can rebuild the agent on reload. They live in the page origin until
+the tab is closed. The optional `MapLibre JS` toggle (which exposes the
+`run_maplibre_script` tool) executes arbitrary JavaScript in that same page
+context, so a script can read `sessionStorage` and any other page state. Treat
+the JS toggle as a highly trusted, local-only escape hatch and leave it off when
+running prompts you do not control. The toggle defaults to off.
+
 `openai-codex` and Bedrock are intentionally not listed in this browser-only
 example:
 
@@ -89,8 +97,9 @@ Remove the US counties layer.
 ```
 
 Generated MapLibre JavaScript is available through the `run_maplibre_script`
-tool. The `MapLibre JS` toggle is enabled by default; turn it off when you want
-to restrict the agent to dedicated map tools only:
+tool. The `MapLibre JS` toggle defaults to off; enable it only for trusted local
+sessions where you want the agent to fall back to writing JavaScript when no
+dedicated tool fits:
 
 ```text
 Tilt the map to pitch 75 and rotate it slightly.

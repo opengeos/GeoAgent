@@ -121,14 +121,14 @@ const PROVIDER_CONFIGS: Record<ProviderId, ProviderConfig> = {
 const PROVIDER_OPTIONS = Object.values(PROVIDER_CONFIGS)
   .map((provider) => `<option value="${provider.id}">${provider.label}</option>`)
   .join("");
-const BROWSER_MAPLIBRE_SYSTEM_PROMPT = `You are an AI assistant embedded in a browser web app with direct access to a live MapLibre map through safe browser tools.
+const BROWSER_MAPLIBRE_SYSTEM_PROMPT = `You are an AI assistant embedded in a browser web app with direct access to a live MapLibre map through dedicated browser tools.
 
 Workflow guidance:
 - Use browser map tools for map navigation, layer inspection, marker creation, GeoJSON display, layer visibility, feature queries, and screenshots.
 - Coordinates in user-facing prompts are latitude/longitude, but browser map internals use longitude/latitude. Use the tool parameter names exactly.
 - Do not ask the user to paste JavaScript or run Python for actions that the browser map tools can perform.
 - Keep responses concise and include layer names, locations, and tool results when useful.`;
-const BROWSER_MAPLIBRE_CODE_SYSTEM_PROMPT = `Browser JavaScript code execution is enabled for this local session.
+const BROWSER_MAPLIBRE_CODE_SYSTEM_PROMPT = `Browser JavaScript code execution is enabled for this local session. This tool runs arbitrary JavaScript in the page context and is not a safety boundary; treat it as a trusted, local-only escape hatch.
 
 When no dedicated browser map tool can perform the requested MapLibre operation, write a short JavaScript snippet and run it with run_maplibre_script. The snippet executes in the browser with these names in scope: map, maplibregl, and helpers. Prefer MapLibre GL JS API calls, keep code focused on map operations, and avoid credential handling, storage access, unrelated DOM manipulation, or broad network operations.`;
 
@@ -307,7 +307,7 @@ let streamingAssistantText = "";
 const history: HistoryItem[] = [];
 const overlays = new Map<string, Overlay>();
 
-allowCodeInput.checked = true;
+allowCodeInput.checked = false;
 const storedProvider = sessionStorage.getItem(PROVIDER_STORAGE_KEY);
 if (storedProvider && storedProvider in PROVIDER_CONFIGS) {
   providerSelect.value = storedProvider;
@@ -881,11 +881,16 @@ async function runMapLibreScript(args: JsonObject): Promise<JsonObject> {
     throw new Error("No MapLibre JavaScript code was provided.");
   }
   const description = stringArg(args, "description");
+  const overlayNames = (): string[] => Array.from(overlays.keys());
+  const removeOverlayGated = (name: string): boolean => {
+    requireDestructiveApproval("Layer removal");
+    return removeOverlay(name);
+  };
   const helpers = Object.freeze({
-    overlays,
+    overlayNames,
     waitForMapIdle,
     slug,
-    removeOverlay,
+    removeOverlay: removeOverlayGated,
     addGeoJsonOverlay,
     addRasterOverlay,
     addMarkerOverlay,
