@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GeoAgent Browser MapLibre Example</title>
+    <link
+      href="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        --border: #d7dde5;
+        --ink: #17202a;
+        --muted: #5f6b7a;
+        --panel: #ffffff;
+        --panel-soft: #f6f8fb;
+        --primary: #0f766e;
+        --danger: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #eef2f6;
+      }
+
+      #map {
+        position: fixed;
+        inset: 0;
+      }
+
+      .panel {
+        position: fixed;
+        z-index: 2;
+        top: 16px;
+        left: 16px;
+        width: min(430px, calc(100vw - 32px));
+        max-height: calc(100vh - 32px);
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--panel) 94%, transparent);
+        box-shadow: 0 18px 50px rgb(15 23 42 / 18%);
+      }
+
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .title-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.2;
+        font-weight: 700;
+      }
+
+      .status {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #edf2f7;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status.connected {
+        background: #dff6ee;
+        color: #076448;
+      }
+
+      .status.error {
+        background: #fee4e2;
+        color: var(--danger);
+      }
+
+      label {
+        display: grid;
+        gap: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      input,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      input {
+        height: 36px;
+        padding: 0 10px;
+      }
+
+      textarea {
+        min-height: 86px;
+        resize: vertical;
+        padding: 9px 10px;
+        line-height: 1.35;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: end;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      button {
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        border-color: var(--border);
+        background: #fff;
+        color: var(--ink);
+      }
+
+      .panel-toggle {
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        min-height: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 6px;
+        color: var(--muted);
+      }
+
+      .panel-toggle svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+      }
+
+      .connect-toggle {
+        min-width: 92px;
+        min-height: 34px;
+        height: 34px;
+        padding: 0 10px;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .panel-body {
+        display: grid;
+        gap: 12px;
+        min-height: 0;
+      }
+
+      .panel.collapsed {
+        width: 29px;
+        height: 29px;
+        max-height: 29px;
+        padding: 0;
+        gap: 0;
+      }
+
+      .panel.collapsed .title {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .panel.collapsed .title-actions {
+        display: grid;
+        place-items: center;
+      }
+
+      .panel.collapsed h1,
+      .panel.collapsed .status,
+      .panel.collapsed .panel-body {
+        display: none;
+      }
+
+      .panel.collapsed .panel-toggle {
+        width: 29px;
+        height: 29px;
+        min-height: 29px;
+        border: 0;
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .panel.collapsed .panel-toggle svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .log {
+        overflow: auto;
+        min-height: 160px;
+        max-height: min(280px, calc(100vh - 360px));
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel-soft);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .entry {
+        margin: 0 0 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e3e8ef;
+      }
+
+      .entry:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .role {
+        margin-bottom: 3px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .text {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      @media (max-width: 700px) {
+        .panel {
+          top: auto;
+          right: 10px;
+          bottom: 10px;
+          left: 10px;
+          width: auto;
+          max-height: min(72vh, 620px);
+        }
+
+        .panel.collapsed {
+          width: 29px;
+          height: 29px;
+          max-height: 29px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map" aria-label="MapLibre map"></div>
+
+    <section class="panel" aria-label="GeoAgent chat panel">
+      <div class="title">
+        <h1>GeoAgent</h1>
+        <div class="title-actions">
+          <span id="status" class="status">Disconnected</span>
+          <button
+            id="panel-toggle"
+            class="secondary panel-toggle"
+            type="button"
+            aria-expanded="true"
+            aria-label="Collapse panel"
+            title="Collapse panel"
+          >
+            <svg
+              id="panel-toggle-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m18 15-6-6-6 6"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="panel-body" class="panel-body">
+        <div class="row">
+          <label>
+            WebSocket URL
+            <input id="ws-url" value="ws://127.0.0.1:8765/geoagent/ws" />
+          </label>
+          <button id="connect" class="connect-toggle" type="button">Connect</button>
+        </div>
+
+        <div id="log" class="log" aria-live="polite"></div>
+
+        <form id="chat-form">
+          <label>
+            Prompt
+            <textarea
+              id="prompt"
+              placeholder="Add a red marker for Knoxville and zoom to it."
+            ></textarea>
+          </label>
+          <div class="actions" style="margin-top: 8px">
+            <button id="send" type="submit" disabled>Send</button>
+            <button id="clear-log" class="secondary" type="button">Clear</button>
+          </div>
+        </form>
+
+        <p class="hint">
+          Start `geoagent browser` first. This page executes map commands in the
+          live browser map and sends results back to the Python agent.
+        </p>
+      </div>
+    </section>
+
+    <script src="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js"></script>
+    <script>
+      const BASEMAPS = {
+        positron: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+        voyager: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+        demotiles: "https://demotiles.maplibre.org/style.json",
+        openstreetmap: "osm",
+        osm: {
+          version: 8,
+          sources: {
+            osm: {
+              type: "raster",
+              tiles: [
+                "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+              ],
+              tileSize: 256,
+              attribution: "OpenStreetMap contributors",
+            },
+          },
+          layers: [{ id: "osm", type: "raster", source: "osm" }],
+        },
+      };
+
+      const map = new maplibregl.Map({
+        container: "map",
+        style: BASEMAPS.positron,
+        center: [-98.5795, 39.8283],
+        zoom: 3,
+        preserveDrawingBuffer: true,
+      });
+      map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+      const statusEl = document.querySelector("#status");
+      const connectButton = document.querySelector("#connect");
+      const panelEl = document.querySelector(".panel");
+      const panelToggleButton = document.querySelector("#panel-toggle");
+      const sendButton = document.querySelector("#send");
+      const wsUrlInput = document.querySelector("#ws-url");
+      const logEl = document.querySelector("#log");
+      const form = document.querySelector("#chat-form");
+      const promptEl = document.querySelector("#prompt");
+      const clearLogButton = document.querySelector("#clear-log");
+
+      let ws = null;
+      let sessionId = null;
+      let mapId = "default";
+      let busy = false;
+      let streamingAssistantTextEl = null;
+      let streamingAssistantText = "";
+      const history = [];
+      const overlays = new Map();
+
+      function setStatus(text, kind = "") {
+        statusEl.textContent = text;
+        statusEl.className = `status ${kind}`.trim();
+      }
+
+      function appendLog(role, text) {
+        const entry = document.createElement("div");
+        entry.className = "entry";
+        const roleEl = document.createElement("div");
+        roleEl.className = "role";
+        roleEl.textContent = role;
+        const textEl = document.createElement("div");
+        textEl.className = "text";
+        textEl.textContent = text;
+        entry.append(roleEl, textEl);
+        logEl.append(entry);
+        logEl.scrollTop = logEl.scrollHeight;
+        return textEl;
+      }
+
+      function updateControls() {
+        const connected = ws && ws.readyState === WebSocket.OPEN && sessionId;
+        sendButton.disabled = !connected || busy || !promptEl.value.trim();
+        connectButton.disabled = ws && ws.readyState === WebSocket.CONNECTING;
+      }
+
+      function togglePanel() {
+        const collapsed = !panelEl.classList.contains("collapsed");
+        panelEl.classList.toggle("collapsed", collapsed);
+        panelToggleButton.setAttribute("aria-expanded", String(!collapsed));
+        panelToggleButton.setAttribute(
+          "aria-label",
+          collapsed ? "Expand panel" : "Collapse panel",
+        );
+        panelToggleButton.title = collapsed ? "Expand panel" : "Collapse panel";
+        const iconPath = panelToggleButton.querySelector("path");
+        if (iconPath) {
+          iconPath.setAttribute("d", collapsed ? "m6 9 6 6 6-6" : "m18 15-6-6-6 6");
+        }
+      }
+
+      function waitForMapIdle() {
+        return new Promise((resolve) => {
+          if (map.loaded()) {
+            resolve();
+            return;
+          }
+          map.once("idle", resolve);
+        });
+      }
+
+      function slug(value) {
+        return String(value || "layer")
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9_-]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 60) || "layer";
+      }
+
+      function removeOverlay(name) {
+        const key = Array.from(overlays.keys()).find(
+          (item) => item === name || slug(item) === slug(name),
+        );
+        if (!key || !overlays.has(key)) {
+          return false;
+        }
+        const overlay = overlays.get(key);
+        for (const layerId of overlay.layerIds || []) {
+          if (map.getLayer(layerId)) {
+            map.removeLayer(layerId);
+          }
+        }
+        for (const sourceId of overlay.sourceIds || []) {
+          if (map.getSource(sourceId)) {
+            map.removeSource(sourceId);
+          }
+        }
+        if (overlay.marker) {
+          overlay.marker.remove();
+        }
+        overlays.delete(key);
+        return true;
+      }
+
+      function serializableFeature(feature) {
+        return {
+          type: "Feature",
+          geometry: feature.geometry || null,
+          properties: feature.properties || {},
+          layer: feature.layer
+            ? {
+                id: feature.layer.id,
+                type: feature.layer.type,
+                source: feature.layer.source,
+              }
+            : undefined,
+        };
+      }
+
+      function geojsonLayerPaint(style = {}) {
+        const color = style.color || style["line-color"] || "#1c7ed6";
+        const fillColor = style["fill-color"] || style.fillColor || color;
+        const lineColor = style["line-color"] || style.lineColor || color;
+        const circleColor = style["circle-color"] || style.circleColor || color;
+        const opacity = Number(style.opacity ?? style["fill-opacity"] ?? 0.35);
+        return {
+          fill: {
+            "fill-color": fillColor,
+            "fill-opacity": Math.max(0, Math.min(1, opacity)),
+          },
+          line: {
+            "line-color": lineColor,
+            "line-width": Number(style["line-width"] || style.lineWidth || 2),
+          },
+          circle: {
+            "circle-color": circleColor,
+            "circle-radius": Number(style["circle-radius"] || style.radius || 6),
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 1,
+          },
+        };
+      }
+
+      async function addGeoJsonOverlay({ name, data, url, style = {} }) {
+        await waitForMapIdle();
+        removeOverlay(name);
+        const sourceId = `geoagent-src-${slug(name)}`;
+        const baseId = `geoagent-layer-${slug(name)}`;
+        const paint = geojsonLayerPaint(style);
+        map.addSource(sourceId, {
+          type: "geojson",
+          data: url || data,
+        });
+        const layerDefs = [
+          {
+            id: `${baseId}-fill`,
+            type: "fill",
+            filter: ["==", ["geometry-type"], "Polygon"],
+            paint: paint.fill,
+          },
+          {
+            id: `${baseId}-line`,
+            type: "line",
+            filter: [
+              "any",
+              ["==", ["geometry-type"], "LineString"],
+              ["==", ["geometry-type"], "Polygon"],
+            ],
+            paint: paint.line,
+          },
+          {
+            id: `${baseId}-point`,
+            type: "circle",
+            filter: ["==", ["geometry-type"], "Point"],
+            paint: paint.circle,
+          },
+        ];
+        for (const def of layerDefs) {
+          map.addLayer({ ...def, source: sourceId });
+        }
+        overlays.set(name, {
+          kind: "geojson",
+          name,
+          data,
+          url,
+          style,
+          sourceIds: [sourceId],
+          layerIds: layerDefs.map((item) => item.id),
+        });
+      }
+
+      async function addRasterOverlay({ name, url, attribution = "" }) {
+        await waitForMapIdle();
+        removeOverlay(name);
+        const sourceId = `geoagent-src-${slug(name)}`;
+        const layerId = `geoagent-layer-${slug(name)}`;
+        map.addSource(sourceId, {
+          type: "raster",
+          tiles: [url],
+          tileSize: 256,
+          attribution,
+        });
+        map.addLayer({
+          id: layerId,
+          type: "raster",
+          source: sourceId,
+        });
+        overlays.set(name, {
+          kind: "raster",
+          name,
+          url,
+          attribution,
+          sourceIds: [sourceId],
+          layerIds: [layerId],
+        });
+      }
+
+      function addMarkerOverlay(args) {
+        const name = args.name || `marker-${overlays.size + 1}`;
+        removeOverlay(name);
+        const marker = new maplibregl.Marker({
+          color: args.color || "#3388ff",
+        })
+          .setLngLat([Number(args.lon), Number(args.lat)])
+          .addTo(map);
+        marker.getElement().title = args.tooltip || args.popup || name;
+        if (args.popup) {
+          marker.setPopup(new maplibregl.Popup().setText(args.popup));
+        }
+        overlays.set(name, {
+          kind: "marker",
+          name,
+          marker,
+          lngLat: [Number(args.lon), Number(args.lat)],
+          layerIds: [],
+          sourceIds: [],
+        });
+        return name;
+      }
+
+      async function restoreOverlaysAfterStyleChange() {
+        const saved = Array.from(overlays.values()).map((overlay) => ({
+          ...overlay,
+        }));
+        for (const overlay of saved) {
+          if (overlay.kind === "geojson") {
+            await addGeoJsonOverlay(overlay);
+          } else if (overlay.kind === "raster") {
+            await addRasterOverlay(overlay);
+          }
+        }
+      }
+
+      async function executeCommand(command, args = {}) {
+        await waitForMapIdle();
+
+        if (command === "list_layers") {
+          const styleLayers = (map.getStyle().layers || []).map((layer) => ({
+            id: layer.id,
+            type: layer.type,
+            source: layer.source || null,
+            visible: (layer.layout || {}).visibility !== "none",
+            user_added: layer.id.startsWith("geoagent-layer-"),
+          }));
+          const markerLayers = Array.from(overlays.values())
+            .filter((overlay) => overlay.kind === "marker")
+            .map((overlay) => ({
+              id: overlay.name,
+              type: "marker",
+              source: null,
+              visible: true,
+              user_added: true,
+            }));
+          return [...styleLayers, ...markerLayers];
+        }
+
+        if (command === "get_map_state") {
+          const center = map.getCenter();
+          const bounds = map.getBounds();
+          return {
+            center: [center.lng, center.lat],
+            zoom: map.getZoom(),
+            bearing: map.getBearing(),
+            pitch: map.getPitch(),
+            bounds: {
+              west: bounds.getWest(),
+              south: bounds.getSouth(),
+              east: bounds.getEast(),
+              north: bounds.getNorth(),
+            },
+            user_layers: Array.from(overlays.keys()),
+          };
+        }
+
+        if (command === "set_center") {
+          map.jumpTo({
+            center: [Number(args.lon), Number(args.lat)],
+            zoom: args.zoom == null ? map.getZoom() : Number(args.zoom),
+          });
+          return "Centered map.";
+        }
+
+        if (command === "fly_to") {
+          map.flyTo({
+            center: [Number(args.lon), Number(args.lat)],
+            zoom: args.zoom == null ? map.getZoom() : Number(args.zoom),
+          });
+          return "Moved map.";
+        }
+
+        if (command === "set_zoom") {
+          map.setZoom(Number(args.zoom));
+          return "Zoom updated.";
+        }
+
+        if (command === "zoom_to_bounds") {
+          map.fitBounds(
+            [
+              [Number(args.west), Number(args.south)],
+              [Number(args.east), Number(args.north)],
+            ],
+            { padding: 48, maxZoom: 16 },
+          );
+          return "Zoomed to bounds.";
+        }
+
+        if (command === "change_basemap") {
+          const rawStyle = String(args.style || "positron").trim();
+          let style = BASEMAPS[rawStyle.toLowerCase()] || rawStyle;
+          if (typeof style === "string" && BASEMAPS[style]) {
+            style = BASEMAPS[style];
+          }
+          map.setStyle(style);
+          await new Promise((resolve) => map.once("style.load", resolve));
+          await restoreOverlaysAfterStyleChange();
+          return `Basemap changed to ${rawStyle}.`;
+        }
+
+        if (command === "add_marker") {
+          const name = addMarkerOverlay(args);
+          return `Added marker ${name}.`;
+        }
+
+        if (command === "add_geojson_data") {
+          await addGeoJsonOverlay({
+            name: args.name || "geojson",
+            data: args.data,
+            style: args.style || {},
+          });
+          return `Added GeoJSON layer ${args.name || "geojson"}.`;
+        }
+
+        if (command === "add_vector_data") {
+          await addGeoJsonOverlay({
+            name: args.name || "vector-data",
+            url: args.url,
+            style: args.style || {},
+          });
+          return `Added GeoJSON URL layer ${args.name || "vector-data"}.`;
+        }
+
+        if (command === "add_xyz_tile_layer") {
+          await addRasterOverlay({
+            name: args.name || "xyz-tiles",
+            url: args.url,
+            attribution: args.attribution || "",
+          });
+          return `Added XYZ tile layer ${args.name || "xyz-tiles"}.`;
+        }
+
+        if (command === "set_layer_visibility") {
+          const overlay = overlays.get(args.name);
+          const visibility = args.visible ? "visible" : "none";
+          if (overlay) {
+            for (const layerId of overlay.layerIds || []) {
+              if (map.getLayer(layerId)) {
+                map.setLayoutProperty(layerId, "visibility", visibility);
+              }
+            }
+            return `Layer ${args.name} visibility updated.`;
+          }
+          if (map.getLayer(args.name)) {
+            map.setLayoutProperty(args.name, "visibility", visibility);
+            return `Layer ${args.name} visibility updated.`;
+          }
+          throw new Error(`Layer not found: ${args.name}`);
+        }
+
+        if (command === "set_layer_opacity") {
+          const opacity = Math.max(0, Math.min(1, Number(args.opacity)));
+          const overlay = overlays.get(args.name);
+          const layerIds = overlay ? overlay.layerIds : [args.name];
+          let changed = false;
+          for (const layerId of layerIds || []) {
+            const layer = map.getLayer(layerId);
+            if (!layer) {
+              continue;
+            }
+            const prop =
+              layer.type === "raster"
+                ? "raster-opacity"
+                : layer.type === "fill"
+                  ? "fill-opacity"
+                  : layer.type === "line"
+                    ? "line-opacity"
+                    : layer.type === "circle"
+                      ? "circle-opacity"
+                      : null;
+            if (prop) {
+              map.setPaintProperty(layerId, prop, opacity);
+              changed = true;
+            }
+          }
+          if (!changed) {
+            throw new Error(`Layer not found or opacity unsupported: ${args.name}`);
+          }
+          return `Layer ${args.name} opacity updated.`;
+        }
+
+        if (command === "query_rendered_features") {
+          const canvas = map.getCanvas();
+          const point =
+            args.x == null || args.y == null
+              ? [canvas.clientWidth / 2, canvas.clientHeight / 2]
+              : [Number(args.x), Number(args.y)];
+          const layers = [];
+          if (Array.isArray(args.layers)) {
+            for (const requested of args.layers) {
+              const overlay = overlays.get(requested);
+              if (overlay) {
+                layers.push(...(overlay.layerIds || []));
+              } else if (map.getLayer(requested)) {
+                layers.push(requested);
+              }
+            }
+          }
+          const options = layers.length ? { layers } : {};
+          return map
+            .queryRenderedFeatures(point, options)
+            .slice(0, 50)
+            .map(serializableFeature);
+        }
+
+        if (command === "screenshot_map") {
+          return {
+            data_url: map.getCanvas().toDataURL("image/png"),
+            width: map.getCanvas().width,
+            height: map.getCanvas().height,
+          };
+        }
+
+        if (command === "remove_layer") {
+          if (!removeOverlay(args.name)) {
+            throw new Error(`User-added layer not found: ${args.name}`);
+          }
+          return `Removed layer ${args.name}.`;
+        }
+
+        if (command === "clear_layers") {
+          for (const name of Array.from(overlays.keys())) {
+            removeOverlay(name);
+          }
+          return "Cleared user-added layers.";
+        }
+
+        throw new Error(`Unsupported command: ${command}`);
+      }
+
+      function connect() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close();
+          return;
+        }
+        setStatus("Connecting");
+        ws = new WebSocket(wsUrlInput.value.trim());
+        updateControls();
+
+        ws.addEventListener("open", () => {
+          setStatus("Connected", "connected");
+          connectButton.textContent = "Disconnect";
+          appendLog("system", "Connected to GeoAgent browser backend.");
+          updateControls();
+        });
+
+        ws.addEventListener("close", () => {
+          sessionId = null;
+          setStatus("Disconnected");
+          connectButton.textContent = "Connect";
+          appendLog("system", "Disconnected.");
+          updateControls();
+        });
+
+        ws.addEventListener("error", () => {
+          setStatus("WebSocket error", "error");
+          const url = wsUrlInput.value.trim();
+          const httpsMixedContent =
+            window.location.protocol === "https:" && url.startsWith("ws://");
+          const detail = httpsMixedContent
+            ? "This page is running over HTTPS, so the browser may block ws:// connections. Serve the example from http://127.0.0.1:8000 or use a TLS WebSocket endpoint."
+            : "If the backend is running, stop it and start it again so it loads the current GeoAgent checkout.";
+          appendLog("error", `Could not connect to the GeoAgent backend. ${detail}`);
+          updateControls();
+        });
+
+        ws.addEventListener("message", async (event) => {
+          const message = JSON.parse(event.data);
+
+          if (message.type === "session") {
+            sessionId = message.sessionId;
+            mapId = message.mapId || "default";
+            appendLog("system", `Session ${sessionId}`);
+            updateControls();
+            return;
+          }
+
+          if (message.type === "chat_status") {
+            busy = message.status === "running";
+            if (busy) {
+              streamingAssistantTextEl = null;
+              streamingAssistantText = "";
+            }
+            setStatus(busy ? "Running" : "Connected", "connected");
+            updateControls();
+            return;
+          }
+
+          if (message.type === "chat_delta") {
+            const text = String(message.text || "");
+            if (!text) {
+              return;
+            }
+            if (!streamingAssistantTextEl) {
+              streamingAssistantTextEl = appendLog("assistant", "");
+            }
+            streamingAssistantText += text;
+            streamingAssistantTextEl.textContent = streamingAssistantText;
+            logEl.scrollTop = logEl.scrollHeight;
+            return;
+          }
+
+          if (message.type === "chat_tool") {
+            if (message.name) {
+              appendLog("tool", `Running ${message.name}`);
+            }
+            return;
+          }
+
+          if (message.type === "chat_result") {
+            busy = false;
+            setStatus(message.ok ? "Connected" : "Error", message.ok ? "connected" : "error");
+            const answer = message.answer || message.error || "No response.";
+            if (message.ok && streamingAssistantTextEl) {
+              streamingAssistantTextEl.textContent = answer;
+            } else {
+              appendLog(message.ok ? "assistant" : "error", answer);
+            }
+            if (message.executed_tools && message.executed_tools.length) {
+              appendLog("tools", message.executed_tools.join(", "));
+            }
+            history.push({ role: "assistant", text: answer, status: message.ok ? "ok" : "error" });
+            streamingAssistantTextEl = null;
+            streamingAssistantText = "";
+            updateControls();
+            return;
+          }
+
+          if (message.type === "map_command") {
+            try {
+              const result = await executeCommand(message.command, message.args || {});
+              ws.send(
+                JSON.stringify({
+                  type: "map_command_result",
+                  id: message.id,
+                  ok: true,
+                  result,
+                }),
+              );
+              appendLog("map", `${message.command}: ok`);
+            } catch (error) {
+              ws.send(
+                JSON.stringify({
+                  type: "map_command_result",
+                  id: message.id,
+                  ok: false,
+                  error: String(error && error.message ? error.message : error),
+                }),
+              );
+              appendLog("map error", `${message.command}: ${error.message || error}`);
+            }
+            return;
+          }
+
+          if (message.type === "error") {
+            appendLog("error", message.error || "Unknown backend error.");
+          }
+        });
+      }
+
+      function sendPrompt() {
+        const text = promptEl.value.trim();
+        if (!text || !ws || ws.readyState !== WebSocket.OPEN || !sessionId) {
+          return;
+        }
+        history.push({ role: "user", text });
+        appendLog("user", text);
+        streamingAssistantTextEl = null;
+        streamingAssistantText = "";
+        promptEl.value = "";
+        busy = true;
+        setStatus("Running", "connected");
+        updateControls();
+        ws.send(
+          JSON.stringify({
+            type: "chat",
+            mapId,
+            message: text,
+            history,
+          }),
+        );
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendPrompt();
+      });
+
+      promptEl.addEventListener("input", updateControls);
+      promptEl.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
+          sendPrompt();
+        }
+      });
+      connectButton.addEventListener("click", connect);
+      panelToggleButton.addEventListener("click", togglePanel);
+      clearLogButton.addEventListener("click", () => {
+        logEl.replaceChildren();
+      });
+
+      appendLog(
+        "system",
+        "Start `geoagent browser --port 8765`, then connect this page.",
+      );
+    </script>
+  </body>
+</html>

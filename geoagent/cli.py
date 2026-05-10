@@ -122,7 +122,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     browser_parser.add_argument("--host", default="127.0.0.1")
     browser_parser.add_argument("--port", type=int, default=8765)
-    browser_parser.add_argument("--provider", default=None)
+    browser_parser.add_argument(
+        "--provider",
+        default="openai-codex",
+        help="Model provider id. Defaults to openai-codex.",
+    )
     browser_parser.add_argument("--model", default=None, help="Override model id")
     browser_parser.add_argument(
         "--command-timeout",

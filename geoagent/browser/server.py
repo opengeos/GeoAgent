@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import threading
+import time
 from typing import Any
 from uuid import uuid4
 
@@ -10,6 +12,54 @@ from geoagent.browser.session import BrowserMapSession
 from geoagent.core.factory import for_browser_maplibre
 from geoagent.core.safety import auto_approve_safe_only
 from geoagent.ui.app import build_prompt_with_context
+
+
+def _stream_result_to_text(result: Any) -> str:
+    """Extract assistant text from a final Strands streaming result."""
+    message = getattr(result, "message", None)
+    if not isinstance(message, dict):
+        return ""
+    content = message.get("content")
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for block in content:
+        if isinstance(block, dict) and "text" in block:
+            parts.append(str(block["text"]))
+    return "\n".join(parts).strip()
+
+
+def _stream_result_tool_names(result: Any) -> list[str]:
+    """Extract executed tool names from a final Strands streaming result."""
+    metrics = getattr(result, "metrics", None)
+    tool_metrics = getattr(metrics, "tool_metrics", {}) if metrics is not None else {}
+    return list(tool_metrics.keys()) if isinstance(tool_metrics, dict) else []
+
+
+def _chat_result_payload(
+    *,
+    agent: Any,
+    result: Any,
+    answer_text: str,
+    elapsed: float,
+) -> dict[str, Any]:
+    """Build the final browser chat payload for streamed and non-streamed turns."""
+    final_text = _stream_result_to_text(result) if result is not None else ""
+    stop = str(getattr(result, "stop_reason", "end_turn")) if result is not None else ""
+    success = stop not in ("cancelled", "guardrail_intervened")
+    payload: dict[str, Any] = {
+        "type": "chat_result",
+        "ok": success,
+        "answer": final_text or answer_text,
+        "executed_tools": _stream_result_tool_names(result),
+        "tool_calls": list(getattr(agent, "_tool_calls", []) or []),
+        "cancelled_tools": list(getattr(agent, "_cancelled", []) or []),
+        "execution_time": elapsed,
+        "streamed": True,
+    }
+    if not success:
+        payload["error"] = f"stop_reason={stop}"
+    return payload
 
 
 async def _send_json(websocket: Any, payload: dict[str, Any]) -> None:
@@ -29,7 +79,7 @@ async def _run_chat_turn(
     model_id: str | None,
     history: list[dict[str, Any]] | None = None,
 ) -> None:
-    """Run one GeoAgent chat turn in a worker thread."""
+    """Run one GeoAgent chat turn and stream deltas to the browser."""
     try:
         await _send_json(websocket, {"type": "chat_status", "status": "running"})
         agent = for_browser_maplibre(
@@ -39,18 +89,78 @@ async def _run_chat_turn(
             confirm=auto_approve_safe_only,
         )
         prompt = build_prompt_with_context(history, message) if history else message
-        response = await asyncio.to_thread(agent.chat, prompt)
-        payload: dict[str, Any] = {
-            "type": "chat_result",
-            "ok": bool(response.success),
-            "answer": response.answer_text or "",
-            "executed_tools": list(response.executed_tools or []),
-            "tool_calls": list(response.tool_calls or []),
-            "cancelled_tools": list(response.cancelled_tools or []),
-        }
-        if response.error_message:
-            payload["error"] = response.error_message
-        await _send_json(websocket, payload)
+        loop = asyncio.get_running_loop()
+        events: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
+
+        async def _consume_stream() -> None:
+            """Drain GeoAgent streaming events in the worker thread."""
+            try:
+                async for event in agent.stream_chat(prompt):
+                    loop.call_soon_threadsafe(events.put_nowait, ("event", event))
+            except BaseException as exc:  # pragma: no cover - defensive worker path
+                loop.call_soon_threadsafe(events.put_nowait, ("error", exc))
+            finally:
+                loop.call_soon_threadsafe(events.put_nowait, ("done", None))
+
+        def _worker() -> None:
+            asyncio.run(_consume_stream())
+
+        started = time.time()
+        thread = threading.Thread(
+            target=_worker,
+            daemon=True,
+            name="GeoAgent-browser-stream-chat",
+        )
+        thread.start()
+
+        answer_parts: list[str] = []
+        final_result: Any = None
+        while True:
+            kind, event = await events.get()
+            if kind == "done":
+                break
+            if kind == "error":
+                raise event
+            if not isinstance(event, dict):
+                continue
+            if "data" in event:
+                text = str(event.get("data") or "")
+                if text:
+                    answer_parts.append(text)
+                    await _send_json(
+                        websocket,
+                        {
+                            "type": "chat_delta",
+                            "text": text,
+                        },
+                    )
+                continue
+            if "current_tool_use" in event:
+                tool_use = event.get("current_tool_use")
+                tool_name = ""
+                if isinstance(tool_use, dict):
+                    tool_name = str(tool_use.get("name") or "")
+                await _send_json(
+                    websocket,
+                    {
+                        "type": "chat_tool",
+                        "name": tool_name,
+                    },
+                )
+                continue
+            if "result" in event:
+                final_result = event.get("result")
+
+        thread.join(timeout=0)
+        await _send_json(
+            websocket,
+            _chat_result_payload(
+                agent=agent,
+                result=final_result,
+                answer_text="".join(answer_parts),
+                elapsed=time.time() - started,
+            ),
+        )
     except Exception as exc:
         await _send_json(
             websocket,
@@ -77,6 +187,10 @@ def create_browser_app(
             "FastAPI is required for `geoagent browser`. Install with "
             "`pip install GeoAgent[browser]`."
         ) from exc
+    # Endpoint annotations are postponed by ``from __future__ import annotations``.
+    # FastAPI resolves them against module globals, not this function's locals.
+    globals()["WebSocket"] = WebSocket
+    globals()["WebSocketDisconnect"] = WebSocketDisconnect
 
     app = FastAPI(title="GeoAgent Browser")
 
@@ -164,10 +278,9 @@ def create_browser_app(
             session.fail_all(str(exc))
             raise
         finally:
-            # ``active_chat`` runs ``agent.chat`` inside ``asyncio.to_thread``;
-            # the worker thread is not actually cancellable, so ``cancel()`` would
-            # only mark the wrapping task while the provider call kept running.
-            # Drop the reference and let the task finish quietly instead.
+            # Streaming chat runs in a worker thread so browser map tools can
+            # synchronously wait on this WebSocket loop. The worker thread is not
+            # cancellable, so drop the reference and let the task finish quietly.
             active_chat = None
 
     return app

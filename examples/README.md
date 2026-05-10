@@ -6,6 +6,8 @@ Runnable Jupyter notebooks live under **`docs/examples/`**:
 - **`docs/examples/live_mapping.ipynb`** — leafmap MapLibre + Claude; camera comes from **`m.view_state`** (see `get_map_state` tool).
 - **`docs/examples/qgis_agent.ipynb`** — QGIS-oriented tools using mock `iface` in Jupyter; snippet for real QGIS included.
 - **`docs/examples/stac_workflow.ipynb`** — STAC catalog search, asset inspection, and mock QGIS raster loading.
+- **`examples/browser_maplibre/`** — end-to-end browser MapLibre client for the `geoagent browser` WebSocket backend.
+- **`examples/browser_maplibre_typescript/`** — TypeScript/Vite version of the browser MapLibre WebSocket client.
 - **`examples/nasa_opera_qgis.py`** — NASA OPERA search and footprints workflow for the QGIS Python console.
 
 Install extras as shown in each notebook (`GeoAgent[anthropic]`, `GeoAgent[anthropic,leafmap]`, `GeoAgent[stac]`).

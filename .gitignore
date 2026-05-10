@@ -103,6 +103,9 @@ ENV/
 # mypy
 .mypy_cache/
 
+# JavaScript dependencies
+node_modules/
+
 # IDE settings
 .vscode/
 CLAUDE.md
