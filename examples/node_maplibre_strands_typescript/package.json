@@ -1,0 +1,38 @@
+{
+  "name": "geoagent-node-maplibre-strands-typescript",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run build:client && tsc -p tsconfig.json",
+    "build:client": "esbuild src/client/main.ts --bundle --format=esm --sourcemap --outdir=public/assets",
+    "codex:login": "cd ../.. && python -m geoagent.cli codex login",
+    "dev": "npm run build:client && tsx src/server/main.ts",
+    "start": "node dist/server/main.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1037.0",
+    "@google/genai": "^1.52.0",
+    "@strands-agents/sdk": "^1.1.0",
+    "express": "^5.2.1",
+    "maplibre-gl": "^5.12.0",
+    "maplibre-gl-layer-control": "^0.14.1",
+    "openai": "^6.37.0",
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^25.0.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

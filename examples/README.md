@@ -9,6 +9,7 @@ Runnable Jupyter notebooks live under **`docs/examples/`**:
 - **`examples/browser_maplibre/`** — end-to-end browser MapLibre client for the `geoagent browser` WebSocket backend.
 - **`examples/browser_maplibre_typescript/`** — TypeScript/Vite version of the browser MapLibre WebSocket client.
 - **`examples/browser_maplibre_strands_typescript/`** — browser-only TypeScript/Vite MapLibre client with a Strands TypeScript agent, direct in-page map tools, and selectable model providers.
+- **`examples/node_maplibre_strands_typescript/`** — Node.js TypeScript MapLibre app with a Strands backend for the GeoAgent/QGIS provider set, keeping API keys, Codex OAuth, and AWS credentials server-side.
 - **`examples/nasa_opera_qgis.py`** — NASA OPERA search and footprints workflow for the QGIS Python console.
 
 Install extras as shown in each notebook (`GeoAgent[anthropic]`, `GeoAgent[anthropic,leafmap]`, `GeoAgent[stac]`).

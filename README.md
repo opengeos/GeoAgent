@@ -263,6 +263,11 @@ with the Strands TypeScript SDK, see
 the Python WebSocket backend and supports OpenAI Responses, OpenAI Chat,
 Anthropic, and Google Gemini providers from the browser UI.
 
+For a Node.js TypeScript MapLibre app that keeps model authentication on the
+server, see `examples/node_maplibre_strands_typescript/`. It supports
+the same provider ids as the GeoAgent/QGIS UI, including ChatGPT/Codex OAuth,
+OpenAI, Anthropic, Gemini, Amazon Bedrock, LiteLLM, and Ollama.
+
 For local sessions where you want PyQGIS-style fallback behavior, add
 `--allow-browser-code`. This exposes `run_maplibre_script`, allowing the agent
 to execute generated MapLibre JavaScript in the browser when no dedicated tool
