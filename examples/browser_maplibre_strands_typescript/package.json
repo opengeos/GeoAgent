@@ -1,0 +1,26 @@
+{
+  "name": "geoagent-browser-maplibre-strands-typescript",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
+    "@google/genai": "^1.52.0",
+    "@strands-agents/sdk": "^1.1.0",
+    "dompurify": "^3.4.2",
+    "maplibre-gl": "^5.12.0",
+    "maplibre-gl-layer-control": "^0.14.1",
+    "marked": "^18.0.3",
+    "openai": "^6.37.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7"
+  }
+}

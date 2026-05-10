@@ -1,0 +1,411 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --border: #d7dde5;
+  --ink: #17202a;
+  --muted: #5f6b7a;
+  --panel: #ffffff;
+  --panel-soft: #f6f8fb;
+  --primary: #0f766e;
+  --danger: #b42318;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: #eef2f6;
+}
+
+#map {
+  position: fixed;
+  inset: 0;
+}
+
+.panel {
+  position: fixed;
+  z-index: 2;
+  top: 16px;
+  left: 16px;
+  width: min(430px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: 0 18px 50px rgb(15 23 42 / 18%);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #edf2f7;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.connected {
+  background: #dff6ee;
+  color: #076448;
+}
+
+.status.error {
+  background: #fee4e2;
+  color: var(--danger);
+}
+
+label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.panel input,
+.panel select,
+.panel textarea,
+.panel button {
+  font: inherit;
+}
+
+.panel input,
+.panel select,
+.panel textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.panel input,
+.panel select {
+  height: 36px;
+  padding: 0 10px;
+}
+
+.panel select {
+  cursor: pointer;
+}
+
+.panel textarea {
+  min-height: 86px;
+  resize: vertical;
+  padding: 9px 10px;
+  line-height: 1.35;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(110px, 0.55fr);
+  gap: 8px;
+  align-items: end;
+}
+
+.toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkbox-row {
+  display: inline-flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.checkbox-row input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.panel button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.panel button.secondary {
+  border-color: var(--border);
+  background: #fff;
+  color: var(--ink);
+}
+
+.panel button.panel-toggle,
+.panel button.secondary.panel-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--muted);
+  line-height: 1;
+  font-weight: 700;
+}
+
+.panel button.panel-toggle svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.connect-toggle {
+  min-width: 92px;
+  min-height: 34px;
+  height: 34px;
+  padding: 0 10px;
+}
+
+.panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.panel-body {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.panel.collapsed {
+  display: none;
+}
+
+.geoagent-map-control {
+  display: none;
+}
+
+.geoagent-map-control button {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  min-height: 29px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.geoagent-map-control button:hover {
+  background-color: rgb(0 0 0 / 5%);
+}
+
+.geoagent-map-control svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.log {
+  overflow: auto;
+  min-height: 160px;
+  max-height: min(280px, calc(100vh - 360px));
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.entry {
+  margin: 0 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e3e8ef;
+}
+
+.entry:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.role {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.text.markdown {
+  white-space: normal;
+}
+
+.text.markdown > :first-child {
+  margin-top: 0;
+}
+
+.text.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.text.markdown p {
+  margin: 0 0 8px;
+}
+
+.text.markdown ul,
+.text.markdown ol {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}
+
+.text.markdown li {
+  margin: 2px 0;
+}
+
+.text.markdown a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.text.markdown code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #e8edf3;
+  color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+.text.markdown pre {
+  overflow: auto;
+  max-width: 100%;
+  margin: 0 0 8px;
+  padding: 8px;
+  border: 1px solid #d8dee8;
+  border-radius: 6px;
+  background: #111827;
+  color: #f8fafc;
+}
+
+.text.markdown pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre;
+}
+
+.text.markdown blockquote {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid #c7d2df;
+  color: var(--muted);
+}
+
+.text.markdown table {
+  display: block;
+  overflow: auto;
+  max-width: 100%;
+  margin: 0 0 8px;
+  border-collapse: collapse;
+}
+
+.text.markdown th,
+.text.markdown td {
+  padding: 4px 6px;
+  border: 1px solid #d8dee8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+@media (max-width: 700px) {
+  .panel {
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+    max-height: min(72vh, 620px);
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -257,6 +257,12 @@ provider.
 A TypeScript/Vite version is available in
 `examples/browser_maplibre_typescript/`.
 
+For a browser-only TypeScript agent that calls the live MapLibre map directly
+with the Strands TypeScript SDK, see
+`examples/browser_maplibre_strands_typescript/`. This example does not require
+the Python WebSocket backend and supports OpenAI, OpenAI Codex, Anthropic,
+Google Gemini, and Amazon Bedrock providers from the browser UI.
+
 For local sessions where you want PyQGIS-style fallback behavior, add
 `--allow-browser-code`. This exposes `run_maplibre_script`, allowing the agent
 to execute generated MapLibre JavaScript in the browser when no dedicated tool
