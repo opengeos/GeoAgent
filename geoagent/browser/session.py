@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 import uuid
 from typing import Any
 
@@ -63,6 +64,9 @@ class BrowserMapSession:
         wait_timeout = (
             self.timeout_seconds if timeout_seconds is None else float(timeout_seconds)
         )
+        # Treat ``wait_timeout`` as a total deadline so the send and response
+        # phases share one budget instead of each consuming a full ``wait_timeout``.
+        deadline = time.monotonic() + wait_timeout
         future = asyncio.run_coroutine_threadsafe(
             self.websocket.send_json(payload),
             self.loop,
@@ -73,7 +77,8 @@ class BrowserMapSession:
             self._drop_pending(command_id)
             raise
 
-        if not event.wait(wait_timeout):
+        remaining = max(0.0, deadline - time.monotonic())
+        if not event.wait(remaining):
             self._drop_pending(command_id)
             raise BrowserMapTimeoutError(
                 f"Browser did not return a result for {command!r} within "

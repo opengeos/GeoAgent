@@ -154,3 +154,18 @@ def test_call_honors_explicit_zero_timeout(loop_thread: _LoopThread) -> None:
         session.call("noop", timeout_seconds=0.0)
     elapsed = time.monotonic() - started
     assert elapsed < 5.0, "Explicit zero timeout fell back to the session default."
+
+
+def test_call_timeout_is_total_deadline(loop_thread: _LoopThread) -> None:
+    """``wait_timeout`` covers send + response combined, not each phase separately."""
+    session = _make_session(loop_thread, timeout_seconds=0.3)
+    started = time.monotonic()
+    with pytest.raises(BrowserMapTimeoutError):
+        session.call("noop")
+    elapsed = time.monotonic() - started
+    # Without a shared deadline the send + response phases would each consume
+    # ``timeout_seconds``, doubling the total wait. Allow a small scheduling
+    # margin but reject anything that approaches the doubled budget.
+    assert (
+        elapsed < 0.5
+    ), f"call() exceeded its single-deadline timeout budget (took {elapsed:.2f}s)."
