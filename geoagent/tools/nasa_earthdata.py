@@ -59,6 +59,9 @@ def _compact_catalog_row(row: dict[str, str]) -> dict[str, str]:
     keys = [
         "ShortName",
         "EntryTitle",
+        "concept-id",
+        "provider-id",
+        "Version",
         "Platform",
         "Instrument",
         "ProcessingLevel",
@@ -131,6 +134,26 @@ def _parse_bbox(bbox: str | list[float] | tuple[float, ...] | None) -> (
     if west >= east or south >= north:
         raise ValueError("bbox coordinates must satisfy west < east and south < north")
     return west, south, east, north
+
+
+def _normalize_orbit_number(value: Any) -> int | tuple[int, int] | None:
+    """Return a positive CMR orbit filter, ignoring unset UI/LLM defaults."""
+    if value is None or value == "":
+        return None
+
+    if isinstance(value, (list, tuple)):
+        numbers = [int(item) for item in value if item not in (None, "")]
+        positives = [number for number in numbers if number > 0]
+        if not positives:
+            return None
+        if len(positives) == 1:
+            return positives[0]
+        return positives[0], positives[1]
+
+    number = int(value)
+    if number <= 0:
+        return None
+    return number
 
 
 def _current_bbox_wgs84(iface: Any) -> tuple[float, float, float, float]:
@@ -246,6 +269,108 @@ def _safe_basename(value: str, *, fallback: str = "earthdata") -> str:
     return cleaned.strip("._") or fallback
 
 
+def _download_raster_source(
+    source: str,
+    target_dir: str,
+    earthaccess: Any,
+) -> str:
+    """Return a local raster path for an Earthdata URL or existing file."""
+    value = str(source or "").strip()
+    if not value:
+        raise ValueError("Raster source URL/path cannot be empty.")
+    if os.path.exists(value):
+        return value
+
+    basename = _safe_basename(value, fallback="earthdata_raster")
+    local_path = os.path.join(target_dir, basename)
+    if os.path.exists(local_path):
+        return local_path
+
+    downloaded = earthaccess.download([value], local_path=target_dir, threads=1) or []
+    for item in downloaded:
+        item_path = str(item)
+        if os.path.exists(item_path):
+            return item_path
+    if os.path.exists(local_path):
+        return local_path
+    raise RuntimeError(f"Downloaded raster was not found for {value!r}.")
+
+
+def _vsicurl_raster_source(source: str) -> str:
+    """Return a GDAL streaming source for a remote COG URL or local path."""
+    value = str(source or "").strip()
+    if not value:
+        raise ValueError("Raster source URL/path cannot be empty.")
+    if value.startswith("/vsicurl/") or value.startswith("/vsis3/"):
+        return value
+    if value.startswith(("http://", "https://")):
+        return f"/vsicurl/{value}"
+    if value.startswith("s3://"):
+        return f"/vsis3/{value[5:]}"
+    return value
+
+
+def _prime_earthdata_session(session: Any, url: str) -> None:
+    """Touch one protected URL so Earthdata redirects populate cookies."""
+    if not url.startswith(("http://", "https://")):
+        return
+    try:
+        with session.get(url, stream=True, timeout=60) as response:
+            response.raise_for_status()
+    except Exception:
+        pass
+
+
+def _write_gdal_cookie_file(session: Any) -> str | None:
+    """Write requests-session cookies in Netscape format for GDAL."""
+    cookies = getattr(session, "cookies", None)
+    if not cookies:
+        return None
+    cookie_file = os.path.join(
+        tempfile.gettempdir(), f"geoagent_earthdata_gdal_{uuid.uuid4().hex}.cookies"
+    )
+    with open(cookie_file, "w", encoding="utf-8") as f:
+        f.write("# Netscape HTTP Cookie File\n")
+        for cookie in cookies:
+            domain = cookie.domain or ""
+            include_subdomains = "TRUE" if domain.startswith(".") else "FALSE"
+            path = cookie.path or "/"
+            secure = "TRUE" if cookie.secure else "FALSE"
+            expires = str(cookie.expires or 0)
+            f.write(
+                "\t".join(
+                    [
+                        domain,
+                        include_subdomains,
+                        path,
+                        secure,
+                        expires,
+                        str(cookie.name),
+                        str(cookie.value),
+                    ]
+                )
+                + "\n"
+            )
+    return cookie_file
+
+
+def _configure_gdal_http_streaming(gdal: Any, cookie_file: str | None = None) -> None:
+    """Configure GDAL for authenticated /vsicurl/ Earthdata COG reads."""
+    if cookie_file:
+        gdal.SetConfigOption("GDAL_HTTP_COOKIEFILE", cookie_file)
+        gdal.SetConfigOption("GDAL_HTTP_COOKIEJAR", cookie_file)
+    netrc_path = os.path.expanduser("~/.netrc")
+    if os.path.exists(netrc_path):
+        gdal.SetConfigOption("GDAL_HTTP_NETRC", "YES")
+        gdal.SetConfigOption("GDAL_HTTP_NETRC_FILE", netrc_path)
+    gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+    gdal.SetConfigOption("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "tif,tiff,TIF,TIFF")
+    gdal.SetConfigOption("GDAL_HTTP_UNSAFESSL", "YES")
+    gdal.SetConfigOption("GDAL_HTTP_MAX_RETRY", "3")
+    gdal.SetConfigOption("VSI_CACHE", "TRUE")
+    gdal.SetConfigOption("VSI_CACHE_SIZE", "100000000")
+
+
 def _add_qgis_raster_layer(
     iface: Any,
     project_getter: Any,
@@ -260,6 +385,54 @@ def _add_qgis_raster_layer(
         layer = QgsRasterLayer(path_or_uri, layer_name)
         if not layer.isValid():
             return {"error": f"Failed to load raster from {path_or_uri}."}
+        project_getter().addMapLayer(layer)
+        iface.mapCanvas().refresh()
+        return {"success": True, "layer_name": layer_name}
+
+    return _on_gui(_run)
+
+
+def _add_qgis_rgb_raster_layer(
+    iface: Any,
+    project_getter: Any,
+    path_or_uri: str,
+    layer_name: str,
+) -> dict[str, Any]:
+    """Add an RGB raster layer to QGIS on the GUI thread."""
+
+    def _run() -> dict[str, Any]:
+        from qgis.core import QgsRasterLayer  # type: ignore[import-not-found]
+
+        layer = QgsRasterLayer(path_or_uri, layer_name)
+        if not layer.isValid():
+            return {"error": f"Failed to load raster from {path_or_uri}."}
+
+        try:
+            from qgis.core import (  # type: ignore[import-not-found]
+                QgsContrastEnhancement,
+                QgsMultiBandColorRenderer,
+            )
+
+            provider = layer.dataProvider()
+            renderer = QgsMultiBandColorRenderer(provider, 1, 2, 3)
+            for setter_name in (
+                "setRedContrastEnhancement",
+                "setGreenContrastEnhancement",
+                "setBlueContrastEnhancement",
+            ):
+                enhancement = QgsContrastEnhancement(provider.dataType(1))
+                enhancement.setMinimumValue(0)
+                enhancement.setMaximumValue(3000)
+                enhancement.setContrastEnhancementAlgorithm(
+                    QgsContrastEnhancement.StretchToMinimumMaximum
+                )
+                setter = getattr(renderer, setter_name, None)
+                if callable(setter):
+                    setter(enhancement)
+            layer.setRenderer(renderer)
+        except Exception:
+            pass
+
         project_getter().addMapLayer(layer)
         iface.mapCanvas().refresh()
         return {"success": True, "layer_name": layer_name}
@@ -369,7 +542,8 @@ def earthdata_tools(
         requires_packages=("earthaccess",),
     )
     def search_earthdata_data(
-        short_name: str,
+        short_name: str = "",
+        concept_id: Optional[str] = None,
         bbox: str | list[float] | None = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
@@ -390,8 +564,17 @@ def earthdata_tools(
             parsed_bbox = _current_bbox_wgs84(iface)
 
         _earthdata_login()
+        collection_id = (concept_id or "").strip()
+        dataset_short_name = (short_name or "").strip()
+        if collection_id:
+            dataset_param = {"concept_id": collection_id}
+        elif dataset_short_name:
+            dataset_param = {"short_name": dataset_short_name}
+        else:
+            raise ValueError("short_name or concept_id is required")
+
         search_params: dict[str, Any] = {
-            "short_name": short_name,
+            **dataset_param,
             "count": max(1, int(max_results)),
             "bounding_box": parsed_bbox,
         }
@@ -415,17 +598,20 @@ def earthdata_tools(
             search_params["day_night_flag"] = day_night
         if granule_id:
             search_params["granule_ur"] = granule_id
-        if orbit_number is not None:
-            search_params["orbit_number"] = orbit_number
+        normalized_orbit_number = _normalize_orbit_number(orbit_number)
+        if normalized_orbit_number is not None:
+            search_params["orbit_number"] = normalized_orbit_number
 
         results = list(earthaccess.search_data(**search_params))
         state["last_search_results"] = results
-        state["last_search_short_name"] = short_name
+        state["last_search_short_name"] = dataset_short_name
+        state["last_search_concept_id"] = collection_id
         state["last_search_bbox"] = parsed_bbox
 
         return {
             "count": len(results),
-            "short_name": short_name,
+            "short_name": dataset_short_name,
+            "concept_id": collection_id,
             "bbox": parsed_bbox,
             "granules": [_granule_summary(granule) for granule in results],
         }
@@ -536,6 +722,94 @@ def earthdata_tools(
 
     @geo_tool(
         category="nasa_earthdata",
+        name="create_earthdata_rgb_composite",
+        requires_confirmation=True,
+        long_running=True,
+        requires_packages=("earthaccess", "osgeo"),
+    )
+    def create_earthdata_rgb_composite(
+        red_url: str,
+        green_url: str,
+        blue_url: str,
+        layer_name: str = "NASA Earthdata RGB Composite",
+        cache_dir: Optional[str] = None,
+        stream: bool = True,
+    ) -> dict[str, Any]:
+        """Build a georeferenced RGB VRT from three Earthdata COG bands."""
+        import earthaccess
+        from osgeo import gdal  # type: ignore[import-not-found]
+
+        _earthdata_login()
+        cookie_file = None
+        if stream:
+            try:
+                session = earthaccess.get_requests_https_session()
+                _prime_earthdata_session(session, red_url)
+                cookie_file = _write_gdal_cookie_file(session)
+            except Exception:
+                cookie_file = None
+            _configure_gdal_http_streaming(gdal, cookie_file)
+            channel_sources = {
+                "red": _vsicurl_raster_source(red_url),
+                "green": _vsicurl_raster_source(green_url),
+                "blue": _vsicurl_raster_source(blue_url),
+            }
+        else:
+            target_dir = cache_dir or os.path.join(
+                os.path.expanduser("~"), "nasa_earthdata_cache"
+            )
+            os.makedirs(target_dir, exist_ok=True)
+            channel_sources = {
+                "red": _download_raster_source(red_url, target_dir, earthaccess),
+                "green": _download_raster_source(green_url, target_dir, earthaccess),
+                "blue": _download_raster_source(blue_url, target_dir, earthaccess),
+            }
+
+        safe_stem = _safe_basename(layer_name, fallback="earthdata_rgb")
+        vrt_path = os.path.join(
+            tempfile.gettempdir(), f"{safe_stem}_{uuid.uuid4().hex}.vrt"
+        )
+        vrt = gdal.BuildVRT(
+            vrt_path,
+            [
+                channel_sources["red"],
+                channel_sources["green"],
+                channel_sources["blue"],
+            ],
+            options=gdal.BuildVRTOptions(separate=True),
+        )
+        if vrt is None:
+            return {"error": "Failed to build georeferenced RGB VRT."}
+
+        for band_index, color_interp in enumerate(
+            (gdal.GCI_RedBand, gdal.GCI_GreenBand, gdal.GCI_BlueBand),
+            start=1,
+        ):
+            band = vrt.GetRasterBand(band_index)
+            if band is not None:
+                band.SetColorInterpretation(color_interp)
+        vrt.FlushCache()
+        vrt = None
+
+        if not os.path.exists(vrt_path):
+            return {"error": f"RGB VRT was not written: {vrt_path}"}
+
+        result = _add_qgis_rgb_raster_layer(iface, _project, vrt_path, layer_name)
+        if result.get("success"):
+            result.update(
+                {
+                    "path": vrt_path,
+                    "red_source": channel_sources["red"],
+                    "green_source": channel_sources["green"],
+                    "blue_source": channel_sources["blue"],
+                    "source_type": "stream" if stream else "download",
+                    "cookie_file": cookie_file or "",
+                }
+            )
+        return result
+
+    @geo_tool(
+        category="nasa_earthdata",
         name="open_nasa_earthdata_search_panel",
         requires_confirmation=True,
     )
@@ -558,6 +832,7 @@ def earthdata_tools(
         search_earthdata_data,
         display_earthdata_footprints,
         load_earthdata_raster,
+        create_earthdata_rgb_composite,
         open_nasa_earthdata_search_panel,
         open_nasa_earthdata_settings,
     ]

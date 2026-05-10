@@ -35,11 +35,22 @@ project.
 Workflow guidance:
 - Search the catalog first when the user names a topic rather than an exact
   NASA Earthdata short name.
+- When a catalog result includes a concept-id, pass it to granule search to
+  disambiguate duplicate short names.
 - If the user gives no location, use the current QGIS map extent.
+- Only use an orbit number filter when the user explicitly asks for a positive
+  orbit number.
 - Search granules before displaying footprints or loading rasters.
 - For raster display, choose a specific COG or GeoTIFF data link from search
   results. Loading data can download protected assets and requires user
   confirmation.
+- For HLS true-color or false-color composites, call
+  create_earthdata_rgb_composite with the three ordered band URLs. Do not
+  hand-write inline VRT XML or pass VRT XML strings to add_raster_layer; use
+  the composite tool so GDAL streams the COGs and preserves CRS and
+  geotransform metadata.
+- HLS Landsat false color NIR/Red/Green uses B05, B04, B03. HLS Sentinel-2
+  false color commonly uses B08, B04, B03.
 - Keep responses concise and include dataset short names, result counts,
   date ranges, and relevant first-result identifiers when available.
 """
