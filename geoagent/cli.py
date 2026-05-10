@@ -59,6 +59,8 @@ def _run_browser_server(args: argparse.Namespace) -> int:
             provider=args.provider,
             model_id=args.model,
             command_timeout_seconds=args.command_timeout,
+            allow_browser_code=args.allow_browser_code,
+            auto_approve_browser_tools=args.auto_approve_browser_tools,
         )
         return 0
     except Exception as exc:
@@ -133,6 +135,22 @@ def main(argv: list[str] | None = None) -> int:
         type=float,
         default=30.0,
         help="Seconds to wait for browser map command results",
+    )
+    browser_parser.add_argument(
+        "--allow-browser-code",
+        action="store_true",
+        help=(
+            "Expose and auto-approve run_maplibre_script for local browser "
+            "MapLibre JavaScript execution."
+        ),
+    )
+    browser_parser.add_argument(
+        "--auto-approve-browser-tools",
+        action="store_true",
+        help=(
+            "Auto-approve confirmation-gated browser map tools such as "
+            "remove_layer and clear_layers for trusted local sessions."
+        ),
     )
     browser_parser.set_defaults(func=_run_browser_server)
 

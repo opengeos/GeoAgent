@@ -51,6 +51,27 @@ def test_browser_maplibre_tool_surface() -> None:
         "remove_layer",
         "clear_layers",
     }.issubset(names)
+    assert "run_maplibre_script" not in names
+
+
+def test_browser_maplibre_code_tool_is_opt_in() -> None:
+    """Verify arbitrary browser code execution is opt-in and confirmation gated."""
+    tools = {
+        tool.tool_name: tool
+        for tool in browser_maplibre_tools(FakeBrowserMapSession(), allow_code=True)
+    }
+
+    assert "run_maplibre_script" in tools
+    assert needs_confirmation(tools["run_maplibre_script"]) is True
+    assert tools["run_maplibre_script"](
+        code="return map.getZoom();",
+        description="Read the zoom level.",
+    ) == {
+        "success": True,
+        "message": "ok:run_maplibre_script",
+        "description": "Read the zoom level.",
+        "maplibre_script": "return map.getZoom();",
+    }
 
 
 def test_browser_maplibre_tools_send_expected_payloads() -> None:

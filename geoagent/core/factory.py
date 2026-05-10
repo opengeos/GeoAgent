@@ -314,6 +314,17 @@ Workflow guidance:
   when useful.
 """
 
+BROWSER_MAPLIBRE_CODE_SYSTEM_PROMPT = """\
+Browser JavaScript code execution is enabled for this local session.
+
+When no dedicated browser map tool can perform the requested MapLibre
+operation, write a short JavaScript snippet and run it with
+run_maplibre_script. The snippet executes in the browser with these names in
+scope: map, maplibregl, and helpers. Prefer MapLibre GL JS API calls, keep code
+focused on map operations, and avoid credential handling, storage access,
+unrelated DOM manipulation, or broad network operations.
+"""
+
 
 def _filter_by_imports(tools: list[Any]) -> list[Any]:
     """Drop tools whose declared optional packages are unavailable."""
@@ -643,15 +654,21 @@ def for_browser_maplibre(
     fast: bool = False,
     confirm: ConfirmCallback | None = None,
     extra_tools: Optional[list[Any]] = None,
+    allow_browser_code: bool = False,
 ) -> GeoAgent:
     """Bind an agent to a MapLibre map running in a browser session."""
+    system_prompt = BROWSER_MAPLIBRE_SYSTEM_PROMPT
+    if allow_browser_code:
+        system_prompt = f"{system_prompt}\n\n{BROWSER_MAPLIBRE_CODE_SYSTEM_PROMPT}"
     ctx = GeoAgentContext(
         metadata={
             "integration": "browser_maplibre",
-            "system_prompt": BROWSER_MAPLIBRE_SYSTEM_PROMPT,
+            "system_prompt": system_prompt,
         }
     )
-    tool_list = _filter_by_imports(browser_maplibre_tools(session))
+    tool_list = _filter_by_imports(
+        browser_maplibre_tools(session, allow_code=allow_browser_code)
+    )
     if extra_tools:
         tool_list.extend(extra_tools)
     registry = GeoToolRegistry()

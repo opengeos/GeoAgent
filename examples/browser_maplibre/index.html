@@ -8,6 +8,10 @@
       href="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.css"
       rel="stylesheet"
     />
+    <link
+      href="https://unpkg.com/maplibre-gl-layer-control@0.14.1/dist/maplibre-gl-layer-control.css"
+      rel="stylesheet"
+    />
     <style>
       :root {
         color-scheme: light;
@@ -106,14 +110,14 @@
         font-weight: 650;
       }
 
-      input,
-      textarea,
-      button {
+      .panel input,
+      .panel textarea,
+      .panel button {
         font: inherit;
       }
 
-      input,
-      textarea {
+      .panel input,
+      .panel textarea {
         width: 100%;
         border: 1px solid var(--border);
         border-radius: 6px;
@@ -121,12 +125,12 @@
         color: var(--ink);
       }
 
-      input {
+      .panel input {
         height: 36px;
         padding: 0 10px;
       }
 
-      textarea {
+      .panel textarea {
         min-height: 86px;
         resize: vertical;
         padding: 9px 10px;
@@ -145,7 +149,7 @@
         gap: 8px;
       }
 
-      button {
+      .panel button {
         min-height: 36px;
         padding: 0 12px;
         border: 1px solid transparent;
@@ -156,24 +160,30 @@
         cursor: pointer;
       }
 
-      button.secondary {
+      .panel button.secondary {
         border-color: var(--border);
         background: #fff;
         color: var(--ink);
       }
 
-      .panel-toggle {
+      .panel button.panel-toggle,
+      .panel button.secondary.panel-toggle {
         display: inline-grid;
         place-items: center;
         width: 28px;
+        min-width: 28px;
         min-height: 28px;
         height: 28px;
         padding: 0;
+        border: 1px solid var(--border);
         border-radius: 6px;
+        background: #fff;
         color: var(--muted);
+        line-height: 1;
+        font-weight: 700;
       }
 
-      .panel-toggle svg {
+      .panel button.panel-toggle svg {
         width: 16px;
         height: 16px;
         stroke: currentColor;
@@ -186,7 +196,7 @@
         padding: 0 10px;
       }
 
-      button:disabled {
+      .panel button:disabled {
         cursor: not-allowed;
         opacity: 0.55;
       }
@@ -198,43 +208,35 @@
       }
 
       .panel.collapsed {
-        width: 29px;
-        height: 29px;
-        max-height: 29px;
-        padding: 0;
-        gap: 0;
-      }
-
-      .panel.collapsed .title {
-        display: grid;
-        place-items: center;
-        width: 100%;
-        height: 100%;
-      }
-
-      .panel.collapsed .title-actions {
-        display: grid;
-        place-items: center;
-      }
-
-      .panel.collapsed h1,
-      .panel.collapsed .status,
-      .panel.collapsed .panel-body {
         display: none;
       }
 
-      .panel.collapsed .panel-toggle {
+      .geoagent-map-control {
+        display: none;
+      }
+
+      .geoagent-map-control button {
+        display: grid;
+        place-items: center;
         width: 29px;
         height: 29px;
         min-height: 29px;
+        padding: 0;
         border: 0;
-        background: var(--primary);
-        color: #fff;
+        border-radius: 0;
+        background: transparent;
+        color: var(--ink);
+        font-weight: 400;
       }
 
-      .panel.collapsed .panel-toggle svg {
-        width: 18px;
-        height: 18px;
+      .geoagent-map-control button:hover {
+        background-color: rgb(0 0 0 / 5%);
+      }
+
+      .geoagent-map-control svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
       }
 
       .log {
@@ -292,11 +294,6 @@
           max-height: min(72vh, 620px);
         }
 
-        .panel.collapsed {
-          width: 29px;
-          height: 29px;
-          max-height: 29px;
-        }
       }
     </style>
   </head>
@@ -364,8 +361,12 @@
     </section>
 
     <script src="https://unpkg.com/maplibre-gl@5.12.0/dist/maplibre-gl.js"></script>
-    <script>
+    <script type="module">
+      import { LayerControl } from "https://unpkg.com/maplibre-gl-layer-control@0.14.1/dist/index.mjs";
+
+      const maplibregl = window.maplibregl;
       const BASEMAPS = {
+        liberty: "https://tiles.openfreemap.org/styles/liberty",
         positron: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
         dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
         voyager: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
@@ -388,15 +389,81 @@
           layers: [{ id: "osm", type: "raster", source: "osm" }],
         },
       };
+      const DEFAULT_BASEMAP = BASEMAPS.liberty;
 
       const map = new maplibregl.Map({
         container: "map",
-        style: BASEMAPS.positron,
+        style: DEFAULT_BASEMAP,
         center: [-98.5795, 39.8283],
         zoom: 3,
+        maxPitch: 85,
         preserveDrawingBuffer: true,
       });
       map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+      let layerControl = null;
+
+      function basemapStyleUrl(style) {
+        return typeof style === "string" && /^https?:\/\//.test(style) ? style : null;
+      }
+
+      function removeLayerControl() {
+        if (layerControl) {
+          map.removeControl(layerControl);
+          layerControl = null;
+        }
+      }
+
+      function installLayerControl(style) {
+        removeLayerControl();
+        const styleUrl = basemapStyleUrl(style);
+        layerControl = new LayerControl({
+          collapsed: true,
+          ...(styleUrl ? { basemapStyleUrl: styleUrl } : {}),
+          panelWidth: 320,
+          panelMinWidth: 240,
+          panelMaxWidth: 420,
+        });
+        map.addControl(layerControl, "top-right");
+      }
+
+      map.once("load", () => installLayerControl(DEFAULT_BASEMAP));
+
+      let geoAgentControlEl = null;
+      class GeoAgentControl {
+        onAdd() {
+          const container = document.createElement("div");
+          container.className = "maplibregl-ctrl maplibregl-ctrl-group geoagent-map-control";
+          const button = document.createElement("button");
+          button.type = "button";
+          button.title = "Expand GeoAgent";
+          button.setAttribute("aria-label", "Expand GeoAgent");
+          button.innerHTML = `
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          `;
+          button.addEventListener("click", () => setPanelCollapsed(false));
+          container.append(button);
+          geoAgentControlEl = container;
+          return container;
+        }
+
+        onRemove() {
+          if (geoAgentControlEl && geoAgentControlEl.parentNode) {
+            geoAgentControlEl.parentNode.removeChild(geoAgentControlEl);
+          }
+          geoAgentControlEl = null;
+        }
+      }
+      map.addControl(new GeoAgentControl(), "top-left");
 
       const statusEl = document.querySelector("#status");
       const connectButton = document.querySelector("#connect");
@@ -444,9 +511,11 @@
         connectButton.disabled = ws && ws.readyState === WebSocket.CONNECTING;
       }
 
-      function togglePanel() {
-        const collapsed = !panelEl.classList.contains("collapsed");
+      function setPanelCollapsed(collapsed) {
         panelEl.classList.toggle("collapsed", collapsed);
+        if (geoAgentControlEl) {
+          geoAgentControlEl.style.display = collapsed ? "block" : "none";
+        }
         panelToggleButton.setAttribute("aria-expanded", String(!collapsed));
         panelToggleButton.setAttribute(
           "aria-label",
@@ -457,6 +526,10 @@
         if (iconPath) {
           iconPath.setAttribute("d", collapsed ? "m6 9 6 6 6-6" : "m18 15-6-6-6 6");
         }
+      }
+
+      function togglePanel() {
+        setPanelCollapsed(!panelEl.classList.contains("collapsed"));
       }
 
       function waitForMapIdle() {
@@ -476,6 +549,32 @@
           .replace(/[^a-z0-9_-]+/g, "-")
           .replace(/^-+|-+$/g, "")
           .slice(0, 60) || "layer";
+      }
+
+      function uniqueSourceId(baseId) {
+        let sourceId = baseId;
+        let index = 2;
+        while (map.getSource(sourceId)) {
+          sourceId = `${baseId}-${index}`;
+          index += 1;
+        }
+        return sourceId;
+      }
+
+      function uniqueLayerBaseId(baseId, suffixes) {
+        let layerBaseId = baseId;
+        let index = 2;
+        while (suffixes.some((suffix) => map.getLayer(`${layerBaseId}${suffix}`))) {
+          layerBaseId = `${baseId}-${index}`;
+          index += 1;
+        }
+        return layerBaseId;
+      }
+
+      function isOverlayLayerId(layerId) {
+        return Array.from(overlays.values()).some((overlay) =>
+          (overlay.layerIds || []).includes(layerId),
+        );
       }
 
       function removeOverlay(name) {
@@ -527,6 +626,7 @@
         return {
           fill: {
             "fill-color": fillColor,
+            "fill-outline-color": lineColor,
             "fill-opacity": Math.max(0, Math.min(1, opacity)),
           },
           line: {
@@ -542,41 +642,217 @@
         };
       }
 
-      async function addGeoJsonOverlay({ name, data, url, style = {} }) {
-        await waitForMapIdle();
-        removeOverlay(name);
-        const sourceId = `geoagent-src-${slug(name)}`;
-        const baseId = `geoagent-layer-${slug(name)}`;
-        const paint = geojsonLayerPaint(style);
-        map.addSource(sourceId, {
-          type: "geojson",
-          data: url || data,
-        });
-        const layerDefs = [
-          {
+      async function fetchGeoJson(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Could not fetch GeoJSON (${response.status}) from ${url}`);
+        }
+        return response.json();
+      }
+
+      function extendBounds(bounds, coordinate) {
+        if (!Array.isArray(coordinate) || coordinate.length < 2) {
+          return bounds;
+        }
+        const lon = Number(coordinate[0]);
+        const lat = Number(coordinate[1]);
+        if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
+          return bounds;
+        }
+        if (!bounds) {
+          return [lon, lat, lon, lat];
+        }
+        bounds[0] = Math.min(bounds[0], lon);
+        bounds[1] = Math.min(bounds[1], lat);
+        bounds[2] = Math.max(bounds[2], lon);
+        bounds[3] = Math.max(bounds[3], lat);
+        return bounds;
+      }
+
+      function extendGeometryBounds(bounds, geometry) {
+        if (!geometry) {
+          return bounds;
+        }
+        if (geometry.type === "GeometryCollection") {
+          for (const item of geometry.geometries || []) {
+            bounds = extendGeometryBounds(bounds, item);
+          }
+          return bounds;
+        }
+        const visit = (coordinates) => {
+          if (!Array.isArray(coordinates)) {
+            return;
+          }
+          if (
+            coordinates.length >= 2 &&
+            typeof coordinates[0] === "number" &&
+            typeof coordinates[1] === "number"
+          ) {
+            bounds = extendBounds(bounds, coordinates);
+            return;
+          }
+          for (const item of coordinates) {
+            visit(item);
+          }
+        };
+        visit(geometry.coordinates);
+        return bounds;
+      }
+
+      function geoJsonBounds(geojson) {
+        if (!geojson) {
+          return null;
+        }
+        if (Array.isArray(geojson.bbox) && geojson.bbox.length >= 4) {
+          const dimension = geojson.bbox.length / 2;
+          const bbox = [
+            geojson.bbox[0],
+            geojson.bbox[1],
+            geojson.bbox[dimension],
+            geojson.bbox[dimension + 1],
+          ].map(Number);
+          if (bbox.every(Number.isFinite)) {
+            return bbox;
+          }
+        }
+        if (geojson.type === "FeatureCollection") {
+          return (geojson.features || []).reduce(
+            (bounds, feature) => extendGeometryBounds(bounds, feature.geometry),
+            null,
+          );
+        }
+        if (geojson.type === "Feature") {
+          return extendGeometryBounds(null, geojson.geometry);
+        }
+        return extendGeometryBounds(null, geojson);
+      }
+
+      function collectGeometryTypes(types, geometry) {
+        if (!geometry) {
+          return types;
+        }
+        if (geometry.type === "GeometryCollection") {
+          for (const item of geometry.geometries || []) {
+            collectGeometryTypes(types, item);
+          }
+          return types;
+        }
+        types.add(geometry.type);
+        return types;
+      }
+
+      function geoJsonGeometryTypes(geojson) {
+        const types = new Set();
+        if (!geojson) {
+          return types;
+        }
+        if (geojson.type === "FeatureCollection") {
+          for (const feature of geojson.features || []) {
+            collectGeometryTypes(types, feature.geometry);
+          }
+          return types;
+        }
+        if (geojson.type === "Feature") {
+          return collectGeometryTypes(types, geojson.geometry);
+        }
+        return collectGeometryTypes(types, geojson);
+      }
+
+      function geojsonLayerDefs(baseId, paint, geojson) {
+        const geometryTypes = geoJsonGeometryTypes(geojson);
+        const hasKnownTypes = geometryTypes.size > 0;
+        const hasPolygons =
+          !hasKnownTypes ||
+          geometryTypes.has("Polygon") ||
+          geometryTypes.has("MultiPolygon");
+        const hasLines =
+          !hasKnownTypes ||
+          geometryTypes.has("LineString") ||
+          geometryTypes.has("MultiLineString");
+        const hasPoints =
+          !hasKnownTypes ||
+          geometryTypes.has("Point") ||
+          geometryTypes.has("MultiPoint");
+        const layerDefs = [];
+        if (hasPolygons) {
+          layerDefs.push({
             id: `${baseId}-fill`,
+            suffix: "-fill",
             type: "fill",
             filter: ["==", ["geometry-type"], "Polygon"],
             paint: paint.fill,
-          },
-          {
+          });
+        }
+        if (hasLines) {
+          layerDefs.push({
             id: `${baseId}-line`,
+            suffix: "-line",
             type: "line",
-            filter: [
-              "any",
-              ["==", ["geometry-type"], "LineString"],
-              ["==", ["geometry-type"], "Polygon"],
-            ],
+            filter: ["==", ["geometry-type"], "LineString"],
             paint: paint.line,
-          },
-          {
+          });
+        }
+        if (hasPoints) {
+          layerDefs.push({
             id: `${baseId}-point`,
+            suffix: "-point",
             type: "circle",
             filter: ["==", ["geometry-type"], "Point"],
             paint: paint.circle,
-          },
-        ];
-        for (const def of layerDefs) {
+          });
+        }
+        return layerDefs;
+      }
+
+      function zoomToGeoJsonBounds(bounds) {
+        if (!bounds) {
+          return false;
+        }
+        const [west, south, east, north] = bounds;
+        if (![west, south, east, north].every(Number.isFinite)) {
+          return false;
+        }
+        if (west === east && south === north) {
+          map.easeTo({
+            center: [west, south],
+            zoom: Math.max(map.getZoom(), 12),
+          });
+          return true;
+        }
+        map.fitBounds(
+          [
+            [west, south],
+            [east, north],
+          ],
+          { padding: 48, maxZoom: 16 },
+        );
+        return true;
+      }
+
+      async function addGeoJsonOverlay({ name, data, url, style = {}, zoomTo = false }) {
+        await waitForMapIdle();
+        removeOverlay(name);
+        const sourceId = uniqueSourceId(`${slug(name)}-source`);
+        const paint = geojsonLayerPaint(style);
+        let sourceData = data;
+        if (!sourceData && url) {
+          try {
+            sourceData = await fetchGeoJson(url);
+          } catch (error) {
+            console.warn(error);
+          }
+        }
+        const initialLayerDefs = geojsonLayerDefs(slug(name), paint, sourceData);
+        const baseId = uniqueLayerBaseId(
+          slug(name),
+          initialLayerDefs.map((item) => item.suffix),
+        );
+        const layerDefs = geojsonLayerDefs(baseId, paint, sourceData);
+        map.addSource(sourceId, {
+          type: "geojson",
+          data: sourceData || url || data || { type: "FeatureCollection", features: [] },
+        });
+        for (const { suffix, ...def } of layerDefs) {
           map.addLayer({ ...def, source: sourceId });
         }
         overlays.set(name, {
@@ -588,13 +864,16 @@
           sourceIds: [sourceId],
           layerIds: layerDefs.map((item) => item.id),
         });
+        if (zoomTo) {
+          zoomToGeoJsonBounds(geoJsonBounds(sourceData || data));
+        }
       }
 
       async function addRasterOverlay({ name, url, attribution = "" }) {
         await waitForMapIdle();
         removeOverlay(name);
-        const sourceId = `geoagent-src-${slug(name)}`;
-        const layerId = `geoagent-layer-${slug(name)}`;
+        const sourceId = uniqueSourceId(`${slug(name)}-source`);
+        const layerId = uniqueLayerBaseId(slug(name), [""]);
         map.addSource(sourceId, {
           type: "raster",
           tiles: [url],
@@ -639,6 +918,49 @@
         return name;
       }
 
+      function serializeScriptResult(value) {
+        if (value === undefined) {
+          return null;
+        }
+        try {
+          return JSON.parse(JSON.stringify(value));
+        } catch {
+          return String(value);
+        }
+      }
+
+      async function runMapLibreScript(args) {
+        const code = String(args.code || "").trim();
+        if (!code) {
+          throw new Error("No MapLibre JavaScript code was provided.");
+        }
+        const description = String(args.description || "");
+        const helpers = Object.freeze({
+          overlays,
+          waitForMapIdle,
+          slug,
+          removeOverlay,
+          addGeoJsonOverlay,
+          addRasterOverlay,
+          addMarkerOverlay,
+          serializeScriptResult,
+        });
+        const fn = new Function(
+          "map",
+          "maplibregl",
+          "helpers",
+          `"use strict"; return (async () => {\n${code}\n})()`,
+        );
+        const result = await fn(map, maplibregl, helpers);
+        return {
+          success: true,
+          message: description || "MapLibre script executed.",
+          result: serializeScriptResult(result),
+          description,
+          maplibre_script: code,
+        };
+      }
+
       async function restoreOverlaysAfterStyleChange() {
         const saved = Array.from(overlays.values()).map((overlay) => ({
           ...overlay,
@@ -661,7 +983,7 @@
             type: layer.type,
             source: layer.source || null,
             visible: (layer.layout || {}).visibility !== "none",
-            user_added: layer.id.startsWith("geoagent-layer-"),
+            user_added: isOverlayLayerId(layer.id),
           }));
           const markerLayers = Array.from(overlays.values())
             .filter((overlay) => overlay.kind === "marker")
@@ -726,14 +1048,16 @@
         }
 
         if (command === "change_basemap") {
-          const rawStyle = String(args.style || "positron").trim();
+          const rawStyle = String(args.style || "liberty").trim();
           let style = BASEMAPS[rawStyle.toLowerCase()] || rawStyle;
           if (typeof style === "string" && BASEMAPS[style]) {
             style = BASEMAPS[style];
           }
+          removeLayerControl();
           map.setStyle(style);
           await new Promise((resolve) => map.once("style.load", resolve));
           await restoreOverlaysAfterStyleChange();
+          installLayerControl(style);
           return `Basemap changed to ${rawStyle}.`;
         }
 
@@ -747,6 +1071,7 @@
             name: args.name || "geojson",
             data: args.data,
             style: args.style || {},
+            zoomTo: true,
           });
           return `Added GeoJSON layer ${args.name || "geojson"}.`;
         }
@@ -756,6 +1081,7 @@
             name: args.name || "vector-data",
             url: args.url,
             style: args.style || {},
+            zoomTo: true,
           });
           return `Added GeoJSON URL layer ${args.name || "vector-data"}.`;
         }
@@ -862,6 +1188,10 @@
             removeOverlay(name);
           }
           return "Cleared user-added layers.";
+        }
+
+        if (command === "run_maplibre_script") {
+          return runMapLibreScript(args);
         }
 
         throw new Error(`Unsupported command: ${command}`);

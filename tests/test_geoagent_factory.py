@@ -56,6 +56,23 @@ def test_for_browser_maplibre_registers_tools() -> None:
     assert "live\nMapLibre map" in a.context.metadata["system_prompt"]
 
 
+def test_for_browser_maplibre_code_tool_is_opt_in() -> None:
+    """Verify browser JavaScript execution is available only when enabled."""
+    session = object()
+    default_agent = for_browser_maplibre(session, model=_MockModel())
+    code_agent = for_browser_maplibre(
+        session,
+        model=_MockModel(),
+        allow_browser_code=True,
+    )
+
+    assert "run_maplibre_script" not in default_agent.strands_agent.tool_names
+    assert "run_maplibre_script" in code_agent.strands_agent.tool_names
+    assert "Browser JavaScript code execution is enabled" in (
+        code_agent.context.metadata["system_prompt"]
+    )
+
+
 def test_factory_accepts_gemini_provider() -> None:
     """Verify that factory accepts gemini provider."""
     m = MockLeafmap()

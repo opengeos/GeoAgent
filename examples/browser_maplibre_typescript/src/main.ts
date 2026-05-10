@@ -1,7 +1,17 @@
 import maplibregl, { type StyleSpecification } from "maplibre-gl";
+import { LayerControl } from "maplibre-gl-layer-control";
 import "./styles.css";
+import "maplibre-gl-layer-control/style.css";
 
 type JsonObject = Record<string, unknown>;
+type BBox = [number, number, number, number];
+interface GeoJsonLayerDefinition {
+  id: string;
+  suffix: string;
+  type: "fill" | "line" | "circle";
+  filter: unknown[];
+  paint: JsonObject;
+}
 
 interface SessionMessage {
   type: "session";
@@ -72,6 +82,7 @@ interface Overlay {
 }
 
 const BASEMAPS: Record<string, string | StyleSpecification> = {
+  liberty: "https://tiles.openfreemap.org/styles/liberty",
   positron: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   voyager: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
@@ -94,6 +105,7 @@ const BASEMAPS: Record<string, string | StyleSpecification> = {
     layers: [{ id: "osm", type: "raster", source: "osm" }],
   },
 };
+const DEFAULT_BASEMAP = BASEMAPS.liberty;
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
@@ -164,12 +176,75 @@ app.innerHTML = `
 
 const map = new maplibregl.Map({
   container: "map",
-  style: BASEMAPS.positron,
+  style: DEFAULT_BASEMAP,
   center: [-98.5795, 39.8283],
   zoom: 3,
+  maxPitch: 85,
   canvasContextAttributes: { preserveDrawingBuffer: true },
 });
 map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+let layerControl: LayerControl | null = null;
+
+function basemapStyleUrl(style: string | StyleSpecification): string | undefined {
+  return typeof style === "string" && /^https?:\/\//.test(style) ? style : undefined;
+}
+
+function removeLayerControl(): void {
+  if (layerControl) {
+    map.removeControl(layerControl);
+    layerControl = null;
+  }
+}
+
+function installLayerControl(style: string | StyleSpecification): void {
+  removeLayerControl();
+  const styleUrl = basemapStyleUrl(style);
+  layerControl = new LayerControl({
+    collapsed: true,
+    ...(styleUrl ? { basemapStyleUrl: styleUrl } : {}),
+    panelWidth: 320,
+    panelMinWidth: 240,
+    panelMaxWidth: 420,
+  });
+  map.addControl(layerControl, "top-right");
+}
+
+map.once("load", () => installLayerControl(DEFAULT_BASEMAP));
+
+let geoAgentControlEl: HTMLDivElement | null = null;
+class GeoAgentControl {
+  onAdd(): HTMLElement {
+    const container = document.createElement("div");
+    container.className = "maplibregl-ctrl maplibregl-ctrl-group geoagent-map-control";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.title = "Expand GeoAgent";
+    button.setAttribute("aria-label", "Expand GeoAgent");
+    button.innerHTML = `
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m6 9 6 6 6-6"></path>
+      </svg>
+    `;
+    button.addEventListener("click", () => setPanelCollapsed(false));
+    container.append(button);
+    geoAgentControlEl = container;
+    return container;
+  }
+
+  onRemove(): void {
+    geoAgentControlEl?.parentNode?.removeChild(geoAgentControlEl);
+    geoAgentControlEl = null;
+  }
+}
+map.addControl(new GeoAgentControl(), "top-left");
 
 const statusEl = requiredElement<HTMLSpanElement>("#status");
 const connectButton = requiredElement<HTMLButtonElement>("#connect");
@@ -245,9 +320,11 @@ function updateControls(): void {
   connectButton.disabled = Boolean(ws && ws.readyState === WebSocket.CONNECTING);
 }
 
-function togglePanel(): void {
-  const collapsed = !panelEl.classList.contains("collapsed");
+function setPanelCollapsed(collapsed: boolean): void {
   panelEl.classList.toggle("collapsed", collapsed);
+  if (geoAgentControlEl) {
+    geoAgentControlEl.style.display = collapsed ? "block" : "none";
+  }
   panelToggleButton.setAttribute("aria-expanded", String(!collapsed));
   panelToggleButton.setAttribute(
     "aria-label",
@@ -258,6 +335,10 @@ function togglePanel(): void {
   if (iconPath) {
     iconPath.setAttribute("d", collapsed ? "m6 9 6 6 6-6" : "m18 15-6-6-6 6");
   }
+}
+
+function togglePanel(): void {
+  setPanelCollapsed(!panelEl.classList.contains("collapsed"));
 }
 
 function waitForMapIdle(): Promise<void> {
@@ -278,6 +359,32 @@ function slug(value: unknown): string {
       .replace(/[^a-z0-9_-]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 60) || "layer"
+  );
+}
+
+function uniqueSourceId(baseId: string): string {
+  let sourceId = baseId;
+  let index = 2;
+  while (map.getSource(sourceId)) {
+    sourceId = `${baseId}-${index}`;
+    index += 1;
+  }
+  return sourceId;
+}
+
+function uniqueLayerBaseId(baseId: string, suffixes: string[]): string {
+  let layerBaseId = baseId;
+  let index = 2;
+  while (suffixes.some((suffix) => map.getLayer(`${layerBaseId}${suffix}`))) {
+    layerBaseId = `${baseId}-${index}`;
+    index += 1;
+  }
+  return layerBaseId;
+}
+
+function isOverlayLayerId(layerId: string): boolean {
+  return Array.from(overlays.values()).some((overlay) =>
+    overlay.layerIds.includes(layerId),
   );
 }
 
@@ -340,6 +447,7 @@ function geojsonLayerPaint(style: JsonObject): {
   return {
     fill: {
       "fill-color": fillColor,
+      "fill-outline-color": lineColor,
       "fill-opacity": Math.max(0, Math.min(1, opacity)),
     },
     line: {
@@ -355,48 +463,244 @@ function geojsonLayerPaint(style: JsonObject): {
   };
 }
 
+async function fetchGeoJson(url: string): Promise<GeoJSON.GeoJSON> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Could not fetch GeoJSON (${response.status}) from ${url}`);
+  }
+  return (await response.json()) as GeoJSON.GeoJSON;
+}
+
+function extendBounds(bounds: BBox | null, coordinate: unknown): BBox | null {
+  if (!Array.isArray(coordinate) || coordinate.length < 2) {
+    return bounds;
+  }
+  const lon = Number(coordinate[0]);
+  const lat = Number(coordinate[1]);
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
+    return bounds;
+  }
+  if (!bounds) {
+    return [lon, lat, lon, lat];
+  }
+  bounds[0] = Math.min(bounds[0], lon);
+  bounds[1] = Math.min(bounds[1], lat);
+  bounds[2] = Math.max(bounds[2], lon);
+  bounds[3] = Math.max(bounds[3], lat);
+  return bounds;
+}
+
+function extendGeometryBounds(
+  bounds: BBox | null,
+  geometry: GeoJSON.Geometry | null | undefined,
+): BBox | null {
+  if (!geometry) {
+    return bounds;
+  }
+  if (geometry.type === "GeometryCollection") {
+    return geometry.geometries.reduce(
+      (currentBounds, item) => extendGeometryBounds(currentBounds, item),
+      bounds,
+    );
+  }
+  const visit = (coordinates: unknown): void => {
+    if (!Array.isArray(coordinates)) {
+      return;
+    }
+    if (
+      coordinates.length >= 2 &&
+      typeof coordinates[0] === "number" &&
+      typeof coordinates[1] === "number"
+    ) {
+      bounds = extendBounds(bounds, coordinates);
+      return;
+    }
+    for (const item of coordinates) {
+      visit(item);
+    }
+  };
+  visit(geometry.coordinates);
+  return bounds;
+}
+
+function geoJsonBounds(geojson: GeoJSON.GeoJSON | undefined): BBox | null {
+  if (!geojson) {
+    return null;
+  }
+  if (Array.isArray(geojson.bbox) && geojson.bbox.length >= 4) {
+    const dimension = geojson.bbox.length / 2;
+    const bbox = [
+      geojson.bbox[0],
+      geojson.bbox[1],
+      geojson.bbox[dimension],
+      geojson.bbox[dimension + 1],
+    ].map(Number);
+    if (bbox.every(Number.isFinite)) {
+      return bbox as BBox;
+    }
+  }
+  if (geojson.type === "FeatureCollection") {
+    return geojson.features.reduce(
+      (bounds, feature) => extendGeometryBounds(bounds, feature.geometry),
+      null as BBox | null,
+    );
+  }
+  if (geojson.type === "Feature") {
+    return extendGeometryBounds(null, geojson.geometry);
+  }
+  return extendGeometryBounds(null, geojson);
+}
+
+function collectGeometryTypes(
+  types: Set<GeoJSON.GeoJsonGeometryTypes>,
+  geometry: GeoJSON.Geometry | null | undefined,
+): Set<GeoJSON.GeoJsonGeometryTypes> {
+  if (!geometry) {
+    return types;
+  }
+  if (geometry.type === "GeometryCollection") {
+    for (const item of geometry.geometries) {
+      collectGeometryTypes(types, item);
+    }
+    return types;
+  }
+  types.add(geometry.type);
+  return types;
+}
+
+function geoJsonGeometryTypes(
+  geojson: GeoJSON.GeoJSON | undefined,
+): Set<GeoJSON.GeoJsonGeometryTypes> {
+  const types = new Set<GeoJSON.GeoJsonGeometryTypes>();
+  if (!geojson) {
+    return types;
+  }
+  if (geojson.type === "FeatureCollection") {
+    for (const feature of geojson.features) {
+      collectGeometryTypes(types, feature.geometry);
+    }
+    return types;
+  }
+  if (geojson.type === "Feature") {
+    return collectGeometryTypes(types, geojson.geometry);
+  }
+  return collectGeometryTypes(types, geojson);
+}
+
+function geojsonLayerDefs(
+  baseId: string,
+  paint: ReturnType<typeof geojsonLayerPaint>,
+  geojson: GeoJSON.GeoJSON | undefined,
+): GeoJsonLayerDefinition[] {
+  const geometryTypes = geoJsonGeometryTypes(geojson);
+  const hasKnownTypes = geometryTypes.size > 0;
+  const hasPolygons =
+    !hasKnownTypes ||
+    geometryTypes.has("Polygon") ||
+    geometryTypes.has("MultiPolygon");
+  const hasLines =
+    !hasKnownTypes ||
+    geometryTypes.has("LineString") ||
+    geometryTypes.has("MultiLineString");
+  const hasPoints =
+    !hasKnownTypes ||
+    geometryTypes.has("Point") ||
+    geometryTypes.has("MultiPoint");
+  const layerDefs: GeoJsonLayerDefinition[] = [];
+  if (hasPolygons) {
+    layerDefs.push({
+      id: `${baseId}-fill`,
+      suffix: "-fill",
+      type: "fill",
+      filter: ["==", ["geometry-type"], "Polygon"],
+      paint: paint.fill,
+    });
+  }
+  if (hasLines) {
+    layerDefs.push({
+      id: `${baseId}-line`,
+      suffix: "-line",
+      type: "line",
+      filter: ["==", ["geometry-type"], "LineString"],
+      paint: paint.line,
+    });
+  }
+  if (hasPoints) {
+    layerDefs.push({
+      id: `${baseId}-point`,
+      suffix: "-point",
+      type: "circle",
+      filter: ["==", ["geometry-type"], "Point"],
+      paint: paint.circle,
+    });
+  }
+  return layerDefs;
+}
+
+function zoomToGeoJsonBounds(bounds: BBox | null): boolean {
+  if (!bounds) {
+    return false;
+  }
+  const [west, south, east, north] = bounds;
+  if (![west, south, east, north].every(Number.isFinite)) {
+    return false;
+  }
+  if (west === east && south === north) {
+    map.easeTo({
+      center: [west, south],
+      zoom: Math.max(map.getZoom(), 12),
+    });
+    return true;
+  }
+  map.fitBounds(
+    [
+      [west, south],
+      [east, north],
+    ],
+    { padding: 48, maxZoom: 16 },
+  );
+  return true;
+}
+
 async function addGeoJsonOverlay(overlay: {
   name: string;
   data?: GeoJSON.GeoJSON;
   url?: string;
   style?: JsonObject;
+  zoomTo?: boolean;
 }): Promise<void> {
   await waitForMapIdle();
   removeOverlay(overlay.name);
-  const sourceId = `geoagent-src-${slug(overlay.name)}`;
-  const baseId = `geoagent-layer-${slug(overlay.name)}`;
+  const sourceId = uniqueSourceId(`${slug(overlay.name)}-source`);
   const style = overlay.style ?? {};
   const paint = geojsonLayerPaint(style);
+  let sourceData = overlay.data;
+  if (!sourceData && overlay.url) {
+    try {
+      sourceData = await fetchGeoJson(overlay.url);
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+  const initialLayerDefs = geojsonLayerDefs(slug(overlay.name), paint, sourceData);
+  const baseId = uniqueLayerBaseId(
+    slug(overlay.name),
+    initialLayerDefs.map((item) => item.suffix),
+  );
+  const layerDefs = geojsonLayerDefs(baseId, paint, sourceData);
   map.addSource(sourceId, {
     type: "geojson",
-    data: overlay.url ?? overlay.data ?? { type: "FeatureCollection", features: [] },
+    data:
+      sourceData ??
+      overlay.url ??
+      ({ type: "FeatureCollection", features: [] } as GeoJSON.FeatureCollection),
   });
-  const layerDefs = [
-    {
-      id: `${baseId}-fill`,
-      type: "fill",
-      filter: ["==", ["geometry-type"], "Polygon"],
-      paint: paint.fill,
-    },
-    {
-      id: `${baseId}-line`,
-      type: "line",
-      filter: [
-        "any",
-        ["==", ["geometry-type"], "LineString"],
-        ["==", ["geometry-type"], "Polygon"],
-      ],
-      paint: paint.line,
-    },
-    {
-      id: `${baseId}-point`,
-      type: "circle",
-      filter: ["==", ["geometry-type"], "Point"],
-      paint: paint.circle,
-    },
-  ];
   for (const layer of layerDefs) {
-    map.addLayer({ ...layer, source: sourceId } as maplibregl.LayerSpecification);
+    const { suffix: _suffix, ...layerDefinition } = layer;
+    map.addLayer({
+      ...layerDefinition,
+      source: sourceId,
+    } as maplibregl.LayerSpecification);
   }
   overlays.set(overlay.name, {
     kind: "geojson",
@@ -407,6 +711,9 @@ async function addGeoJsonOverlay(overlay: {
     sourceIds: [sourceId],
     layerIds: layerDefs.map((item) => item.id),
   });
+  if (overlay.zoomTo) {
+    zoomToGeoJsonBounds(geoJsonBounds(sourceData ?? overlay.data));
+  }
 }
 
 async function addRasterOverlay(overlay: {
@@ -416,8 +723,8 @@ async function addRasterOverlay(overlay: {
 }): Promise<void> {
   await waitForMapIdle();
   removeOverlay(overlay.name);
-  const sourceId = `geoagent-src-${slug(overlay.name)}`;
-  const layerId = `geoagent-layer-${slug(overlay.name)}`;
+  const sourceId = uniqueSourceId(`${slug(overlay.name)}-source`);
+  const layerId = uniqueLayerBaseId(slug(overlay.name), [""]);
   map.addSource(sourceId, {
     type: "raster",
     tiles: [overlay.url],
@@ -463,6 +770,53 @@ function addMarkerOverlay(args: JsonObject): string {
   return name;
 }
 
+function serializeScriptResult(value: unknown): unknown {
+  if (value === undefined) {
+    return null;
+  }
+  try {
+    return JSON.parse(JSON.stringify(value)) as unknown;
+  } catch {
+    return String(value);
+  }
+}
+
+async function runMapLibreScript(args: JsonObject): Promise<JsonObject> {
+  const code = stringArg(args, "code").trim();
+  if (!code) {
+    throw new Error("No MapLibre JavaScript code was provided.");
+  }
+  const description = stringArg(args, "description");
+  const helpers = Object.freeze({
+    overlays,
+    waitForMapIdle,
+    slug,
+    removeOverlay,
+    addGeoJsonOverlay,
+    addRasterOverlay,
+    addMarkerOverlay,
+    serializeScriptResult,
+  });
+  const fn = new Function(
+    "map",
+    "maplibregl",
+    "helpers",
+    `"use strict"; return (async () => {\n${code}\n})()`,
+  ) as (
+    map: maplibregl.Map,
+    maplibreglApi: typeof maplibregl,
+    helpers: Record<string, unknown>,
+  ) => Promise<unknown>;
+  const result = await fn(map, maplibregl, helpers);
+  return {
+    success: true,
+    message: description || "MapLibre script executed.",
+    result: serializeScriptResult(result),
+    description,
+    maplibre_script: code,
+  };
+}
+
 async function restoreOverlaysAfterStyleChange(): Promise<void> {
   const saved = Array.from(overlays.values()).map((overlay) => ({ ...overlay }));
   for (const overlay of saved) {
@@ -492,7 +846,7 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
       type: layer.type,
       source: "source" in layer ? layer.source : null,
       visible: layer.layout?.visibility !== "none",
-      user_added: layer.id.startsWith("geoagent-layer-"),
+      user_added: isOverlayLayerId(layer.id),
     }));
     const markerLayers = Array.from(overlays.values())
       .filter((overlay) => overlay.kind === "marker")
@@ -557,14 +911,16 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
   }
 
   if (command === "change_basemap") {
-    const rawStyle = stringArg(args, "style", "positron").trim();
+    const rawStyle = stringArg(args, "style", "liberty").trim();
     let style = BASEMAPS[rawStyle.toLowerCase()] ?? rawStyle;
     if (typeof style === "string" && BASEMAPS[style]) {
       style = BASEMAPS[style];
     }
+    removeLayerControl();
     map.setStyle(style);
     await new Promise<void>((resolve) => map.once("style.load", () => resolve()));
     await restoreOverlaysAfterStyleChange();
+    installLayerControl(style);
     return `Basemap changed to ${rawStyle}.`;
   }
 
@@ -578,6 +934,7 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
       name: stringArg(args, "name", "geojson"),
       data: args.data as GeoJSON.GeoJSON,
       style: objectArg(args, "style"),
+      zoomTo: true,
     });
     return `Added GeoJSON layer ${stringArg(args, "name", "geojson")}.`;
   }
@@ -587,6 +944,7 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
       name: stringArg(args, "name", "vector-data"),
       url: stringArg(args, "url"),
       style: objectArg(args, "style"),
+      zoomTo: true,
     });
     return `Added GeoJSON URL layer ${stringArg(args, "name", "vector-data")}.`;
   }
@@ -696,6 +1054,10 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
       removeOverlay(name);
     }
     return "Cleared user-added layers.";
+  }
+
+  if (command === "run_maplibre_script") {
+    return runMapLibreScript(args);
   }
 
   throw new Error(`Unsupported command: ${command}`);

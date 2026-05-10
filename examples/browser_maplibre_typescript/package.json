@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "maplibre-gl": "^5.12.0"
+    "maplibre-gl": "^5.12.0",
+    "maplibre-gl-layer-control": "^0.14.1"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

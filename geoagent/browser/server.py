@@ -13,6 +13,14 @@ from geoagent.core.factory import for_browser_maplibre
 from geoagent.core.safety import auto_approve_safe_only
 from geoagent.ui.app import build_prompt_with_context
 
+_BROWSER_CONFIRM_TOOL_NAMES = frozenset(
+    {
+        "remove_layer",
+        "clear_layers",
+        "run_maplibre_script",
+    }
+)
+
 
 def _stream_result_to_text(result: Any) -> str:
     """Extract assistant text from a final Strands streaming result."""
@@ -62,6 +70,25 @@ def _chat_result_payload(
     return payload
 
 
+def _browser_confirm_callback(
+    allow_browser_code: bool,
+    auto_approve_browser_tools: bool,
+):
+    """Return the browser backend confirmation policy."""
+
+    def _confirm(request: Any) -> bool:
+        if auto_approve_browser_tools and (
+            getattr(request, "category", None) == "browser_map"
+            or request.tool_name in _BROWSER_CONFIRM_TOOL_NAMES
+        ):
+            return True
+        if allow_browser_code and request.tool_name == "run_maplibre_script":
+            return True
+        return auto_approve_safe_only(request)
+
+    return _confirm
+
+
 async def _send_json(websocket: Any, payload: dict[str, Any]) -> None:
     """Send JSON while tolerating disconnected clients."""
     try:
@@ -77,6 +104,8 @@ async def _run_chat_turn(
     message: str,
     provider: str | None,
     model_id: str | None,
+    allow_browser_code: bool,
+    auto_approve_browser_tools: bool,
     history: list[dict[str, Any]] | None = None,
 ) -> None:
     """Run one GeoAgent chat turn and stream deltas to the browser."""
@@ -86,7 +115,11 @@ async def _run_chat_turn(
             session=session,
             provider=provider,
             model_id=model_id,
-            confirm=auto_approve_safe_only,
+            confirm=_browser_confirm_callback(
+                allow_browser_code,
+                auto_approve_browser_tools,
+            ),
+            allow_browser_code=allow_browser_code,
         )
         prompt = build_prompt_with_context(history, message) if history else message
         loop = asyncio.get_running_loop()
@@ -178,6 +211,8 @@ def create_browser_app(
     provider: str | None = None,
     model_id: str | None = None,
     command_timeout_seconds: float = 30.0,
+    allow_browser_code: bool = False,
+    auto_approve_browser_tools: bool = False,
 ) -> Any:
     """Create the FastAPI app for browser-embedded GeoAgent chat."""
     try:
@@ -269,6 +304,8 @@ def create_browser_app(
                         message=chat_message,
                         provider=provider,
                         model_id=model_id,
+                        allow_browser_code=allow_browser_code,
+                        auto_approve_browser_tools=auto_approve_browser_tools,
                         history=history,
                     )
                 )
@@ -293,6 +330,8 @@ def run_browser_server(
     provider: str | None = None,
     model_id: str | None = None,
     command_timeout_seconds: float = 30.0,
+    allow_browser_code: bool = False,
+    auto_approve_browser_tools: bool = False,
 ) -> None:
     """Run the browser GeoAgent server with uvicorn."""
     try:
@@ -307,6 +346,8 @@ def run_browser_server(
         provider=provider,
         model_id=model_id,
         command_timeout_seconds=command_timeout_seconds,
+        allow_browser_code=allow_browser_code,
+        auto_approve_browser_tools=auto_approve_browser_tools,
     )
     uvicorn.run(app, host=host, port=int(port))
 

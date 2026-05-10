@@ -23,6 +23,33 @@ def test_browser_websocket_accepts_connection() -> None:
     assert message["mapId"] == "default"
 
 
+def test_browser_code_confirmation_is_explicitly_opt_in() -> None:
+    """Verify only the browser code flag approves run_maplibre_script."""
+    code_request = SimpleNamespace(
+        tool_name="run_maplibre_script",
+        args={},
+        category="browser_map",
+    )
+    remove_request = SimpleNamespace(
+        tool_name="remove_layer",
+        args={},
+        category="browser_map",
+    )
+
+    assert (
+        server._browser_confirm_callback(False, False)(code_request) is False
+    )  # noqa: SLF001
+    assert (
+        server._browser_confirm_callback(True, False)(code_request) is True
+    )  # noqa: SLF001
+    assert (
+        server._browser_confirm_callback(True, False)(remove_request) is False
+    )  # noqa: SLF001
+    assert (
+        server._browser_confirm_callback(False, True)(remove_request) is True
+    )  # noqa: SLF001
+
+
 def test_browser_websocket_streams_chat_deltas(monkeypatch) -> None:
     """Verify browser chat uses stream_chat and emits incremental deltas."""
     fastapi_testclient = pytest.importorskip("fastapi.testclient")

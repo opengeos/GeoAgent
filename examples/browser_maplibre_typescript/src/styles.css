@@ -97,14 +97,14 @@ label {
   font-weight: 650;
 }
 
-input,
-textarea,
-button {
+.panel input,
+.panel textarea,
+.panel button {
   font: inherit;
 }
 
-input,
-textarea {
+.panel input,
+.panel textarea {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -112,12 +112,12 @@ textarea {
   color: var(--ink);
 }
 
-input {
+.panel input {
   height: 36px;
   padding: 0 10px;
 }
 
-textarea {
+.panel textarea {
   min-height: 86px;
   resize: vertical;
   padding: 9px 10px;
@@ -136,7 +136,7 @@ textarea {
   gap: 8px;
 }
 
-button {
+.panel button {
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid transparent;
@@ -147,24 +147,30 @@ button {
   cursor: pointer;
 }
 
-button.secondary {
+.panel button.secondary {
   border-color: var(--border);
   background: #fff;
   color: var(--ink);
 }
 
-.panel-toggle {
+.panel button.panel-toggle,
+.panel button.secondary.panel-toggle {
   display: inline-grid;
   place-items: center;
   width: 28px;
+  min-width: 28px;
   min-height: 28px;
   height: 28px;
   padding: 0;
+  border: 1px solid var(--border);
   border-radius: 6px;
+  background: #fff;
   color: var(--muted);
+  line-height: 1;
+  font-weight: 700;
 }
 
-.panel-toggle svg {
+.panel button.panel-toggle svg {
   width: 16px;
   height: 16px;
   stroke: currentColor;
@@ -177,7 +183,7 @@ button.secondary {
   padding: 0 10px;
 }
 
-button:disabled {
+.panel button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
@@ -189,43 +195,35 @@ button:disabled {
 }
 
 .panel.collapsed {
-  width: 29px;
-  height: 29px;
-  max-height: 29px;
-  padding: 0;
-  gap: 0;
-}
-
-.panel.collapsed .title {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-}
-
-.panel.collapsed .title-actions {
-  display: grid;
-  place-items: center;
-}
-
-.panel.collapsed h1,
-.panel.collapsed .status,
-.panel.collapsed .panel-body {
   display: none;
 }
 
-.panel.collapsed .panel-toggle {
+.geoagent-map-control {
+  display: none;
+}
+
+.geoagent-map-control button {
+  display: grid;
+  place-items: center;
   width: 29px;
   height: 29px;
   min-height: 29px;
+  padding: 0;
   border: 0;
-  background: var(--primary);
-  color: #fff;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 400;
 }
 
-.panel.collapsed .panel-toggle svg {
-  width: 18px;
-  height: 18px;
+.geoagent-map-control button:hover {
+  background-color: rgb(0 0 0 / 5%);
+}
+
+.geoagent-map-control svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .log {
@@ -281,11 +279,5 @@ button:disabled {
     left: 10px;
     width: auto;
     max-height: min(72vh, 620px);
-  }
-
-  .panel.collapsed {
-    width: 29px;
-    height: 29px;
-    max-height: 29px;
   }
 }

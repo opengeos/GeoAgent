@@ -8,7 +8,11 @@ from geoagent.browser.session import BrowserMapSession
 from geoagent.core.decorators import geo_tool
 
 
-def browser_maplibre_tools(session: BrowserMapSession | None) -> list[Any]:
+def browser_maplibre_tools(
+    session: BrowserMapSession | None,
+    *,
+    allow_code: bool = False,
+) -> list[Any]:
     """Build browser MapLibre tools bound to a WebSocket map session."""
     if session is None:
         return []
@@ -181,7 +185,7 @@ def browser_maplibre_tools(session: BrowserMapSession | None) -> list[Any]:
         result = session.call("clear_layers")
         return str(result or "Cleared browser map layers.")
 
-    return [
+    tools = [
         list_layers,
         get_map_state,
         set_center,
@@ -200,6 +204,55 @@ def browser_maplibre_tools(session: BrowserMapSession | None) -> list[Any]:
         remove_layer,
         clear_layers,
     ]
+
+    if allow_code:
+
+        @geo_tool(
+            category="browser_map",
+            requires_confirmation=True,
+            destructive=True,
+        )
+        def run_maplibre_script(code: str, description: str = "") -> dict[str, Any]:
+            """Run a short JavaScript snippet against the live browser MapLibre map.
+
+            Use this only when no dedicated browser map tool can perform the
+            requested operation. The browser page executes the code with ``map``,
+            ``maplibregl``, and a small ``helpers`` object in scope. Do not use
+            this for credential handling, storage access, broad DOM access, or
+            unrelated network operations.
+
+            Args:
+                code: JavaScript code to execute in the browser. It may use
+                    ``await`` and may return a JSON-serializable value.
+                description: One-sentence explanation of the intended map change.
+
+            Returns:
+                A dict with success status, message, returned value, and the
+                executed code.
+            """
+            code = (code or "").strip()
+            if not code:
+                return {
+                    "success": False,
+                    "error": "No MapLibre JavaScript code was provided.",
+                    "maplibre_script": "",
+                }
+            result = session.call(
+                "run_maplibre_script",
+                {"code": code, "description": description},
+            )
+            if isinstance(result, dict):
+                return result
+            return {
+                "success": True,
+                "message": str(result or description or "MapLibre script executed."),
+                "description": description,
+                "maplibre_script": code,
+            }
+
+        tools.append(run_maplibre_script)
+
+    return tools
 
 
 __all__ = ["browser_maplibre_tools"]

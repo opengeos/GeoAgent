@@ -257,6 +257,14 @@ provider.
 A TypeScript/Vite version is available in
 `examples/browser_maplibre_typescript/`.
 
+For local sessions where you want PyQGIS-style fallback behavior, add
+`--allow-browser-code`. This exposes `run_maplibre_script`, allowing the agent
+to execute generated MapLibre JavaScript in the browser when no dedicated tool
+fits the request.
+
+To let the agent remove or clear browser map layers in trusted local sessions,
+add `--auto-approve-browser-tools`.
+
 Use GeoAgent inside QGIS:
 
 ```python
