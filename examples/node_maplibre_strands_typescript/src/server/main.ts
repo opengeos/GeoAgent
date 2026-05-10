@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Agent, type AgentStreamEvent } from "@strands-agents/sdk";
 import express from "express";
-import { WebSocketServer, type WebSocket } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import { BrowserMapSession } from "./mapSession.js";
 import { createProviderModel, defaultModelForProvider } from "./models.js";
 import {
@@ -89,7 +89,7 @@ function defaultModelMap(): Record<ProviderId, string> {
 }
 
 function sendJson(websocket: WebSocket, payload: JsonObject): void {
-  if (websocket.readyState !== websocket.OPEN) {
+  if (websocket.readyState !== WebSocket.OPEN) {
     return;
   }
   websocket.send(JSON.stringify(payload));
@@ -296,9 +296,9 @@ function createApp(options: RuntimeOptions): void {
     });
 
     websocket.on("message", (data) => {
-      let parsed: ClientMessage;
+      let raw: unknown;
       try {
-        parsed = JSON.parse(data.toString()) as ClientMessage;
+        raw = JSON.parse(data.toString());
       } catch {
         sendJson(websocket, {
           type: "error",
@@ -306,6 +306,14 @@ function createApp(options: RuntimeOptions): void {
         });
         return;
       }
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+        sendJson(websocket, {
+          type: "error",
+          error: "Message must be a JSON object.",
+        });
+        return;
+      }
+      const parsed = raw as ClientMessage;
 
       if (isMapCommandResult(parsed)) {
         session.resolveResult(parsed);

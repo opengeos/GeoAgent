@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type WebSocket from "ws";
+import { WebSocket } from "ws";
 import type { JsonObject } from "./types.js";
 
 interface PendingCommand {
@@ -20,7 +20,7 @@ export class BrowserMapSession {
   ) {}
 
   call(command: string, args: JsonObject = {}): Promise<unknown> {
-    if (this.websocket.readyState !== this.websocket.OPEN) {
+    if (this.websocket.readyState !== WebSocket.OPEN) {
       return Promise.reject(new Error("Browser WebSocket is not connected."));
     }
     const id = randomUUID();

@@ -320,6 +320,8 @@ const clearLogButton = requiredElement<HTMLButtonElement>("#clear-log");
 let ws: WebSocket | null = null;
 let sessionId: string | null = null;
 let mapId = "default";
+let allowBrowserCode = false;
+let allowDestructive = false;
 let busy = false;
 let streamingAssistantTextEl: HTMLDivElement | null = null;
 let streamingAssistantText = "";
@@ -1137,6 +1139,11 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
   }
 
   if (command === "remove_layer") {
+    if (!allowDestructive) {
+      throw new Error(
+        "Layer removal is disabled for this session. Start the server with --allow-destructive to enable it.",
+      );
+    }
     const name = stringArg(args, "name");
     if (!removeOverlay(name)) {
       throw new Error(`User-added layer not found: ${name}`);
@@ -1145,6 +1152,11 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
   }
 
   if (command === "clear_layers") {
+    if (!allowDestructive) {
+      throw new Error(
+        "Layer removal is disabled for this session. Start the server with --allow-destructive to enable it.",
+      );
+    }
     for (const name of Array.from(overlays.keys())) {
       removeOverlay(name);
     }
@@ -1152,6 +1164,11 @@ async function executeCommand(command: string, args: JsonObject = {}): Promise<u
   }
 
   if (command === "run_maplibre_script") {
+    if (!allowBrowserCode) {
+      throw new Error(
+        "Browser MapLibre code execution is disabled for this session. Start the server with --allow-browser-code to enable it.",
+      );
+    }
     return runMapLibreScript(args);
   }
 
@@ -1202,6 +1219,8 @@ async function handleBackendMessage(message: BackendMessage): Promise<void> {
   if (message.type === "session") {
     sessionId = message.sessionId;
     mapId = message.mapId || "default";
+    allowBrowserCode = Boolean(message.allowBrowserCode);
+    allowDestructive = Boolean(message.allowDestructive);
     for (const provider of Object.keys(PROVIDER_LABELS) as ProviderId[]) {
       const model = message.defaultModels?.[provider];
       if (model) {
