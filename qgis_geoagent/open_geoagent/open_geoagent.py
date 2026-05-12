@@ -8,9 +8,9 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu, QToolBar, QMessageBox
 
-
 TOOLBAR_OBJECT_NAME = "OpenGeoAgentToolbar"
 MENU_TITLE = "&OpenGeoAgent"
+
 
 class OpenGeoAgent:
     """QGIS plugin that exposes GeoAgent through a dockable chat interface."""
@@ -115,7 +115,6 @@ class OpenGeoAgent:
             status_tip="About OpenGeoAgent",
             parent=self.iface.mainWindow(),
         )
-
 
     def _remove_toolbar(self, toolbar):
         """Detach and schedule deletion of a plugin toolbar widget."""
