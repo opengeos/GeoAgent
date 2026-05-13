@@ -7,24 +7,43 @@ from ``PyQt6.QtGui`` under ``qgis.PyQt.QtWidgets`` (they moved out of
 ``QtWidgets`` in Qt6).
 
 PyQt6 is required for these tests. If it is not installed (for example in a
-contributor's bare environment), ``pytest.importorskip`` skips the suite
-instead of failing collection. CI installs PyQt6 explicitly.
+contributor's bare environment), pytest skips collecting the plugin test
+modules instead of failing before the rest of the suite can run. CI installs
+PyQt6 explicitly.
 """
 
 import sys
 import types
+from importlib import import_module
 from pathlib import Path
 
-import pytest
-
-PyQtCore = pytest.importorskip("PyQt6.QtCore")
-PyQtGui = pytest.importorskip("PyQt6.QtGui")
-PyQtNetwork = pytest.importorskip("PyQt6.QtNetwork")
-PyQtWidgets = pytest.importorskip("PyQt6.QtWidgets")
+try:
+    PyQtCore = import_module("PyQt6.QtCore")
+    PyQtGui = import_module("PyQt6.QtGui")
+    PyQtNetwork = import_module("PyQt6.QtNetwork")
+    PyQtWidgets = import_module("PyQt6.QtWidgets")
+except ImportError as exc:
+    PyQtCore = PyQtGui = PyQtNetwork = PyQtWidgets = None
+    PYQT6_SKIP_REASON = str(exc)
+else:
+    PYQT6_SKIP_REASON = ""
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 if str(PLUGIN_ROOT) not in sys.path:
     sys.path.insert(0, str(PLUGIN_ROOT))
+
+
+def pytest_ignore_collect(collection_path, config):  # noqa: ARG001
+    """Avoid importing PyQt-backed plugin tests when PyQt6 is unavailable."""
+    if not PYQT6_SKIP_REASON:
+        return None
+
+    path = Path(str(collection_path))
+    if path.name == "test_pyqt6_dependency.py":
+        return None
+    if path.name.startswith("test_") and path.suffix == ".py":
+        return True
+    return None
 
 
 def _make_strict_module(name: str, attrs: dict) -> types.ModuleType:
@@ -122,4 +141,5 @@ def _install_qgis_stub() -> None:
     qgis.core = qgis_core
 
 
-_install_qgis_stub()
+if not PYQT6_SKIP_REASON:
+    _install_qgis_stub()
