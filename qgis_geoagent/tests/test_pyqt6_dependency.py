@@ -17,10 +17,7 @@ except ImportError:
 
 
 @pytest.mark.skipif(
-    any(
-        module is None
-        for module in (PyQtCore, PyQtGui, PyQtNetwork, PyQtWidgets)
-    ),
+    any(module is None for module in (PyQtCore, PyQtGui, PyQtNetwork, PyQtWidgets)),
     reason="PyQt6 is required for qgis_geoagent tests.",
 )
 def test_pyqt6_available_for_qgis_plugin_tests() -> None:
