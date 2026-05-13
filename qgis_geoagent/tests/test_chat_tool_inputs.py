@@ -328,7 +328,7 @@ def test_format_chat_worker_error_unwraps_streaming_read_error() -> None:
     )
 
     assert "streaming connection was interrupted" in error
-    assert "HyperCoast tools were not the source" in error
+    assert "OpenGeoAgent tools were not the source" in error
     assert "Disable streaming" in error
     assert "Original error: ReadError" in error
 
@@ -809,7 +809,7 @@ def test_permission_profiles_filter_sensitive_tools() -> None:
         destructive = False
         long_running = False
 
-    assert DEFAULT_PERMISSION_PROFILE == "Trusted auto-approve"
+    assert DEFAULT_PERMISSION_PROFILE == "Inspect only"
     assert not _permission_allows_tool("Inspect only", "run_pyqgis_script", _Meta())
     assert _permission_allows_tool("Execute Scripts", "run_pyqgis_script", _Meta())
     assert _permission_allows_tool("Execute PyQGIS", "run_pyqgis_script", _Meta())

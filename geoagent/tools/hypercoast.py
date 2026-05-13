@@ -1058,6 +1058,10 @@ def _filename_from_download_url(url: str, index: int) -> str:
 def _is_data_download_url(url: str) -> bool:
     """Return whether a URL points to a science data file.
 
+    Only ``https://`` URLs (and ``s3://`` URIs for cloud listings) are
+    accepted. ``http://``, ``file://``, and other schemes are rejected so
+    that downstream openers never fetch unsafe local or plaintext targets.
+
     Args:
         url: Candidate CMR, UMM, or Earthaccess URL.
 
@@ -1065,6 +1069,9 @@ def _is_data_download_url(url: str) -> bool:
         True when the URL looks like a downloadable data asset.
     """
     parsed = urlparse(str(url))
+    scheme = parsed.scheme.lower()
+    if scheme not in ("https", "s3"):
+        return False
     path = unquote(parsed.path).lower()
     if not path:
         return False
@@ -1075,10 +1082,6 @@ def _is_data_download_url(url: str) -> bool:
     if "search.earthdata.nasa.gov" in parsed.netloc:
         return False
     if path.endswith((".nc", ".nc4", ".h5", ".he5", ".tif", ".tiff")):
-        return True
-    if str(url).startswith("s3://") and path.endswith(
-        (".nc", ".nc4", ".h5", ".he5", ".tif", ".tiff")
-    ):
         return True
     return False
 
@@ -1296,13 +1299,15 @@ def _download_data_links(
     index = 0
     for granule in granules:
         for url in _granule_data_links(granule, max_links_per_granule):
+            if urlparse(url).scheme.lower() != "https":
+                continue
             index += 1
             filename = _filename_from_download_url(url, index)
             output_path = os.path.join(out_dir, filename)
             request = Request(url, headers={"User-Agent": "GeoAgent/HyperCoast"})
             if token:
                 request.add_header("Authorization", f"Bearer {token}")
-            with opener.open(request, timeout=120) as response:
+            with opener.open(request, timeout=120) as response:  # nosec B310
                 with open(output_path, "wb") as dst:
                     shutil.copyfileobj(response, dst)
             paths.append(output_path)
@@ -1370,6 +1375,7 @@ def _ensure_output_path(
     project: Any | None,
     create_generated_raster_path: Any | None,
     output_path: str | None,
+    suffix: str = "rgb",
 ) -> str:
     """Return an output GeoTIFF path for a generated HyperCoast raster.
 
@@ -1378,21 +1384,29 @@ def _ensure_output_path(
         project: QGIS project-like object.
         create_generated_raster_path: Optional HyperCoast path factory.
         output_path: Optional explicit output path.
+        suffix: Output-kind tag (for example ``"rgb"`` or a variable name)
+            used to disambiguate RGB exports from variable exports.
 
     Returns:
         Absolute output path.
     """
     if output_path:
         return os.path.abspath(os.path.expanduser(output_path))
+    safe_suffix = (
+        "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in (suffix or "rgb"))
+        or "rgb"
+    )
     if create_generated_raster_path is not None:
-        return create_generated_raster_path(layer_name, "rgb", project=project)
+        return create_generated_raster_path(layer_name, safe_suffix, project=project)
     cache_dir = os.path.join(os.path.expanduser("~"), ".qgis_hypercoast", "cache")
     os.makedirs(cache_dir, exist_ok=True)
     safe_name = "".join(
         c if c.isalnum() or c in ("-", "_") else "_" for c in layer_name
     )
     fd, path = tempfile.mkstemp(
-        prefix=f"{safe_name or 'hypercoast'}_rgb_", suffix=".tif"
+        prefix=f"{safe_name or 'hypercoast'}_{safe_suffix}_",
+        suffix=".tif",
+        dir=cache_dir,
     )
     os.close(fd)
     return path
@@ -2060,6 +2074,7 @@ def hypercoast_tools(
             project_obj,
             create_generated_raster_path,
             output_path,
+            suffix=variable_name or "var",
         )
         result = _load_and_export_dataset(dataset, target_path, None)
         if result is None:

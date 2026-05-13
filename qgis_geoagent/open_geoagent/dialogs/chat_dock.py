@@ -163,7 +163,7 @@ PERMISSION_PROFILES = [
 PERMISSION_PROFILE_ALIASES = {
     "Execute PyQGIS": "Execute Scripts",
 }
-DEFAULT_PERMISSION_PROFILE = "Trusted auto-approve"
+DEFAULT_PERMISSION_PROFILE = "Inspect only"
 WORKFLOW_PROMPTS = {
     "NASA Earthdata": [
         (
@@ -509,7 +509,7 @@ def _format_chat_worker_error(exc, provider="", agent_mode=""):
     if "readerror" in cls_name or "remoteprotocolerror" in cls_name:
         return (
             "The model provider streaming connection was interrupted while "
-            f"OpenGeoAgent was running {mode_label}. The HyperCoast tools were "
+            f"OpenGeoAgent was running {mode_label}. OpenGeoAgent tools were "
             "not the source of this error.\n\nDisable streaming in OpenGeoAgent "
             "settings or retry the request. If this repeats, use a shorter "
             f"request or check network access for {provider_label}.\n\n"
@@ -1958,11 +1958,13 @@ class ChatWorker(QThread):
                 "HyperCoast": "for_hypercoast",
             }.get(self.agent_mode, "for_qgis")
             if not hasattr(geoagent, factory_name):
-                for module_name in list(sys.modules):
-                    if module_name == "geoagent" or module_name.startswith("geoagent."):
-                        sys.modules.pop(module_name, None)
+                import importlib
+
+                factory_module = sys.modules.get("geoagent.core.factory")
+                if factory_module is not None:
+                    importlib.reload(factory_module)
+                geoagent = importlib.reload(geoagent)
                 from geoagent import GeoAgentConfig
-                import geoagent
 
             factory = getattr(geoagent, factory_name)
             kwargs = {
