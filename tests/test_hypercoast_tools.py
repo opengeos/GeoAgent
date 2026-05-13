@@ -490,6 +490,90 @@ def test_search_hypercoast_data_cloud_filter_falls_back_to_cmr(monkeypatch) -> N
     }
 
 
+def test_pace_short_name_ignores_cloud_cover_detects_l3_products() -> None:
+    """Verify the PACE L3 detector recognizes BGC and L3M short names."""
+    assert hypercoast._pace_short_name_ignores_cloud_cover("PACE_OCI_L3M_BGC_DAILY_4KM")
+    assert hypercoast._pace_short_name_ignores_cloud_cover("PACE_OCI_L3M_AOP_8DAY_4KM")
+    assert hypercoast._pace_short_name_ignores_cloud_cover("PACE_OCI_L2_BGC")
+    assert not hypercoast._pace_short_name_ignores_cloud_cover("PACE_OCI_L1B_SCI")
+    assert not hypercoast._pace_short_name_ignores_cloud_cover(None)
+
+
+def test_search_hypercoast_data_drops_cloud_cover_for_pace_bgc(monkeypatch) -> None:
+    """Verify PACE BGC searches strip cloud_cover and surface a note."""
+    captured: dict[str, Any] = {}
+
+    class _FakeCommon:
+        def search_pace(self, **kwargs: Any) -> list[dict[str, Any]]:
+            captured.update(kwargs)
+            return [{"id": "pace-bgc", "umm": {"GranuleUR": "PACE_BGC"}}]
+
+        def search_emit(self, **kwargs: Any) -> list[dict[str, Any]]:
+            raise AssertionError("EMIT search should not run for PACE source")
+
+    monkeypatch.setattr(hypercoast, "_load_hypercoast_common", lambda: _FakeCommon())
+
+    def _fail_filter(**kwargs: Any) -> list[dict[str, Any]]:
+        raise AssertionError("cloud_cover should be dropped before filter search")
+
+    monkeypatch.setattr(hypercoast, "_search_earthaccess_data", _fail_filter)
+    monkeypatch.setattr(hypercoast, "_search_cmr_granules", _fail_filter)
+
+    tools = {tool.tool_name: tool for tool in hypercoast_tools(object())}
+
+    result = tools["search_hypercoast_data"].__wrapped__(
+        source="pace",
+        bbox="-92,28,-88,31",
+        count=5,
+        short_name="PACE_OCI_L3M_BGC_DAILY_4KM",
+        cloud_cover_min=0,
+        cloud_cover_max=0,
+    )
+
+    assert result["search_backend"] == "hypercoast"
+    assert result["count"] == 1
+    assert result["cloud_cover"] is None
+    assert result["cloud_cover_ignored"] is True
+    assert result["cloud_cover_requested"] is True
+    assert any("Ignored cloud_cover" in note for note in result.get("notes", []))
+    assert captured["bbox"] == [-92.0, 28.0, -88.0, 31.0]
+    assert "cloud_cover" not in captured
+
+
+def test_search_hypercoast_data_warns_on_degenerate_zero_filter(monkeypatch) -> None:
+    """Verify a 0..0 cloud filter with no results surfaces an actionable hint."""
+
+    def _fake_search_earthaccess_data(**kwargs: Any) -> list[dict[str, Any]]:
+        return []
+
+    monkeypatch.setattr(
+        hypercoast,
+        "_search_earthaccess_data",
+        _fake_search_earthaccess_data,
+    )
+    monkeypatch.setattr(
+        hypercoast,
+        "_search_cmr_granules",
+        lambda **_: [],
+    )
+
+    tools = {tool.tool_name: tool for tool in hypercoast_tools(object())}
+
+    result = tools["search_hypercoast_data"].__wrapped__(
+        source="emit",
+        bbox="-85,34,-83,36",
+        count=5,
+        cloud_cover_min=0,
+        cloud_cover_max=0,
+    )
+
+    assert result["count"] == 0
+    assert any(
+        "both 0" in note or "exactly 0% cloud cover" in note
+        for note in result.get("notes", [])
+    )
+
+
 def test_display_hypercoast_footprints_adds_geojson_layer() -> None:
     """Verify HyperCoast granule footprints can be displayed in QGIS."""
     project = MockQGISProject()

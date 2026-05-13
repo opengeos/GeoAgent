@@ -198,6 +198,26 @@ def _normalize_cloud_cover_filter(
     return (minimum, maximum)
 
 
+def _pace_short_name_ignores_cloud_cover(short_name: str | None) -> bool:
+    """Return whether a PACE short name lacks per-granule CloudCover metadata.
+
+    PACE L3 mapped composites (for example ``PACE_OCI_L3M_BGC_*``) do not
+    carry a per-granule ``CloudCover`` field in CMR, so filtering by
+    ``cloud_cover`` silently drops every result. Detect those products so the
+    caller can skip the filter.
+
+    Args:
+        short_name: Earthdata short name supplied to the search tool.
+
+    Returns:
+        True when ``cloud_cover`` filters should be ignored for ``short_name``.
+    """
+    if not short_name:
+        return False
+    upper = short_name.upper()
+    return "L3M" in upper or "_BGC" in upper or upper.endswith("_BGC")
+
+
 def _current_bbox_wgs84(iface: Any) -> list[float]:
     """Return the current QGIS canvas extent as WGS84 bounds.
 
@@ -1565,6 +1585,13 @@ def hypercoast_tools(
     ) -> dict[str, Any]:
         """Search NASA EMIT or PACE hyperspectral granules with HyperCoast.
 
+        Do not pass ``cloud_cover_min``/``cloud_cover_max``/``max_cloud_cover``
+        when ``source="pace"`` with an L3 mapped short name (for example
+        ``PACE_OCI_L3M_BGC_*``); those composites have no per-granule
+        CloudCover metadata and the filter would silently exclude every
+        result. Pass cloud-cover filters only for L2 imaging products when
+        the user explicitly asks for cloud-free or low-cloud results.
+
         Args:
             source: Search source, either ``emit`` or ``pace``.
             bbox: Optional west,south,east,north bounds.
@@ -1587,11 +1614,24 @@ def hypercoast_tools(
         parsed_bbox = (
             _current_bbox_wgs84(iface) if use_current_extent else _parse_bbox(bbox)
         )
+        cloud_cover_requested = (
+            cloud_cover_min is not None
+            or cloud_cover_max is not None
+            or max_cloud_cover is not None
+        )
         cloud_cover = _normalize_cloud_cover_filter(
             cloud_cover_min=cloud_cover_min,
             cloud_cover_max=cloud_cover_max,
             max_cloud_cover=max_cloud_cover,
         )
+        cloud_cover_ignored = False
+        if (
+            cloud_cover is not None
+            and source_key == "pace"
+            and _pace_short_name_ignores_cloud_cover(short_name)
+        ):
+            cloud_cover = None
+            cloud_cover_ignored = True
         kwargs: dict[str, Any] = {
             "bbox": parsed_bbox,
             "temporal": temporal,
@@ -1662,6 +1702,24 @@ def hypercoast_tools(
         granules = _search_result_granules(results)
         state["last_search_results"] = granules
         compact = _compact_search_results(granules)
+        notes: list[str] = []
+        if cloud_cover_ignored:
+            notes.append(
+                "Ignored cloud_cover for PACE L3 mapped product "
+                f"'{short_name}' because L3 composites carry no per-granule "
+                "CloudCover metadata."
+            )
+        if (
+            compact.get("count", 0) == 0
+            and cloud_cover is not None
+            and cloud_cover[0] == 0
+            and cloud_cover[1] == 0
+        ):
+            notes.append(
+                "cloud_cover_min and cloud_cover_max were both 0, which only "
+                "matches granules with exactly 0% cloud cover. Retry without "
+                "the cloud_cover filter or widen the range."
+            )
         compact.update(
             {
                 "source": source_key,
@@ -1673,8 +1731,12 @@ def hypercoast_tools(
                 "cloud_cover": list(cloud_cover) if cloud_cover else None,
                 "cloud_cover_min": cloud_cover[0] if cloud_cover else None,
                 "cloud_cover_max": cloud_cover[1] if cloud_cover else None,
+                "cloud_cover_requested": cloud_cover_requested,
+                "cloud_cover_ignored": cloud_cover_ignored,
             }
         )
+        if notes:
+            compact["notes"] = notes
         return compact
 
     @geo_tool(
