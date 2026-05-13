@@ -17,6 +17,7 @@ from geoagent.tools.anymap import anymap_tools
 from geoagent.tools.browser_maplibre import browser_maplibre_tools
 from geoagent.tools.geoai import geoai_tools
 from geoagent.tools.gee_data_catalogs import gee_data_catalogs_tools
+from geoagent.tools.hypercoast import hypercoast_tools
 from geoagent.tools.images import image_generation_tools
 from geoagent.tools.leafmap import leafmap_tools
 from geoagent.tools.nasa_earthdata import earthdata_tools
@@ -220,6 +221,48 @@ Workflow guidance:
   output path when available.
 """
 
+HYPERCOAST_SYSTEM_PROMPT = """\
+You are an AI assistant embedded in QGIS for the HyperCoast plugin.
+Use the HyperCoast tools to search, download, preview, and visualize
+hyperspectral data.
+
+Workflow guidance:
+- Search before downloading when the user asks for online EMIT or PACE data.
+- For online hyperspectral data, default to EMIT for mineral/surface
+  reflectance workflows and PACE for ocean color, water quality, and
+  chlorophyll workflows unless the user specifies a source.
+- If the user asks for the current map area, use the current QGIS map extent
+  for the search bbox.
+- If the user asks for cloud-free, clear-sky, low-cloud, or a specific cloud
+  cover limit, pass cloud_cover_max to search_hypercoast_data. Use 10 percent
+  for generic cloud-free or low-cloud requests unless the user gives another
+  threshold.
+- If the user asks to show footprints after a HyperCoast search, use
+  display_hypercoast_footprints. Do not generate ad hoc PyQGIS footprint code.
+- If the user asks to download or visualize a selected HyperCoast footprint,
+  first call get_selected_hypercoast_footprints for the footprint layer, then
+  pass its granules to download_hypercoast_data.
+- For PACE OCI BGC products such as chlor_a, download the NetCDF locally first,
+  then use load_hypercoast_variable with variable_name="chlor_a" unless the
+  user asks for another BGC variable. Do not load grouped PACE NetCDF variables
+  directly through QGIS /vsicurl or GDAL subdataset strings.
+- Never visualize HyperCoast search results with add_raster_layer, browse PNGs,
+  remote /vsicurl paths, or raw NetCDF subdataset strings. Use
+  load_hypercoast_rgb for AOP/Rrs imagery and load_hypercoast_variable for BGC
+  variables.
+- Do not add cloud_cover filters to PACE BGC searches unless the user explicitly
+  asks for cloud-free or low-cloud results.
+- Downloading data and loading visualizations can take time and require user
+  confirmation.
+- For local hyperspectral files, preview metadata first when the requested
+  data type or available variables are unclear, then load an RGB visualization
+  with load_hypercoast_rgb.
+- Use true color wavelengths 650,550,450 nm by default. For vegetation, prefer
+  color infrared 850,650,550 nm. For water, prefer 550,480,450 nm.
+- Keep responses concise and include source, result count, output paths, layer
+  names, selected wavelengths, and selected variable when available.
+"""
+
 QGIS_SYSTEM_PROMPT = """\
 You are an AI assistant embedded in QGIS with access to PyQGIS-backed tools.
 
@@ -386,6 +429,7 @@ def _permission_allows_tool(permission_profile: str | None, tool: Any) -> bool:
         "timelapse",
         "vantor",
         "geoai",
+        "hypercoast",
     }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
@@ -441,12 +485,14 @@ def assemble_tools(
     include_whitebox: bool = False,
     include_stac: bool = False,
     include_geoai: bool = False,
+    include_hypercoast: bool = False,
     include_image_generation: bool = False,
     nasa_earthdata_plugin: Any | None = None,
     gee_data_catalogs_plugin: Any | None = None,
     timelapse_plugin: Any | None = None,
     vantor_plugin: Any | None = None,
     geoai_plugin: Any | None = None,
+    hypercoast_plugin: Any | None = None,
     fast: bool = False,
     permission_profile: str | None = None,
     exclude_tool_names: set[str] | None = None,
@@ -533,6 +579,16 @@ def assemble_tools(
         )
         register_all_tools(registry, geoai_tool_list)
         collected.extend(geoai_tool_list)
+    if include_hypercoast:
+        hypercoast_tool_list = _filter_by_imports(
+            hypercoast_tools(
+                context.qgis_iface,
+                context.qgis_project,
+                plugin=hypercoast_plugin,
+            )
+        )
+        register_all_tools(registry, hypercoast_tool_list)
+        collected.extend(hypercoast_tool_list)
     if include_image_generation:
         image_tools = _filter_by_imports(image_generation_tools())
         register_all_tools(registry, image_tools)
@@ -540,8 +596,11 @@ def assemble_tools(
     if extra_tools:
         register_all_tools(registry, extra_tools)
         collected.extend(extra_tools)
+    effective_exclude_tool_names = set(exclude_tool_names or set())
+    if include_hypercoast:
+        effective_exclude_tool_names.add("add_raster_layer")
     collected = _filter_by_permission(collected, permission_profile)
-    collected = _drop_tools_by_name(collected, exclude_tool_names or set())
+    collected = _drop_tools_by_name(collected, effective_exclude_tool_names)
     tools = collect_tools_for_context(collected, fast=fast, registry=registry)
     return tools, registry
 
@@ -1036,6 +1095,64 @@ def for_timelapse(
     )
 
 
+def for_hypercoast(
+    iface: Any,
+    project: Any = None,
+    *,
+    plugin: Any | None = None,
+    config: GeoAgentConfig | None = None,
+    model: Any | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
+    fast: bool = False,
+    confirm: ConfirmCallback | None = None,
+    extra_tools: Optional[list[Any]] = None,
+    include_qgis: bool = True,
+    permission_profile: str | None = None,
+) -> GeoAgent:
+    """Bind an agent to the QGIS HyperCoast plugin runtime.
+
+    The factory exposes native HyperCoast search, download, and visualization
+    tools and, by default, the general QGIS map/project tools used for
+    inspection and navigation.
+    """
+    ctx = GeoAgentContext(
+        qgis_iface=iface,
+        qgis_project=project,
+        metadata={
+            "integration": "hypercoast",
+            "system_prompt": HYPERCOAST_SYSTEM_PROMPT,
+        },
+    )
+    tools, registry = assemble_tools(
+        context=ctx,
+        include_qgis=include_qgis,
+        include_hypercoast=True,
+        include_image_generation=True,
+        hypercoast_plugin=plugin,
+        extra_tools=extra_tools,
+        fast=fast,
+        permission_profile=permission_profile,
+    )
+    cfg = config or GeoAgentConfig()
+    if provider is not None:
+        cfg = cfg.model_copy(update={"provider": provider})
+    if model_id is not None:
+        cfg = cfg.model_copy(update={"model": model_id})
+    return GeoAgent(
+        context=ctx,
+        config=cfg,
+        tools=tools,
+        registry=registry,
+        model=model,
+        provider=provider,
+        model_id=model_id,
+        fast=fast,
+        confirm=confirm,
+        qgis_safe_mode=True,
+    )
+
+
 def for_whitebox(
     iface: Any,
     project: Any = None,
@@ -1207,6 +1324,7 @@ __all__ = [
     "for_anymap",
     "for_gee_data_catalogs",
     "for_geoai",
+    "for_hypercoast",
     "for_leafmap",
     "for_nasa_earthdata",
     "for_nasa_opera",

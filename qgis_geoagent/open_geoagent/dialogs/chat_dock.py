@@ -9,6 +9,7 @@ import importlib
 import array
 import json
 import re
+import sys
 import tempfile
 import time
 import traceback
@@ -141,14 +142,15 @@ SAMPLE_PROMPTS = [
 ]
 AGENT_MODES = [
     "General QGIS",
-    "WhiteboxTools",
+    "GEE Data Catalogs",
+    "GeoAI",
+    "HyperCoast",
     "NASA Earthdata",
     "NASA OPERA",
-    "GEE Data Catalogs",
     "STAC",
     "Timelapse",
     "Vantor",
-    "GeoAI",
+    "WhiteboxTools",
 ]
 DEFAULT_AGENT_MODE = "General QGIS"
 PERMISSION_PROFILES = [
@@ -161,7 +163,7 @@ PERMISSION_PROFILES = [
 PERMISSION_PROFILE_ALIASES = {
     "Execute PyQGIS": "Execute Scripts",
 }
-DEFAULT_PERMISSION_PROFILE = "Inspect only"
+DEFAULT_PERMISSION_PROFILE = "Trusted auto-approve"
 WORKFLOW_PROMPTS = {
     "NASA Earthdata": [
         (
@@ -227,6 +229,13 @@ WORKFLOW_PROMPTS = {
             "and add the raster mask to QGIS."
         ),
     ],
+    "HyperCoast": [
+        ("Search HyperCoast for EMIT hyperspectral data in the current " "map extent."),
+        (
+            "Load a true-color HyperCoast RGB visualization from a local "
+            "hyperspectral file."
+        ),
+    ],
 }
 
 
@@ -264,6 +273,7 @@ def _permission_allows_tool(permission_profile, tool_name, meta=None):
         "timelapse",
         "vantor",
         "geoai",
+        "hypercoast",
     }:
         return profile in {"Run processing", "Execute Scripts", "Trusted auto-approve"}
     if profile == "Edit layers":
@@ -444,11 +454,27 @@ def _apply_environment_from_settings(settings):
                 os.environ[env_name] = value
 
 
+def _unwrap_chat_worker_exception(exc):
+    """Return the most useful nested exception for UI reporting."""
+    seen = set()
+    current = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        nested = getattr(current, "original_exception", None)
+        if nested is None:
+            nested = getattr(current, "__cause__", None)
+        if nested is None:
+            break
+        current = nested
+    return current or exc
+
+
 def _format_chat_worker_error(exc, provider="", agent_mode=""):
     """Return an actionable UI error for chat worker exceptions."""
-    raw = str(exc) or exc.__class__.__name__
+    display_exc = _unwrap_chat_worker_exception(exc)
+    raw = str(display_exc) or display_exc.__class__.__name__
     lower = raw.lower()
-    cls_name = exc.__class__.__name__.lower()
+    cls_name = display_exc.__class__.__name__.lower()
     provider_label = provider or "the selected provider"
     mode_label = agent_mode or "this mode"
     is_opera_mode = "opera" in agent_mode.lower()
@@ -459,7 +485,7 @@ def _format_chat_worker_error(exc, provider="", agent_mode=""):
         _looks_like_max_tokens_reached = None
 
     if _looks_like_max_tokens_reached is not None and _looks_like_max_tokens_reached(
-        exc
+        display_exc
     ):
         advice = (
             "The model hit its output-token limit before OpenGeoAgent could "
@@ -479,6 +505,16 @@ def _format_chat_worker_error(exc, provider="", agent_mode=""):
                 f"{provider_label}, or retry with a narrower request."
             )
         return f"{advice}\n\nOriginal error: {raw}"
+
+    if "readerror" in cls_name or "remoteprotocolerror" in cls_name:
+        return (
+            "The model provider streaming connection was interrupted while "
+            f"OpenGeoAgent was running {mode_label}. The HyperCoast tools were "
+            "not the source of this error.\n\nDisable streaming in OpenGeoAgent "
+            "settings or retry the request. If this repeats, use a shorter "
+            f"request or check network access for {provider_label}.\n\n"
+            f"Original error: {raw}"
+        )
 
     if (
         "tlsv1_alert_decode_error" in lower
@@ -1919,7 +1955,15 @@ class ChatWorker(QThread):
                 "Timelapse": "for_timelapse",
                 "Vantor": "for_vantor",
                 "GeoAI": "for_geoai",
+                "HyperCoast": "for_hypercoast",
             }.get(self.agent_mode, "for_qgis")
+            if not hasattr(geoagent, factory_name):
+                for module_name in list(sys.modules):
+                    if module_name == "geoagent" or module_name.startswith("geoagent."):
+                        sys.modules.pop(module_name, None)
+                from geoagent import GeoAgentConfig
+                import geoagent
+
             factory = getattr(geoagent, factory_name)
             kwargs = {
                 "project": project,
@@ -2872,6 +2916,7 @@ class ChatDockWidget(QDockWidget):
                 "include_timelapse": mode == "Timelapse",
                 "include_vantor": mode == "Vantor",
                 "include_geoai": mode == "GeoAI",
+                "include_hypercoast": mode == "HyperCoast",
                 "permission_profile": profile,
                 "fast": self.fast_check.isChecked(),
             }

@@ -308,6 +308,31 @@ def test_format_chat_worker_error_detects_httpx_connect_error_by_class() -> None
     assert "Check network/proxy/TLS access for openai" in error
 
 
+def test_format_chat_worker_error_unwraps_streaming_read_error() -> None:
+    """Verify Strands EventLoopException wrappers expose stream read failures."""
+
+    class ReadError(Exception):
+        """Mimic httpx.ReadError with an empty message."""
+
+    class EventLoopException(Exception):
+        """Mimic Strands EventLoopException."""
+
+        def __init__(self, original_exception):
+            self.original_exception = original_exception
+            super().__init__("")
+
+    error = _format_chat_worker_error(
+        EventLoopException(ReadError()),
+        provider="openai-codex",
+        agent_mode="HyperCoast",
+    )
+
+    assert "streaming connection was interrupted" in error
+    assert "HyperCoast tools were not the source" in error
+    assert "Disable streaming" in error
+    assert "Original error: ReadError" in error
+
+
 def test_format_tool_calls_includes_full_stac_asset_url() -> None:
     """Verify STAC signed URLs are preserved outside compact arg display."""
     href = "https://example.blob.core.windows.net/container/path/file.tif?" + (
@@ -731,6 +756,14 @@ def test_timelapse_mode_is_available() -> None:
     assert WORKFLOW_PROMPTS["Timelapse"]
 
 
+def test_hypercoast_mode_is_available() -> None:
+    """Verify HyperCoast appears in the OpenGeoAgent agent-mode list."""
+    from open_geoagent.dialogs.chat_dock import AGENT_MODES, WORKFLOW_PROMPTS
+
+    assert "HyperCoast" in AGENT_MODES
+    assert WORKFLOW_PROMPTS["HyperCoast"]
+
+
 def test_transcribed_prompt_moves_cursor_to_end() -> None:
     """Transcribed text should leave the prompt cursor at the end."""
     from open_geoagent.dialogs.chat_dock import ChatDockWidget
@@ -822,3 +855,16 @@ def test_run_processing_profile_allows_timelapse_tools() -> None:
 
     assert not _permission_allows_tool("Inspect only", "create_timelapse", _Meta())
     assert _permission_allows_tool("Run processing", "create_timelapse", _Meta())
+
+
+def test_run_processing_profile_allows_hypercoast_tools() -> None:
+    """Verify HyperCoast mode can expose download and load tools."""
+
+    class _Meta:
+        category = "hypercoast"
+        requires_confirmation = True
+        destructive = False
+        long_running = True
+
+    assert not _permission_allows_tool("Inspect only", "load_hypercoast_rgb", _Meta())
+    assert _permission_allows_tool("Run processing", "load_hypercoast_rgb", _Meta())
