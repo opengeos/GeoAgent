@@ -374,7 +374,7 @@ def test_install_packages_falls_back_to_pip_when_uv_install_fails(
 
     success, message = deps_manager.install_packages(
         venv_dir,
-        ["GeoAgent[providers]>=1.7.2"],
+        ["GeoAgent[providers]>=1.8.0"],
         progress_callback=lambda p, m: progress.append((p, m)),
     )
 

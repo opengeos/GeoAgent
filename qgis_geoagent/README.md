@@ -80,11 +80,11 @@ adds its site-packages directory when the plugin loads.
 Manual fallback:
 
 ```bash
-pip install "GeoAgent[providers]>=1.7.2"
-pip install "GeoAgent[stac]>=1.7.2"
-pip install "GeoAgent[whitebox]>=1.7.2"
-pip install "GeoAgent[earthdata,nasa-opera]>=1.7.2"
-pip install "GeoAgent[earthengine]>=1.7.2"
+pip install "GeoAgent[providers]>=1.8.0"
+pip install "GeoAgent[stac]>=1.8.0"
+pip install "GeoAgent[whitebox]>=1.8.0"
+pip install "GeoAgent[earthdata,nasa-opera]>=1.8.0"
+pip install "GeoAgent[earthengine]>=1.8.0"
 ```
 
 GEE Data Catalogs mode also expects the `gee_data_catalogs` Python module from
