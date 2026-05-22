@@ -40,6 +40,14 @@ def test_litellm_config_is_valid() -> None:
     assert cfg.model == "openai/gpt-5.5"
 
 
+def test_vllm_config_is_valid() -> None:
+    """Verify that vLLM is accepted as a configured provider."""
+    cfg = GeoAgentConfig(provider="vllm", model="Qwen/Qwen3-4B")
+
+    assert cfg.provider == "vllm"
+    assert cfg.model == "Qwen/Qwen3-4B"
+
+
 def test_max_tokens_defaults_to_provider_auto() -> None:
     """Verify default config leaves output token limits to the provider."""
     assert GeoAgentConfig().max_tokens is None
@@ -66,6 +74,8 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
     ]:
         monkeypatch.delenv(key, raising=False)
 
@@ -84,6 +94,8 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("OPENAI_CODEX_ACCESS_TOKEN", "codex-token")
@@ -101,11 +113,33 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "GOOGLE_API_KEY",
         "OLLAMA_HOST",
         "USE_OLLAMA",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("LITELLM_BASE_URL", "https://litellm.example.test")
 
     assert GeoAgentConfig().provider == "litellm"
+
+
+def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify that vLLM environment variables select vLLM by default."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
+
+    assert GeoAgentConfig().provider == "vllm"
 
 
 def test_resolve_openai_codex_model(monkeypatch) -> None:
@@ -279,3 +313,51 @@ def test_resolve_litellm_model(monkeypatch) -> None:
         "model_id": "anthropic/claude-3-7-sonnet-20250219",
         "params": {"temperature": 0.2, "max_tokens": 1024},
     }
+
+
+def test_resolve_vllm_model(monkeypatch) -> None:
+    """Verify that vLLM config resolves to the Strands vLLM model."""
+
+    class FakeVLLMModel:
+        """Capture vLLM constructor arguments."""
+
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    module = types.ModuleType("strands_vllm")
+    module.VLLMModel = FakeVLLMModel
+    monkeypatch.setitem(sys.modules, "strands_vllm", module)
+    monkeypatch.setenv("VLLM_API_KEY", "test-key")
+    monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
+
+    model = resolve_model(
+        GeoAgentConfig(
+            provider="vllm",
+            model="Qwen/Qwen3-4B",
+            temperature=0.2,
+            max_tokens=1024,
+        )
+    )
+
+    assert isinstance(model, FakeVLLMModel)
+    assert model.kwargs == {
+        "base_url": "http://localhost:8000/v1",
+        "model_id": "Qwen/Qwen3-4B",
+        "api_key": "test-key",
+        "params": {"temperature": 0.2, "max_tokens": 1024},
+    }
+
+
+def test_resolve_vllm_requires_model_id(monkeypatch) -> None:
+    """Verify vLLM reports a clear error without a model id."""
+
+    class FakeVLLMModel:
+        """Unused fake vLLM model."""
+
+    module = types.ModuleType("strands_vllm")
+    module.VLLMModel = FakeVLLMModel
+    monkeypatch.setitem(sys.modules, "strands_vllm", module)
+    monkeypatch.delenv("VLLM_MODEL_ID", raising=False)
+
+    with pytest.raises(ValueError, match="vLLM provider requires a model id"):
+        resolve_model(GeoAgentConfig(provider="vllm"))

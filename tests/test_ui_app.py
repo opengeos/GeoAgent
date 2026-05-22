@@ -14,7 +14,9 @@ def test_default_model_for_provider() -> None:
     """Verify provider default model ids."""
     assert app.default_model_for_provider("openai-codex") == "gpt-5.5"
     assert app.default_model_for_provider("anthropic") == "claude-sonnet-4-6"
+    assert app.default_model_for_provider("vllm") == ""
     assert app.default_model_for_provider("unknown") == ""
+    assert "vllm" in app.PROVIDER_NAMES
 
 
 def test_confirmation_callback_denies_by_default() -> None:
@@ -132,6 +134,8 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
         "OLLAMA_HOST",
         "USE_OLLAMA",
     ):
@@ -143,6 +147,10 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
     monkeypatch.delenv("OPENAI_API_KEY")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "anthropic-test")
     assert app.default_provider() == "anthropic"
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY")
+    monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
+    assert app.default_provider() == "vllm"
 
 
 def test_compact_tool_call_truncates_structurally() -> None:

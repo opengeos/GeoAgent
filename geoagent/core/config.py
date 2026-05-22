@@ -15,6 +15,7 @@ ProviderName = Literal[
     "gemini",
     "ollama",
     "litellm",
+    "vllm",
 ]
 
 DEFAULT_PROVIDER: ProviderName = "openai-codex"
@@ -36,6 +37,8 @@ def _default_provider_from_env() -> ProviderName:
         or os.environ.get("LITELLM_BASE_URL")
     ):
         return "litellm"
+    if os.environ.get("VLLM_BASE_URL") or os.environ.get("VLLM_MODEL_ID"):
+        return "vllm"
     if os.environ.get("OLLAMA_HOST") or os.environ.get("USE_OLLAMA") == "1":
         return "ollama"
     return DEFAULT_PROVIDER
@@ -48,6 +51,7 @@ class GeoAgentConfig(BaseModel):
     passed explicitly (``OPENAI_API_KEY``, ``ANTHROPIC_API_KEY``,
     ``OPENAI_CODEX_ACCESS_TOKEN``,
     ``GEMINI_API_KEY`` / ``GOOGLE_API_KEY``, ``LITELLM_API_KEY``,
+    ``VLLM_BASE_URL`` / ``VLLM_MODEL_ID``,
     ``AWS_REGION`` / default AWS credential chain for Bedrock, etc.).
 
     Attributes:
@@ -59,6 +63,7 @@ class GeoAgentConfig(BaseModel):
         ollama_host: Ollama server base URL (e.g. ``http://127.0.0.1:11434``).
         openai_codex_base_url: ChatGPT/Codex backend base URL.
         litellm_base_url: Optional LiteLLM proxy or OpenAI-compatible base URL.
+        vllm_base_url: vLLM OpenAI-compatible API base URL.
     """
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
@@ -77,6 +82,10 @@ class GeoAgentConfig(BaseModel):
     litellm_base_url: Optional[str] = Field(
         default=None,
         description="LiteLLM proxy or OpenAI-compatible base URL.",
+    )
+    vllm_base_url: Optional[str] = Field(
+        default=None,
+        description="vLLM OpenAI-compatible API base URL.",
     )
     # Optional provider client_args (e.g. base_url for Azure or LiteLLM proxy)
     client_args: dict[str, Any] = Field(default_factory=dict)

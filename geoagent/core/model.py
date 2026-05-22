@@ -202,6 +202,35 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             params=params,
         )
 
+    if provider == "vllm":
+        from strands_vllm import VLLMModel
+
+        model_id = cfg.model or os.environ.get("VLLM_MODEL_ID")
+        if not model_id:
+            raise ValueError(
+                "vLLM provider requires a model id. Pass model=..., set "
+                "VLLM_MODEL_ID, or configure the model in OpenGeoAgent settings."
+            )
+        client_args = dict(cfg.client_args)
+        base_url = (
+            cfg.vllm_base_url
+            or client_args.pop("base_url", None)
+            or os.environ.get("VLLM_BASE_URL")
+            or "http://localhost:8000/v1"
+        )
+        api_key = client_args.pop("api_key", None) or os.environ.get(
+            "VLLM_API_KEY", "EMPTY"
+        )
+        params = {"temperature": cfg.temperature}
+        params.update(_token_param("max_tokens", cfg.max_tokens))
+        return VLLMModel(
+            base_url=base_url,
+            model_id=model_id,
+            api_key=api_key,
+            params=params,
+            **client_args,
+        )
+
     raise ValueError(f"Unknown provider: {provider}")
 
 

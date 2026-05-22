@@ -4,11 +4,14 @@ from qgis.PyQt.QtCore import QPoint, QRect, QSize
 from qgis.PyQt.QtGui import QColor, QImage
 
 from open_geoagent.dialogs.chat_dock import (
+    DEFAULT_MODELS,
+    PROVIDERS,
     SETTINGS_PREFIX,
     _build_chat_content,
     _console_ready_pyqgis_script,
     _conversation_markdown,
     _format_tool_calls,
+    _apply_environment_from_settings,
     _format_chat_worker_error,
     _grab_screen_rect,
     _grab_widget_global_rect,
@@ -27,6 +30,7 @@ from open_geoagent.dialogs.chat_dock import (
     _permission_allows_tool,
     _project_history_key,
     _images_from_trusted_tool_output_text,
+    _default_model_for_provider,
 )
 
 
@@ -44,6 +48,32 @@ def _qimage_format(name):
     """Return QImage format across PyQt enum API variants."""
     container = getattr(QImage, "Format", QImage)
     return getattr(container, name)
+
+
+def test_vllm_provider_defaults_are_available() -> None:
+    """Verify vLLM is listed with no hard-coded model default."""
+    assert "vllm" in PROVIDERS
+    assert DEFAULT_MODELS["vllm"] == ""
+    assert _default_model_for_provider("vllm") == ""
+
+
+def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
+    """Verify vLLM settings are exported for chat workers."""
+    monkeypatch.delenv("VLLM_BASE_URL", raising=False)
+    monkeypatch.delenv("VLLM_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}vllm_base_url": "http://localhost:8000/v1",
+            f"{SETTINGS_PREFIX}vllm_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert os.environ["VLLM_BASE_URL"] == "http://localhost:8000/v1"
+    assert os.environ["VLLM_API_KEY"] == "test-key"
 
 
 def test_conversation_markdown_includes_full_history() -> None:

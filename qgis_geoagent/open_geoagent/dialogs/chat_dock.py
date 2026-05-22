@@ -81,6 +81,7 @@ DEFAULT_MODELS = {
     "gemini": "gemini-3.1-pro-preview",
     "ollama": "qwen3.5:4b",
     "litellm": "openai/gpt-5.5",
+    "vllm": "",
 }
 PROVIDERS = [
     "anthropic",
@@ -90,6 +91,7 @@ PROVIDERS = [
     "ollama",
     "openai",
     "openai-codex",
+    "vllm",
 ]
 MAX_CONTEXT_MESSAGES = 12
 MAX_CONTEXT_CHARS = 12000
@@ -444,6 +446,8 @@ def _apply_environment_from_settings(settings):
         "ollama_host": "OLLAMA_HOST",
         "litellm_api_key": "LITELLM_API_KEY",  # pragma: allowlist secret
         "litellm_base_url": "LITELLM_BASE_URL",
+        "vllm_api_key": "VLLM_API_KEY",  # pragma: allowlist secret
+        "vllm_base_url": "VLLM_BASE_URL",
     }
     for key, env_names in env_map.items():
         value = _setting(settings, key, "").strip()

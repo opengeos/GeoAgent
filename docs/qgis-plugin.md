@@ -34,10 +34,16 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - Google Gemini
 - Ollama
 - LiteLLM
+- vLLM
 
 Use the settings panel to configure API keys, hosts, model defaults, and
 dependency status. Vision features require a provider and model that support
 image inputs.
+
+vLLM requires a separately running vLLM server. Configure the vLLM base URL and
+model in settings, or set `VLLM_BASE_URL` and `VLLM_MODEL_ID`. GeoAgent tool
+use requires the vLLM server to be started with tool-calling support for the
+selected model and chat template.
 
 ## Sample Data
 

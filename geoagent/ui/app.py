@@ -22,6 +22,7 @@ PROVIDER_NAMES: tuple[str, ...] = (
     "bedrock",
     "litellm",
     "ollama",
+    "vllm",
 )
 
 DEFAULT_MODEL_BY_PROVIDER: dict[str, str] = {
@@ -32,6 +33,7 @@ DEFAULT_MODEL_BY_PROVIDER: dict[str, str] = {
     "bedrock": "us.anthropic.claude-sonnet-4-6",
     "litellm": "openai/gpt-5.5",
     "ollama": "qwen3.5:4b",
+    "vllm": "",
 }
 
 MAX_CONTEXT_MESSAGES = 12

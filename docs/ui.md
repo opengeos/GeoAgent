@@ -42,7 +42,7 @@ The first screen is the chat-and-map workspace. It includes:
 
 - a persistent interactive map where layers accumulate across prompts;
 - provider and model controls for OpenAI, ChatGPT/Codex OAuth, Anthropic,
-  Google Gemini, Bedrock, LiteLLM, and Ollama;
+  Google Gemini, Bedrock, LiteLLM, vLLM, and Ollama;
 - a fast-mode toggle for lower-latency map-control prompts;
 - an auto-approve toggle for confirmation-required tools;
 - chat history for the current browser session;

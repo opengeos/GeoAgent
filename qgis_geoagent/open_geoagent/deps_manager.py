@@ -41,6 +41,7 @@ PROVIDER_PACKAGES = [
     ("google.genai", "google-genai>=1.0"),
     ("ollama", "ollama>=0.3"),
     ("litellm", "strands-agents[litellm]>=1.37"),
+    ("strands_vllm", "strands-vllm"),
 ]
 WHITEBOX_PACKAGES = [("whitebox", "whitebox>=2.3.6")]
 NASA_PACKAGES = [("earthaccess", "earthaccess>=0.10")]

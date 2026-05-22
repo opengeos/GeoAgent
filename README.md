@@ -37,8 +37,8 @@ Many geospatial libraries need the same agent features:
 
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
-- support OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Bedrock, LiteLLM, and local
-  Ollama models;
+- support OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Bedrock,
+  LiteLLM, vLLM, and local Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
@@ -83,6 +83,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[gemini]`      | Google Gemini model support through Strands.                      |
 | `GeoAgent[ollama]`      | Local Ollama model support.                                       |
 | `GeoAgent[litellm]`     | LiteLLM model support for many hosted and proxy providers.        |
+| `GeoAgent[vllm]`        | vLLM server support through the Strands community provider.       |
 | `GeoAgent[leafmap]`     | leafmap live map integration.                                     |
 | `GeoAgent[anymap]`      | anymap live map integration.                                      |
 | `GeoAgent[stac]`        | STAC client dependencies.                                         |
@@ -92,7 +93,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies.                                 |
 | `GeoAgent[ui]`          | Solara UI dependencies.                                           |
 | `GeoAgent[browser]`     | FastAPI WebSocket backend for browser MapLibre apps.              |
-| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, and LiteLLM provider clients.  |
+| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, and vLLM clients.     |
 | `GeoAgent[all]`         | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
@@ -119,6 +120,7 @@ specified:
 | Anthropic           | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL`                    |
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
+| vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
 
 Bedrock is not auto-detected. Pass `provider="bedrock"` explicitly; it then
@@ -127,6 +129,10 @@ with optional `BEDROCK_MODEL`.
 
 ChatGPT/Codex OAuth uses the Codex browser login flow and the Codex Responses
 backend.
+
+vLLM support expects a running vLLM server. When using GeoAgent tools, start
+the server with vLLM tool-calling support enabled for the selected model and
+chat template.
 
 For notebooks and Python scripts, log in once with the CLI:
 
@@ -266,7 +272,7 @@ Anthropic, and Google Gemini providers from the browser UI.
 For a Node.js TypeScript MapLibre app that keeps model authentication on the
 server, see `examples/node_maplibre_strands_typescript/`. It supports
 the same provider ids as the GeoAgent/QGIS UI, including ChatGPT/Codex OAuth,
-OpenAI, Anthropic, Gemini, Amazon Bedrock, LiteLLM, and Ollama.
+OpenAI, Anthropic, Gemini, Amazon Bedrock, LiteLLM, vLLM, and Ollama.
 
 For local sessions where you want PyQGIS-style fallback behavior, add
 `--allow-browser-code`. This exposes `run_maplibre_script`, allowing the agent
@@ -310,7 +316,7 @@ PyQGIS scripts from natural language.
 Key plugin features:
 
 - provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth,
-  Anthropic, Google Gemini, Ollama, and LiteLLM;
+  Anthropic, Google Gemini, Ollama, LiteLLM, and vLLM;
 - project-aware QGIS tools for layers, selections, map navigation, processing,
   project saving, and attribute table actions;
 - image-aware chat with clipboard paste and screenshot attachments for models

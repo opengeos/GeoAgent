@@ -34,7 +34,7 @@ See it in action:
 
 - A `GeoAgent` facade around a Strands `Agent`.
 - Provider configuration for OpenAI, Anthropic, Google Gemini, Bedrock,
-  LiteLLM, and Ollama.
+  LiteLLM, vLLM, and Ollama.
 - `@geo_tool` metadata for category, safety, fast-mode filtering, and optional
   dependency checks.
 - Factories for common runtime environments:
@@ -94,11 +94,16 @@ GeoAgent can infer a provider from environment variables:
 | Anthropic           | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL`                    |
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
+| vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
 
 Bedrock is not auto-detected. Pass `provider="bedrock"` explicitly; it then
 uses the AWS credential chain, configured region, and Bedrock model access,
 with optional `BEDROCK_MODEL`.
+
+vLLM support expects a running vLLM server. When using GeoAgent tools, start
+the server with vLLM tool-calling support enabled for the selected model and
+chat template.
 
 Explicit configuration is also supported:
 
