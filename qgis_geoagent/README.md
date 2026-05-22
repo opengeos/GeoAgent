@@ -124,11 +124,12 @@ applied to the current QGIS process before each chat request:
 - Bedrock: `AWS_REGION` plus the normal AWS credential chain
 - Ollama: `OLLAMA_HOST`
 - LiteLLM: `LITELLM_API_KEY` and optional `LITELLM_BASE_URL`
-- vLLM: `VLLM_BASE_URL`, `VLLM_MODEL_ID`, and optional `VLLM_API_KEY`
+- vLLM: `VLLM_BASE_URL` and optional `VLLM_API_KEY`
 
-vLLM requires a separately running vLLM server. GeoAgent tool use requires the
-server to be started with tool-calling support for the selected model and chat
-template.
+vLLM requires a separately running vLLM server. The model id is supplied via
+the **Model** setting (or `VLLM_MODEL_ID` if no QGIS setting is saved). GeoAgent
+tool use requires the server to be started with tool-calling support for the
+selected model and chat template.
 
 Default models:
 

@@ -51,8 +51,8 @@ The first screen is the chat-and-map workspace. It includes:
 The MVP uses non-streaming `agent.chat(...)` calls. Provider credentials are
 still configured through the same environment variables used by the Python API,
 such as `OPENAI_API_KEY`, `OPENAI_CODEX_ACCESS_TOKEN`, `ANTHROPIC_API_KEY`,
-`GEMINI_API_KEY`, `LITELLM_API_KEY`, `OLLAMA_HOST`, or AWS credentials for
-Bedrock.
+`GEMINI_API_KEY`, `LITELLM_API_KEY`, `VLLM_BASE_URL`, `VLLM_MODEL_ID`,
+`OLLAMA_HOST`, or AWS credentials for Bedrock.
 
 ## Safety
 
