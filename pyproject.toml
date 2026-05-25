@@ -1,6 +1,6 @@
 [project]
 name = "GeoAgent"
-version = "1.8.0"
+version = "1.8.1"
 description = "Centralized AI agent framework for Open Geospatial Python packages and QGIS plugins (Strands Agents)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -79,7 +79,7 @@ exclude = ["docs*", "tests*", "examples*"]
 universal = true
 
 [tool.bumpversion]
-current_version = "1.8.0"
+current_version = "1.8.1"
 commit = true
 tag = true
 
