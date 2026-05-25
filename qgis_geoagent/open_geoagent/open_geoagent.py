@@ -12,6 +12,26 @@ TOOLBAR_OBJECT_NAME = "OpenGeoAgentToolbar"
 MENU_TITLE = "&OpenGeoAgent"
 
 
+def _set_no_native_menu_role(action):
+    """Keep plugin actions from moving into native macOS application menus.
+
+    Args:
+        action: QAction-like object whose native menu role should be disabled.
+    """
+    set_menu_role = getattr(action, "setMenuRole", None)
+    if not callable(set_menu_role):
+        return
+
+    menu_role = getattr(QAction, "MenuRole", None)
+    no_role = getattr(menu_role, "NoRole", None) if menu_role is not None else None
+    if no_role is None:
+        no_role = getattr(QAction, "NoRole", None)
+    if no_role is None:
+        return
+
+    set_menu_role(no_role)
+
+
 class OpenGeoAgent:
     """QGIS plugin that exposes GeoAgent through a dockable chat interface."""
 
@@ -39,6 +59,7 @@ class OpenGeoAgent:
     ):
         """Create a QAction and add it to the plugin menu and toolbar."""
         action = QAction(QIcon(icon_path), text, parent)
+        _set_no_native_menu_role(action)
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
         action.setCheckable(checkable)

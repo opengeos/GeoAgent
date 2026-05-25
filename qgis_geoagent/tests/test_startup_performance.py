@@ -80,3 +80,72 @@ def test_python_runtime_error_mentions_required_version(monkeypatch) -> None:
 
     assert deps_manager.python_runtime_supported() is False
     assert "Python 99.0 or newer" in deps_manager.python_runtime_error()
+
+
+def test_plugin_actions_disable_pyqt6_native_menu_roles(monkeypatch) -> None:
+    """PyQt6 actions should stay in the plugin menu on macOS.
+
+    Args:
+        monkeypatch: Pytest fixture for replacing module attributes.
+    """
+    from open_geoagent import open_geoagent
+
+    class FakeAction:
+        """QAction stand-in with the PyQt6 MenuRole shape."""
+
+        class MenuRole:
+            """PyQt6-style QAction.MenuRole enum stand-in."""
+
+            NoRole = object()
+
+        def __init__(self) -> None:
+            """Initialize the captured menu role."""
+            self.menu_role = None
+
+        def setMenuRole(self, role) -> None:  # noqa: N802
+            """Capture the assigned role.
+
+            Args:
+                role: Menu role assigned by the plugin helper.
+            """
+            self.menu_role = role
+
+    monkeypatch.setattr(open_geoagent, "QAction", FakeAction)
+
+    action = FakeAction()
+    open_geoagent._set_no_native_menu_role(action)
+
+    assert action.menu_role is FakeAction.MenuRole.NoRole
+
+
+def test_plugin_actions_disable_pyqt5_native_menu_roles(monkeypatch) -> None:
+    """PyQt5 actions should stay in the plugin menu on macOS.
+
+    Args:
+        monkeypatch: Pytest fixture for replacing module attributes.
+    """
+    from open_geoagent import open_geoagent
+
+    class FakeAction:
+        """QAction stand-in with the PyQt5 enum shape."""
+
+        NoRole = object()
+
+        def __init__(self) -> None:
+            """Initialize the captured menu role."""
+            self.menu_role = None
+
+        def setMenuRole(self, role) -> None:  # noqa: N802
+            """Capture the assigned role.
+
+            Args:
+                role: Menu role assigned by the plugin helper.
+            """
+            self.menu_role = role
+
+    monkeypatch.setattr(open_geoagent, "QAction", FakeAction)
+
+    action = FakeAction()
+    open_geoagent._set_no_native_menu_role(action)
+
+    assert action.menu_role is FakeAction.NoRole
