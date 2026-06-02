@@ -223,8 +223,9 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             or "https://openrouter.ai/api/v1"
         )
         client_args["base_url"] = base_url
-        params = {"temperature": cfg.temperature}
-        params.update(_token_param("max_tokens", cfg.max_tokens))
+        params = _token_param("max_tokens", cfg.max_tokens)
+        if not _model_uses_default_temperature_only(model_id):
+            params["temperature"] = cfg.temperature
         return OpenAIModel(
             client_args=client_args,
             model_id=model_id,

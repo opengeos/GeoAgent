@@ -32,11 +32,7 @@ def _default_provider_from_env() -> ProviderName:
         return "anthropic"
     if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
         return "gemini"
-    if (
-        os.environ.get("OPENROUTER_API_KEY")
-        or os.environ.get("OPENROUTER_MODEL")
-        or os.environ.get("OPENROUTER_BASE_URL")
-    ):
+    if os.environ.get("OPENROUTER_API_KEY"):
         return "openrouter"
     if (
         os.environ.get("LITELLM_API_KEY")
