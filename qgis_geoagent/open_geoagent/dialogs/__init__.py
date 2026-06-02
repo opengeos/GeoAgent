@@ -4,7 +4,6 @@ The dialog classes are imported lazily so opening one panel does not import
 all plugin dialogs and their helper modules.
 """
 
-
 # ---------------------------------------------------------------------------
 # Global SSL bypass — runs at plugin load time, before any provider client
 # is constructed.  Covers both sync (httpx.Client) and async
