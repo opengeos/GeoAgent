@@ -14,8 +14,10 @@ def test_default_model_for_provider() -> None:
     """Verify provider default model ids."""
     assert app.default_model_for_provider("openai-codex") == "gpt-5.5"
     assert app.default_model_for_provider("anthropic") == "claude-sonnet-4-6"
+    assert app.default_model_for_provider("openrouter") == "deepseek/deepseek-chat"
     assert app.default_model_for_provider("vllm") == ""
     assert app.default_model_for_provider("unknown") == ""
+    assert "openrouter" in app.PROVIDER_NAMES
     assert "vllm" in app.PROVIDER_NAMES
 
 
@@ -134,6 +136,9 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_BASE_URL",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OLLAMA_HOST",
@@ -149,6 +154,10 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
     assert app.default_provider() == "anthropic"
 
     monkeypatch.delenv("ANTHROPIC_API_KEY")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "openrouter-test")
+    assert app.default_provider() == "openrouter"
+
+    monkeypatch.delenv("OPENROUTER_API_KEY")
     monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
     assert app.default_provider() == "vllm"
 

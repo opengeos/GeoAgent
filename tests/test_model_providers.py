@@ -32,12 +32,41 @@ def _install_fake_openai_responses_model(monkeypatch):
     return FakeOpenAIResponsesModel
 
 
+def _install_fake_openai_model(monkeypatch):
+    """Install a fake Strands OpenAI module."""
+
+    class FakeOpenAIModel:
+        """Capture OpenAI constructor arguments."""
+
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    module = types.ModuleType("strands.models.openai")
+    module.OpenAIModel = FakeOpenAIModel
+    monkeypatch.setitem(sys.modules, "strands", types.ModuleType("strands"))
+    monkeypatch.setitem(
+        sys.modules,
+        "strands.models",
+        types.ModuleType("strands.models"),
+    )
+    monkeypatch.setitem(sys.modules, "strands.models.openai", module)
+    return FakeOpenAIModel
+
+
 def test_litellm_config_is_valid() -> None:
     """Verify that LiteLLM is accepted as a configured provider."""
     cfg = GeoAgentConfig(provider="litellm", model="openai/gpt-5.5")
 
     assert cfg.provider == "litellm"
     assert cfg.model == "openai/gpt-5.5"
+
+
+def test_openrouter_config_is_valid() -> None:
+    """Verify that OpenRouter is accepted as a configured provider."""
+    cfg = GeoAgentConfig(provider="openrouter", model="qwen/qwen3-32b")
+
+    assert cfg.provider == "openrouter"
+    assert cfg.model == "qwen/qwen3-32b"
 
 
 def test_vllm_config_is_valid() -> None:
@@ -74,6 +103,9 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_BASE_URL",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
     ]:
@@ -94,6 +126,9 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_BASE_URL",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
     ]:
@@ -115,11 +150,36 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "USE_OLLAMA",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_BASE_URL",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("LITELLM_BASE_URL", "https://litellm.example.test")
 
     assert GeoAgentConfig().provider == "litellm"
+
+
+def test_openrouter_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify that OpenRouter environment variables select OpenRouter."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+
+    assert GeoAgentConfig().provider == "openrouter"
 
 
 def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
@@ -135,6 +195,9 @@ def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
         "LITELLM_API_KEY",
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_BASE_URL",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
@@ -313,6 +376,41 @@ def test_resolve_litellm_model(monkeypatch) -> None:
         "model_id": "anthropic/claude-3-7-sonnet-20250219",
         "params": {"temperature": 0.2, "max_tokens": 1024},
     }
+
+
+def test_resolve_openrouter_model(monkeypatch) -> None:
+    """Verify OpenRouter resolves through the OpenAI-compatible model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setenv("OPENROUTER_BASE_URL", "https://openrouter.example.test/v1")
+
+    model = resolve_model(
+        GeoAgentConfig(
+            provider="openrouter",
+            model="qwen/qwen3-32b",
+            temperature=0.2,
+            max_tokens=1024,
+        )
+    )
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs == {
+        "client_args": {
+            "api_key": "test-key",
+            "base_url": "https://openrouter.example.test/v1",
+        },
+        "model_id": "qwen/qwen3-32b",
+        "params": {"temperature": 0.2, "max_tokens": 1024},
+    }
+
+
+def test_resolve_openrouter_requires_api_key(monkeypatch) -> None:
+    """Verify OpenRouter reports a clear error without an API key."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="OpenRouter provider requires an API key"):
+        resolve_model(GeoAgentConfig(provider="openrouter"))
 
 
 def test_resolve_vllm_model(monkeypatch) -> None:

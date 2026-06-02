@@ -22,7 +22,7 @@ GitHub update checker.
 - Tool permission profiles, defaulting to trusted auto-approval
 - Project-scoped chat history with Markdown import/export
 - Compact jobs panel for active and completed GeoAgent requests
-- Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, LiteLLM, and vLLM
+- Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, OpenRouter, LiteLLM, and vLLM
 - Settings panel for model defaults, API keys, hosts, AWS region, provider
   smoke tests, and redacted diagnostics export
 - Dependency installer that installs core provider packages or selected
@@ -124,7 +124,12 @@ applied to the current QGIS process before each chat request:
 - Bedrock: `AWS_REGION` plus the normal AWS credential chain
 - Ollama: `OLLAMA_HOST`
 - LiteLLM: `LITELLM_API_KEY` and optional `LITELLM_BASE_URL`
+- OpenRouter: `OPENROUTER_API_KEY` and optional `OPENROUTER_BASE_URL`
 - vLLM: `VLLM_BASE_URL` and optional `VLLM_API_KEY`
+
+OpenRouter can be used for DeepSeek and Qwen models. The default model is
+`deepseek/deepseek-chat`; enter a Qwen model ID such as `qwen/qwen3-32b` in the
+**Model** setting to use Qwen through OpenRouter.
 
 vLLM requires a separately running vLLM server. The model id is supplied via
 the **Model** setting (or `VLLM_MODEL_ID` if no QGIS setting is saved). GeoAgent
@@ -142,6 +147,7 @@ Default models:
 | Google Gemini | `gemini-3.1-pro-preview` |
 | Ollama | `qwen3.5:4b` |
 | LiteLLM | `openai/gpt-5.5` |
+| OpenRouter | `deepseek/deepseek-chat` |
 | vLLM | Use `VLLM_MODEL_ID` or enter a model |
 
 ## Chat Workflow

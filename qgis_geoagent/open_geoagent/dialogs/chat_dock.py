@@ -81,6 +81,7 @@ DEFAULT_MODELS = {
     "gemini": "gemini-3.1-pro-preview",
     "ollama": "qwen3.5:4b",
     "litellm": "openai/gpt-5.5",
+    "openrouter": "deepseek/deepseek-chat",
     "vllm": "",
 }
 PROVIDERS = [
@@ -91,6 +92,7 @@ PROVIDERS = [
     "ollama",
     "openai",
     "openai-codex",
+    "openrouter",
     "vllm",
 ]
 MAX_CONTEXT_MESSAGES = 12
@@ -446,6 +448,8 @@ def _apply_environment_from_settings(settings):
         "ollama_host": "OLLAMA_HOST",
         "litellm_api_key": "LITELLM_API_KEY",  # pragma: allowlist secret
         "litellm_base_url": "LITELLM_BASE_URL",
+        "openrouter_api_key": "OPENROUTER_API_KEY",  # pragma: allowlist secret
+        "openrouter_base_url": "OPENROUTER_BASE_URL",
         "vllm_api_key": "VLLM_API_KEY",  # pragma: allowlist secret
         "vllm_base_url": "VLLM_BASE_URL",
     }

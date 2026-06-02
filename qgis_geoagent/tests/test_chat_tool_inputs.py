@@ -57,6 +57,13 @@ def test_vllm_provider_defaults_are_available() -> None:
     assert _default_model_for_provider("vllm") == ""
 
 
+def test_openrouter_provider_defaults_are_available() -> None:
+    """Verify OpenRouter is listed with the DeepSeek default model."""
+    assert "openrouter" in PROVIDERS
+    assert DEFAULT_MODELS["openrouter"] == "deepseek/deepseek-chat"
+    assert _default_model_for_provider("openrouter") == "deepseek/deepseek-chat"
+
+
 def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
     """Verify vLLM settings are exported for chat workers."""
     monkeypatch.delenv("VLLM_BASE_URL", raising=False)
@@ -74,6 +81,25 @@ def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
 
     assert os.environ["VLLM_BASE_URL"] == "http://localhost:8000/v1"
     assert os.environ["VLLM_API_KEY"] == "test-key"
+
+
+def test_apply_environment_sets_openrouter_values(monkeypatch) -> None:
+    """Verify OpenRouter settings are exported for chat workers."""
+    monkeypatch.delenv("OPENROUTER_BASE_URL", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}openrouter_base_url": "https://openrouter.test/v1",
+            f"{SETTINGS_PREFIX}openrouter_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert os.environ["OPENROUTER_BASE_URL"] == "https://openrouter.test/v1"
+    assert os.environ["OPENROUTER_API_KEY"] == "test-key"
 
 
 def test_conversation_markdown_includes_full_history() -> None:
@@ -243,8 +269,9 @@ def test_images_from_output_text_extracts_generated_path() -> None:
     ]
 
 
-def test_trusted_tool_output_text_extracts_timelapse_gif(tmp_path) -> None:
+def test_trusted_tool_output_text_extracts_timelapse_gif(tmp_path, monkeypatch) -> None:
     """Verify Timelapse GIF paths in successful answers become thumbnails."""
+    monkeypatch.setenv("GEOAGENT_IMAGE_OUTPUT_DIR", str(tmp_path))
     gif = tmp_path / "landsat_timelapse.gif"
     gif.write_bytes(b"GIF89a")
 
@@ -363,8 +390,8 @@ def test_format_chat_worker_error_unwraps_streaming_read_error() -> None:
     assert "Original error: ReadError" in error
 
 
-def test_format_tool_calls_includes_full_stac_asset_url() -> None:
-    """Verify STAC signed URLs are preserved outside compact arg display."""
+def test_format_tool_calls_redacts_stac_asset_url_query() -> None:
+    """Verify STAC signed URL secrets are redacted outside compact display."""
     href = "https://example.blob.core.windows.net/container/path/file.tif?" + (
         "sig=" + ("x" * 300)
     )
@@ -385,7 +412,8 @@ def test_format_tool_calls_includes_full_stac_asset_url() -> None:
     )
 
     assert "STAC asset URLs:" in text
-    assert href in text
+    assert href not in text
+    assert "sig=REDACTED" in text
     assert "..." in text
 
 

@@ -42,7 +42,7 @@ The first screen is the chat-and-map workspace. It includes:
 
 - a persistent interactive map where layers accumulate across prompts;
 - provider and model controls for OpenAI, ChatGPT/Codex OAuth, Anthropic,
-  Google Gemini, Bedrock, LiteLLM, vLLM, and Ollama;
+  Google Gemini, Bedrock, OpenRouter, LiteLLM, vLLM, and Ollama;
 - a fast-mode toggle for lower-latency map-control prompts;
 - an auto-approve toggle for confirmation-required tools;
 - chat history for the current browser session;
@@ -51,8 +51,8 @@ The first screen is the chat-and-map workspace. It includes:
 The MVP uses non-streaming `agent.chat(...)` calls. Provider credentials are
 still configured through the same environment variables used by the Python API,
 such as `OPENAI_API_KEY`, `OPENAI_CODEX_ACCESS_TOKEN`, `ANTHROPIC_API_KEY`,
-`GEMINI_API_KEY`, `LITELLM_API_KEY`, `VLLM_BASE_URL`, `VLLM_MODEL_ID`,
-`OLLAMA_HOST`, or AWS credentials for Bedrock.
+`GEMINI_API_KEY`, `LITELLM_API_KEY`, `OPENROUTER_API_KEY`, `VLLM_BASE_URL`,
+`VLLM_MODEL_ID`, `OLLAMA_HOST`, or AWS credentials for Bedrock.
 
 ## Safety
 

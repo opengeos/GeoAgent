@@ -71,6 +71,8 @@ ENV_FALLBACKS = {
     "ollama_host": ("OLLAMA_HOST",),
     "litellm_api_key": ("LITELLM_API_KEY",),
     "litellm_base_url": ("LITELLM_BASE_URL",),
+    "openrouter_api_key": ("OPENROUTER_API_KEY",),
+    "openrouter_base_url": ("OPENROUTER_BASE_URL",),
     "vllm_api_key": ("VLLM_API_KEY",),
     "vllm_base_url": ("VLLM_BASE_URL",),
 }
@@ -633,6 +635,16 @@ class SettingsDockWidget(QDockWidget):
         self.litellm_base_url_input.setPlaceholderText("https://proxy.example.com")
         credentials_form.addRow("LiteLLM base URL:", self.litellm_base_url_input)
 
+        self.openrouter_key_input = QLineEdit()
+        self.openrouter_key_input.setEchoMode(password_mode)
+        credentials_form.addRow("OpenRouter API key:", self.openrouter_key_input)
+
+        self.openrouter_base_url_input = QLineEdit()
+        self.openrouter_base_url_input.setPlaceholderText(
+            "https://openrouter.ai/api/v1"
+        )
+        credentials_form.addRow("OpenRouter base URL:", self.openrouter_base_url_input)
+
         self.vllm_key_input = QLineEdit()
         self.vllm_key_input.setEchoMode(password_mode)
         self.vllm_key_input.setPlaceholderText("Optional; often EMPTY for local vLLM")
@@ -1073,6 +1085,8 @@ class SettingsDockWidget(QDockWidget):
             ("ollama_host", self.ollama_host_input),
             ("litellm_api_key", self.litellm_key_input),
             ("litellm_base_url", self.litellm_base_url_input),
+            ("openrouter_api_key", self.openrouter_key_input),
+            ("openrouter_base_url", self.openrouter_base_url_input),
             ("vllm_api_key", self.vllm_key_input),
             ("vllm_base_url", self.vllm_base_url_input),
         )
@@ -1244,6 +1258,8 @@ class SettingsDockWidget(QDockWidget):
             "ollama_host",
             "litellm_api_key",
             "litellm_base_url",
+            "openrouter_api_key",
+            "openrouter_base_url",
             "vllm_api_key",
             "vllm_base_url",
             *OAUTH_CONFIG_KEYS,

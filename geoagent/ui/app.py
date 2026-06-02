@@ -21,6 +21,7 @@ PROVIDER_NAMES: tuple[str, ...] = (
     "gemini",
     "bedrock",
     "litellm",
+    "openrouter",
     "ollama",
     "vllm",
 )
@@ -32,6 +33,7 @@ DEFAULT_MODEL_BY_PROVIDER: dict[str, str] = {
     "gemini": "gemini-3.1-pro-preview",
     "bedrock": "us.anthropic.claude-sonnet-4-6",
     "litellm": "openai/gpt-5.5",
+    "openrouter": "deepseek/deepseek-chat",
     "ollama": "qwen3.5:4b",
     "vllm": "",
 }

@@ -38,7 +38,7 @@ Many geospatial libraries need the same agent features:
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
 - support OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Bedrock,
-  LiteLLM, vLLM, and local Ollama models;
+  OpenRouter, LiteLLM, vLLM, and local Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
@@ -83,6 +83,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[gemini]`      | Google Gemini model support through Strands.                      |
 | `GeoAgent[ollama]`      | Local Ollama model support.                                       |
 | `GeoAgent[litellm]`     | LiteLLM model support for many hosted and proxy providers.        |
+| `GeoAgent[openrouter]`  | OpenRouter support for DeepSeek, Qwen, and other hosted models.   |
 | `GeoAgent[vllm]`        | vLLM server support through the Strands community provider.       |
 | `GeoAgent[leafmap]`     | leafmap live map integration.                                     |
 | `GeoAgent[anymap]`      | anymap live map integration.                                      |
@@ -93,7 +94,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies.                                 |
 | `GeoAgent[ui]`          | Solara UI dependencies.                                           |
 | `GeoAgent[browser]`     | FastAPI WebSocket backend for browser MapLibre apps.              |
-| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, and vLLM clients.     |
+| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, OpenRouter, and vLLM clients. |
 | `GeoAgent[all]`         | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
@@ -120,6 +121,7 @@ specified:
 | Anthropic           | `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL`                    |
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
+| OpenRouter          | `OPENROUTER_API_KEY`, optional `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` |
 | vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
 
@@ -178,6 +180,24 @@ Factories also accept `provider=` and `model_id=` shortcuts:
 
 ```python
 agent = for_leafmap(m, provider="gemini", model_id="gemini-3.1-pro-preview")
+```
+
+OpenRouter can be used for DeepSeek and Qwen models:
+
+```python
+agent = GeoAgent(
+    config=GeoAgentConfig(
+        provider="openrouter",
+        model="deepseek/deepseek-chat",
+    )
+)
+
+qwen_agent = GeoAgent(
+    config=GeoAgentConfig(
+        provider="openrouter",
+        model="qwen/qwen3-32b",
+    )
+)
 ```
 
 ## Quickstart
@@ -272,7 +292,8 @@ Anthropic, and Google Gemini providers from the browser UI.
 For a Node.js TypeScript MapLibre app that keeps model authentication on the
 server, see `examples/node_maplibre_strands_typescript/`. It supports
 the same provider ids as the GeoAgent/QGIS UI, including ChatGPT/Codex OAuth,
-OpenAI, Anthropic, Gemini, Amazon Bedrock, LiteLLM, vLLM, and Ollama.
+OpenAI, Anthropic, Gemini, Amazon Bedrock, OpenRouter, LiteLLM, vLLM, and
+Ollama.
 
 For local sessions where you want PyQGIS-style fallback behavior, add
 `--allow-browser-code`. This exposes `run_maplibre_script`, allowing the agent
@@ -316,7 +337,7 @@ PyQGIS scripts from natural language.
 Key plugin features:
 
 - provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth,
-  Anthropic, Google Gemini, Ollama, LiteLLM, and vLLM;
+  Anthropic, Google Gemini, Ollama, OpenRouter, LiteLLM, and vLLM;
 - project-aware QGIS tools for layers, selections, map navigation, processing,
   project saving, and attribute table actions;
 - image-aware chat with clipboard paste and screenshot attachments for models

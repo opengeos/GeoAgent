@@ -20,6 +20,7 @@ Test coverage:
 
 from __future__ import annotations
 
+import importlib
 import sys
 
 import pytest
@@ -31,8 +32,7 @@ import pytest
 
 def test_hsae_module_imports_without_hydrosovereign() -> None:
     """Verify the HSAE adapter is import-safe when hydrosovereign is absent."""
-    import importlib
-    import geoagent.tools.hsae  # noqa: F401
+    importlib.import_module("geoagent.tools.hsae")
 
     assert "geoagent.tools.hsae" in sys.modules
 
@@ -44,8 +44,6 @@ def test_hsae_module_import_does_not_trigger_hydrosovereign() -> None:
     # Also remove hydrosovereign if present so we can detect a fresh import
     was_present = sys.modules.pop("hydrosovereign", None)
     try:
-        import importlib
-
         importlib.import_module("geoagent.tools.hsae")
         assert (
             "hydrosovereign" not in sys.modules
@@ -60,7 +58,11 @@ def test_hsae_module_import_does_not_trigger_hydrosovereign() -> None:
 # Factory
 # ---------------------------------------------------------------------------
 
-from geoagent.tools.hsae import hsae_tools, _resolve_basin_id, _legal_status
+from geoagent.tools.hsae import (  # noqa: E402
+    hsae_tools,
+    _resolve_basin_id,
+    _legal_status,
+)
 
 
 def test_hsae_tools_returns_list() -> None:

@@ -34,11 +34,17 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - Google Gemini
 - Ollama
 - LiteLLM
+- OpenRouter
 - vLLM
 
 Use the settings panel to configure API keys, hosts, model defaults, and
 dependency status. Vision features require a provider and model that support
 image inputs.
+
+OpenRouter can be used for DeepSeek and Qwen models. Configure the OpenRouter
+API key in settings, or set `OPENROUTER_API_KEY`; the default model is
+`deepseek/deepseek-chat`, and Qwen model IDs such as `qwen/qwen3-32b` can be
+entered in the model field.
 
 vLLM requires a separately running vLLM server. Configure the vLLM base URL and
 model in settings, or set `VLLM_BASE_URL` and `VLLM_MODEL_ID`. GeoAgent tool
