@@ -26,7 +26,7 @@ jobs:
             - name: Build docs
               run: mkdocs build --strict
             - name: Deploy to Netlify
-              uses: nwtgck/actions-netlify@v3.0
+              uses: nwtgck/actions-netlify@v4.0
               with:
                   publish-dir: "./site"
                   production-branch: main
