@@ -22,7 +22,7 @@ jobs:
                     - { os: ubuntu-latest, py: "3.13" }
         steps:
             - name: Checkout Code
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
             - name: Setup Python
               uses: actions/setup-python@v6
               with:
