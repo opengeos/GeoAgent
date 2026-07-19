@@ -80,6 +80,10 @@ ENV_FALLBACKS = {
 
 def _apply_environment_from_settings(settings):
     """Apply saved provider credentials to the current process."""
+    sync = getattr(settings, "sync", None)
+    if callable(sync):
+        sync()
+
     for key, env_names in ENV_FALLBACKS.items():
         value = settings.value(f"{SETTINGS_PREFIX}{key}", "", type=str).strip()
         if not value:
@@ -1151,6 +1155,7 @@ class SettingsDockWidget(QDockWidget):
                 # secret to QSettings.
                 continue
             self.settings.setValue(f"{SETTINGS_PREFIX}{key}", current)
+        _apply_environment_from_settings(self.settings)
         self.status_label.setText("Settings saved")
         self.status_label.setStyleSheet("color: green; font-size: 10px;")
         self.iface.messageBar().pushSuccess("OpenGeoAgent", "Settings saved.")
