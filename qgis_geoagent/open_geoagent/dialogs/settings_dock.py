@@ -29,6 +29,7 @@ from qgis.PyQt.QtWidgets import (
     QProgressBar,
     QPushButton,
     QKeySequenceEdit,
+    QScrollArea,
     QSpinBox,
     QTabWidget,
     QVBoxLayout,
@@ -426,6 +427,33 @@ class SettingsDockWidget(QDockWidget):
         self._setup_ui()
         self._load_settings()
 
+    def showEvent(self, event):
+        """Keep restored floating geometry inside the current screen."""
+        super().showEvent(event)
+        QTimer.singleShot(0, self._fit_floating_dock_to_screen)
+
+    def _fit_floating_dock_to_screen(self):
+        """Shrink and reposition an oversized floating settings dock."""
+        if not self.isFloating():
+            return
+
+        screen = self.screen() or QGuiApplication.primaryScreen()
+        if screen is None:
+            return
+
+        available = screen.availableGeometry().adjusted(8, 8, -8, -8)
+        width = min(self.width(), available.width())
+        height = min(self.height(), available.height())
+        if (width, height) != (self.width(), self.height()):
+            self.resize(width, height)
+
+        frame = self.frameGeometry()
+        x = min(max(frame.x(), available.left()), available.right() - frame.width() + 1)
+        y = min(
+            max(frame.y(), available.top()), available.bottom() - frame.height() + 1
+        )
+        self.move(x, y)
+
     def _setup_ui(self):
         """Build the settings dock widgets and tabs."""
         main_widget = QWidget()
@@ -445,8 +473,10 @@ class SettingsDockWidget(QDockWidget):
         self.tab_widget = QTabWidget()
         layout.addWidget(self.tab_widget)
 
-        self.tab_widget.addTab(self._create_dependencies_tab(), "Dependencies")
-        self.tab_widget.addTab(self._create_model_tab(), "Model")
+        self.dependencies_scroll = self._scrollable_tab(self._create_dependencies_tab())
+        self.model_scroll = self._scrollable_tab(self._create_model_tab())
+        self.tab_widget.addTab(self.dependencies_scroll, "Dependencies")
+        self.tab_widget.addTab(self.model_scroll, "Model")
 
         button_layout = QHBoxLayout()
         self.save_btn = QPushButton("Save Settings")
@@ -475,6 +505,13 @@ class SettingsDockWidget(QDockWidget):
         self.status_label = QLabel("Settings loaded")
         self.status_label.setStyleSheet("color: gray; font-size: 10px;")
         layout.addWidget(self.status_label)
+
+    def _scrollable_tab(self, content):
+        """Wrap tab content so short docks retain access to the full form."""
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(content)
+        return scroll
 
     def _create_dependencies_tab(self):
         """Create the dependency status and installer tab."""
