@@ -442,8 +442,12 @@ class SettingsDockWidget(QDockWidget):
             return
 
         available = screen.availableGeometry().adjusted(8, 8, -8, -8)
-        width = min(self.width(), available.width())
-        height = min(self.height(), available.height())
+        frame = self.frameGeometry()
+        client = self.geometry()
+        frame_width = max(0, frame.width() - client.width())
+        frame_height = max(0, frame.height() - client.height())
+        width = min(self.width(), max(0, available.width() - frame_width))
+        height = min(self.height(), max(0, available.height() - frame_height))
         if (width, height) != (self.width(), self.height()):
             self.resize(width, height)
 

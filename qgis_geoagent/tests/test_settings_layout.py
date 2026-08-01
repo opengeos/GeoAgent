@@ -33,11 +33,11 @@ def test_floating_settings_dock_fits_available_screen(monkeypatch) -> None:
     app = QApplication.instance() or QApplication([])
     dock = SettingsDockWidget(None)
     dock.setFloating(True)
-    dock.resize(700, 5000)
-    dock._fit_floating_dock_to_screen()
+    available = dock.screen().availableGeometry().adjusted(8, 8, -8, -8)
+    dock.resize(available.width(), available.height())
+    dock.show()
     app.processEvents()
 
-    available = dock.screen().availableGeometry().adjusted(8, 8, -8, -8)
     assert dock.height() <= available.height()
     assert available.contains(dock.frameGeometry())
 
