@@ -40,12 +40,17 @@ dependencies = [
 geoagent = "geoagent.cli:main"
 
 [project.optional-dependencies]
-openai = ["openai>=1.0"]
+openai = ["openai>=2.0"]
 anthropic = ["anthropic>=0.40"]
 gemini = ["strands-agents[gemini]>=1.37", "google-genai>=1.0"]
 ollama = ["ollama>=0.3"]
 litellm = ["strands-agents[litellm]>=1.37"]
-openrouter = ["openai>=1.0"]
+openrouter = ["openai>=2.0"]
+openai-compatible = ["openai>=2.0"]
+# strands-vllm pins openai<2.0, which conflicts with the openai>=2.0 needed by
+# the default openai-codex provider, so this extra is not part of `providers`
+# or `all`. Point the `openai-compatible` provider at a vLLM server's /v1 URL
+# to use vLLM alongside the rest of the stack.
 vllm = ["strands-vllm"]
 bedrock = []
 leafmap = ["leafmap>=0.43"]
@@ -61,7 +66,9 @@ hsae = ["hydrosovereign>=6.0.7"]
 ui = ["solara>=1.35", "starlette<2.0"]
 browser = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 qgis = []
-providers = ["GeoAgent[openai,anthropic,gemini,ollama,litellm,openrouter,vllm]"]
+providers = [
+    "GeoAgent[openai,anthropic,gemini,ollama,litellm,openrouter,openai-compatible]",
+]
 all = [
     "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,nasa-opera,whitebox,ui,browser]",
 ]

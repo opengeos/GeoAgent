@@ -82,6 +82,7 @@ DEFAULT_MODELS = {
     "ollama": "qwen3.5:4b",
     "litellm": "openai/gpt-5.5",
     "openrouter": "deepseek/deepseek-chat",
+    "openai-compatible": "",
     "vllm": "",
 }
 PROVIDERS = [
@@ -92,6 +93,7 @@ PROVIDERS = [
     "ollama",
     "openai",
     "openai-codex",
+    "openai-compatible",
     "openrouter",
     "vllm",
 ]
@@ -455,6 +457,10 @@ def _apply_environment_from_settings(settings):
         "litellm_base_url": "LITELLM_BASE_URL",
         "openrouter_api_key": "OPENROUTER_API_KEY",  # pragma: allowlist secret
         "openrouter_base_url": "OPENROUTER_BASE_URL",
+        "openai_compatible_api_key": (  # pragma: allowlist secret
+            "OPENAI_COMPATIBLE_API_KEY",
+        ),
+        "openai_compatible_base_url": "OPENAI_COMPATIBLE_BASE_URL",
         "vllm_api_key": "VLLM_API_KEY",  # pragma: allowlist secret
         "vllm_base_url": "VLLM_BASE_URL",
     }

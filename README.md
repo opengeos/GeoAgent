@@ -38,7 +38,8 @@ Many geospatial libraries need the same agent features:
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
 - support OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Bedrock,
-  OpenRouter, LiteLLM, vLLM, and local Ollama models;
+  OpenRouter, LiteLLM, any OpenAI-compatible server, vLLM, and local
+  Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
@@ -84,7 +85,8 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[ollama]`      | Local Ollama model support.                                       |
 | `GeoAgent[litellm]`     | LiteLLM model support for many hosted and proxy providers.        |
 | `GeoAgent[openrouter]`  | OpenRouter support for DeepSeek, Qwen, and other hosted models.   |
-| `GeoAgent[vllm]`        | vLLM server support through the Strands community provider.       |
+| `GeoAgent[openai-compatible]` | Any OpenAI-compatible server, e.g. llama.cpp, LM Studio, vLLM. |
+| `GeoAgent[vllm]`        | vLLM through the Strands community provider. Not in `providers`/`all`; see note below. |
 | `GeoAgent[leafmap]`     | leafmap live map integration.                                     |
 | `GeoAgent[anymap]`      | anymap live map integration.                                      |
 | `GeoAgent[stac]`        | STAC client dependencies.                                         |
@@ -94,7 +96,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies.                                 |
 | `GeoAgent[ui]`          | Solara UI dependencies.                                           |
 | `GeoAgent[browser]`     | FastAPI WebSocket backend for browser MapLibre apps.              |
-| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, OpenRouter, and vLLM clients. |
+| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, OpenRouter, and OpenAI-compatible clients. |
 | `GeoAgent[all]`         | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
@@ -122,6 +124,7 @@ specified:
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | OpenRouter          | `OPENROUTER_API_KEY`, optional `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` |
+| OpenAI-compatible   | `OPENAI_COMPATIBLE_BASE_URL`, `OPENAI_COMPATIBLE_MODEL`, optional `OPENAI_COMPATIBLE_API_KEY` |
 | vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
 
@@ -132,9 +135,32 @@ with optional `BEDROCK_MODEL`.
 ChatGPT/Codex OAuth uses the Codex browser login flow and the Codex Responses
 backend.
 
+The `openai-compatible` provider talks to any server that exposes the OpenAI
+Chat Completions API, including llama.cpp, LM Studio, Text Generation WebUI,
+and vLLM. Point it at the server's `/v1` URL. A model id is required because a
+generic endpoint has no default, and the API key is optional since most local
+servers ignore it:
+
+```python
+from geoagent import GeoAgent
+
+agent = GeoAgent(
+    provider="openai-compatible",
+    model="qwen3-8b",
+    openai_compatible_base_url="http://localhost:8000/v1",
+)
+```
+
 vLLM support expects a running vLLM server. When using GeoAgent tools, start
 the server with vLLM tool-calling support enabled for the selected model and
 chat template.
+
+The dedicated `vllm` provider depends on `strands-vllm`, which pins
+`openai<2.0` and therefore cannot be installed alongside the `openai>=2.0` that
+the default `openai-codex` provider requires. `GeoAgent[vllm]` is consequently
+excluded from `GeoAgent[providers]` and `GeoAgent[all]`. Prefer the
+`openai-compatible` provider pointed at your vLLM server's `/v1` URL, which
+needs no extra dependency.
 
 For notebooks and Python scripts, log in once with the CLI:
 
@@ -292,8 +318,8 @@ Anthropic, and Google Gemini providers from the browser UI.
 For a Node.js TypeScript MapLibre app that keeps model authentication on the
 server, see `examples/node_maplibre_strands_typescript/`. It supports
 the same provider ids as the GeoAgent/QGIS UI, including ChatGPT/Codex OAuth,
-OpenAI, Anthropic, Gemini, Amazon Bedrock, OpenRouter, LiteLLM, vLLM, and
-Ollama.
+OpenAI, Anthropic, Gemini, Amazon Bedrock, OpenRouter, LiteLLM, any
+OpenAI-compatible server, vLLM, and Ollama.
 
 For local sessions where you want PyQGIS-style fallback behavior, add
 `--allow-browser-code`. This exposes `run_maplibre_script`, allowing the agent

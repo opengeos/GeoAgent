@@ -36,13 +36,18 @@ CORE_RUNTIME_PACKAGES = [
     ("pydantic", "pydantic>=2.0"),
 ]
 PROVIDER_PACKAGES = [
-    ("openai", "openai>=1.0"),
+    # openai>=2.0 is required by the default openai-codex provider, which uses
+    # the Responses API. Older 1.x releases fail at import time.
+    ("openai", "openai>=2.0"),
     ("anthropic", "anthropic>=0.40"),
     ("google.genai", "google-genai>=1.0"),
     ("ollama", "ollama>=0.3"),
     ("litellm", "strands-agents[litellm]>=1.37"),
-    ("strands_vllm", "strands-vllm"),
 ]
+# strands-vllm is deliberately absent: it pins openai<2.0, which cannot resolve
+# against the openai>=2.0 that GeoAgent[providers] and the default openai-codex
+# provider require, so including it here breaks the whole install. Reach a vLLM
+# server through the openai-compatible provider and its /v1 URL instead.
 WHITEBOX_PACKAGES = [("whitebox", "whitebox>=2.3.6")]
 NASA_PACKAGES = [("earthaccess", "earthaccess>=0.10")]
 GEE_PACKAGES = [

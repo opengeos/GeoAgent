@@ -35,6 +35,7 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - Ollama
 - LiteLLM
 - OpenRouter
+- OpenAI-compatible (any server exposing the OpenAI API)
 - vLLM
 
 Use the settings panel to configure API keys, hosts, model defaults, and
@@ -46,10 +47,19 @@ API key in settings, or set `OPENROUTER_API_KEY`; the default model is
 `deepseek/deepseek-chat`, and Qwen model IDs such as `qwen/qwen3-32b` can be
 entered in the model field.
 
+The `openai-compatible` provider works with any server exposing the OpenAI
+Chat Completions API, such as llama.cpp, LM Studio, Text Generation WebUI, or
+vLLM. Set the OpenAI-compatible base URL in settings (or
+`OPENAI_COMPATIBLE_BASE_URL`) to the server's `/v1` URL and enter a model id in
+the **Model** field. The API key is optional; most local servers ignore it.
+
 vLLM requires a separately running vLLM server. Configure the vLLM base URL and
 model in settings, or set `VLLM_BASE_URL` and `VLLM_MODEL_ID`. GeoAgent tool
 use requires the vLLM server to be started with tool-calling support for the
-selected model and chat template.
+selected model and chat template. The dedicated `vllm` provider needs
+`strands-vllm`, which pins `openai<2.0` and is therefore no longer installed by
+the **Core Providers** dependency group; the `openai-compatible` provider is
+the recommended way to reach a vLLM server.
 
 ## Sample Data
 
