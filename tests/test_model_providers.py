@@ -108,6 +108,8 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "OPENROUTER_BASE_URL",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
     ]:
         monkeypatch.delenv(key, raising=False)
 
@@ -131,6 +133,8 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_BASE_URL",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("OPENAI_CODEX_ACCESS_TOKEN", "codex-token")
@@ -153,6 +157,8 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("LITELLM_BASE_URL", "https://litellm.example.test")
@@ -175,6 +181,8 @@ def test_openrouter_can_be_selected_from_environment(monkeypatch) -> None:
         "LITELLM_BASE_URL",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
@@ -198,6 +206,8 @@ def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
     ]:
         monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
@@ -459,3 +469,121 @@ def test_resolve_vllm_requires_model_id(monkeypatch) -> None:
 
     with pytest.raises(ValueError, match="vLLM provider requires a model id"):
         resolve_model(GeoAgentConfig(provider="vllm"))
+
+
+def test_openai_compatible_config_is_valid() -> None:
+    """Verify that a generic OpenAI-compatible server is an accepted provider."""
+    cfg = GeoAgentConfig(
+        provider="openai-compatible",
+        model="qwen3-8b",
+        openai_compatible_base_url="http://localhost:8000/v1",
+    )
+
+    assert cfg.provider == "openai-compatible"
+    assert cfg.model == "qwen3-8b"
+    assert cfg.openai_compatible_base_url == "http://localhost:8000/v1"
+
+
+def test_openai_compatible_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify a generic base URL selects the openai-compatible provider."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_MODEL",
+        "OPENROUTER_BASE_URL",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("OPENAI_COMPATIBLE_BASE_URL", "http://localhost:8000/v1")
+
+    assert GeoAgentConfig().provider == "openai-compatible"
+
+
+def test_resolve_openai_compatible_model(monkeypatch) -> None:
+    """Verify a generic endpoint resolves to the OpenAI chat completions model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "local-key")
+
+    model = resolve_model(
+        GeoAgentConfig(
+            provider="openai-compatible",
+            model="qwen3-8b",
+            openai_compatible_base_url="http://localhost:8000/v1",
+            temperature=0.3,
+            max_tokens=512,
+        )
+    )
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs == {
+        "client_args": {
+            "base_url": "http://localhost:8000/v1",
+            "api_key": "local-key",
+        },
+        "model_id": "qwen3-8b",
+        "params": {"temperature": 0.3, "max_tokens": 512},
+    }
+
+
+def test_resolve_openai_compatible_defaults_api_key(monkeypatch) -> None:
+    """Verify keyless local servers still get a non-empty placeholder key."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("OPENAI_COMPATIBLE_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_COMPATIBLE_BASE_URL", "http://localhost:1234/v1")
+    monkeypatch.setenv("OPENAI_COMPATIBLE_MODEL", "local-model")
+
+    model = resolve_model(GeoAgentConfig(provider="openai-compatible"))
+
+    assert model.kwargs["client_args"]["api_key"] == "EMPTY"
+    assert model.kwargs["client_args"]["base_url"] == "http://localhost:1234/v1"
+    assert model.kwargs["model_id"] == "local-model"
+
+
+def test_resolve_openai_compatible_requires_base_url(monkeypatch) -> None:
+    """Verify a missing base URL reports a clear, actionable error."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("OPENAI_COMPATIBLE_BASE_URL", raising=False)
+
+    with pytest.raises(ValueError, match="requires the base URL"):
+        resolve_model(GeoAgentConfig(provider="openai-compatible", model="qwen3-8b"))
+
+
+def test_resolve_openai_compatible_requires_model_id(monkeypatch) -> None:
+    """Verify a missing model id reports a clear, actionable error."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("OPENAI_COMPATIBLE_MODEL", raising=False)
+    monkeypatch.setenv("OPENAI_COMPATIBLE_BASE_URL", "http://localhost:8000/v1")
+
+    with pytest.raises(ValueError, match="requires a model id"):
+        resolve_model(GeoAgentConfig(provider="openai-compatible"))
+
+
+def test_openai_codex_reports_openai_version_requirement(monkeypatch) -> None:
+    """Verify an unimportable Responses API explains the openai>=2.0 upgrade."""
+    monkeypatch.setitem(sys.modules, "strands", types.ModuleType("strands"))
+    monkeypatch.setitem(
+        sys.modules,
+        "strands.models",
+        types.ModuleType("strands.models"),
+    )
+    # A module without OpenAIResponsesModel makes the `from ... import` raise
+    # ImportError, the same failure mode as an installed openai 1.x.
+    monkeypatch.setitem(
+        sys.modules,
+        "strands.models.openai_responses",
+        types.ModuleType("strands.models.openai_responses"),
+    )
+    monkeypatch.setenv("OPENAI_CODEX_ACCESS_TOKEN", "codex-token")
+
+    with pytest.raises(ImportError, match=r"requires the openai package"):
+        resolve_model(GeoAgentConfig(provider="openai-codex", model="gpt-5.5"))

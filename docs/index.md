@@ -34,7 +34,7 @@ See it in action:
 
 - A `GeoAgent` facade around a Strands `Agent`.
 - Provider configuration for OpenAI, Anthropic, Google Gemini, Bedrock,
-  OpenRouter, LiteLLM, vLLM, and Ollama.
+  OpenRouter, LiteLLM, any OpenAI-compatible server, vLLM, and Ollama.
 - `@geo_tool` metadata for category, safety, fast-mode filtering, and optional
   dependency checks.
 - Factories for common runtime environments:
@@ -95,6 +95,7 @@ GeoAgent can infer a provider from environment variables:
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | OpenRouter          | `OPENROUTER_API_KEY`, optional `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` |
+| OpenAI-compatible   | `OPENAI_COMPATIBLE_BASE_URL`, `OPENAI_COMPATIBLE_MODEL`, optional `OPENAI_COMPATIBLE_API_KEY` |
 | vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
 
@@ -102,9 +103,17 @@ Bedrock is not auto-detected. Pass `provider="bedrock"` explicitly; it then
 uses the AWS credential chain, configured region, and Bedrock model access,
 with optional `BEDROCK_MODEL`.
 
+The `openai-compatible` provider talks to any server exposing the OpenAI Chat
+Completions API (llama.cpp, LM Studio, Text Generation WebUI, vLLM). Point it
+at the server's `/v1` URL and supply a model id.
+
 vLLM support expects a running vLLM server. When using GeoAgent tools, start
 the server with vLLM tool-calling support enabled for the selected model and
-chat template.
+chat template. The dedicated `vllm` provider depends on `strands-vllm`, which
+pins `openai<2.0` and cannot be installed alongside the `openai>=2.0` required
+by the default `openai-codex` provider, so `GeoAgent[vllm]` is excluded from
+`GeoAgent[providers]` and `GeoAgent[all]`. The `openai-compatible` provider is
+the dependency-free alternative.
 
 Explicit configuration is also supported:
 

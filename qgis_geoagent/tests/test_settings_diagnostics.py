@@ -123,11 +123,41 @@ def test_settings_environment_sets_openrouter_values(monkeypatch) -> None:
     assert os.environ["OPENROUTER_API_KEY"] == "test-key"
 
 
-def test_core_provider_dependencies_include_vllm() -> None:
-    """Verify Core Providers installs the vLLM client."""
+def test_settings_environment_sets_openai_compatible_values(monkeypatch) -> None:
+    """Verify settings apply generic OpenAI-compatible environment variables."""
+    import os
+
+    monkeypatch.delenv("OPENAI_COMPATIBLE_BASE_URL", raising=False)
+    monkeypatch.delenv("OPENAI_COMPATIBLE_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}openai_compatible_base_url": "http://localhost:8000/v1",
+            f"{SETTINGS_PREFIX}openai_compatible_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    assert os.environ["OPENAI_COMPATIBLE_BASE_URL"] == "http://localhost:8000/v1"
+    assert os.environ["OPENAI_COMPATIBLE_API_KEY"] == "test-key"
+
+
+def test_core_provider_dependencies_exclude_vllm() -> None:
+    """Verify Core Providers omits the vLLM client.
+
+    ``strands-vllm`` pins ``openai<2.0``, which cannot coexist with the
+    ``openai>=2.0`` the default openai-codex provider requires.
+    """
     from open_geoagent.deps_manager import REQUIRED_PACKAGES
 
-    assert ("strands_vllm", "strands-vllm") in REQUIRED_PACKAGES
+    assert ("strands_vllm", "strands-vllm") not in REQUIRED_PACKAGES
+
+
+def test_core_provider_dependencies_require_openai_2() -> None:
+    """Verify the plugin installs an openai release with the Responses API."""
+    from open_geoagent.deps_manager import REQUIRED_PACKAGES
+
+    assert ("openai", "openai>=2.0") in REQUIRED_PACKAGES
 
 
 def test_uv_usable_requires_successful_verification(monkeypatch) -> None:

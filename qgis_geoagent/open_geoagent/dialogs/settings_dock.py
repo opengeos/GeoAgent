@@ -74,6 +74,8 @@ ENV_FALLBACKS = {
     "litellm_base_url": ("LITELLM_BASE_URL",),
     "openrouter_api_key": ("OPENROUTER_API_KEY",),
     "openrouter_base_url": ("OPENROUTER_BASE_URL",),
+    "openai_compatible_api_key": ("OPENAI_COMPATIBLE_API_KEY",),
+    "openai_compatible_base_url": ("OPENAI_COMPATIBLE_BASE_URL",),
     "vllm_api_key": ("VLLM_API_KEY",),
     "vllm_base_url": ("VLLM_BASE_URL",),
 }
@@ -690,6 +692,23 @@ class SettingsDockWidget(QDockWidget):
         )
         credentials_form.addRow("OpenRouter base URL:", self.openrouter_base_url_input)
 
+        self.openai_compatible_key_input = QLineEdit()
+        self.openai_compatible_key_input.setEchoMode(password_mode)
+        self.openai_compatible_key_input.setPlaceholderText(
+            "Optional; often unused by local servers"
+        )
+        credentials_form.addRow(
+            "OpenAI-compatible API key:", self.openai_compatible_key_input
+        )
+
+        self.openai_compatible_base_url_input = QLineEdit()
+        self.openai_compatible_base_url_input.setPlaceholderText(
+            "http://localhost:8000/v1"
+        )
+        credentials_form.addRow(
+            "OpenAI-compatible base URL:", self.openai_compatible_base_url_input
+        )
+
         self.vllm_key_input = QLineEdit()
         self.vllm_key_input.setEchoMode(password_mode)
         self.vllm_key_input.setPlaceholderText("Optional; often EMPTY for local vLLM")
@@ -1132,6 +1151,8 @@ class SettingsDockWidget(QDockWidget):
             ("litellm_base_url", self.litellm_base_url_input),
             ("openrouter_api_key", self.openrouter_key_input),
             ("openrouter_base_url", self.openrouter_base_url_input),
+            ("openai_compatible_api_key", self.openai_compatible_key_input),
+            ("openai_compatible_base_url", self.openai_compatible_base_url_input),
             ("vllm_api_key", self.vllm_key_input),
             ("vllm_base_url", self.vllm_base_url_input),
         )
@@ -1306,6 +1327,8 @@ class SettingsDockWidget(QDockWidget):
             "litellm_base_url",
             "openrouter_api_key",
             "openrouter_base_url",
+            "openai_compatible_api_key",
+            "openai_compatible_base_url",
             "vllm_api_key",
             "vllm_base_url",
             *OAUTH_CONFIG_KEYS,
