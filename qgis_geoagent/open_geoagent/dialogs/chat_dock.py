@@ -433,6 +433,11 @@ def _max_tokens_to_display(value):
 
 def _apply_environment_from_settings(settings):
     """Apply provider credentials from QSettings to the current QGIS process."""
+    # The settings and chat docks keep separate QSettings instances.
+    sync = getattr(settings, "sync", None)
+    if callable(sync):
+        sync()
+
     # Mapping of QSettings key names to environment variable names. The strings
     # are identifiers, not credentials; the actual values are read from QSettings
     # at runtime. ``# pragma: allowlist secret`` silences detect-secrets keyword

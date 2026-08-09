@@ -44,6 +44,19 @@ class _FakeSettings:
         return self.values.get(key, default)
 
 
+class _SyncingSettings(_FakeSettings):
+    """Expose pending values only after the consumer synchronizes settings."""
+
+    def __init__(self, pending):
+        super().__init__()
+        self.pending = dict(pending)
+        self.sync_calls = 0
+
+    def sync(self):
+        self.sync_calls += 1
+        self.values.update(self.pending)
+
+
 def _qimage_format(name):
     """Return QImage format across PyQt enum API variants."""
     container = getattr(QImage, "Format", QImage)
@@ -100,6 +113,30 @@ def test_apply_environment_sets_openrouter_values(monkeypatch) -> None:
 
     assert os.environ["OPENROUTER_BASE_URL"] == "https://openrouter.test/v1"
     assert os.environ["OPENROUTER_API_KEY"] == "test-key"
+
+
+def test_apply_environment_syncs_credentials_saved_by_settings_dock(
+    monkeypatch,
+) -> None:
+    """Chat reads provider values written through another QSettings instance."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("OLLAMA_HOST", raising=False)
+    settings = _SyncingSettings(
+        {
+            f"{SETTINGS_PREFIX}gemini_api_key": "test-key",
+            f"{SETTINGS_PREFIX}ollama_host": "http://192.168.0.177:11434",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert settings.sync_calls == 1
+    assert os.environ["GEMINI_API_KEY"] == "test-key"
+    assert os.environ["GOOGLE_API_KEY"] == "test-key"
+    assert os.environ["OLLAMA_HOST"] == "http://192.168.0.177:11434"
 
 
 def test_conversation_markdown_includes_full_history() -> None:
