@@ -9,6 +9,7 @@ import os
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,15 @@ MINIMAX_DEFAULT_RESPONSE_FORMAT = "url"
 MINIMAX_MIN_DIMENSION = 512
 MINIMAX_MAX_DIMENSION = 2048
 MINIMAX_MAX_IMAGES = 9
+# MiniMax returns JPEG bytes for ``response_format="base64"``.
+MINIMAX_DEFAULT_IMAGE_FORMAT = ("jpg", "image/jpeg")
+
+IMAGE_SIGNATURES = (
+    (b"\x89PNG\r\n\x1a\n", "png", "image/png"),
+    (b"\xff\xd8\xff", "jpg", "image/jpeg"),
+    (b"GIF87a", "gif", "image/gif"),
+    (b"GIF89a", "gif", "image/gif"),
+)
 
 
 def _output_dir(output_dir: str | None = None) -> Path:
@@ -65,6 +75,16 @@ def _safe_image_stem(value: str | None = None) -> str:
     if not text:
         text = "geoagent_image"
     return text[:60]
+
+
+def _image_format(image_bytes: bytes, default: tuple[str, str]) -> tuple[str, str]:
+    """Return the ``(extension, mime_type)`` implied by the image bytes."""
+    for signature, extension, mime_type in IMAGE_SIGNATURES:
+        if image_bytes.startswith(signature):
+            return extension, mime_type
+    if image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP":
+        return "webp", "image/webp"
+    return default
 
 
 def _response_data_items(response: Any) -> list[Any]:
@@ -136,7 +156,7 @@ def _minimax_image_enabled() -> bool:
 def _minimax_image_endpoint() -> str:
     """Return the MiniMax image generation endpoint for the active region."""
     explicit = os.environ.get("MINIMAX_IMAGE_ENDPOINT", "").strip()
-    if explicit:
+    if explicit and urllib.parse.urlparse(explicit).scheme in ("http", "https"):
         return explicit
     region = os.environ.get("MINIMAX_API_REGION", "").strip().lower()
     return MINIMAX_IMAGE_ENDPOINTS.get(
@@ -207,8 +227,12 @@ def _post_minimax_image(
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return response.read()
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.read()
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "replace").strip()
+        raise urllib.error.URLError(f"HTTP {exc.code}: {detail or exc.reason}") from exc
 
 
 def _generate_minimax_image(
@@ -301,16 +325,17 @@ def _generate_minimax_image(
         except (binascii.Error, ValueError) as exc:
             decode_errors.append(f"item {index}: {exc}")
             continue
+        extension, mime_type = _image_format(image_bytes, MINIMAX_DEFAULT_IMAGE_FORMAT)
         stem = _safe_image_stem(prompt)
         suffix = time.strftime("%Y%m%d-%H%M%S")
-        path = out_dir / f"{stem}-{suffix}-{index}.png"
+        path = out_dir / f"{stem}-{suffix}-{index}.{extension}"
         with open(path, "wb") as f:
             f.write(image_bytes)
         images.append(
             {
                 "path": str(path),
-                "format": "png",
-                "mime_type": "image/png",
+                "format": extension,
+                "mime_type": mime_type,
                 "revised_prompt": "",
             }
         )
@@ -385,10 +410,15 @@ def image_generation_tools() -> list[Any]:
 
         Args:
             prompt: Visual description of the image to generate.
-            size: One of 1024x1024, 1024x1536, 1536x1024, or auto.
-            quality: One of low, medium, high, or auto.
+            size: One of 1024x1024, 1024x1536, 1536x1024, or auto. On the
+                MiniMax path each dimension must be 512-2048 and divisible
+                by 8, and is ignored when ``aspect_ratio`` is set.
+            quality: One of low, medium, high, or auto. Ignored by MiniMax.
             model: Image model to use. Defaults to ``GEOAGENT_IMAGE_MODEL``
-                when set, otherwise the backend default.
+                when set, otherwise the backend default. MiniMax is used only
+                when no model is requested or the requested model is a
+                MiniMax model, so an explicit OpenAI model still reaches
+                OpenAI.
             output_dir: Optional directory for the generated image.
             aspect_ratio: MiniMax aspect ratio (for example ``1:1`` or
                 ``16:9``). When set it takes priority over ``size``.
@@ -406,7 +436,13 @@ def image_generation_tools() -> list[Any]:
         prompt = str(prompt or "").strip()
         if not prompt:
             return {"success": False, "error": "Image prompt is empty."}
-        if _minimax_image_enabled():
+        selected_model = (
+            str(model or "").strip()
+            or os.environ.get("GEOAGENT_IMAGE_MODEL", "").strip()
+        )
+        if _minimax_image_enabled() and (
+            not selected_model or selected_model in MINIMAX_IMAGE_MODELS
+        ):
             return _generate_minimax_image(
                 prompt=prompt,
                 size=size,

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import base64
+import io
 import json
 import sys
 import types
+import urllib.error
 import urllib.request
 
 from geoagent.tools.images import image_generation_tools
@@ -15,6 +17,19 @@ def _get_generate_image():
     """Return the ``generate_image`` tool callable."""
     tools = {item.tool_name: item for item in image_generation_tools()}
     return tools["generate_image"]
+
+
+def _use_minimax_env(monkeypatch):
+    """Configure a hermetic MiniMax-only environment for a test."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+    for name in (
+        "MINIMAX_API_REGION",
+        "MINIMAX_IMAGE_ENDPOINT",
+        "MINIMAX_IMAGE_RESPONSE_FORMAT",
+        "GEOAGENT_IMAGE_MODEL",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
 
 def _stub_minimax_urlopen(monkeypatch, response_body, captured):
@@ -52,9 +67,7 @@ def test_generate_image_uses_minimax_url_response(monkeypatch) -> None:
         "metadata": {"success_count": "1", "failed_count": "0"},
         "base_resp": {"status_code": 0, "status_msg": "success"},
     }
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
-    monkeypatch.delenv("MINIMAX_API_REGION", raising=False)
+    _use_minimax_env(monkeypatch)
     _stub_minimax_urlopen(monkeypatch, body, captured)
 
     result = _get_generate_image().__wrapped__(
@@ -80,13 +93,13 @@ def test_generate_image_uses_minimax_url_response(monkeypatch) -> None:
 def test_generate_image_writes_minimax_base64_bytes(monkeypatch, tmp_path) -> None:
     """Verify MiniMax base64 responses are decoded and written to files."""
     captured: dict = {}
-    image_payload = base64.b64encode(b"minimax-png").decode("ascii")
+    image_bytes = b"\x89PNG\r\n\x1a\nminimax"
     body = {
-        "data": {"image_base64": [image_payload]},
+        "data": {"image_base64": [base64.b64encode(image_bytes).decode("ascii")]},
         "metadata": {"success_count": 1, "failed_count": 0},
         "base_resp": {"status_code": 0, "status_msg": "success"},
     }
-    monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+    _use_minimax_env(monkeypatch)
     _stub_minimax_urlopen(monkeypatch, body, captured)
 
     result = _get_generate_image().__wrapped__(
@@ -100,9 +113,32 @@ def test_generate_image_writes_minimax_base64_bytes(monkeypatch, tmp_path) -> No
     assert result["model"] == "image-01-live"
     path = result["images"][0]["path"]
     assert path.endswith(".png")
+    assert result["images"][0]["mime_type"] == "image/png"
     filename = path.split("/")[-1]
-    assert (tmp_path / filename).read_bytes() == b"minimax-png"
+    assert (tmp_path / filename).read_bytes() == image_bytes
     assert captured["payload"]["response_format"] == "base64"
+
+
+def test_generate_image_minimax_base64_defaults_to_jpeg(monkeypatch, tmp_path) -> None:
+    """Verify MiniMax base64 bytes are saved with their sniffed image format."""
+    captured: dict = {}
+    image_bytes = b"\xff\xd8\xff\xe0minimax"
+    body = {
+        "data": {"image_base64": [base64.b64encode(image_bytes).decode("ascii")]},
+        "base_resp": {"status_code": 0, "status_msg": "success"},
+    }
+    _use_minimax_env(monkeypatch)
+    _stub_minimax_urlopen(monkeypatch, body, captured)
+
+    result = _get_generate_image().__wrapped__(
+        "orange tabby cat",
+        output_dir=str(tmp_path),
+        response_format="base64",
+    )
+
+    assert result["success"] is True
+    assert result["images"][0]["path"].endswith(".jpg")
+    assert result["images"][0]["mime_type"] == "image/jpeg"
 
 
 def test_generate_image_minimax_cn_region_endpoint(monkeypatch) -> None:
@@ -112,7 +148,7 @@ def test_generate_image_minimax_cn_region_endpoint(monkeypatch) -> None:
         "data": {"image_urls": ["https://example.com/b.png"]},
         "base_resp": {"status_code": 0, "status_msg": "success"},
     }
-    monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+    _use_minimax_env(monkeypatch)
     monkeypatch.setenv("MINIMAX_API_REGION", "cn_zh")
     _stub_minimax_urlopen(monkeypatch, body, captured)
 
@@ -122,6 +158,23 @@ def test_generate_image_minimax_cn_region_endpoint(monkeypatch) -> None:
     assert captured["url"] == "https://api.minimaxi.com/v1/image_generation"
 
 
+def test_generate_image_minimax_rejects_non_http_endpoint(monkeypatch) -> None:
+    """Verify a non-http endpoint override falls back to the region default."""
+    captured: dict = {}
+    body = {
+        "data": {"image_urls": ["https://example.com/c.png"]},
+        "base_resp": {"status_code": 0, "status_msg": "success"},
+    }
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setenv("MINIMAX_IMAGE_ENDPOINT", "file:///etc/passwd")
+    _stub_minimax_urlopen(monkeypatch, body, captured)
+
+    result = _get_generate_image().__wrapped__("a salt flat")
+
+    assert result["success"] is True
+    assert captured["url"] == "https://api.minimax.io/v1/image_generation"
+
+
 def test_generate_image_minimax_reports_status_error(monkeypatch) -> None:
     """Verify a non-zero base_resp status_code is surfaced as an error."""
     captured: dict = {}
@@ -129,7 +182,7 @@ def test_generate_image_minimax_reports_status_error(monkeypatch) -> None:
         "data": {},
         "base_resp": {"status_code": 1004, "status_msg": "authentication failed"},
     }
-    monkeypatch.setenv("MINIMAX_API_KEY", "test-key")
+    _use_minimax_env(monkeypatch)
     _stub_minimax_urlopen(monkeypatch, body, captured)
 
     result = _get_generate_image().__wrapped__("a coastline")
@@ -137,6 +190,63 @@ def test_generate_image_minimax_reports_status_error(monkeypatch) -> None:
     assert result["success"] is False
     assert result["status_code"] == 1004
     assert "authentication failed" in result["error"]
+
+
+def test_generate_image_minimax_surfaces_http_error_body(monkeypatch) -> None:
+    """Verify the MiniMax HTTP error payload is included in the error text."""
+
+    def _fake_urlopen(request, timeout=None):
+        raise urllib.error.HTTPError(
+            request.full_url,
+            429,
+            "Too Many Requests",
+            {},
+            io.BytesIO(b'{"base_resp":{"status_msg":"rate limit reached"}}'),
+        )
+
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setattr(urllib.request, "urlopen", _fake_urlopen)
+
+    result = _get_generate_image().__wrapped__("a glacier")
+
+    assert result["success"] is False
+    assert "HTTP 429" in result["error"]
+    assert "rate limit reached" in result["error"]
+
+
+def test_generate_image_explicit_openai_model_bypasses_minimax(
+    monkeypatch, tmp_path
+) -> None:
+    """Verify an explicit OpenAI model still reaches OpenAI when MiniMax is set."""
+    image_payload = base64.b64encode(b"fake-png").decode("ascii")
+    calls: dict = {}
+
+    class _Images:
+        def generate(self, **kwargs):
+            calls.update(kwargs)
+            item = types.SimpleNamespace(
+                b64_json=image_payload,
+                revised_prompt="",
+                url=None,
+            )
+            return types.SimpleNamespace(data=[item])
+
+    class _Client:
+        def __init__(self, **kwargs) -> None:
+            self.images = _Images()
+
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(OpenAI=_Client))
+
+    result = _get_generate_image().__wrapped__(
+        "a fjord",
+        model="gpt-image-1",
+        output_dir=str(tmp_path),
+    )
+
+    assert result["success"] is True
+    assert calls["model"] == "gpt-image-1"
 
 
 def test_generate_image_writes_openai_image_bytes(monkeypatch, tmp_path) -> None:
