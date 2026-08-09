@@ -7,6 +7,9 @@ from functools import lru_cache
 from typing import Any, Iterable, Sequence
 import importlib
 
+# Execution contexts a tool may be filtered for.
+TOOL_CONTEXTS: frozenset[str] = frozenset({"full", "fast"})
+
 
 @dataclass
 class GeoToolMeta:
@@ -42,7 +45,7 @@ class GeoToolMeta:
         data = asdict(self)
 
         data["available_in"] = list(self.available_in)
-        data["requires_confirmation"] = list(self.requires_packages)
+        data["requires_packages"] = list(self.requires_packages)
 
         return data
 
@@ -181,12 +184,23 @@ class GeoToolRegistry:
                 Collection of tool implementation.
 
             context:
-                Execution context name such as ``full`` or ``fast``
+                Execution context name, either ``full`` or ``fast``.
 
         Returns:
-            Filtered list of tool objects that may bbe used in the requested
+            Filtered list of tool objects that may be used in the requested
+            context.
+
+        Raises:
+            ValueError:
+                If ``context`` is not a known execution context.
         """
-        if context != "fast":
+        if context not in TOOL_CONTEXTS:
+            raise ValueError(
+                f"Unknown tool context '{context}'. "
+                f"Expected one of {sorted(TOOL_CONTEXTS)}."
+            )
+
+        if context == "full":
             return list(tool_objects)
 
         result: list[Any] = []
