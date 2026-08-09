@@ -1359,6 +1359,7 @@ QGIS installation. The QGIS Python runtime must be Python 3.11 or newer.</p>
 <li>Ollama</li>
 <li>LiteLLM</li>
 <li>OpenRouter</li>
+<li>OpenAI-compatible (any server exposing the OpenAI API)</li>
 <li>vLLM</li>
 </ul>
 <p>Use the settings panel to configure API keys, hosts, model defaults, and
@@ -1368,10 +1369,18 @@ image inputs.</p>
 API key in settings, or set <code>OPENROUTER_API_KEY</code>; the default model is
 <code>deepseek/deepseek-chat</code>, and Qwen model IDs such as <code>qwen/qwen3-32b</code> can be
 entered in the model field.</p>
+<p>The <code>openai-compatible</code> provider works with any server exposing the OpenAI
+Chat Completions API, such as llama.cpp, LM Studio, Text Generation WebUI, or
+vLLM. Set the OpenAI-compatible base URL in settings (or
+<code>OPENAI_COMPATIBLE_BASE_URL</code>) to the server's <code>/v1</code> URL and enter a model id in
+the <strong>Model</strong> field. The API key is optional; most local servers ignore it.</p>
 <p>vLLM requires a separately running vLLM server. Configure the vLLM base URL and
 model in settings, or set <code>VLLM_BASE_URL</code> and <code>VLLM_MODEL_ID</code>. GeoAgent tool
 use requires the vLLM server to be started with tool-calling support for the
-selected model and chat template.</p>
+selected model and chat template. The dedicated <code>vllm</code> provider needs
+<code>strands-vllm</code>, which pins <code>openai&lt;2.0</code> and is therefore no longer installed by
+the <strong>Core Providers</strong> dependency group; the <code>openai-compatible</code> provider is
+the recommended way to reach a vLLM server.</p>
 <h2 id="sample-data">Sample Data<a class="headerlink" href="#sample-data" title="Permanent link">&para;</a></h2>
 <p>You can download sample data from Source Coop <a href="https://data.source.coop/opengeos/geoai/geoagent-sample-data.zip">here</a>.</p>
 <h2 id="video-tutorial">Video Tutorial<a class="headerlink" href="#video-tutorial" title="Permanent link">&para;</a></h2>
@@ -1477,7 +1486,7 @@ profile such as Inspect only when you want to restrict tool access.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="June 2, 2026 19:48:17 UTC"><span class="timeago" datetime="2026-06-02T19:48:17+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="June 2, 2026 19:48:17 UTC">2026-06-02</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 9, 2026 16:22:15 UTC"><span class="timeago" datetime="2026-08-09T16:22:15+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 9, 2026 16:22:15 UTC">2026-08-09</span>
   </span>
 
     

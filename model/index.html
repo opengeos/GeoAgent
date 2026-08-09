@@ -1394,7 +1394,20 @@
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai-codex&quot;</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai_responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIResponsesModel</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai_responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIResponsesModel</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">&quot;The openai-codex provider could not import the OpenAI Responses &quot;</span>
+                <span class="s2">&quot;API model from strands. This usually means the installed openai &quot;</span>
+                <span class="s2">&quot;package is too old, because the Responses API requires the &quot;</span>
+                <span class="s2">&quot;openai package version 2.0 or newer. Upgrade with `pip install &quot;</span>
+                <span class="s2">&quot;-U &#39;GeoAgent[openai]&#39;` (or `pip install -U &#39;openai&gt;=2&#39;`) and &quot;</span>
+                <span class="s2">&quot;restart QGIS or your Python session. To stay on openai 1.x, &quot;</span>
+                <span class="s2">&quot;switch the provider to &#39;openai&#39;, which uses the Chat Completions &quot;</span>
+                <span class="s2">&quot;API instead. If openai 2.x is already installed, the original &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;error below has the real cause. Original error: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
         <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_CODEX_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-5.5&quot;</span><span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
@@ -1527,6 +1540,48 @@
             <span class="ow">or</span> <span class="s2">&quot;https://openrouter.ai/api/v1&quot;</span>
         <span class="p">)</span>
         <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
+        <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
+            <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai-compatible&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
+
+        <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
+        <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_url&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">openai_compatible_base_url</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_COMPATIBLE_BASE_URL&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">base_url</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The openai-compatible provider requires the base URL of an &quot;</span>
+                <span class="s2">&quot;OpenAI-compatible server, for example http://localhost:8000/v1. &quot;</span>
+                <span class="s2">&quot;Set OPENAI_COMPATIBLE_BASE_URL, pass &quot;</span>
+                <span class="s2">&quot;openai_compatible_base_url=..., or configure it in OpenGeoAgent &quot;</span>
+                <span class="s2">&quot;Settings.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_COMPATIBLE_MODEL&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The openai-compatible provider requires a model id, because a &quot;</span>
+                <span class="s2">&quot;generic endpoint has no default. Pass model=..., set &quot;</span>
+                <span class="s2">&quot;OPENAI_COMPATIBLE_MODEL, or configure the model in OpenGeoAgent &quot;</span>
+                <span class="s2">&quot;Settings.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="c1"># Local servers usually ignore the key, but the OpenAI SDK rejects an</span>
+        <span class="c1"># empty one, so fall back to the same placeholder the vLLM path uses.</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_COMPATIBLE_API_KEY&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">&quot;EMPTY&quot;</span>
+        <span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
             <span class="n">params</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
