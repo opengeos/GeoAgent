@@ -3,7 +3,7 @@ name=OpenGeoAgent
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
 description=GeoAgent-powered multimodal AI chatbot for QGIS projects.
-version=1.8.2
+version=1.9.0
 author=Qiusheng Wu
 email=giswqs@gmail.com
 
@@ -47,6 +47,14 @@ experimental=False
 deprecated=False
 
 changelog=
+    1.9.0 - Minor release for new providers and image backends
+        - Added an OpenRouter provider
+        - Added a generic OpenAI-compatible provider and required openai>=2.0
+        - Added a MiniMax image generation backend to generate_image
+        - Fixed inaccessible QGIS settings actions on short screens
+        - Fixed provider credential syncing across docks
+        - Raised the plugin dependency guidance to GeoAgent 1.9.0
+
     1.8.2 - Patch release
         - Raised package and plugin version metadata to 1.8.2
 
