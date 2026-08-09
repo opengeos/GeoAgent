@@ -94,12 +94,15 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             from strands.models.openai_responses import OpenAIResponsesModel
         except ImportError as exc:
             raise ImportError(
-                "The openai-codex provider uses the OpenAI Responses API, which "
-                "requires the openai package version 2.0 or newer. Upgrade with "
-                "`pip install -U 'GeoAgent[openai]'` (or `pip install -U "
-                "'openai>=2'`) and restart QGIS or your Python session. To stay "
-                "on openai 1.x, switch the provider to 'openai', which uses the "
-                f"Chat Completions API instead. Original error: {exc}"
+                "The openai-codex provider could not import the OpenAI Responses "
+                "API model from strands. This usually means the installed openai "
+                "package is too old, because the Responses API requires the "
+                "openai package version 2.0 or newer. Upgrade with `pip install "
+                "-U 'GeoAgent[openai]'` (or `pip install -U 'openai>=2'`) and "
+                "restart QGIS or your Python session. To stay on openai 1.x, "
+                "switch the provider to 'openai', which uses the Chat Completions "
+                "API instead. If openai 2.x is already installed, the original "
+                f"error below has the real cause. Original error: {exc}"
             ) from exc
 
         model_id = cfg.model or os.environ.get("OPENAI_CODEX_MODEL", "gpt-5.5")
