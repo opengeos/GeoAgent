@@ -77,6 +77,13 @@ def test_openrouter_provider_defaults_are_available() -> None:
     assert _default_model_for_provider("openrouter") == "deepseek/deepseek-chat"
 
 
+def test_requesty_provider_defaults_are_available() -> None:
+    """Verify Requesty is listed with its default model."""
+    assert "requesty" in PROVIDERS
+    assert DEFAULT_MODELS["requesty"] == "openai/gpt-4o-mini"
+    assert _default_model_for_provider("requesty") == "openai/gpt-4o-mini"
+
+
 def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
     """Verify vLLM settings are exported for chat workers."""
     monkeypatch.delenv("VLLM_BASE_URL", raising=False)
@@ -113,6 +120,25 @@ def test_apply_environment_sets_openrouter_values(monkeypatch) -> None:
 
     assert os.environ["OPENROUTER_BASE_URL"] == "https://openrouter.test/v1"
     assert os.environ["OPENROUTER_API_KEY"] == "test-key"
+
+
+def test_apply_environment_sets_requesty_values(monkeypatch) -> None:
+    """Verify Requesty settings are exported for chat workers."""
+    monkeypatch.delenv("REQUESTY_BASE_URL", raising=False)
+    monkeypatch.delenv("REQUESTY_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}requesty_base_url": "https://requesty.test/v1",
+            f"{SETTINGS_PREFIX}requesty_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert os.environ["REQUESTY_BASE_URL"] == "https://requesty.test/v1"
+    assert os.environ["REQUESTY_API_KEY"] == "test-key"
 
 
 def test_apply_environment_syncs_credentials_saved_by_settings_dock(

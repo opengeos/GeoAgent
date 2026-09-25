@@ -56,6 +56,8 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
             f"{SETTINGS_PREFIX}openai_project_id": "proj-secret",
             f"{SETTINGS_PREFIX}openrouter_api_key": "openrouter-secret",
             f"{SETTINGS_PREFIX}openrouter_base_url": "https://openrouter.example/v1",
+            f"{SETTINGS_PREFIX}requesty_api_key": "requesty-secret",
+            f"{SETTINGS_PREFIX}requesty_base_url": "https://requesty.example/v1",
             f"{SETTINGS_PREFIX}vllm_api_key": "vllm-secret",
             f"{SETTINGS_PREFIX}vllm_base_url": "https://vllm.example.test/v1",
         }
@@ -70,6 +72,8 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
     assert diagnostics["credential_presence"]["openai_project_id"]["saved"] is True
     assert diagnostics["credential_presence"]["openrouter_api_key"]["saved"] is True
     assert diagnostics["credential_presence"]["openrouter_base_url"]["saved"] is True
+    assert diagnostics["credential_presence"]["requesty_api_key"]["saved"] is True
+    assert diagnostics["credential_presence"]["requesty_base_url"]["saved"] is True
     assert diagnostics["credential_presence"]["vllm_api_key"]["saved"] is True
     assert diagnostics["credential_presence"]["vllm_base_url"]["saved"] is True
     assert diagnostics["model"]["provider"] == "openai"
@@ -81,6 +85,8 @@ def test_collect_diagnostics_redacts_credentials(monkeypatch, tmp_path) -> None:
     assert "proj-secret" not in text
     assert "openrouter-secret" not in text
     assert "https://openrouter.example/v1" not in text
+    assert "requesty-secret" not in text
+    assert "https://requesty.example/v1" not in text
     assert "vllm-secret" not in text
     assert "https://vllm.example.test/v1" not in text
 
@@ -121,6 +127,25 @@ def test_settings_environment_sets_openrouter_values(monkeypatch) -> None:
 
     assert os.environ["OPENROUTER_BASE_URL"] == "https://openrouter.test/v1"
     assert os.environ["OPENROUTER_API_KEY"] == "test-key"
+
+
+def test_settings_environment_sets_requesty_values(monkeypatch) -> None:
+    """Verify settings apply Requesty environment variables."""
+    import os
+
+    monkeypatch.delenv("REQUESTY_BASE_URL", raising=False)
+    monkeypatch.delenv("REQUESTY_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}requesty_base_url": "https://requesty.test/v1",
+            f"{SETTINGS_PREFIX}requesty_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    assert os.environ["REQUESTY_BASE_URL"] == "https://requesty.test/v1"
+    assert os.environ["REQUESTY_API_KEY"] == "test-key"
 
 
 def test_settings_environment_sets_openai_compatible_values(monkeypatch) -> None:
