@@ -114,6 +114,7 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -139,6 +140,7 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -165,6 +167,7 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -198,6 +201,31 @@ def test_openrouter_can_be_selected_from_environment(monkeypatch) -> None:
     assert GeoAgentConfig().provider == "openrouter"
 
 
+def test_requesty_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify that the Requesty API key selects Requesty."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("REQUESTY_API_KEY", "test-key")
+
+    assert GeoAgentConfig().provider == "requesty"
+
+
 def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
     """Verify that vLLM environment variables select vLLM by default."""
     for key in [
@@ -214,6 +242,7 @@ def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -557,6 +586,7 @@ def test_openai_compatible_can_be_selected_from_environment(monkeypatch) -> None
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
     ]:

@@ -36,6 +36,8 @@ def _default_provider_from_env() -> ProviderName:
         return "gemini"
     if os.environ.get("OPENROUTER_API_KEY"):
         return "openrouter"
+    if os.environ.get("REQUESTY_API_KEY"):
+        return "requesty"
     if (
         os.environ.get("LITELLM_API_KEY")
         or os.environ.get("LITELLM_MODEL")

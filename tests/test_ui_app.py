@@ -141,6 +141,7 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OLLAMA_HOST",
@@ -160,6 +161,10 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
     assert app.default_provider() == "openrouter"
 
     monkeypatch.delenv("OPENROUTER_API_KEY")
+    monkeypatch.setenv("REQUESTY_API_KEY", "requesty-test")
+    assert app.default_provider() == "requesty"
+
+    monkeypatch.delenv("REQUESTY_API_KEY")
     monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
     assert app.default_provider() == "vllm"
 
