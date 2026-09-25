@@ -35,6 +35,7 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - Ollama
 - LiteLLM
 - OpenRouter
+- Requesty
 - OpenAI-compatible (any server exposing the OpenAI API)
 - vLLM
 
@@ -46,6 +47,11 @@ OpenRouter can be used for DeepSeek and Qwen models. Configure the OpenRouter
 API key in settings, or set `OPENROUTER_API_KEY`; the default model is
 `deepseek/deepseek-chat`, and Qwen model IDs such as `qwen/qwen3-32b` can be
 entered in the model field.
+
+Requesty can be used with `vendor/model` IDs such as `openai/gpt-4o-mini`.
+Configure the Requesty API key in settings, or set `REQUESTY_API_KEY`; the
+default model is `openai/gpt-4o-mini`. Set the Requesty base URL to
+`https://router.eu.requesty.ai/v1` to use the EU region.
 
 The `openai-compatible` provider works with any server exposing the OpenAI
 Chat Completions API, such as llama.cpp, LM Studio, Text Generation WebUI, or

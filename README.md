@@ -38,8 +38,8 @@ Many geospatial libraries need the same agent features:
 - bind an agent to a live map, QGIS session, dataset, or workflow object;
 - expose package functions as structured tools with docstrings and metadata;
 - support OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Bedrock,
-  OpenRouter, LiteLLM, any OpenAI-compatible server, vLLM, and local
-  Ollama models;
+  OpenRouter, Requesty, LiteLLM, any OpenAI-compatible server, vLLM, and
+  local Ollama models;
 - keep optional geospatial stacks optional;
 - ask for confirmation before deleting layers, saving files, or running
   expensive processing jobs;
@@ -85,6 +85,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[ollama]`      | Local Ollama model support.                                       |
 | `GeoAgent[litellm]`     | LiteLLM model support for many hosted and proxy providers.        |
 | `GeoAgent[openrouter]`  | OpenRouter support for DeepSeek, Qwen, and other hosted models.   |
+| `GeoAgent[requesty]`    | Requesty router support for OpenAI, Anthropic, Gemini, and other hosted models. |
 | `GeoAgent[openai-compatible]` | Any OpenAI-compatible server, e.g. llama.cpp, LM Studio, vLLM. |
 | `GeoAgent[vllm]`        | vLLM through the Strands community provider. Not in `providers`/`all`; see note below. |
 | `GeoAgent[leafmap]`     | leafmap live map integration.                                     |
@@ -96,7 +97,7 @@ and `pydantic`. Geospatial packages and provider clients are optional extras:
 | `GeoAgent[earthengine]` | Google Earth Engine dependencies.                                 |
 | `GeoAgent[ui]`          | Solara UI dependencies.                                           |
 | `GeoAgent[browser]`     | FastAPI WebSocket backend for browser MapLibre apps.              |
-| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, OpenRouter, and OpenAI-compatible clients. |
+| `GeoAgent[providers]`   | OpenAI, Anthropic, Gemini, Ollama, LiteLLM, OpenRouter, Requesty, and OpenAI-compatible clients. |
 | `GeoAgent[all]`         | Most optional integrations. QGIS itself remains system-installed. |
 
 Examples:
@@ -124,6 +125,7 @@ specified:
 | Google Gemini       | `GEMINI_API_KEY` or `GOOGLE_API_KEY`, optional `GEMINI_MODEL`      |
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | OpenRouter          | `OPENROUTER_API_KEY`, optional `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` |
+| Requesty            | `REQUESTY_API_KEY`, optional `REQUESTY_MODEL` and `REQUESTY_BASE_URL` |
 | OpenAI-compatible   | `OPENAI_COMPATIBLE_BASE_URL`, `OPENAI_COMPATIBLE_MODEL`, optional `OPENAI_COMPATIBLE_API_KEY` |
 | vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |
@@ -222,6 +224,19 @@ qwen_agent = GeoAgent(
     config=GeoAgentConfig(
         provider="openrouter",
         model="qwen/qwen3-32b",
+    )
+)
+```
+
+Requesty routes `vendor/model` ids such as `openai/gpt-4o-mini` through one
+OpenAI-compatible endpoint. Get a key at <https://app.requesty.ai/api-keys>.
+Set `REQUESTY_BASE_URL=https://router.eu.requesty.ai/v1` to use the EU region:
+
+```python
+agent = GeoAgent(
+    config=GeoAgentConfig(
+        provider="requesty",
+        model="openai/gpt-4o-mini",
     )
 )
 ```
@@ -363,7 +378,7 @@ PyQGIS scripts from natural language.
 Key plugin features:
 
 - provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth,
-  Anthropic, Google Gemini, Ollama, OpenRouter, LiteLLM, and vLLM;
+  Anthropic, Google Gemini, Ollama, OpenRouter, Requesty, LiteLLM, and vLLM;
 - project-aware QGIS tools for layers, selections, map navigation, processing,
   project saving, and attribute table actions;
 - image-aware chat with clipboard paste and screenshot attachments for models

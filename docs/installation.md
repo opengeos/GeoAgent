@@ -21,8 +21,9 @@ pip install -e ".[dev]"
 
 Configure API keys via environment variables (`OPENAI_API_KEY`,
 `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` or `GOOGLE_API_KEY`,
-`LITELLM_API_KEY`, `OPENROUTER_API_KEY`, AWS credentials for Bedrock,
-`OLLAMA_HOST`, `OPENAI_COMPATIBLE_BASE_URL`, `VLLM_BASE_URL`, `VLLM_MODEL_ID`,
+`LITELLM_API_KEY`, `OPENROUTER_API_KEY`, `REQUESTY_API_KEY`, AWS credentials
+for Bedrock, `OLLAMA_HOST`, `OPENAI_COMPATIBLE_BASE_URL`, `VLLM_BASE_URL`,
+`VLLM_MODEL_ID`,
 etc.). See `GeoAgentConfig` in `geoagent.core.config`.
 
 To use any OpenAI-compatible server (llama.cpp, LM Studio, Text Generation

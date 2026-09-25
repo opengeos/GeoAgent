@@ -46,6 +46,7 @@ gemini = ["strands-agents[gemini]>=1.37", "google-genai>=1.0"]
 ollama = ["ollama>=0.3"]
 litellm = ["strands-agents[litellm]>=1.37"]
 openrouter = ["openai>=2.0"]
+requesty = ["openai>=2.0"]
 openai-compatible = ["openai>=2.0"]
 # strands-vllm pins openai<2.0, which conflicts with the openai>=2.0 needed by
 # the default openai-codex provider, so this extra is not part of `providers`
@@ -67,7 +68,7 @@ ui = ["solara>=1.35", "starlette<2.0"]
 browser = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 qgis = []
 providers = [
-    "GeoAgent[openai,anthropic,gemini,ollama,litellm,openrouter,openai-compatible]",
+    "GeoAgent[openai,anthropic,gemini,ollama,litellm,openrouter,requesty,openai-compatible]",
 ]
 all = [
     "GeoAgent[providers,leafmap,anymap,geoai,geemap,earthengine,stac,earthdata,nasa-opera,whitebox,ui,browser]",
