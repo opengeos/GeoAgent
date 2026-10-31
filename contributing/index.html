@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1524,15 +1524,15 @@ adapters, tests, and documentation are especially valuable.</p>
 <span class="nb">cd</span><span class="w"> </span>GeoAgent
 python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
 pre-commit<span class="w"> </span>install
 </code></pre></div></td></tr></table></div>
 <p>Install optional extras when working on a specific integration:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[leafmap,openai,dev]&quot;</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[anymap,anthropic,dev]&quot;</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[stac,earthdata,dev]&quot;</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[leafmap,openai,dev]"</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[anymap,anthropic,dev]"</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[stac,earthdata,dev]"</span>
 </code></pre></div></td></tr></table></div>
 <p>For QGIS work, use the Python environment bundled with QGIS or make sure your
 development environment can import the relevant QGIS modules. Unit tests should
@@ -1594,13 +1594,13 @@ required by GeoAgent core. Prefer lazy imports inside tool bodies:</p>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@geo_tool</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">&quot;raster&quot;</span><span class="p">)</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@geo_tool</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">"raster"</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">inspect_raster</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inspect a raster dataset.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Inspect a raster dataset."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">rasterio</span>
 
     <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">height</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"width"</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="s2">"height"</span><span class="p">:</span> <span class="n">src</span><span class="o">.</span><span class="n">height</span><span class="p">}</span>
 </code></pre></div></td></tr></table></div>
 <p>This keeps <code>import geoagent</code> and <code>import geoagent.tools.&lt;module&gt;</code> usable in CI
 and in environments that do not have every geospatial stack installed.</p>
@@ -1640,13 +1640,13 @@ dependency.</p>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">my_map_tools</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build tools bound to a live map-like object.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Build tools bound to a live map-like object."""</span>
 
-    <span class="nd">@geo_tool</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">&quot;map&quot;</span><span class="p">)</span>
+    <span class="nd">@geo_tool</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">"map"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_geojson</span><span class="p">(</span><span class="n">path_or_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a GeoJSON dataset to the active map.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Add a GeoJSON dataset to the active map."""</span>
         <span class="n">m</span><span class="o">.</span><span class="n">add_geojson</span><span class="p">(</span><span class="n">path_or_url</span><span class="p">,</span> <span class="n">layer_name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Added GeoJSON layer </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">.&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Added GeoJSON layer </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span>
 
     <span class="k">return</span> <span class="p">[</span><span class="n">add_geojson</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
@@ -1660,12 +1660,12 @@ dependency.</p>
 <span class="normal">6</span>
 <span class="normal">7</span>
 <span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@geo_tool</span><span class="p">(</span>
-    <span class="n">category</span><span class="o">=</span><span class="s2">&quot;processing&quot;</span><span class="p">,</span>
+    <span class="n">category</span><span class="o">=</span><span class="s2">"processing"</span><span class="p">,</span>
     <span class="n">requires_confirmation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">long_running</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_expensive_job</span><span class="p">(</span><span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run an expensive external processing job.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run an expensive external processing job."""</span>
     <span class="o">...</span>
 </code></pre></div></td></tr></table></div>
 <p>Mark tools as confirmation-required when they:</p>
@@ -1894,15 +1894,122 @@ presentation or wiring, put it in the NASA OPERA plugin.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../js/timeago.min.js"></script>
       
         <script src="../js/timeago_mkdocs_material.js"></script>
       
     
-  </body>
+  <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
+/* Shared by full pages and Material's instant navigation. */
+(() => {
+  const config = JSON.parse(document.currentScript.dataset.mkdocsJupyterMathjax);
+  if (window.mkdocsJupyterMathJax) return;
+
+  let loading;
+  let queue = Promise.resolve();
+  let previous = [];
+
+  const ready = async () => {
+    if (!loading) {
+      loading = (async () => {
+        let math = window.MathJax;
+        if (!math?.typesetPromise) {
+          const url = new URL(config.url, document.baseURI).href;
+          const existing = Array.from(document.scripts).find(script =>
+            script.src && (script.src === url || script.id === 'MathJax-script' ||
+              (/mathjax/i.test(script.src) &&
+               /\/(?:MathJax|latest|(?:tex|mml)(?:-mml)?-(?:chtml|svg))\.js(?:[?#]|$)/i.test(script.src))));
+          if (existing) {
+            if (!math?.startup?.promise) {
+              await new Promise((resolve, reject) => {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+              });
+            }
+          } else {
+            // Keep site macros, delimiters and startup hooks when supplied.
+            const options = math || {};
+            window.MathJax = {
+              ...options,
+              loader: {
+                ...options.loader,
+                load: Array.from(new Set(['ui/safe', ...(options.loader?.load || [])]))
+              },
+              startup: { typeset: false, ...options.startup },
+              tex: {
+                tags: 'ams',
+                useLabelIds: true,
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                ...options.tex
+              }
+            };
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = config.url;
+              script.id = 'MathJax-script';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+        }
+        math = window.MathJax;
+        await math.startup.promise;
+        return math;
+      })();
+    }
+    const math = await loading;
+    // A site owner can extend the v3 queue again on each navigation.
+    await math.startup.promise;
+    return math;
+  };
+
+  const unrendered = node => {
+    if (node.matches('mjx-container')) return [];
+    if (!node.querySelector('mjx-container')) return [node];
+    // In v3, scanning generated assistive MathML again produces nested output.
+    return Array.from(node.children).flatMap(unrendered);
+  };
+
+  const refresh = () => {
+    // A separate chain also serializes v3, without changing v4's startup promise.
+    queue = queue.then(async () => {
+      const notebooks = Array.from(document.querySelectorAll('.jupyter-wrapper'));
+      if (!notebooks.length && !previous.length) return;
+      if (notebooks.length === previous.length &&
+          notebooks.every((node, index) => node === previous[index])) return;
+      const math = await ready();
+      if (previous.length) {
+        math.typesetClear(previous);
+        math.texReset();
+      }
+      previous = notebooks.filter(node => node.isConnected);
+      const pending = previous.flatMap(unrendered);
+      if (pending.length) await math.typesetPromise(pending);
+    }).catch(error => console.error('mkdocs-jupyter: MathJax rendering failed', error));
+    return queue;
+  };
+
+  window.mkdocsJupyterMathJax = { refresh };
+  const start = () => {
+    if (typeof document$ !== 'undefined') document$.subscribe(refresh);
+    else refresh();
+  };
+  // Theme bundles and user-provided MathJax scripts can follow notebook content.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+})();
+
+</script>
+</body>
 </html>

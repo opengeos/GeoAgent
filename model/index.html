@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1281,7 +1281,7 @@
         <details class="quote">
           <summary>Source code in <code>geoagent/core/model.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_default_model</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default model using environment-derived provider selection.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Default model using environment-derived provider selection."""</span>
     <span class="k">return</span> <span class="n">resolve_model</span><span class="p">(</span><span class="n">GeoAgentConfig</span><span class="p">())</span>
 </code></pre></div>
         </details>
@@ -1308,7 +1308,7 @@
         <details class="quote">
           <summary>Source code in <code>geoagent/core/model.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_llm</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a model (alias for :func:`resolve_model` with a fresh config).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Build a model (alias for :func:`resolve_model` with a fresh config)."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">get_default_model</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">resolve_model</span><span class="p">(</span><span class="n">GeoAgentConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
@@ -1356,36 +1356,36 @@
         <details class="quote">
           <summary>Source code in <code>geoagent/core/model.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_model</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">GeoAgentConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a Strands model from :class:`GeoAgentConfig` or kwargs overrides.</span>
+<span class="w">    </span><span class="sd">"""Build a Strands model from :class:`GeoAgentConfig` or kwargs overrides.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ImportError: When optional provider client libraries are missing.</span>
 <span class="sd">        ValueError: When configuration is inconsistent.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">config</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="n">overrides</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">else</span> <span class="n">GeoAgentConfig</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="n">provider</span><span class="p">:</span> <span class="n">ProviderName</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">provider</span>
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;bedrock&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"bedrock"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.bedrock</span><span class="w"> </span><span class="kn">import</span> <span class="n">BedrockModel</span>
 
         <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;BEDROCK_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;us.anthropic.claude-sonnet-4-6&quot;</span>
+            <span class="s2">"BEDROCK_MODEL"</span><span class="p">,</span> <span class="s2">"us.anthropic.claude-sonnet-4-6"</span>
         <span class="p">)</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">}</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">}</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">BedrockModel</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"openai"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-5.5&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_MODEL"</span><span class="p">,</span> <span class="s2">"gpt-5.5"</span><span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
         <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_openai_token_params</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
@@ -1393,105 +1393,105 @@
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai-codex&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"openai-codex"</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai_responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIResponsesModel</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-                <span class="s2">&quot;The openai-codex provider could not import the OpenAI Responses &quot;</span>
-                <span class="s2">&quot;API model from strands. This usually means the installed openai &quot;</span>
-                <span class="s2">&quot;package is too old, because the Responses API requires the &quot;</span>
-                <span class="s2">&quot;openai package version 2.0 or newer. Upgrade with `pip install &quot;</span>
-                <span class="s2">&quot;-U &#39;GeoAgent[openai]&#39;` (or `pip install -U &#39;openai&gt;=2&#39;`) and &quot;</span>
-                <span class="s2">&quot;restart QGIS or your Python session. To stay on openai 1.x, &quot;</span>
-                <span class="s2">&quot;switch the provider to &#39;openai&#39;, which uses the Chat Completions &quot;</span>
-                <span class="s2">&quot;API instead. If openai 2.x is already installed, the original &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;error below has the real cause. Original error: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"The openai-codex provider could not import the OpenAI Responses "</span>
+                <span class="s2">"API model from strands. This usually means the installed openai "</span>
+                <span class="s2">"package is too old, because the Responses API requires the "</span>
+                <span class="s2">"openai package version 2.0 or newer. Upgrade with `pip install "</span>
+                <span class="s2">"-U 'GeoAgent[openai]'` (or `pip install -U 'openai&gt;=2'`) and "</span>
+                <span class="s2">"restart QGIS or your Python session. To stay on openai 1.x, "</span>
+                <span class="s2">"switch the provider to 'openai', which uses the Chat Completions "</span>
+                <span class="s2">"API instead. If openai 2.x is already installed, the original "</span>
+                <span class="sa">f</span><span class="s2">"error below has the real cause. Original error: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_CODEX_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-5.5&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_CODEX_MODEL"</span><span class="p">,</span> <span class="s2">"gpt-5.5"</span><span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;OPENAI_CODEX_ACCESS_TOKEN&quot;</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"api_key"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"OPENAI_CODEX_ACCESS_TOKEN"</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.openai_codex</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_openai_codex_environment</span>
 
                 <span class="n">ensure_openai_codex_environment</span><span class="p">()</span>
-                <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_CODEX_ACCESS_TOKEN&quot;</span><span class="p">)</span>
+                <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_CODEX_ACCESS_TOKEN"</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
-                <span class="n">api_key</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">api_key</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_url&quot;</span><span class="p">)</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_url"</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">openai_codex_base_url</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_CODEX_BASE_URL&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="s2">&quot;https://chatgpt.com/backend-api/codex&quot;</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_CODEX_BASE_URL"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">"https://chatgpt.com/backend-api/codex"</span>
         <span class="p">)</span>
-        <span class="n">account_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_CODEX_ACCOUNT_ID&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">account_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_CODEX_ACCOUNT_ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;OpenAI Codex provider requires a ChatGPT OAuth access token. &quot;</span>
-                <span class="s2">&quot;Run `geoagent codex login`, call `geoagent.login_openai_codex()`, &quot;</span>
-                <span class="s2">&quot;or set OPENAI_CODEX_ACCESS_TOKEN.&quot;</span>
+                <span class="s2">"OpenAI Codex provider requires a ChatGPT OAuth access token. "</span>
+                <span class="s2">"Run `geoagent codex login`, call `geoagent.login_openai_codex()`, "</span>
+                <span class="s2">"or set OPENAI_CODEX_ACCESS_TOKEN."</span>
             <span class="p">)</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
-        <span class="n">default_headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default_headers&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
-        <span class="n">default_headers</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">,</span> <span class="s2">&quot;codex-cli&quot;</span><span class="p">)</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"base_url"</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="n">default_headers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default_headers"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="n">default_headers</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"User-Agent"</span><span class="p">,</span> <span class="s2">"codex-cli"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">account_id</span><span class="p">:</span>
-            <span class="n">default_headers</span><span class="p">[</span><span class="s2">&quot;ChatGPT-Account-Id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">account_id</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;default_headers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_headers</span>
+            <span class="n">default_headers</span><span class="p">[</span><span class="s2">"ChatGPT-Account-Id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">account_id</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"default_headers"</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_headers</span>
         <span class="k">return</span> <span class="n">OpenAIResponsesModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
             <span class="n">params</span><span class="o">=</span><span class="p">{},</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"anthropic"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.anthropic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnthropicModel</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ANTHROPIC_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ANTHROPIC_MODEL"</span><span class="p">,</span> <span class="s2">"claude-sonnet-4-6"</span><span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"max_tokens"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">AnthropicModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">},</span>
+            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">},</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;gemini&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"gemini"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeminiModel</span>
 
         <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;GEMINI_MODEL&quot;</span><span class="p">,</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GOOGLE_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gemini-3.1-pro-preview&quot;</span><span class="p">),</span>
+            <span class="s2">"GEMINI_MODEL"</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GOOGLE_MODEL"</span><span class="p">,</span> <span class="s2">"gemini-3.1-pro-preview"</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GEMINI_API_KEY&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GOOGLE_API_KEY&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">api_key</span> <span class="ow">and</span> <span class="s2">&quot;api_key&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
-            <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">}</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_output_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GEMINI_API_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"GOOGLE_API_KEY"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">api_key</span> <span class="ow">and</span> <span class="s2">"api_key"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
+            <span class="n">client_args</span><span class="p">[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">}</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_output_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">GeminiModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;ollama&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"ollama"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.ollama</span><span class="w"> </span><span class="kn">import</span> <span class="n">OllamaModel</span>
 
         <span class="n">host</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">ollama_host</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;OLLAMA_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;http://127.0.0.1:11434&quot;</span>
+            <span class="s2">"OLLAMA_HOST"</span><span class="p">,</span> <span class="s2">"http://127.0.0.1:11434"</span>
         <span class="p">)</span>
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OLLAMA_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;qwen3.5:4b&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OLLAMA_MODEL"</span><span class="p">,</span> <span class="s2">"qwen3.5:4b"</span><span class="p">)</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"max_tokens"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">OllamaModel</span><span class="p">(</span>
             <span class="n">host</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
@@ -1499,119 +1499,119 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;litellm&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"litellm"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.litellm</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiteLLMModel</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LITELLM_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;openai/gpt-5.5&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LITELLM_MODEL"</span><span class="p">,</span> <span class="s2">"openai/gpt-5.5"</span><span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LITELLM_API_KEY&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">api_key</span> <span class="ow">and</span> <span class="s2">&quot;api_key&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
-            <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
-        <span class="n">base_url</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">litellm_base_url</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LITELLM_BASE_URL&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">base_url</span> <span class="ow">and</span> <span class="s2">&quot;base_url&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
-            <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LITELLM_API_KEY"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">api_key</span> <span class="ow">and</span> <span class="s2">"api_key"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
+            <span class="n">client_args</span><span class="p">[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="n">base_url</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">litellm_base_url</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LITELLM_BASE_URL"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base_url</span> <span class="ow">and</span> <span class="s2">"base_url"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">client_args</span><span class="p">:</span>
+            <span class="n">client_args</span><span class="p">[</span><span class="s2">"base_url"</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
         <span class="k">return</span> <span class="n">LiteLLMModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openrouter&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"openrouter"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
 
         <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;OPENROUTER_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;deepseek/deepseek-chat&quot;</span>
+            <span class="s2">"OPENROUTER_MODEL"</span><span class="p">,</span> <span class="s2">"deepseek/deepseek-chat"</span>
         <span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENROUTER_API_KEY&quot;</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"api_key"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENROUTER_API_KEY"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;OpenRouter provider requires an API key. Set OPENROUTER_API_KEY &quot;</span>
-                <span class="s2">&quot;or pass client_args={&#39;api_key&#39;: ...}.&quot;</span>
+                <span class="s2">"OpenRouter provider requires an API key. Set OPENROUTER_API_KEY "</span>
+                <span class="s2">"or pass client_args={'api_key': ...}."</span>
             <span class="p">)</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
         <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_url&quot;</span><span class="p">)</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_url"</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">openrouter_base_url</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENROUTER_BASE_URL&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="s2">&quot;https://openrouter.ai/api/v1&quot;</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENROUTER_BASE_URL"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">"https://openrouter.ai/api/v1"</span>
         <span class="p">)</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"base_url"</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
         <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;openai-compatible&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"openai-compatible"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
 
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
         <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_url&quot;</span><span class="p">)</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_url"</span><span class="p">)</span>
             <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">openai_compatible_base_url</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_COMPATIBLE_BASE_URL&quot;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_COMPATIBLE_BASE_URL"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">base_url</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The openai-compatible provider requires the base URL of an &quot;</span>
-                <span class="s2">&quot;OpenAI-compatible server, for example http://localhost:8000/v1. &quot;</span>
-                <span class="s2">&quot;Set OPENAI_COMPATIBLE_BASE_URL, pass &quot;</span>
-                <span class="s2">&quot;openai_compatible_base_url=..., or configure it in OpenGeoAgent &quot;</span>
-                <span class="s2">&quot;Settings.&quot;</span>
+                <span class="s2">"The openai-compatible provider requires the base URL of an "</span>
+                <span class="s2">"OpenAI-compatible server, for example http://localhost:8000/v1. "</span>
+                <span class="s2">"Set OPENAI_COMPATIBLE_BASE_URL, pass "</span>
+                <span class="s2">"openai_compatible_base_url=..., or configure it in OpenGeoAgent "</span>
+                <span class="s2">"Settings."</span>
             <span class="p">)</span>
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_COMPATIBLE_MODEL&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_COMPATIBLE_MODEL"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">model_id</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The openai-compatible provider requires a model id, because a &quot;</span>
-                <span class="s2">&quot;generic endpoint has no default. Pass model=..., set &quot;</span>
-                <span class="s2">&quot;OPENAI_COMPATIBLE_MODEL, or configure the model in OpenGeoAgent &quot;</span>
-                <span class="s2">&quot;Settings.&quot;</span>
+                <span class="s2">"The openai-compatible provider requires a model id, because a "</span>
+                <span class="s2">"generic endpoint has no default. Pass model=..., set "</span>
+                <span class="s2">"OPENAI_COMPATIBLE_MODEL, or configure the model in OpenGeoAgent "</span>
+                <span class="s2">"Settings."</span>
             <span class="p">)</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"base_url"</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
         <span class="c1"># Local servers usually ignore the key, but the OpenAI SDK rejects an</span>
         <span class="c1"># empty one, so fall back to the same placeholder the vLLM path uses.</span>
-        <span class="n">client_args</span><span class="p">[</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENAI_COMPATIBLE_API_KEY&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="s2">&quot;EMPTY&quot;</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"api_key"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"OPENAI_COMPATIBLE_API_KEY"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">"EMPTY"</span>
         <span class="p">)</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
-            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;temperature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
         <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
             <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">&quot;vllm&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"vllm"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands_vllm</span><span class="w"> </span><span class="kn">import</span> <span class="n">VLLMModel</span>
 
-        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;VLLM_MODEL_ID&quot;</span><span class="p">)</span>
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"VLLM_MODEL_ID"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">model_id</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;vLLM provider requires a model id. Pass model=..., set &quot;</span>
-                <span class="s2">&quot;VLLM_MODEL_ID, or configure the model in OpenGeoAgent settings.&quot;</span>
+                <span class="s2">"vLLM provider requires a model id. Pass model=..., set "</span>
+                <span class="s2">"VLLM_MODEL_ID, or configure the model in OpenGeoAgent settings."</span>
             <span class="p">)</span>
         <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
         <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">cfg</span><span class="o">.</span><span class="n">vllm_base_url</span>
-            <span class="ow">or</span> <span class="n">client_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;base_url&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;VLLM_BASE_URL&quot;</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="s2">&quot;http://localhost:8000/v1&quot;</span>
+            <span class="ow">or</span> <span class="n">client_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"base_url"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"VLLM_BASE_URL"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">"http://localhost:8000/v1"</span>
         <span class="p">)</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;VLLM_API_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;EMPTY&quot;</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"api_key"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"VLLM_API_KEY"</span><span class="p">,</span> <span class="s2">"EMPTY"</span>
         <span class="p">)</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">}</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_token_param</span><span class="p">(</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span><span class="p">}</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">VLLMModel</span><span class="p">(</span>
             <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
@@ -1620,7 +1620,7 @@
             <span class="o">**</span><span class="n">client_args</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown provider: </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown provider: </span><span class="si">{</span><span class="n">provider</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
@@ -1729,15 +1729,122 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../js/timeago.min.js"></script>
       
         <script src="../js/timeago_mkdocs_material.js"></script>
       
     
-  </body>
+  <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
+/* Shared by full pages and Material's instant navigation. */
+(() => {
+  const config = JSON.parse(document.currentScript.dataset.mkdocsJupyterMathjax);
+  if (window.mkdocsJupyterMathJax) return;
+
+  let loading;
+  let queue = Promise.resolve();
+  let previous = [];
+
+  const ready = async () => {
+    if (!loading) {
+      loading = (async () => {
+        let math = window.MathJax;
+        if (!math?.typesetPromise) {
+          const url = new URL(config.url, document.baseURI).href;
+          const existing = Array.from(document.scripts).find(script =>
+            script.src && (script.src === url || script.id === 'MathJax-script' ||
+              (/mathjax/i.test(script.src) &&
+               /\/(?:MathJax|latest|(?:tex|mml)(?:-mml)?-(?:chtml|svg))\.js(?:[?#]|$)/i.test(script.src))));
+          if (existing) {
+            if (!math?.startup?.promise) {
+              await new Promise((resolve, reject) => {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+              });
+            }
+          } else {
+            // Keep site macros, delimiters and startup hooks when supplied.
+            const options = math || {};
+            window.MathJax = {
+              ...options,
+              loader: {
+                ...options.loader,
+                load: Array.from(new Set(['ui/safe', ...(options.loader?.load || [])]))
+              },
+              startup: { typeset: false, ...options.startup },
+              tex: {
+                tags: 'ams',
+                useLabelIds: true,
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                ...options.tex
+              }
+            };
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = config.url;
+              script.id = 'MathJax-script';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+        }
+        math = window.MathJax;
+        await math.startup.promise;
+        return math;
+      })();
+    }
+    const math = await loading;
+    // A site owner can extend the v3 queue again on each navigation.
+    await math.startup.promise;
+    return math;
+  };
+
+  const unrendered = node => {
+    if (node.matches('mjx-container')) return [];
+    if (!node.querySelector('mjx-container')) return [node];
+    // In v3, scanning generated assistive MathML again produces nested output.
+    return Array.from(node.children).flatMap(unrendered);
+  };
+
+  const refresh = () => {
+    // A separate chain also serializes v3, without changing v4's startup promise.
+    queue = queue.then(async () => {
+      const notebooks = Array.from(document.querySelectorAll('.jupyter-wrapper'));
+      if (!notebooks.length && !previous.length) return;
+      if (notebooks.length === previous.length &&
+          notebooks.every((node, index) => node === previous[index])) return;
+      const math = await ready();
+      if (previous.length) {
+        math.typesetClear(previous);
+        math.texReset();
+      }
+      previous = notebooks.filter(node => node.isConnected);
+      const pending = previous.flatMap(unrendered);
+      if (pending.length) await math.typesetPromise(pending);
+    }).catch(error => console.error('mkdocs-jupyter: MathJax rendering failed', error));
+    return queue;
+  };
+
+  window.mkdocsJupyterMathJax = { refresh };
+  const start = () => {
+    if (typeof document$ !== 'undefined') document$.subscribe(refresh);
+    else refresh();
+  };
+  // Theme bundles and user-provided MathJax scripts can follow notebook content.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+})();
+
+</script>
+</body>
 </html>

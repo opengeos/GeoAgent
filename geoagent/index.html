@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1433,7 +1433,7 @@ geoagent.core.agent.GeoAgent        </code>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Public facade: Strands agent + GeoAgent context, tools, and safety hooks.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Public facade: Strands agent + GeoAgent context, tools, and safety hooks."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1452,11 +1452,11 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="n">GeoAgentContext</span><span class="p">()</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
         <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
         <span class="k">if</span> <span class="n">fast</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span> <span class="o">&gt;</span> <span class="mi">2048</span><span class="p">:</span>
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="mi">2048</span><span class="p">})</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"max_tokens"</span><span class="p">:</span> <span class="mi">2048</span><span class="p">})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">cfg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fast</span> <span class="o">=</span> <span class="n">fast</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="o">=</span> <span class="n">qgis_safe_mode</span>
@@ -1469,12 +1469,12 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_strands_agent</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_rebuild_strands_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recreate the underlying Strands agent from current settings.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Recreate the underlying Strands agent from current settings."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">prompt</span> <span class="o">=</span> <span class="n">FAST_SYSTEM_PROMPT</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fast</span> <span class="k">else</span> <span class="n">DEFAULT_SYSTEM_PROMPT</span>
-        <span class="n">extra_prompt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;system_prompt&quot;</span><span class="p">)</span>
+        <span class="n">extra_prompt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"system_prompt"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">extra_prompt</span><span class="p">:</span>
-            <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">extra_prompt</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">extra_prompt</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">hook</span> <span class="o">=</span> <span class="n">ConfirmationHookProvider</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_confirm</span><span class="p">,</span>
@@ -1493,40 +1493,40 @@ geoagent.core.agent.GeoAgent        </code>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentContext</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;GeoAgent runtime context.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""GeoAgent runtime context."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">strands_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The underlying Strands :class:`~strands.agent.agent.Agent`.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The underlying Strands :class:`~strands.agent.agent.Agent`."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tool</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Direct Strands tool caller (``agent.tool.some_tool(...)``).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Direct Strands tool caller (``agent.tool.some_tool(...)``)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">tool</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tool_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Expose Strands tool names on GeoAgent for parity.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Expose Strands tool names on GeoAgent for parity."""</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="o">.</span><span class="n">tool_names</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tool_registry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolRegistry</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;GeoAgent metadata registry for tool inspection.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""GeoAgent metadata registry for tool inspection."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentConfig</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;GeoAgent model and runtime configuration.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""GeoAgent model and runtime configuration."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward unknown attributes to the underlying Strands agent.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Forward unknown attributes to the underlying Strands agent."""</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GeoAgent&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new :class:`GeoAgent` bound to a map (rebuilds tools).&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GeoAgent"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a new :class:`GeoAgent` bound to a map (rebuilds tools)."""</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
         <span class="k">return</span> <span class="n">for_leafmap</span><span class="p">(</span>
@@ -1542,7 +1542,7 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a single user turn and return a :class:`GeoAgentResponse`.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Run a single user turn and return a :class:`GeoAgentResponse`."""</span>
         <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
@@ -1556,29 +1556,29 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
-            <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"integration"</span><span class="p">)</span>
+            <span class="ow">in</span> <span class="p">{</span><span class="s2">"nasa_earthdata"</span><span class="p">,</span> <span class="s2">"nasa_opera"</span><span class="p">}</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span>
             <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">()</span>
         <span class="p">):</span>
-            <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
+            <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"integration"</span><span class="p">)</span>
             <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;NASA Earthdata&quot;</span> <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span> <span class="k">else</span> <span class="s2">&quot;NASA OPERA&quot;</span>
+                <span class="s2">"NASA Earthdata"</span> <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span> <span class="k">else</span> <span class="s2">"NASA OPERA"</span>
             <span class="p">)</span>
             <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;the NASA Earthdata AI Assistant panel&quot;</span>
-                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                <span class="s2">"the NASA Earthdata AI Assistant panel"</span>
+                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span>
                 <span class="k">else</span> <span class="p">(</span>
-                    <span class="s2">&quot;the NASA OPERA AI Assistant panel or &quot;</span>
-                    <span class="s2">&quot;geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) &quot;</span>
-                    <span class="s2">&quot;for direct QGIS-console workflows&quot;</span>
+                    <span class="s2">"the NASA OPERA AI Assistant panel or "</span>
+                    <span class="s2">"geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "</span>
+                    <span class="s2">"for direct QGIS-console workflows"</span>
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
                 <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">error_message</span><span class="o">=</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> chat should be launched from a worker thread inside &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> chat should be launched from a worker thread inside "</span>
+                    <span class="sa">f</span><span class="s2">"QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">),</span>
                 <span class="nb">map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1589,20 +1589,20 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_chat_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a single user turn on the current thread.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Run a single user turn on the current thread."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
             <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
-            <span class="n">exec_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">,</span> <span class="s2">&quot;tool_metrics&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">exec_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">,</span> <span class="s2">"tool_metrics"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="n">answer</span> <span class="o">=</span> <span class="n">_result_to_text</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="n">content_blocks</span> <span class="o">=</span> <span class="n">_result_content_blocks</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="n">images</span> <span class="o">=</span> <span class="n">_result_to_images</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">+</span> <span class="n">_tool_calls_to_images</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="p">)</span>
-            <span class="n">stop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;stop_reason&quot;</span><span class="p">,</span> <span class="s2">&quot;end_turn&quot;</span><span class="p">))</span>
-            <span class="n">success</span> <span class="o">=</span> <span class="n">stop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cancelled&quot;</span><span class="p">,</span> <span class="s2">&quot;guardrail_intervened&quot;</span><span class="p">)</span>
-            <span class="n">err</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;stop_reason=</span><span class="si">{</span><span class="n">stop</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"stop_reason"</span><span class="p">,</span> <span class="s2">"end_turn"</span><span class="p">))</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="n">stop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"cancelled"</span><span class="p">,</span> <span class="s2">"guardrail_intervened"</span><span class="p">)</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">success</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"stop_reason=</span><span class="si">{</span><span class="n">stop</span><span class="si">}</span><span class="s2">"</span>
             <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
                 <span class="n">answer_text</span><span class="o">=</span><span class="n">answer</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">success</span><span class="o">=</span><span class="n">success</span><span class="p">,</span>
@@ -1632,11 +1632,11 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stream a single user turn as raw Strands events.</span>
+<span class="w">        </span><span class="sd">"""Stream a single user turn as raw Strands events.</span>
 
-<span class="sd">        Text deltas are emitted in events containing ``&quot;data&quot;``. The final</span>
-<span class="sd">        Strands result is emitted in the event containing ``&quot;result&quot;``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Text deltas are emitted in events containing ``"data"``. The final</span>
+<span class="sd">        Strands result is emitted in the event containing ``"result"``.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
@@ -1652,25 +1652,25 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="k">return</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">():</span>
-            <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">integration</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">}:</span>
+            <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"integration"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">integration</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"nasa_earthdata"</span><span class="p">,</span> <span class="s2">"nasa_opera"</span><span class="p">}:</span>
                 <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;NASA Earthdata&quot;</span>
-                    <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
-                    <span class="k">else</span> <span class="s2">&quot;NASA OPERA&quot;</span>
+                    <span class="s2">"NASA Earthdata"</span>
+                    <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span>
+                    <span class="k">else</span> <span class="s2">"NASA OPERA"</span>
                 <span class="p">)</span>
                 <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;the NASA Earthdata AI Assistant panel&quot;</span>
-                    <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                    <span class="s2">"the NASA Earthdata AI Assistant panel"</span>
+                    <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span>
                     <span class="k">else</span> <span class="p">(</span>
-                        <span class="s2">&quot;the NASA OPERA AI Assistant panel or &quot;</span>
-                        <span class="s2">&quot;geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) &quot;</span>
-                        <span class="s2">&quot;for direct QGIS-console workflows&quot;</span>
+                        <span class="s2">"the NASA OPERA AI Assistant panel or "</span>
+                        <span class="s2">"geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "</span>
+                        <span class="s2">"for direct QGIS-console workflows"</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread "</span>
+                    <span class="sa">f</span><span class="s2">"inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span>
             <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">event</span>
@@ -1680,7 +1680,7 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="k">yield</span> <span class="n">event</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_chat_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a streaming user turn on the current thread.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Run a streaming user turn on the current thread."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cancelled</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tool_calls</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1692,27 +1692,27 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="k">raise</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stream QGIS chat from a worker thread while pumping Qt events.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Stream QGIS chat from a worker thread while pumping Qt events."""</span>
         <span class="n">events</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
 
         <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_run_stream</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute async streaming work off the GUI thread.&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">"""Execute async streaming work off the GUI thread."""</span>
             <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
-                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="n">event</span><span class="p">))</span>
+                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">"event"</span><span class="p">,</span> <span class="n">event</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Run the async stream and forward events to the GUI thread.&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">"""Run the async stream and forward events to the GUI thread."""</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">_run_stream</span><span class="p">())</span>
             <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - defensive path</span>
-                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="p">))</span>
+                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">"error"</span><span class="p">,</span> <span class="n">exc</span><span class="p">))</span>
             <span class="k">finally</span><span class="p">:</span>
-                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+                <span class="n">events</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="s2">"done"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
         <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
             <span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span>
             <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;GeoAgent-QGIS-stream-chat&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"GeoAgent-QGIS-stream-chat"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
@@ -1724,40 +1724,40 @@ geoagent.core.agent.GeoAgent        </code>
                 <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"event"</span><span class="p">:</span>
                 <span class="k">yield</span> <span class="n">payload</span>
-            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">:</span>
                 <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="n">payload</span>
-            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;done&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"done"</span><span class="p">:</span>
                 <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="k">return</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run sync QGIS chat without starving the Qt event loop.</span>
+<span class="w">        </span><span class="sd">"""Run sync QGIS chat without starving the Qt event loop.</span>
 
 <span class="sd">        QGIS users often call ``resp = agent.chat(...)`` from the Python</span>
 <span class="sd">        console, which executes on the GUI thread. The model call needs to run</span>
 <span class="sd">        away from that thread, but QGIS tools still marshal back to it via</span>
 <span class="sd">        ``BlockingQueuedConnection``. Pumping Qt events while waiting lets those</span>
 <span class="sd">        marshalled tool calls run and keeps the application responsive.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">done</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
         <span class="n">box</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute chat work off the GUI thread.&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">"""Execute chat work off the GUI thread."""</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">box</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+                <span class="n">box</span><span class="p">[</span><span class="s2">"response"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chat_impl</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - defensive path</span>
-                <span class="n">box</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">exc</span>
+                <span class="n">box</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="n">exc</span>
             <span class="k">finally</span><span class="p">:</span>
                 <span class="n">done</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
 
         <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
             <span class="n">target</span><span class="o">=</span><span class="n">_worker</span><span class="p">,</span>
             <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;GeoAgent-QGIS-chat&quot;</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"GeoAgent-QGIS-chat"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
@@ -1766,9 +1766,9 @@ geoagent.core.agent.GeoAgent        </code>
             <span class="n">done</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
 
         <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">box</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">box</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="n">box</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">box</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">box</span><span class="p">[</span><span class="s2">"response"</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">chat_in_background</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1778,14 +1778,14 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="n">on_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">on_error</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run ``chat`` on a worker thread and return immediately.</span>
+<span class="w">        </span><span class="sd">"""Run ``chat`` on a worker thread and return immediately.</span>
 
 <span class="sd">        This is primarily for QGIS console usage where a synchronous ``chat()``</span>
 <span class="sd">        call blocks the GUI event loop during network/model latency.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute chat work and dispatch callbacks.&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">"""Execute chat work and dispatch callbacks."""</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">on_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1970,7 +1970,7 @@ geoagent.core.agent.GeoAgent        </code>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward unknown attributes to the underlying Strands agent.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Forward unknown attributes to the underlying Strands agent."""</span>
     <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strands</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 </code></pre></div>
         </details>
@@ -2002,7 +2002,7 @@ geoagent.core.agent.GeoAgent        </code>
     <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgentResponse</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a single user turn and return a :class:`GeoAgentResponse`.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run a single user turn and return a :class:`GeoAgentResponse`."""</span>
     <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
@@ -2016,29 +2016,29 @@ geoagent.core.agent.GeoAgent        </code>
         <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="p">(</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
-        <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"integration"</span><span class="p">)</span>
+        <span class="ow">in</span> <span class="p">{</span><span class="s2">"nasa_earthdata"</span><span class="p">,</span> <span class="s2">"nasa_opera"</span><span class="p">}</span>
         <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span>
         <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">()</span>
     <span class="p">):</span>
-        <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
+        <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"integration"</span><span class="p">)</span>
         <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;NASA Earthdata&quot;</span> <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span> <span class="k">else</span> <span class="s2">&quot;NASA OPERA&quot;</span>
+            <span class="s2">"NASA Earthdata"</span> <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span> <span class="k">else</span> <span class="s2">"NASA OPERA"</span>
         <span class="p">)</span>
         <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;the NASA Earthdata AI Assistant panel&quot;</span>
-            <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+            <span class="s2">"the NASA Earthdata AI Assistant panel"</span>
+            <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span>
             <span class="k">else</span> <span class="p">(</span>
-                <span class="s2">&quot;the NASA OPERA AI Assistant panel or &quot;</span>
-                <span class="s2">&quot;geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) &quot;</span>
-                <span class="s2">&quot;for direct QGIS-console workflows&quot;</span>
+                <span class="s2">"the NASA OPERA AI Assistant panel or "</span>
+                <span class="s2">"geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "</span>
+                <span class="s2">"for direct QGIS-console workflows"</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">GeoAgentResponse</span><span class="p">(</span>
             <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">error_message</span><span class="o">=</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> chat should be launched from a worker thread inside &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> chat should be launched from a worker thread inside "</span>
+                <span class="sa">f</span><span class="s2">"QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">),</span>
             <span class="nb">map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">,</span>
         <span class="p">)</span>
@@ -2081,14 +2081,14 @@ call blocks the GUI event loop during network/model latency.</p>
     <span class="n">on_result</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">on_error</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run ``chat`` on a worker thread and return immediately.</span>
+<span class="w">    </span><span class="sd">"""Run ``chat`` on a worker thread and return immediately.</span>
 
 <span class="sd">    This is primarily for QGIS console usage where a synchronous ``chat()``</span>
 <span class="sd">    call blocks the GUI event loop during network/model latency.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_worker</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute chat work and dispatch callbacks.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Execute chat work and dispatch callbacks."""</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">target_map</span><span class="o">=</span><span class="n">target_map</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">on_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -2131,11 +2131,11 @@ Strands result is emitted in the event containing <code>"result"</code>.</p>
     <span class="n">query</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">target_map</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stream a single user turn as raw Strands events.</span>
+<span class="w">    </span><span class="sd">"""Stream a single user turn as raw Strands events.</span>
 
-<span class="sd">    Text deltas are emitted in events containing ``&quot;data&quot;``. The final</span>
-<span class="sd">    Strands result is emitted in the event containing ``&quot;result&quot;``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    Text deltas are emitted in events containing ``"data"``. The final</span>
+<span class="sd">    Strands result is emitted in the event containing ``"result"``.</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">map_obj</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
@@ -2151,25 +2151,25 @@ Strands result is emitted in the event containing <code>"result"</code>.</p>
         <span class="k">return</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qgis_safe_mode</span> <span class="ow">and</span> <span class="n">is_qt_gui_thread</span><span class="p">():</span>
-        <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">integration</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">}:</span>
+        <span class="n">integration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"integration"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">integration</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"nasa_earthdata"</span><span class="p">,</span> <span class="s2">"nasa_opera"</span><span class="p">}:</span>
             <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;NASA Earthdata&quot;</span>
-                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
-                <span class="k">else</span> <span class="s2">&quot;NASA OPERA&quot;</span>
+                <span class="s2">"NASA Earthdata"</span>
+                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span>
+                <span class="k">else</span> <span class="s2">"NASA OPERA"</span>
             <span class="p">)</span>
             <span class="n">helper</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;the NASA Earthdata AI Assistant panel&quot;</span>
-                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">&quot;nasa_earthdata&quot;</span>
+                <span class="s2">"the NASA Earthdata AI Assistant panel"</span>
+                <span class="k">if</span> <span class="n">integration</span> <span class="o">==</span> <span class="s2">"nasa_earthdata"</span>
                 <span class="k">else</span> <span class="p">(</span>
-                    <span class="s2">&quot;the NASA OPERA AI Assistant panel or &quot;</span>
-                    <span class="s2">&quot;geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) &quot;</span>
-                    <span class="s2">&quot;for direct QGIS-console workflows&quot;</span>
+                    <span class="s2">"the NASA OPERA AI Assistant panel or "</span>
+                    <span class="s2">"geoagent.tools.nasa_opera.submit_nasa_opera_search_task(...) "</span>
+                    <span class="s2">"for direct QGIS-console workflows"</span>
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> streaming chat should be launched from a worker thread "</span>
+                <span class="sa">f</span><span class="s2">"inside QGIS. Use </span><span class="si">{</span><span class="n">helper</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stream_chat_on_qgis_gui_thread</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
             <span class="k">yield</span> <span class="n">event</span>
@@ -2201,8 +2201,8 @@ Strands result is emitted in the event containing <code>"result"</code>.</p>
 
         <details class="quote">
           <summary>Source code in <code>geoagent/core/agent.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;GeoAgent&quot;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a new :class:`GeoAgent` bound to a map (rebuilds tools).&quot;&quot;&quot;</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">with_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GeoAgent"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a new :class:`GeoAgent` bound to a map (rebuilds tools)."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent.core.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_leafmap</span>
 
     <span class="k">return</span> <span class="n">for_leafmap</span><span class="p">(</span>
@@ -2319,15 +2319,122 @@ Strands result is emitted in the event containing <code>"result"</code>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../js/timeago.min.js"></script>
       
         <script src="../js/timeago_mkdocs_material.js"></script>
       
     
-  </body>
+  <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
+/* Shared by full pages and Material's instant navigation. */
+(() => {
+  const config = JSON.parse(document.currentScript.dataset.mkdocsJupyterMathjax);
+  if (window.mkdocsJupyterMathJax) return;
+
+  let loading;
+  let queue = Promise.resolve();
+  let previous = [];
+
+  const ready = async () => {
+    if (!loading) {
+      loading = (async () => {
+        let math = window.MathJax;
+        if (!math?.typesetPromise) {
+          const url = new URL(config.url, document.baseURI).href;
+          const existing = Array.from(document.scripts).find(script =>
+            script.src && (script.src === url || script.id === 'MathJax-script' ||
+              (/mathjax/i.test(script.src) &&
+               /\/(?:MathJax|latest|(?:tex|mml)(?:-mml)?-(?:chtml|svg))\.js(?:[?#]|$)/i.test(script.src))));
+          if (existing) {
+            if (!math?.startup?.promise) {
+              await new Promise((resolve, reject) => {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+              });
+            }
+          } else {
+            // Keep site macros, delimiters and startup hooks when supplied.
+            const options = math || {};
+            window.MathJax = {
+              ...options,
+              loader: {
+                ...options.loader,
+                load: Array.from(new Set(['ui/safe', ...(options.loader?.load || [])]))
+              },
+              startup: { typeset: false, ...options.startup },
+              tex: {
+                tags: 'ams',
+                useLabelIds: true,
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                ...options.tex
+              }
+            };
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = config.url;
+              script.id = 'MathJax-script';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+        }
+        math = window.MathJax;
+        await math.startup.promise;
+        return math;
+      })();
+    }
+    const math = await loading;
+    // A site owner can extend the v3 queue again on each navigation.
+    await math.startup.promise;
+    return math;
+  };
+
+  const unrendered = node => {
+    if (node.matches('mjx-container')) return [];
+    if (!node.querySelector('mjx-container')) return [node];
+    // In v3, scanning generated assistive MathML again produces nested output.
+    return Array.from(node.children).flatMap(unrendered);
+  };
+
+  const refresh = () => {
+    // A separate chain also serializes v3, without changing v4's startup promise.
+    queue = queue.then(async () => {
+      const notebooks = Array.from(document.querySelectorAll('.jupyter-wrapper'));
+      if (!notebooks.length && !previous.length) return;
+      if (notebooks.length === previous.length &&
+          notebooks.every((node, index) => node === previous[index])) return;
+      const math = await ready();
+      if (previous.length) {
+        math.typesetClear(previous);
+        math.texReset();
+      }
+      previous = notebooks.filter(node => node.isConnected);
+      const pending = previous.flatMap(unrendered);
+      if (pending.length) await math.typesetPromise(pending);
+    }).catch(error => console.error('mkdocs-jupyter: MathJax rendering failed', error));
+    return queue;
+  };
+
+  window.mkdocsJupyterMathJax = { refresh };
+  const start = () => {
+    if (typeof document$ !== 'undefined') document$.subscribe(refresh);
+    else refresh();
+  };
+  // Theme bundles and user-provided MathJax scripts can follow notebook content.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+})();
+
+</script>
+</body>
 </html>

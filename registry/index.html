@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1621,39 +1621,39 @@ GeoToolMeta        </code>
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GeoToolMeta</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Metadata for a registered Strands tool.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Metadata for a registered Strands tool."""</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;general&quot;</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"general"</span>
     <span class="n">requires_confirmation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">destructive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">long_running</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">available_in</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;full&quot;</span><span class="p">,)</span>
+    <span class="n">available_in</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"full"</span><span class="p">,)</span>
     <span class="n">requires_packages</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
     <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">needs_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Determine whether user confirmation is required</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if confirmation should be required before execution</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">requires_confirmation</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">destructive</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">long_running</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Convert metadata into serial dictionary</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Dictionary representation of the metadata</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;available_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_in</span><span class="p">)</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;requires_packages&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requires_packages</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"available_in"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_in</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"requires_packages"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requires_packages</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">data</span>
 </code></pre></div>
@@ -1753,16 +1753,16 @@ GeoToolMeta        </code>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convert metadata into serial dictionary</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dictionary representation of the metadata</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;available_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_in</span><span class="p">)</span>
-    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;requires_packages&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requires_packages</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">"available_in"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">available_in</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">"requires_packages"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requires_packages</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">data</span>
 </code></pre></div>
@@ -1802,7 +1802,7 @@ GeoToolRegistry        </code>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GeoToolRegistry</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maps tool names to :class:`GeoToolMeta`.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Maps tool names to :class:`GeoToolMeta`."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">GeoToolMeta</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1814,7 +1814,7 @@ GeoToolRegistry        </code>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Register metadata by explicit name.</span>
 
 <span class="sd">        Args:</span>
@@ -1824,13 +1824,13 @@ GeoToolRegistry        </code>
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError:</span>
 <span class="sd">                If a tool with the same name has already been registered.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; already registered.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' already registered."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">register_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Register metadata for a Strands decorated tool.</span>
 
 <span class="sd">        Args:</span>
@@ -1839,8 +1839,8 @@ GeoToolRegistry        </code>
 
 <span class="sd">            meta:</span>
 <span class="sd">                Metadata associated with the tool</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">tool_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool_obj</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">tool_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool_obj</span><span class="p">,</span> <span class="s2">"tool_name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">tool_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">tool_name</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
@@ -1860,7 +1860,7 @@ GeoToolRegistry        </code>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Remove a tool from the registry</span>
 
 <span class="sd">        Args:</span>
@@ -1870,11 +1870,11 @@ GeoToolRegistry        </code>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if the tool existed and was removed.</span>
 <span class="sd">            otherwise False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolMeta</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return metadata for a registered tool name.</span>
 
 <span class="sd">        Args:</span>
@@ -1883,11 +1883,11 @@ GeoToolRegistry        </code>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Tool metadata if found, otherwise None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">require</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolMeta</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return tool metadata</span>
 
 <span class="sd">        Args:</span>
@@ -1897,28 +1897,28 @@ GeoToolRegistry        </code>
 <span class="sd">        Returns:</span>
 <span class="sd">            KeyError:</span>
 <span class="sd">                If the tool is not registered.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool_name</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown tool '</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">tool_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">list_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return registered tool names.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return registered tool names."""</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">list_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">GeoToolMeta</span><span class="p">]:</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_all_tools_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return tool metadata as serializable config records.</span>
+<span class="w">        </span><span class="sd">"""Return tool metadata as serializable config records.</span>
 
 <span class="sd">        Mirrors the type of inspection users expect from Strands-facing</span>
 <span class="sd">        registries while preserving GeoAgent-specific metadata.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">meta</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -1927,7 +1927,7 @@ GeoToolRegistry        </code>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_tools_for_context</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tool_objects</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Filter tools that are available in a specific execution context.</span>
 
 <span class="sd">        Args:</span>
@@ -1944,20 +1944,20 @@ GeoToolRegistry        </code>
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError:</span>
 <span class="sd">                If ``context`` is not a known execution context.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">context</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TOOL_CONTEXTS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unknown tool context &#39;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Expected one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TOOL_CONTEXTS</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Unknown tool context '</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">'. "</span>
+                <span class="sa">f</span><span class="s2">"Expected one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TOOL_CONTEXTS</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="s2">"full"</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">tool_objects</span><span class="p">)</span>
 
         <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">tool_objects</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="s2">"tool_name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -1973,13 +1973,13 @@ GeoToolRegistry        </code>
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">tool_requiring_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">GeoToolMeta</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return tool requiring user confirmation</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">meta</span> <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">needs_confirmation</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">needs_user_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the tool should go through the confirm callback.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return True if the tool should go through the confirm callback."""</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">requires_confirmation</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">destructive</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">long_running</span><span class="p">)</span>
 </code></pre></div>
         </details>
@@ -2051,7 +2051,7 @@ GeoToolRegistry        </code>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolMeta</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return metadata for a registered tool name.</span>
 
 <span class="sd">    Args:</span>
@@ -2060,7 +2060,7 @@ GeoToolRegistry        </code>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Tool metadata if found, otherwise None.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span>
 </code></pre></div>
         </details>
@@ -2089,11 +2089,11 @@ registries while preserving GeoAgent-specific metadata.</p>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_all_tools_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return tool metadata as serializable config records.</span>
+<span class="w">    </span><span class="sd">"""Return tool metadata as serializable config records.</span>
 
 <span class="sd">    Mirrors the type of inspection users expect from Strands-facing</span>
 <span class="sd">    registries while preserving GeoAgent-specific metadata.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">meta</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -2166,7 +2166,7 @@ context.</p></td>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tools_for_context</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">tool_objects</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Filter tools that are available in a specific execution context.</span>
 
 <span class="sd">    Args:</span>
@@ -2183,20 +2183,20 @@ context.</p></td>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError:</span>
 <span class="sd">            If ``context`` is not a known execution context.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">context</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TOOL_CONTEXTS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Unknown tool context &#39;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;Expected one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TOOL_CONTEXTS</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Unknown tool context '</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">'. "</span>
+            <span class="sa">f</span><span class="s2">"Expected one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">TOOL_CONTEXTS</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="s2">&quot;full&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="s2">"full"</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">tool_objects</span><span class="p">)</span>
 
     <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">tool_objects</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="s2">"tool_name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
             <span class="k">continue</span>
@@ -2235,7 +2235,7 @@ context.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return registered tool names.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return registered tool names."""</span>
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">)</span>
 </code></pre></div>
         </details>
@@ -2263,7 +2263,7 @@ context.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">needs_user_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if the tool should go through the confirm callback.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return True if the tool should go through the confirm callback."""</span>
     <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">requires_confirmation</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">destructive</span> <span class="ow">or</span> <span class="n">meta</span><span class="o">.</span><span class="n">long_running</span><span class="p">)</span>
 </code></pre></div>
         </details>
@@ -2309,7 +2309,7 @@ context.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Register metadata by explicit name.</span>
 
 <span class="sd">    Args:</span>
@@ -2319,9 +2319,9 @@ context.</p></td>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError:</span>
 <span class="sd">            If a tool with the same name has already been registered.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; already registered.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' already registered."</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
 </code></pre></div>
         </details>
@@ -2373,7 +2373,7 @@ context.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_tool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Register metadata for a Strands decorated tool.</span>
 
 <span class="sd">    Args:</span>
@@ -2382,8 +2382,8 @@ context.</p></td>
 
 <span class="sd">        meta:</span>
 <span class="sd">            Metadata associated with the tool</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">tool_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool_obj</span><span class="p">,</span> <span class="s2">&quot;tool_name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">tool_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tool_obj</span><span class="p">,</span> <span class="s2">"tool_name"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">tool_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">tool_name</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span>
@@ -2460,7 +2460,7 @@ context.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">require</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoToolMeta</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return tool metadata</span>
 
 <span class="sd">    Args:</span>
@@ -2470,11 +2470,11 @@ context.</p></td>
 <span class="sd">    Returns:</span>
 <span class="sd">        KeyError:</span>
 <span class="sd">            If the tool is not registered.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool_name</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown tool '</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 </code></pre></div>
         </details>
     </div>
@@ -2500,9 +2500,9 @@ context.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">tool_requiring_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">GeoToolMeta</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return tool requiring user confirmation</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">meta</span> <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">needs_confirmation</span><span class="p">]</span>
 </code></pre></div>
         </details>
@@ -2564,7 +2564,7 @@ otherwise False.</p></td>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">unregister</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Remove a tool from the registry</span>
 
 <span class="sd">    Args:</span>
@@ -2574,7 +2574,7 @@ otherwise False.</p></td>
 <span class="sd">    Returns:</span>
 <span class="sd">        True if the tool existed and was removed.</span>
 <span class="sd">        otherwise False.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 </code></pre></div>
         </details>
@@ -2663,7 +2663,7 @@ context name.</p>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">collect_tools_for_context</span><span class="p">(</span>
     <span class="n">tool_objects</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">registry</span><span class="p">:</span> <span class="n">GeoToolRegistry</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Convenience wrapper for context-based tool filtering.</span>
 
 <span class="sd">    This function preserves backward compatibility with older code that</span>
@@ -2682,8 +2682,8 @@ context name.</p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Filtered list of tool objects.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">context</span> <span class="o">=</span> <span class="s2">&quot;fast&quot;</span> <span class="k">if</span> <span class="n">fast</span> <span class="k">else</span> <span class="s2">&quot;full&quot;</span>
+<span class="sd">    """</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="s2">"fast"</span> <span class="k">if</span> <span class="n">fast</span> <span class="k">else</span> <span class="s2">"full"</span>
 
     <span class="k">return</span> <span class="n">registry</span><span class="o">.</span><span class="n">get_tools_for_context</span><span class="p">(</span><span class="n">tool_objects</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
 </code></pre></div>
@@ -2746,7 +2746,7 @@ context name.</p>
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">package_available</span><span class="p">(</span><span class="n">package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return True if every named package is importable.</span>
 
 <span class="sd">    Args:</span>
@@ -2755,7 +2755,7 @@ context name.</p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if the package is importable, otherwise False.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
@@ -2821,7 +2821,7 @@ context name.</p>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">packages_available</span><span class="p">(</span><span class="n">packages</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Verify that all required packages are available.</span>
 
 <span class="sd">    Args:</span>
@@ -2830,7 +2830,7 @@ context name.</p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True only if every package can be imported.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">package_available</span><span class="p">(</span><span class="n">package</span><span class="p">)</span> <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">packages</span><span class="p">)</span>
 </code></pre></div>
         </details>
@@ -2940,15 +2940,122 @@ context name.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../js/timeago.min.js"></script>
       
         <script src="../js/timeago_mkdocs_material.js"></script>
       
     
-  </body>
+  <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
+/* Shared by full pages and Material's instant navigation. */
+(() => {
+  const config = JSON.parse(document.currentScript.dataset.mkdocsJupyterMathjax);
+  if (window.mkdocsJupyterMathJax) return;
+
+  let loading;
+  let queue = Promise.resolve();
+  let previous = [];
+
+  const ready = async () => {
+    if (!loading) {
+      loading = (async () => {
+        let math = window.MathJax;
+        if (!math?.typesetPromise) {
+          const url = new URL(config.url, document.baseURI).href;
+          const existing = Array.from(document.scripts).find(script =>
+            script.src && (script.src === url || script.id === 'MathJax-script' ||
+              (/mathjax/i.test(script.src) &&
+               /\/(?:MathJax|latest|(?:tex|mml)(?:-mml)?-(?:chtml|svg))\.js(?:[?#]|$)/i.test(script.src))));
+          if (existing) {
+            if (!math?.startup?.promise) {
+              await new Promise((resolve, reject) => {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+              });
+            }
+          } else {
+            // Keep site macros, delimiters and startup hooks when supplied.
+            const options = math || {};
+            window.MathJax = {
+              ...options,
+              loader: {
+                ...options.loader,
+                load: Array.from(new Set(['ui/safe', ...(options.loader?.load || [])]))
+              },
+              startup: { typeset: false, ...options.startup },
+              tex: {
+                tags: 'ams',
+                useLabelIds: true,
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                ...options.tex
+              }
+            };
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = config.url;
+              script.id = 'MathJax-script';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+        }
+        math = window.MathJax;
+        await math.startup.promise;
+        return math;
+      })();
+    }
+    const math = await loading;
+    // A site owner can extend the v3 queue again on each navigation.
+    await math.startup.promise;
+    return math;
+  };
+
+  const unrendered = node => {
+    if (node.matches('mjx-container')) return [];
+    if (!node.querySelector('mjx-container')) return [node];
+    // In v3, scanning generated assistive MathML again produces nested output.
+    return Array.from(node.children).flatMap(unrendered);
+  };
+
+  const refresh = () => {
+    // A separate chain also serializes v3, without changing v4's startup promise.
+    queue = queue.then(async () => {
+      const notebooks = Array.from(document.querySelectorAll('.jupyter-wrapper'));
+      if (!notebooks.length && !previous.length) return;
+      if (notebooks.length === previous.length &&
+          notebooks.every((node, index) => node === previous[index])) return;
+      const math = await ready();
+      if (previous.length) {
+        math.typesetClear(previous);
+        math.texReset();
+      }
+      previous = notebooks.filter(node => node.isConnected);
+      const pending = previous.flatMap(unrendered);
+      if (pending.length) await math.typesetPromise(pending);
+    }).catch(error => console.error('mkdocs-jupyter: MathJax rendering failed', error));
+    return queue;
+  };
+
+  window.mkdocsJupyterMathJax = { refresh };
+  const start = () => {
+    if (typeof document$ !== 'undefined') document$.subscribe(refresh);
+    else refresh();
+  };
+  // Theme bundles and user-provided MathJax scripts can follow notebook content.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+})();
+
+</script>
+</body>
 </html>

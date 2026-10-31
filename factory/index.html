@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1606,7 +1606,7 @@
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exclude_tool_names</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">GeoToolRegistry</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect tools for a context and build a metadata registry.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Collect tools for a context and build a metadata registry."""</span>
     <span class="n">registry</span> <span class="o">=</span> <span class="n">GeoToolRegistry</span><span class="p">()</span>
     <span class="n">collected</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">include_leafmap</span> <span class="ow">and</span> <span class="n">context</span><span class="o">.</span><span class="n">map_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1707,7 +1707,7 @@
         <span class="n">collected</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">extra_tools</span><span class="p">)</span>
     <span class="n">effective_exclude_tool_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude_tool_names</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">include_hypercoast</span><span class="p">:</span>
-        <span class="n">effective_exclude_tool_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;add_raster_layer&quot;</span><span class="p">)</span>
+        <span class="n">effective_exclude_tool_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"add_raster_layer"</span><span class="p">)</span>
     <span class="n">collected</span> <span class="o">=</span> <span class="n">_filter_by_permission</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">permission_profile</span><span class="p">)</span>
     <span class="n">collected</span> <span class="o">=</span> <span class="n">_drop_tools_by_name</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">effective_exclude_tool_names</span><span class="p">)</span>
     <span class="n">tools</span> <span class="o">=</span> <span class="n">collect_tools_for_context</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span> <span class="n">registry</span><span class="o">=</span><span class="n">registry</span><span class="p">)</span>
@@ -1747,13 +1747,13 @@
     <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a :class:`GeoAgent` with explicit tools and optional model.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Create a :class:`GeoAgent` with explicit tools and optional model."""</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="n">GeoAgentContext</span><span class="p">()</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="n">registry</span> <span class="o">=</span> <span class="n">GeoToolRegistry</span><span class="p">()</span>
     <span class="n">tool_list</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">tools</span> <span class="ow">or</span> <span class="p">[]))</span>
     <span class="n">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">tool_list</span><span class="p">)</span>
@@ -1804,7 +1804,7 @@
     <span class="n">confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">extra_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to an anymap map instance.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to an anymap map instance."""</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span><span class="n">map_obj</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
@@ -1815,9 +1815,9 @@
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -1865,14 +1865,14 @@
     <span class="n">extra_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">allow_browser_code</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to a MapLibre map running in a browser session.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to a MapLibre map running in a browser session."""</span>
     <span class="n">system_prompt</span> <span class="o">=</span> <span class="n">BROWSER_MAPLIBRE_SYSTEM_PROMPT</span>
     <span class="k">if</span> <span class="n">allow_browser_code</span><span class="p">:</span>
-        <span class="n">system_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">system_prompt</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">BROWSER_MAPLIBRE_CODE_SYSTEM_PROMPT</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">system_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">system_prompt</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">BROWSER_MAPLIBRE_CODE_SYSTEM_PROMPT</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;browser_maplibre&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"browser_maplibre"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">,</span>
         <span class="p">}</span>
     <span class="p">)</span>
     <span class="n">tool_list</span> <span class="o">=</span> <span class="n">_filter_by_imports</span><span class="p">(</span>
@@ -1885,9 +1885,9 @@
     <span class="n">tools</span> <span class="o">=</span> <span class="n">collect_tools_for_context</span><span class="p">(</span><span class="n">tool_list</span><span class="p">,</span> <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span> <span class="n">registry</span><span class="o">=</span><span class="n">registry</span><span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -1940,17 +1940,17 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the QGIS GEE Data Catalogs plugin runtime.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to the QGIS GEE Data Catalogs plugin runtime.</span>
 
 <span class="sd">    The factory exposes native GEE Data Catalogs tools and, by default, the</span>
 <span class="sd">    general QGIS map/project tools used for navigation and layer management.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;gee_data_catalogs&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">GEE_DATA_CATALOGS_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"gee_data_catalogs"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">GEE_DATA_CATALOGS_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -1962,13 +1962,13 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>
-        <span class="n">exclude_tool_names</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;set_layer_symbology&quot;</span><span class="p">}</span> <span class="k">if</span> <span class="n">include_qgis</span> <span class="k">else</span> <span class="nb">set</span><span class="p">(),</span>
+        <span class="n">exclude_tool_names</span><span class="o">=</span><span class="p">{</span><span class="s2">"set_layer_symbology"</span><span class="p">}</span> <span class="k">if</span> <span class="n">include_qgis</span> <span class="k">else</span> <span class="nb">set</span><span class="p">(),</span>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2023,18 +2023,18 @@ and navigation.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to QGIS with GeoAI SamGeo segmentation support.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to QGIS with GeoAI SamGeo segmentation support.</span>
 
 <span class="sd">    The factory exposes GeoAI plugin-backed SamGeo text-prompt segmentation</span>
 <span class="sd">    and, by default, the general QGIS map/project tools used for inspection</span>
 <span class="sd">    and navigation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;geoai&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">GEOAI_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"geoai"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">GEOAI_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2049,9 +2049,9 @@ and navigation.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2106,18 +2106,18 @@ inspection and navigation.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the QGIS HyperCoast plugin runtime.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to the QGIS HyperCoast plugin runtime.</span>
 
 <span class="sd">    The factory exposes native HyperCoast search, download, and visualization</span>
 <span class="sd">    tools and, by default, the general QGIS map/project tools used for</span>
 <span class="sd">    inspection and navigation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;hypercoast&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">HYPERCOAST_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"hypercoast"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">HYPERCOAST_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2132,9 +2132,9 @@ inspection and navigation.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2182,7 +2182,7 @@ inspection and navigation.</p>
     <span class="n">confirm</span><span class="p">:</span> <span class="n">ConfirmCallback</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">extra_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to a leafmap-compatible map instance.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to a leafmap-compatible map instance."""</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span><span class="n">map_obj</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
@@ -2193,9 +2193,9 @@ inspection and navigation.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2248,17 +2248,17 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the NASA Earthdata QGIS plugin runtime.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to the NASA Earthdata QGIS plugin runtime.</span>
 
 <span class="sd">    The factory exposes native NASA Earthdata tools and, by default, the</span>
 <span class="sd">    general QGIS map/project tools used for navigation and layer management.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;nasa_earthdata&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">NASA_EARTHDATA_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"nasa_earthdata"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">NASA_EARTHDATA_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2273,9 +2273,9 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2328,17 +2328,17 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the NASA OPERA QGIS plugin runtime.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to the NASA OPERA QGIS plugin runtime.</span>
 
 <span class="sd">    The factory exposes native GeoAgent OPERA tools and, by default, the</span>
 <span class="sd">    general QGIS map/project tools used for navigation and layer management.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;nasa_opera&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">NASA_OPERA_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"nasa_opera"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">NASA_OPERA_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2352,9 +2352,9 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2404,11 +2404,11 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">extra_tools</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to QGIS ``iface`` (and optional ``project``).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to QGIS ``iface`` (and optional ``project``)."""</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
-        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">QGIS_SYSTEM_PROMPT</span><span class="p">},</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">QGIS_SYSTEM_PROMPT</span><span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
@@ -2420,9 +2420,9 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2473,13 +2473,13 @@ general QGIS map/project tools used for navigation and layer management.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to STAC catalog workflows and optional QGIS loading.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to STAC catalog workflows and optional QGIS loading."""</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;stac&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">STAC_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"stac"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">STAC_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2490,13 +2490,13 @@ general QGIS map/project tools used for navigation and layer management.</p>
         <span class="n">extra_tools</span><span class="o">=</span><span class="n">extra_tools</span><span class="p">,</span>
         <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="n">permission_profile</span><span class="o">=</span><span class="n">permission_profile</span><span class="p">,</span>
-        <span class="n">exclude_tool_names</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;run_pyqgis_script&quot;</span><span class="p">},</span>
+        <span class="n">exclude_tool_names</span><span class="o">=</span><span class="p">{</span><span class="s2">"run_pyqgis_script"</span><span class="p">},</span>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2550,17 +2550,17 @@ QGIS map/project tools used for inspection and navigation.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the QGIS Timelapse plugin runtime.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to the QGIS Timelapse plugin runtime.</span>
 
 <span class="sd">    The factory exposes native Timelapse tools and, by default, the general</span>
 <span class="sd">    QGIS map/project tools used for inspection and navigation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;timelapse&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">TIMELAPSE_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"timelapse"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">TIMELAPSE_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2575,9 +2575,9 @@ QGIS map/project tools used for inspection and navigation.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2632,18 +2632,18 @@ management.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to the QGIS Vantor plugin runtime.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to the QGIS Vantor plugin runtime.</span>
 
 <span class="sd">    The factory exposes native Vantor Open Data STAC tools and, by default,</span>
 <span class="sd">    the general QGIS map/project tools used for navigation and layer</span>
 <span class="sd">    management.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;vantor&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">VANTOR_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"vantor"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">VANTOR_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2658,9 +2658,9 @@ management.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2713,17 +2713,17 @@ the general QGIS map/project tools used for inspection and navigation.</p>
     <span class="n">include_qgis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">permission_profile</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeoAgent</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind an agent to QGIS with WhiteboxTools analysis support.</span>
+<span class="w">    </span><span class="sd">"""Bind an agent to QGIS with WhiteboxTools analysis support.</span>
 
 <span class="sd">    The factory exposes a routed WhiteboxTools broker surface and, by default,</span>
 <span class="sd">    the general QGIS map/project tools used for inspection and navigation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">GeoAgentContext</span><span class="p">(</span>
         <span class="n">qgis_iface</span><span class="o">=</span><span class="n">iface</span><span class="p">,</span>
         <span class="n">qgis_project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;integration&quot;</span><span class="p">:</span> <span class="s2">&quot;whitebox&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;system_prompt&quot;</span><span class="p">:</span> <span class="n">WHITEBOX_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">"integration"</span><span class="p">:</span> <span class="s2">"whitebox"</span><span class="p">,</span>
+            <span class="s2">"system_prompt"</span><span class="p">:</span> <span class="n">WHITEBOX_SYSTEM_PROMPT</span><span class="p">,</span>
         <span class="p">},</span>
     <span class="p">)</span>
     <span class="n">tools</span><span class="p">,</span> <span class="n">registry</span> <span class="o">=</span> <span class="n">assemble_tools</span><span class="p">(</span>
@@ -2737,9 +2737,9 @@ the general QGIS map/project tools used for inspection and navigation.</p>
     <span class="p">)</span>
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">GeoAgentConfig</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"provider"</span><span class="p">:</span> <span class="n">provider</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="n">model_id</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">GeoAgent</span><span class="p">(</span>
         <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
@@ -2777,9 +2777,9 @@ the general QGIS map/project tools used for inspection and navigation.</p>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/factory.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register_all_tools</span><span class="p">(</span><span class="n">registry</span><span class="p">:</span> <span class="n">GeoToolRegistry</span><span class="p">,</span> <span class="n">tools</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Populate registry from decorated tools.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Populate registry from decorated tools."""</span>
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tools</span><span class="p">:</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">&quot;_geoagent_meta&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="s2">"_geoagent_meta"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">registry</span><span class="o">.</span><span class="n">register_tool</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
 </code></pre></div>
@@ -2890,15 +2890,122 @@ the general QGIS map/project tools used for inspection and navigation.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../js/timeago.min.js"></script>
       
         <script src="../js/timeago_mkdocs_material.js"></script>
       
     
-  </body>
+  <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
+/* Shared by full pages and Material's instant navigation. */
+(() => {
+  const config = JSON.parse(document.currentScript.dataset.mkdocsJupyterMathjax);
+  if (window.mkdocsJupyterMathJax) return;
+
+  let loading;
+  let queue = Promise.resolve();
+  let previous = [];
+
+  const ready = async () => {
+    if (!loading) {
+      loading = (async () => {
+        let math = window.MathJax;
+        if (!math?.typesetPromise) {
+          const url = new URL(config.url, document.baseURI).href;
+          const existing = Array.from(document.scripts).find(script =>
+            script.src && (script.src === url || script.id === 'MathJax-script' ||
+              (/mathjax/i.test(script.src) &&
+               /\/(?:MathJax|latest|(?:tex|mml)(?:-mml)?-(?:chtml|svg))\.js(?:[?#]|$)/i.test(script.src))));
+          if (existing) {
+            if (!math?.startup?.promise) {
+              await new Promise((resolve, reject) => {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+              });
+            }
+          } else {
+            // Keep site macros, delimiters and startup hooks when supplied.
+            const options = math || {};
+            window.MathJax = {
+              ...options,
+              loader: {
+                ...options.loader,
+                load: Array.from(new Set(['ui/safe', ...(options.loader?.load || [])]))
+              },
+              startup: { typeset: false, ...options.startup },
+              tex: {
+                tags: 'ams',
+                useLabelIds: true,
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                ...options.tex
+              }
+            };
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = config.url;
+              script.id = 'MathJax-script';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+        }
+        math = window.MathJax;
+        await math.startup.promise;
+        return math;
+      })();
+    }
+    const math = await loading;
+    // A site owner can extend the v3 queue again on each navigation.
+    await math.startup.promise;
+    return math;
+  };
+
+  const unrendered = node => {
+    if (node.matches('mjx-container')) return [];
+    if (!node.querySelector('mjx-container')) return [node];
+    // In v3, scanning generated assistive MathML again produces nested output.
+    return Array.from(node.children).flatMap(unrendered);
+  };
+
+  const refresh = () => {
+    // A separate chain also serializes v3, without changing v4's startup promise.
+    queue = queue.then(async () => {
+      const notebooks = Array.from(document.querySelectorAll('.jupyter-wrapper'));
+      if (!notebooks.length && !previous.length) return;
+      if (notebooks.length === previous.length &&
+          notebooks.every((node, index) => node === previous[index])) return;
+      const math = await ready();
+      if (previous.length) {
+        math.typesetClear(previous);
+        math.texReset();
+      }
+      previous = notebooks.filter(node => node.isConnected);
+      const pending = previous.flatMap(unrendered);
+      if (pending.length) await math.typesetPromise(pending);
+    }).catch(error => console.error('mkdocs-jupyter: MathJax rendering failed', error));
+    return queue;
+  };
+
+  window.mkdocsJupyterMathJax = { refresh };
+  const start = () => {
+    if (typeof document$ !== 'undefined') document$.subscribe(refresh);
+    else refresh();
+  };
+  // Theme bundles and user-provided MathJax scripts can follow notebook content.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+})();
+
+</script>
+</body>
 </html>

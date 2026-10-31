@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1576,9 +1576,9 @@ operate on them safely.</p>
 <p>Install optional integrations only when needed:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;GeoAgent[leafmap,openai]&quot;</span>
-pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;GeoAgent[anymap,anthropic]&quot;</span>
-pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;GeoAgent[stac,earthdata,openai]&quot;</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"GeoAgent[leafmap,openai]"</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"GeoAgent[anymap,anthropic]"</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"GeoAgent[stac,earthdata,openai]"</span>
 </code></pre></div></td></tr></table></div>
 <p>QGIS is installed separately through the QGIS desktop application or system
 package manager. Install GeoAgent into the Python environment used by QGIS.</p>
@@ -1656,8 +1656,8 @@ the dependency-free alternative.</p>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">(</span>
     <span class="n">config</span><span class="o">=</span><span class="n">GeoAgentConfig</span><span class="p">(</span>
-        <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
-        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5.5&quot;</span><span class="p">,</span>
+        <span class="n">provider</span><span class="o">=</span><span class="s2">"openai"</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="s2">"gpt-5.5"</span><span class="p">,</span>
         <span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span>
 <span class="p">)</span>
@@ -1671,7 +1671,7 @@ the dependency-free alternative.</p>
 <span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgent</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">GeoAgent</span><span class="p">()</span>
-<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;Explain what STAC is in two sentences.&quot;</span><span class="p">)</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Explain what STAC is in two sentences."</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">answer_text</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="leafmap">leafmap<a class="headerlink" href="#leafmap" title="Permanent link">&para;</a></h3>
@@ -1686,7 +1686,7 @@ the dependency-free alternative.</p>
 
 <span class="n">m</span> <span class="o">=</span> <span class="n">leafmap</span><span class="o">.</span><span class="n">Map</span><span class="p">()</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">for_leafmap</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
-<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;Add a marker for Knoxville and zoom to it.&quot;</span><span class="p">)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Add a marker for Knoxville and zoom to it."</span><span class="p">)</span>
 <span class="n">m</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="anymap">anymap<a class="headerlink" href="#anymap" title="Permanent link">&para;</a></h3>
@@ -1700,7 +1700,7 @@ the dependency-free alternative.</p>
 
 <span class="n">m</span> <span class="o">=</span> <span class="n">anymap</span><span class="o">.</span><span class="n">Map</span><span class="p">()</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">for_anymap</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
-<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;List layers and change the basemap.&quot;</span><span class="p">)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"List layers and change the basemap."</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="qgis">QGIS<a class="headerlink" href="#qgis" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1711,7 +1711,7 @@ the dependency-free alternative.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">for_qgis</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">for_qgis</span><span class="p">(</span><span class="n">iface</span><span class="p">)</span>
-<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">&quot;Summarize this project and zoom to the active layer.&quot;</span><span class="p">)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span><span class="s2">"Summarize this project and zoom to the active layer."</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
 <p>QGIS tools are import-safe outside QGIS and run through a Qt GUI-thread
 marshaller when used in QGIS.</p>
@@ -1761,10 +1761,10 @@ result.</p>
 <span class="normal">10</span>
 <span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">geoagent</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoAgentContext</span><span class="p">,</span> <span class="n">create_agent</span><span class="p">,</span> <span class="n">geo_tool</span>
 
-<span class="nd">@geo_tool</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">&quot;my_package&quot;</span><span class="p">)</span>
+<span class="nd">@geo_tool</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s2">"my_package"</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">describe_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return basic metadata for a dataset path.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span>
+<span class="w">    </span><span class="sd">"""Return basic metadata for a dataset path."""</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">create_agent</span><span class="p">(</span>
     <span class="n">context</span><span class="o">=</span><span class="n">GeoAgentContext</span><span class="p">(),</span>
@@ -1890,15 +1890,122 @@ Qt dialog, notebook modal, web prompt, or CLI prompt.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="js/timeago.min.js"></script>
       
         <script src="js/timeago_mkdocs_material.js"></script>
       
     
-  </body>
+  <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
+/* Shared by full pages and Material's instant navigation. */
+(() => {
+  const config = JSON.parse(document.currentScript.dataset.mkdocsJupyterMathjax);
+  if (window.mkdocsJupyterMathJax) return;
+
+  let loading;
+  let queue = Promise.resolve();
+  let previous = [];
+
+  const ready = async () => {
+    if (!loading) {
+      loading = (async () => {
+        let math = window.MathJax;
+        if (!math?.typesetPromise) {
+          const url = new URL(config.url, document.baseURI).href;
+          const existing = Array.from(document.scripts).find(script =>
+            script.src && (script.src === url || script.id === 'MathJax-script' ||
+              (/mathjax/i.test(script.src) &&
+               /\/(?:MathJax|latest|(?:tex|mml)(?:-mml)?-(?:chtml|svg))\.js(?:[?#]|$)/i.test(script.src))));
+          if (existing) {
+            if (!math?.startup?.promise) {
+              await new Promise((resolve, reject) => {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+              });
+            }
+          } else {
+            // Keep site macros, delimiters and startup hooks when supplied.
+            const options = math || {};
+            window.MathJax = {
+              ...options,
+              loader: {
+                ...options.loader,
+                load: Array.from(new Set(['ui/safe', ...(options.loader?.load || [])]))
+              },
+              startup: { typeset: false, ...options.startup },
+              tex: {
+                tags: 'ams',
+                useLabelIds: true,
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                ...options.tex
+              }
+            };
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = config.url;
+              script.id = 'MathJax-script';
+              script.async = true;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.head.appendChild(script);
+            });
+          }
+        }
+        math = window.MathJax;
+        await math.startup.promise;
+        return math;
+      })();
+    }
+    const math = await loading;
+    // A site owner can extend the v3 queue again on each navigation.
+    await math.startup.promise;
+    return math;
+  };
+
+  const unrendered = node => {
+    if (node.matches('mjx-container')) return [];
+    if (!node.querySelector('mjx-container')) return [node];
+    // In v3, scanning generated assistive MathML again produces nested output.
+    return Array.from(node.children).flatMap(unrendered);
+  };
+
+  const refresh = () => {
+    // A separate chain also serializes v3, without changing v4's startup promise.
+    queue = queue.then(async () => {
+      const notebooks = Array.from(document.querySelectorAll('.jupyter-wrapper'));
+      if (!notebooks.length && !previous.length) return;
+      if (notebooks.length === previous.length &&
+          notebooks.every((node, index) => node === previous[index])) return;
+      const math = await ready();
+      if (previous.length) {
+        math.typesetClear(previous);
+        math.texReset();
+      }
+      previous = notebooks.filter(node => node.isConnected);
+      const pending = previous.flatMap(unrendered);
+      if (pending.length) await math.typesetPromise(pending);
+    }).catch(error => console.error('mkdocs-jupyter: MathJax rendering failed', error));
+    return queue;
+  };
+
+  window.mkdocsJupyterMathJax = { refresh };
+  const start = () => {
+    if (typeof document$ !== 'undefined') document$.subscribe(refresh);
+    else refresh();
+  };
+  // Theme bundles and user-provided MathJax scripts can follow notebook content.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else start();
+})();
+
+</script>
+</body>
 </html>
