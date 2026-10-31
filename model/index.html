@@ -1549,6 +1549,34 @@
             <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"requesty"</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
+
+        <span class="n">model_id</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"REQUESTY_MODEL"</span><span class="p">,</span> <span class="s2">"openai/gpt-4o-mini"</span><span class="p">)</span>
+        <span class="n">client_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">client_args</span><span class="p">)</span>
+        <span class="n">api_key</span> <span class="o">=</span> <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"api_key"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"REQUESTY_API_KEY"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Requesty provider requires an API key. Set REQUESTY_API_KEY "</span>
+                <span class="s2">"or pass client_args={'api_key': ...}."</span>
+            <span class="p">)</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"api_key"</span><span class="p">]</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="n">base_url</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">client_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_url"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">requesty_base_url</span>
+            <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"REQUESTY_BASE_URL"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="s2">"https://router.requesty.ai/v1"</span>
+        <span class="p">)</span>
+        <span class="n">client_args</span><span class="p">[</span><span class="s2">"base_url"</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_url</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">_token_param</span><span class="p">(</span><span class="s2">"max_tokens"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_tokens</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_model_uses_default_temperature_only</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">temperature</span>
+        <span class="k">return</span> <span class="n">OpenAIModel</span><span class="p">(</span>
+            <span class="n">client_args</span><span class="o">=</span><span class="n">client_args</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+        <span class="p">)</span>
+
     <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"openai-compatible"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">strands.models.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIModel</span>
 
