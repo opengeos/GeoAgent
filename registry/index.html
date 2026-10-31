@@ -1822,8 +1822,7 @@ GeoToolRegistry        </code>
 <span class="sd">                Metadata describing the tool.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ValueError:</span>
-<span class="sd">                If a tool with the same name has already been registered.</span>
+<span class="sd">            ValueError: If a tool with the same name has already been registered.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' already registered."</span><span class="p">)</span>
@@ -1942,8 +1941,7 @@ GeoToolRegistry        </code>
 <span class="sd">            context.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ValueError:</span>
-<span class="sd">                If ``context`` is not a known execution context.</span>
+<span class="sd">            ValueError: If ``context`` is not a known execution context.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">context</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TOOL_CONTEXTS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -2161,6 +2159,21 @@ context.</p></td>
     </tr>
   </tbody>
 </table>
+<p><strong>Exceptions:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ValueError</code></td>
+        <td><p>If <code>context</code> is not a known execution context.</p></td>
+      </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tools_for_context</span><span class="p">(</span>
@@ -2181,8 +2194,7 @@ context.</p></td>
 <span class="sd">        context.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError:</span>
-<span class="sd">            If ``context`` is not a known execution context.</span>
+<span class="sd">        ValueError: If ``context`` is not a known execution context.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">context</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TOOL_CONTEXTS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -2306,6 +2318,21 @@ context.</p></td>
       </tr>
   </tbody>
 </table>
+<p><strong>Exceptions:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ValueError</code></td>
+        <td><p>If a tool with the same name has already been registered.</p></td>
+      </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>geoagent/core/registry.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">GeoToolMeta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -2317,8 +2344,7 @@ context.</p></td>
 <span class="sd">            Metadata describing the tool.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError:</span>
-<span class="sd">            If a tool with the same name has already been registered.</span>
+<span class="sd">        ValueError: If a tool with the same name has already been registered.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' already registered."</span><span class="p">)</span>
