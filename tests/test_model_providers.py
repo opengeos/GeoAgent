@@ -69,6 +69,14 @@ def test_openrouter_config_is_valid() -> None:
     assert cfg.model == "qwen/qwen3-32b"
 
 
+def test_requesty_config_is_valid() -> None:
+    """Verify that Requesty is accepted as a configured provider."""
+    cfg = GeoAgentConfig(provider="requesty", model="openai/gpt-4o-mini")
+
+    assert cfg.provider == "requesty"
+    assert cfg.model == "openai/gpt-4o-mini"
+
+
 def test_vllm_config_is_valid() -> None:
     """Verify that vLLM is accepted as a configured provider."""
     cfg = GeoAgentConfig(provider="vllm", model="Qwen/Qwen3-4B")
@@ -106,6 +114,7 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -131,6 +140,7 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -157,6 +167,7 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -190,6 +201,31 @@ def test_openrouter_can_be_selected_from_environment(monkeypatch) -> None:
     assert GeoAgentConfig().provider == "openrouter"
 
 
+def test_requesty_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify that the Requesty API key selects Requesty."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("REQUESTY_API_KEY", "test-key")
+
+    assert GeoAgentConfig().provider == "requesty"
+
+
 def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
     """Verify that vLLM environment variables select vLLM by default."""
     for key in [
@@ -206,6 +242,7 @@ def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -423,6 +460,55 @@ def test_resolve_openrouter_requires_api_key(monkeypatch) -> None:
         resolve_model(GeoAgentConfig(provider="openrouter"))
 
 
+def test_resolve_requesty_model(monkeypatch) -> None:
+    """Verify Requesty resolves through the OpenAI-compatible model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("REQUESTY_API_KEY", "test-key")
+    monkeypatch.setenv("REQUESTY_BASE_URL", "https://requesty.example.test/v1")
+
+    model = resolve_model(
+        GeoAgentConfig(
+            provider="requesty",
+            model="anthropic/claude-sonnet-4-5",
+            temperature=0.2,
+            max_tokens=1024,
+        )
+    )
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs == {
+        "client_args": {
+            "api_key": "test-key",
+            "base_url": "https://requesty.example.test/v1",
+        },
+        "model_id": "anthropic/claude-sonnet-4-5",
+        "params": {"temperature": 0.2, "max_tokens": 1024},
+    }
+
+
+def test_resolve_requesty_uses_default_base_url(monkeypatch) -> None:
+    """Verify Requesty falls back to the public router URL and default model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("REQUESTY_API_KEY", "test-key")
+    monkeypatch.delenv("REQUESTY_BASE_URL", raising=False)
+    monkeypatch.delenv("REQUESTY_MODEL", raising=False)
+
+    model = resolve_model(GeoAgentConfig(provider="requesty"))
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs["client_args"]["base_url"] == "https://router.requesty.ai/v1"
+    assert model.kwargs["model_id"] == "openai/gpt-4o-mini"
+
+
+def test_resolve_requesty_requires_api_key(monkeypatch) -> None:
+    """Verify Requesty reports a clear error without an API key."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("REQUESTY_API_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="Requesty provider requires an API key"):
+        resolve_model(GeoAgentConfig(provider="requesty"))
+
+
 def test_resolve_vllm_model(monkeypatch) -> None:
     """Verify that vLLM config resolves to the Strands vLLM model."""
 
@@ -500,6 +586,7 @@ def test_openai_compatible_can_be_selected_from_environment(monkeypatch) -> None
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
     ]:

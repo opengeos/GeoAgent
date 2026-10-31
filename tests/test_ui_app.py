@@ -15,9 +15,11 @@ def test_default_model_for_provider() -> None:
     assert app.default_model_for_provider("openai-codex") == "gpt-5.5"
     assert app.default_model_for_provider("anthropic") == "claude-sonnet-4-6"
     assert app.default_model_for_provider("openrouter") == "deepseek/deepseek-chat"
+    assert app.default_model_for_provider("requesty") == "openai/gpt-4o-mini"
     assert app.default_model_for_provider("vllm") == ""
     assert app.default_model_for_provider("unknown") == ""
     assert "openrouter" in app.PROVIDER_NAMES
+    assert "requesty" in app.PROVIDER_NAMES
     assert "vllm" in app.PROVIDER_NAMES
 
 
@@ -139,6 +141,7 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
         "OPENROUTER_API_KEY",
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OLLAMA_HOST",
@@ -158,6 +161,10 @@ def test_default_provider_uses_environment(monkeypatch) -> None:
     assert app.default_provider() == "openrouter"
 
     monkeypatch.delenv("OPENROUTER_API_KEY")
+    monkeypatch.setenv("REQUESTY_API_KEY", "requesty-test")
+    assert app.default_provider() == "requesty"
+
+    monkeypatch.delenv("REQUESTY_API_KEY")
     monkeypatch.setenv("VLLM_BASE_URL", "http://localhost:8000/v1")
     assert app.default_provider() == "vllm"
 

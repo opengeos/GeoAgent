@@ -245,6 +245,34 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             params=params,
         )
 
+    if provider == "requesty":
+        from strands.models.openai import OpenAIModel
+
+        model_id = cfg.model or os.environ.get("REQUESTY_MODEL", "openai/gpt-4o-mini")
+        client_args = dict(cfg.client_args)
+        api_key = client_args.get("api_key") or os.environ.get("REQUESTY_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "Requesty provider requires an API key. Set REQUESTY_API_KEY "
+                "or pass client_args={'api_key': ...}."
+            )
+        client_args["api_key"] = api_key
+        base_url = (
+            client_args.get("base_url")
+            or cfg.requesty_base_url
+            or os.environ.get("REQUESTY_BASE_URL")
+            or "https://router.requesty.ai/v1"
+        )
+        client_args["base_url"] = base_url
+        params = _token_param("max_tokens", cfg.max_tokens)
+        if not _model_uses_default_temperature_only(model_id):
+            params["temperature"] = cfg.temperature
+        return OpenAIModel(
+            client_args=client_args,
+            model_id=model_id,
+            params=params,
+        )
+
     if provider == "openai-compatible":
         from strands.models.openai import OpenAIModel
 
