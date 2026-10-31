@@ -71,8 +71,7 @@ class GeoToolRegistry:
                 Metadata describing the tool.
 
         Raises:
-            ValueError:
-                If a tool with the same name has already been registered.
+            ValueError: If a tool with the same name has already been registered.
         """
         if meta.name in self._tools:
             raise ValueError(f"'{meta.name}' already registered.")
@@ -191,8 +190,7 @@ class GeoToolRegistry:
             context.
 
         Raises:
-            ValueError:
-                If ``context`` is not a known execution context.
+            ValueError: If ``context`` is not a known execution context.
         """
         if context not in TOOL_CONTEXTS:
             raise ValueError(
