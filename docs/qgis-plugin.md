@@ -36,6 +36,7 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - LiteLLM
 - OpenRouter
 - Requesty
+- Runcrate
 - OpenAI-compatible (any server exposing the OpenAI API)
 - vLLM
 
@@ -52,6 +53,11 @@ Requesty can be used with `vendor/model` IDs such as `openai/gpt-4o-mini`.
 Configure the Requesty API key in settings, or set `REQUESTY_API_KEY`; the
 default model is `openai/gpt-4o-mini`. Set the Requesty base URL to
 `https://router.eu.requesty.ai/v1` to use the EU region.
+
+Runcrate can be used with open-weight models such as DeepSeek, GLM, Kimi, and
+Qwen. Configure the Runcrate API key in settings, or set `RUNCRATE_API_KEY`;
+the default model is `deepseek-ai/DeepSeek-V4.1-Flash`, and other model IDs
+such as `zai-org/GLM-5.3` can be entered in the model field.
 
 The `openai-compatible` provider works with any server exposing the OpenAI
 Chat Completions API, such as llama.cpp, LM Studio, Text Generation WebUI, or

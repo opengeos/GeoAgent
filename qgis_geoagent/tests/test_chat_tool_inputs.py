@@ -84,6 +84,13 @@ def test_requesty_provider_defaults_are_available() -> None:
     assert _default_model_for_provider("requesty") == "openai/gpt-4o-mini"
 
 
+def test_runcrate_provider_defaults_are_available() -> None:
+    """Verify Runcrate is listed with its default model."""
+    assert "runcrate" in PROVIDERS
+    assert DEFAULT_MODELS["runcrate"] == "deepseek-ai/DeepSeek-V4.1-Flash"
+    assert _default_model_for_provider("runcrate") == "deepseek-ai/DeepSeek-V4.1-Flash"
+
+
 def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
     """Verify vLLM settings are exported for chat workers."""
     monkeypatch.delenv("VLLM_BASE_URL", raising=False)
@@ -139,6 +146,25 @@ def test_apply_environment_sets_requesty_values(monkeypatch) -> None:
 
     assert os.environ["REQUESTY_BASE_URL"] == "https://requesty.test/v1"
     assert os.environ["REQUESTY_API_KEY"] == "test-key"
+
+
+def test_apply_environment_sets_runcrate_values(monkeypatch) -> None:
+    """Verify Runcrate settings are exported for chat workers."""
+    monkeypatch.delenv("RUNCRATE_BASE_URL", raising=False)
+    monkeypatch.delenv("RUNCRATE_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}runcrate_base_url": "https://runcrate.test/v1",
+            f"{SETTINGS_PREFIX}runcrate_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert os.environ["RUNCRATE_BASE_URL"] == "https://runcrate.test/v1"
+    assert os.environ["RUNCRATE_API_KEY"] == "test-key"
 
 
 def test_apply_environment_syncs_credentials_saved_by_settings_dock(

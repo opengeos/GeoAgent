@@ -77,6 +77,14 @@ def test_requesty_config_is_valid() -> None:
     assert cfg.model == "openai/gpt-4o-mini"
 
 
+def test_runcrate_config_is_valid() -> None:
+    """Verify that Runcrate is accepted as a configured provider."""
+    cfg = GeoAgentConfig(provider="runcrate", model="zai-org/GLM-5.3")
+
+    assert cfg.provider == "runcrate"
+    assert cfg.model == "zai-org/GLM-5.3"
+
+
 def test_vllm_config_is_valid() -> None:
     """Verify that vLLM is accepted as a configured provider."""
     cfg = GeoAgentConfig(provider="vllm", model="Qwen/Qwen3-4B")
@@ -115,6 +123,7 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "RUNCRATE_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -141,6 +150,7 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "RUNCRATE_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -168,6 +178,7 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "RUNCRATE_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -226,6 +237,32 @@ def test_requesty_can_be_selected_from_environment(monkeypatch) -> None:
     assert GeoAgentConfig().provider == "requesty"
 
 
+def test_runcrate_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify that the Runcrate API key selects Runcrate."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "REQUESTY_API_KEY",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("RUNCRATE_API_KEY", "test-key")
+
+    assert GeoAgentConfig().provider == "runcrate"
+
+
 def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
     """Verify that vLLM environment variables select vLLM by default."""
     for key in [
@@ -243,6 +280,7 @@ def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "RUNCRATE_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -509,6 +547,55 @@ def test_resolve_requesty_requires_api_key(monkeypatch) -> None:
         resolve_model(GeoAgentConfig(provider="requesty"))
 
 
+def test_resolve_runcrate_model(monkeypatch) -> None:
+    """Verify Runcrate resolves through the OpenAI-compatible model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("RUNCRATE_API_KEY", "test-key")
+    monkeypatch.setenv("RUNCRATE_BASE_URL", "https://runcrate.example.test/v1")
+
+    model = resolve_model(
+        GeoAgentConfig(
+            provider="runcrate",
+            model="Qwen/Qwen3.5-397B-A17B",
+            temperature=0.2,
+            max_tokens=1024,
+        )
+    )
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs == {
+        "client_args": {
+            "api_key": "test-key",
+            "base_url": "https://runcrate.example.test/v1",
+        },
+        "model_id": "Qwen/Qwen3.5-397B-A17B",
+        "params": {"temperature": 0.2, "max_tokens": 1024},
+    }
+
+
+def test_resolve_runcrate_uses_default_base_url(monkeypatch) -> None:
+    """Verify Runcrate falls back to the public API URL and default model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("RUNCRATE_API_KEY", "test-key")
+    monkeypatch.delenv("RUNCRATE_BASE_URL", raising=False)
+    monkeypatch.delenv("RUNCRATE_MODEL", raising=False)
+
+    model = resolve_model(GeoAgentConfig(provider="runcrate"))
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs["client_args"]["base_url"] == "https://api.runcrate.ai/v1"
+    assert model.kwargs["model_id"] == "deepseek-ai/DeepSeek-V4.1-Flash"
+
+
+def test_resolve_runcrate_requires_api_key(monkeypatch) -> None:
+    """Verify Runcrate reports a clear error without an API key."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("RUNCRATE_API_KEY", raising=False)
+
+    with pytest.raises(ValueError, match="Runcrate provider requires an API key"):
+        resolve_model(GeoAgentConfig(provider="runcrate"))
+
+
 def test_resolve_vllm_model(monkeypatch) -> None:
     """Verify that vLLM config resolves to the Strands vLLM model."""
 
@@ -587,6 +674,7 @@ def test_openai_compatible_can_be_selected_from_environment(monkeypatch) -> None
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "RUNCRATE_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
     ]:
