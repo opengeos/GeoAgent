@@ -36,6 +36,7 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - LiteLLM
 - OpenRouter
 - Requesty
+- Cheaper Inference
 - OpenAI-compatible (any server exposing the OpenAI API)
 - vLLM
 
@@ -52,6 +53,10 @@ Requesty can be used with `vendor/model` IDs such as `openai/gpt-4o-mini`.
 Configure the Requesty API key in settings, or set `REQUESTY_API_KEY`; the
 default model is `openai/gpt-4o-mini`. Set the Requesty base URL to
 `https://router.eu.requesty.ai/v1` to use the EU region.
+
+Cheaper Inference can be used with bare model IDs such as `gpt-5.4-mini`.
+Configure the Cheaper Inference API key in settings, or set
+`CHEAPER_INFERENCE_API_KEY`; the default model is `gpt-5.4-mini`.
 
 The `openai-compatible` provider works with any server exposing the OpenAI
 Chat Completions API, such as llama.cpp, LM Studio, Text Generation WebUI, or

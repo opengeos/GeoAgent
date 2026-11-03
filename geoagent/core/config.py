@@ -17,6 +17,7 @@ ProviderName = Literal[
     "litellm",
     "openrouter",
     "requesty",
+    "cheaper-inference",
     "openai-compatible",
     "vllm",
 ]
@@ -38,6 +39,8 @@ def _default_provider_from_env() -> ProviderName:
         return "openrouter"
     if os.environ.get("REQUESTY_API_KEY"):
         return "requesty"
+    if os.environ.get("CHEAPER_INFERENCE_API_KEY"):
+        return "cheaper-inference"
     if (
         os.environ.get("LITELLM_API_KEY")
         or os.environ.get("LITELLM_MODEL")
@@ -60,7 +63,7 @@ class GeoAgentConfig(BaseModel):
     passed explicitly (``OPENAI_API_KEY``, ``ANTHROPIC_API_KEY``,
     ``OPENAI_CODEX_ACCESS_TOKEN``,
     ``GEMINI_API_KEY`` / ``GOOGLE_API_KEY``, ``LITELLM_API_KEY``,
-    ``OPENROUTER_API_KEY``, ``REQUESTY_API_KEY``,
+    ``OPENROUTER_API_KEY``, ``REQUESTY_API_KEY``, ``CHEAPER_INFERENCE_API_KEY``,
     ``OPENAI_COMPATIBLE_BASE_URL`` / ``OPENAI_COMPATIBLE_API_KEY`` /
     ``OPENAI_COMPATIBLE_MODEL``,
     ``VLLM_BASE_URL`` / ``VLLM_MODEL_ID``,
@@ -77,6 +80,8 @@ class GeoAgentConfig(BaseModel):
         litellm_base_url: Optional LiteLLM proxy or OpenAI-compatible base URL.
         openrouter_base_url: OpenRouter OpenAI-compatible API base URL.
         requesty_base_url: Requesty OpenAI-compatible API base URL.
+        cheaper_inference_base_url: Cheaper Inference OpenAI-compatible API
+            base URL.
         openai_compatible_base_url: Base URL of any OpenAI-compatible server,
             for example ``http://localhost:8000/v1``.
         vllm_base_url: vLLM OpenAI-compatible API base URL.
@@ -106,6 +111,10 @@ class GeoAgentConfig(BaseModel):
     requesty_base_url: Optional[str] = Field(
         default=None,
         description="Requesty OpenAI-compatible API base URL.",
+    )
+    cheaper_inference_base_url: Optional[str] = Field(
+        default=None,
+        description="Cheaper Inference OpenAI-compatible API base URL.",
     )
     openai_compatible_base_url: Optional[str] = Field(
         default=None,

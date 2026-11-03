@@ -77,6 +77,14 @@ def test_requesty_config_is_valid() -> None:
     assert cfg.model == "openai/gpt-4o-mini"
 
 
+def test_cheaper_inference_config_is_valid() -> None:
+    """Verify that Cheaper Inference is accepted as a configured provider."""
+    cfg = GeoAgentConfig(provider="cheaper-inference", model="gpt-5.4-mini")
+
+    assert cfg.provider == "cheaper-inference"
+    assert cfg.model == "gpt-5.4-mini"
+
+
 def test_vllm_config_is_valid() -> None:
     """Verify that vLLM is accepted as a configured provider."""
     cfg = GeoAgentConfig(provider="vllm", model="Qwen/Qwen3-4B")
@@ -115,6 +123,7 @@ def test_openai_codex_is_default_provider_without_env(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "CHEAPER_INFERENCE_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -141,6 +150,7 @@ def test_openai_codex_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "CHEAPER_INFERENCE_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
@@ -168,6 +178,7 @@ def test_litellm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "CHEAPER_INFERENCE_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -226,6 +237,32 @@ def test_requesty_can_be_selected_from_environment(monkeypatch) -> None:
     assert GeoAgentConfig().provider == "requesty"
 
 
+def test_cheaper_inference_can_be_selected_from_environment(monkeypatch) -> None:
+    """Verify that the Cheaper Inference API key selects Cheaper Inference."""
+    for key in [
+        "OPENAI_API_KEY",
+        "OPENAI_CODEX_ACCESS_TOKEN",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST",
+        "USE_OLLAMA",
+        "LITELLM_API_KEY",
+        "LITELLM_MODEL",
+        "LITELLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "REQUESTY_API_KEY",
+        "VLLM_BASE_URL",
+        "VLLM_MODEL_ID",
+        "OPENAI_COMPATIBLE_BASE_URL",
+        "OPENAI_COMPATIBLE_MODEL",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("CHEAPER_INFERENCE_API_KEY", "test-key")
+
+    assert GeoAgentConfig().provider == "cheaper-inference"
+
+
 def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
     """Verify that vLLM environment variables select vLLM by default."""
     for key in [
@@ -243,6 +280,7 @@ def test_vllm_can_be_selected_from_environment(monkeypatch) -> None:
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "CHEAPER_INFERENCE_API_KEY",
         "OPENAI_COMPATIBLE_BASE_URL",
         "OPENAI_COMPATIBLE_MODEL",
     ]:
@@ -509,6 +547,61 @@ def test_resolve_requesty_requires_api_key(monkeypatch) -> None:
         resolve_model(GeoAgentConfig(provider="requesty"))
 
 
+def test_resolve_cheaper_inference_model(monkeypatch) -> None:
+    """Verify Cheaper Inference resolves through the OpenAI-compatible model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("CHEAPER_INFERENCE_API_KEY", "test-key")
+    monkeypatch.setenv(
+        "CHEAPER_INFERENCE_BASE_URL", "https://cheaper-inference.example.test/v1"
+    )
+
+    model = resolve_model(
+        GeoAgentConfig(
+            provider="cheaper-inference",
+            model="claude-sonnet-5",
+            temperature=0.2,
+            max_tokens=1024,
+        )
+    )
+
+    assert isinstance(model, fake_model)
+    assert model.kwargs == {
+        "client_args": {
+            "api_key": "test-key",
+            "base_url": "https://cheaper-inference.example.test/v1",
+        },
+        "model_id": "claude-sonnet-5",
+        "params": {"temperature": 0.2, "max_tokens": 1024},
+    }
+
+
+def test_resolve_cheaper_inference_uses_default_base_url(monkeypatch) -> None:
+    """Verify Cheaper Inference falls back to the public API URL and default model."""
+    fake_model = _install_fake_openai_model(monkeypatch)
+    monkeypatch.setenv("CHEAPER_INFERENCE_API_KEY", "test-key")
+    monkeypatch.delenv("CHEAPER_INFERENCE_BASE_URL", raising=False)
+    monkeypatch.delenv("CHEAPER_INFERENCE_MODEL", raising=False)
+
+    model = resolve_model(GeoAgentConfig(provider="cheaper-inference"))
+
+    assert isinstance(model, fake_model)
+    assert (
+        model.kwargs["client_args"]["base_url"] == "https://api.cheaperinference.com/v1"
+    )
+    assert model.kwargs["model_id"] == "gpt-5.4-mini"
+
+
+def test_resolve_cheaper_inference_requires_api_key(monkeypatch) -> None:
+    """Verify Cheaper Inference reports a clear error without an API key."""
+    _install_fake_openai_model(monkeypatch)
+    monkeypatch.delenv("CHEAPER_INFERENCE_API_KEY", raising=False)
+
+    with pytest.raises(
+        ValueError, match="Cheaper Inference provider requires an API key"
+    ):
+        resolve_model(GeoAgentConfig(provider="cheaper-inference"))
+
+
 def test_resolve_vllm_model(monkeypatch) -> None:
     """Verify that vLLM config resolves to the Strands vLLM model."""
 
@@ -587,6 +680,7 @@ def test_openai_compatible_can_be_selected_from_environment(monkeypatch) -> None
         "OPENROUTER_MODEL",
         "OPENROUTER_BASE_URL",
         "REQUESTY_API_KEY",
+        "CHEAPER_INFERENCE_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
     ]:

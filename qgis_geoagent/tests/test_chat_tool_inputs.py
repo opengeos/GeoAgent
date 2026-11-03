@@ -84,6 +84,13 @@ def test_requesty_provider_defaults_are_available() -> None:
     assert _default_model_for_provider("requesty") == "openai/gpt-4o-mini"
 
 
+def test_cheaper_inference_provider_defaults_are_available() -> None:
+    """Verify Cheaper Inference is listed with its default model."""
+    assert "cheaper-inference" in PROVIDERS
+    assert DEFAULT_MODELS["cheaper-inference"] == "gpt-5.4-mini"
+    assert _default_model_for_provider("cheaper-inference") == "gpt-5.4-mini"
+
+
 def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
     """Verify vLLM settings are exported for chat workers."""
     monkeypatch.delenv("VLLM_BASE_URL", raising=False)
@@ -139,6 +146,27 @@ def test_apply_environment_sets_requesty_values(monkeypatch) -> None:
 
     assert os.environ["REQUESTY_BASE_URL"] == "https://requesty.test/v1"
     assert os.environ["REQUESTY_API_KEY"] == "test-key"
+
+
+def test_apply_environment_sets_cheaper_inference_values(monkeypatch) -> None:
+    """Verify Cheaper Inference settings are exported for chat workers."""
+    monkeypatch.delenv("CHEAPER_INFERENCE_BASE_URL", raising=False)
+    monkeypatch.delenv("CHEAPER_INFERENCE_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}cheaper_inference_base_url": "https://cheaper-inference.test/v1",
+            f"{SETTINGS_PREFIX}cheaper_inference_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert (
+        os.environ["CHEAPER_INFERENCE_BASE_URL"] == "https://cheaper-inference.test/v1"
+    )
+    assert os.environ["CHEAPER_INFERENCE_API_KEY"] == "test-key"
 
 
 def test_apply_environment_syncs_credentials_saved_by_settings_dock(
