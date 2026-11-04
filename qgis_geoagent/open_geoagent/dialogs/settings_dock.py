@@ -76,6 +76,8 @@ ENV_FALLBACKS = {
     "openrouter_base_url": ("OPENROUTER_BASE_URL",),
     "requesty_api_key": ("REQUESTY_API_KEY",),
     "requesty_base_url": ("REQUESTY_BASE_URL",),
+    "cheaper_inference_api_key": ("CHEAPER_INFERENCE_API_KEY",),
+    "cheaper_inference_base_url": ("CHEAPER_INFERENCE_BASE_URL",),
     "openai_compatible_api_key": ("OPENAI_COMPATIBLE_API_KEY",),
     "openai_compatible_base_url": ("OPENAI_COMPATIBLE_BASE_URL",),
     "vllm_api_key": ("VLLM_API_KEY",),
@@ -702,6 +704,20 @@ class SettingsDockWidget(QDockWidget):
         self.requesty_base_url_input.setPlaceholderText("https://router.requesty.ai/v1")
         credentials_form.addRow("Requesty base URL:", self.requesty_base_url_input)
 
+        self.cheaper_inference_key_input = QLineEdit()
+        self.cheaper_inference_key_input.setEchoMode(password_mode)
+        credentials_form.addRow(
+            "Cheaper Inference API key:", self.cheaper_inference_key_input
+        )
+
+        self.cheaper_inference_base_url_input = QLineEdit()
+        self.cheaper_inference_base_url_input.setPlaceholderText(
+            "https://api.cheaperinference.com/v1"
+        )
+        credentials_form.addRow(
+            "Cheaper Inference base URL:", self.cheaper_inference_base_url_input
+        )
+
         self.openai_compatible_key_input = QLineEdit()
         self.openai_compatible_key_input.setEchoMode(password_mode)
         self.openai_compatible_key_input.setPlaceholderText(
@@ -1163,6 +1179,8 @@ class SettingsDockWidget(QDockWidget):
             ("openrouter_base_url", self.openrouter_base_url_input),
             ("requesty_api_key", self.requesty_key_input),
             ("requesty_base_url", self.requesty_base_url_input),
+            ("cheaper_inference_api_key", self.cheaper_inference_key_input),
+            ("cheaper_inference_base_url", self.cheaper_inference_base_url_input),
             ("openai_compatible_api_key", self.openai_compatible_key_input),
             ("openai_compatible_base_url", self.openai_compatible_base_url_input),
             ("vllm_api_key", self.vllm_key_input),
@@ -1341,6 +1359,8 @@ class SettingsDockWidget(QDockWidget):
             "openrouter_base_url",
             "requesty_api_key",
             "requesty_base_url",
+            "cheaper_inference_api_key",
+            "cheaper_inference_base_url",
             "openai_compatible_api_key",
             "openai_compatible_base_url",
             "vllm_api_key",
