@@ -34,8 +34,8 @@ See it in action:
 
 - A `GeoAgent` facade around a Strands `Agent`.
 - Provider configuration for OpenAI, Anthropic, Google Gemini, Bedrock,
-  OpenRouter, Requesty, LiteLLM, any OpenAI-compatible server, vLLM, and
-  Ollama.
+  OpenRouter, Requesty, Opper, LiteLLM, any OpenAI-compatible server, vLLM,
+  and Ollama.
 - `@geo_tool` metadata for category, safety, fast-mode filtering, and optional
   dependency checks.
 - Factories for common runtime environments:
@@ -97,6 +97,7 @@ GeoAgent can infer a provider from environment variables:
 | LiteLLM             | `LITELLM_API_KEY`, optional `LITELLM_MODEL` and `LITELLM_BASE_URL` |
 | OpenRouter          | `OPENROUTER_API_KEY`, optional `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` |
 | Requesty            | `REQUESTY_API_KEY`, optional `REQUESTY_MODEL` and `REQUESTY_BASE_URL` |
+| Opper               | `OPPER_API_KEY`, optional `OPPER_MODEL` and `OPPER_BASE_URL`       |
 | OpenAI-compatible   | `OPENAI_COMPATIBLE_BASE_URL`, `OPENAI_COMPATIBLE_MODEL`, optional `OPENAI_COMPATIBLE_API_KEY` |
 | vLLM                | `VLLM_BASE_URL`, `VLLM_MODEL_ID`, optional `VLLM_API_KEY`          |
 | Ollama              | `OLLAMA_HOST` or `USE_OLLAMA=1`, optional `OLLAMA_MODEL`           |

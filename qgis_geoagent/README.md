@@ -22,7 +22,7 @@ GitHub update checker.
 - Tool permission profiles, defaulting to trusted auto-approval
 - Project-scoped chat history with Markdown import/export
 - Compact jobs panel for active and completed GeoAgent requests
-- Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, OpenRouter, Requesty, LiteLLM, OpenAI-compatible servers, and vLLM
+- Provider and model controls for Bedrock, OpenAI, ChatGPT/Codex OAuth, Anthropic, Google Gemini, Ollama, OpenRouter, Requesty, Opper, LiteLLM, OpenAI-compatible servers, and vLLM
 - Settings panel for model defaults, API keys, hosts, AWS region, provider
   smoke tests, and redacted diagnostics export
 - Dependency installer that installs core provider packages or selected
@@ -126,6 +126,7 @@ applied to the current QGIS process before each chat request:
 - LiteLLM: `LITELLM_API_KEY` and optional `LITELLM_BASE_URL`
 - OpenRouter: `OPENROUTER_API_KEY` and optional `OPENROUTER_BASE_URL`
 - Requesty: `REQUESTY_API_KEY` and optional `REQUESTY_BASE_URL`
+- Opper: `OPPER_API_KEY` and optional `OPPER_BASE_URL`
 - OpenAI-compatible: `OPENAI_COMPATIBLE_BASE_URL` and optional
   `OPENAI_COMPATIBLE_API_KEY`
 - vLLM: `VLLM_BASE_URL` and optional `VLLM_API_KEY`
@@ -160,6 +161,7 @@ Default models:
 | LiteLLM | `openai/gpt-5.5` |
 | OpenRouter | `deepseek/deepseek-chat` |
 | Requesty | `openai/gpt-4o-mini` |
+| Opper | `gpt-4o-mini` |
 | OpenAI-compatible | Use `OPENAI_COMPATIBLE_MODEL` or enter a model |
 | vLLM | Use `VLLM_MODEL_ID` or enter a model |
 

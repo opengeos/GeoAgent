@@ -273,6 +273,34 @@ def resolve_model(config: GeoAgentConfig | None = None, **overrides: Any) -> Any
             params=params,
         )
 
+    if provider == "opper":
+        from strands.models.openai import OpenAIModel
+
+        model_id = cfg.model or os.environ.get("OPPER_MODEL", "gpt-4o-mini")
+        client_args = dict(cfg.client_args)
+        api_key = client_args.get("api_key") or os.environ.get("OPPER_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "Opper provider requires an API key. Set OPPER_API_KEY "
+                "or pass client_args={'api_key': ...}."
+            )
+        client_args["api_key"] = api_key
+        base_url = (
+            client_args.get("base_url")
+            or cfg.opper_base_url
+            or os.environ.get("OPPER_BASE_URL")
+            or "https://api.opper.ai/v3/compat"
+        )
+        client_args["base_url"] = base_url
+        params = _token_param("max_tokens", cfg.max_tokens)
+        if not _model_uses_default_temperature_only(model_id):
+            params["temperature"] = cfg.temperature
+        return OpenAIModel(
+            client_args=client_args,
+            model_id=model_id,
+            params=params,
+        )
+
     if provider == "openai-compatible":
         from strands.models.openai import OpenAIModel
 
