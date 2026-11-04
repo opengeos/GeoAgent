@@ -83,6 +83,7 @@ DEFAULT_MODELS = {
     "litellm": "openai/gpt-5.5",
     "openrouter": "deepseek/deepseek-chat",
     "requesty": "openai/gpt-4o-mini",
+    "runcrate": "deepseek-ai/DeepSeek-V4.1-Flash",
     "openai-compatible": "",
     "vllm": "",
 }
@@ -97,6 +98,7 @@ PROVIDERS = [
     "openai-compatible",
     "openrouter",
     "requesty",
+    "runcrate",
     "vllm",
 ]
 MAX_CONTEXT_MESSAGES = 12
@@ -461,6 +463,8 @@ def _apply_environment_from_settings(settings):
         "openrouter_base_url": "OPENROUTER_BASE_URL",
         "requesty_api_key": "REQUESTY_API_KEY",  # pragma: allowlist secret
         "requesty_base_url": "REQUESTY_BASE_URL",
+        "runcrate_api_key": "RUNCRATE_API_KEY",  # pragma: allowlist secret
+        "runcrate_base_url": "RUNCRATE_BASE_URL",
         "openai_compatible_api_key": "OPENAI_COMPATIBLE_API_KEY",  # pragma: allowlist secret
         "openai_compatible_base_url": "OPENAI_COMPATIBLE_BASE_URL",
         "vllm_api_key": "VLLM_API_KEY",  # pragma: allowlist secret
