@@ -84,6 +84,13 @@ def test_requesty_provider_defaults_are_available() -> None:
     assert _default_model_for_provider("requesty") == "openai/gpt-4o-mini"
 
 
+def test_opper_provider_defaults_are_available() -> None:
+    """Verify Opper is listed with its default model."""
+    assert "opper" in PROVIDERS
+    assert DEFAULT_MODELS["opper"] == "gpt-4o-mini"
+    assert _default_model_for_provider("opper") == "gpt-4o-mini"
+
+
 def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
     """Verify vLLM settings are exported for chat workers."""
     monkeypatch.delenv("VLLM_BASE_URL", raising=False)
@@ -139,6 +146,25 @@ def test_apply_environment_sets_requesty_values(monkeypatch) -> None:
 
     assert os.environ["REQUESTY_BASE_URL"] == "https://requesty.test/v1"
     assert os.environ["REQUESTY_API_KEY"] == "test-key"
+
+
+def test_apply_environment_sets_opper_values(monkeypatch) -> None:
+    """Verify Opper settings are exported for chat workers."""
+    monkeypatch.delenv("OPPER_BASE_URL", raising=False)
+    monkeypatch.delenv("OPPER_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}opper_base_url": "https://opper.test/v3/compat",
+            f"{SETTINGS_PREFIX}opper_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert os.environ["OPPER_BASE_URL"] == "https://opper.test/v3/compat"
+    assert os.environ["OPPER_API_KEY"] == "test-key"
 
 
 def test_apply_environment_syncs_credentials_saved_by_settings_dock(
