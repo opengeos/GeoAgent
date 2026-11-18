@@ -9,6 +9,9 @@ import sys
 import types
 import urllib.error
 import urllib.request
+from pathlib import Path
+
+import pytest
 
 from geoagent.tools.images import image_generation_tools
 
@@ -26,6 +29,7 @@ def _use_minimax_env(monkeypatch):
     for name in (
         "MINIMAX_API_REGION",
         "MINIMAX_IMAGE_ENDPOINT",
+        "MINIMAX_H3_IMAGE_ENDPOINT",
         "MINIMAX_IMAGE_RESPONSE_FORMAT",
         "GEOAGENT_IMAGE_MODEL",
     ):
@@ -378,3 +382,106 @@ def test_generate_image_uses_configured_model_and_timeout(
     assert result["timeout"] == 5.0
     assert calls["model"] == "gpt-image-1"
     assert calls["timeout"] == 5.0
+
+
+def test_generate_h3_images_preserves_partial_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep successful H3 images when another output fails."""
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setenv(
+        "MINIMAX_IMAGE_ENDPOINT", "https://example.com/v1/image_generation"
+    )
+    monkeypatch.setenv("GEOAGENT_IMAGE_MODEL", "MiniMax-H3-Image")
+    monkeypatch.setenv("GEOAGENT_IMAGE_TIMEOUT", "5")
+    captured: dict = {}
+    _stub_minimax_urlopen(
+        monkeypatch,
+        {
+            "data": [
+                {
+                    "url": "https://example.com/map.jpg",
+                    "revised_prompt": "A relief map",
+                },
+                {"error": {"message": "image withheld", "code": "1027"}},
+            ]
+        },
+        captured,
+    )
+
+    result = _get_generate_image().__wrapped__("Relief map", size="2720x1536", n=2)
+
+    assert captured["url"] == "https://api.minimax.io/v1/images/generations"
+    assert captured["payload"] == {
+        "model": "MiniMax-H3-Image",
+        "prompt": "Relief map",
+        "n": 2,
+        "response_format": "url",
+        "size": "2720x1536",
+    }
+    assert captured["timeout"] == 600
+    assert result["success"] and result["success_count"] == result["failed_count"] == 1
+    assert result["url"] == "https://example.com/map.jpg"
+    assert result["images"][0]["revised_prompt"] == "A relief map"
+    assert "image withheld" in result["errors"][0]
+
+
+def test_generate_h3_highspeed_base64_in_china(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Map the tool's base64 option onto the regional H3 contract."""
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setenv("MINIMAX_API_REGION", "cn_zh")
+    captured: dict = {}
+    image = b"\xff\xd8\xff\xe0map"
+    _stub_minimax_urlopen(
+        monkeypatch,
+        {"data": [{"b64_json": base64.b64encode(image).decode()}]},
+        captured,
+    )
+    result = _get_generate_image().__wrapped__(
+        "Draw a map",
+        model="MiniMax-H3-Image-Highspeed",
+        response_format="base64",
+        aspect_ratio="5:4",
+        output_dir=str(tmp_path),
+    )
+
+    assert captured["url"] == "https://api.minimax.cn/v1/images/generations"
+    assert captured["payload"] == {
+        "model": "MiniMax-H3-Image-Highspeed",
+        "prompt": "Draw a map",
+        "aspect_ratio": "5:4",
+        "response_format": "b64_json",
+        "n": 1,
+    }
+    assert result["success"] and result["images"][0]["mime_type"] == "image/jpeg"
+    assert next(tmp_path.glob("*.jpg")).read_bytes() == image
+
+
+def test_h3_unsupported_reference_is_reported_before_post(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A requested reference must not silently become text-only generation."""
+    _use_minimax_env(monkeypatch)
+    captured: dict = {}
+    _stub_minimax_urlopen(monkeypatch, {}, captured)
+    result = _get_generate_image().__wrapped__(
+        "Map", model="MiniMax-H3-Image", subject_reference="reference"
+    )
+    assert not captured
+    assert not result["success"] and "subject_reference" in result["error"]
+
+
+def test_h3_custom_endpoint_is_model_specific(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An H3 override takes priority over the H3 regional endpoint."""
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setenv("MINIMAX_H3_IMAGE_ENDPOINT", "https://example.com/h3/generate")
+    captured: dict = {}
+    _stub_minimax_urlopen(
+        monkeypatch, {"data": [{"url": "https://example.com/map.jpg"}]}, captured
+    )
+
+    result = _get_generate_image().__wrapped__("Draw a map", model="MiniMax-H3-Image")
+    assert result["success"]
+    assert captured["url"] == "https://example.com/h3/generate"
