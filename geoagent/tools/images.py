@@ -25,7 +25,12 @@ SUPPORTED_IMAGE_SIZES = {"1024x1024", "1024x1536", "1536x1024", "auto"}
 SUPPORTED_IMAGE_QUALITIES = {"low", "medium", "high", "auto"}
 
 MINIMAX_DEFAULT_IMAGE_MODEL = "image-01"
-MINIMAX_IMAGE_MODELS = {"image-01", "image-01-live"}
+MINIMAX_H3_MODELS = {"MiniMax-H3-Image", "MiniMax-H3-Image-Highspeed"}
+MINIMAX_IMAGE_MODELS = {"image-01", "image-01-live"} | MINIMAX_H3_MODELS
+MINIMAX_H3_ENDPOINTS = {
+    "global_en": "https://api.minimax.io/v1/images/generations",
+    "cn_zh": "https://api.minimax.cn/v1/images/generations",
+}
 MINIMAX_IMAGE_ENDPOINTS = {
     "global_en": "https://api.minimax.io/v1/image_generation",
     "cn_zh": "https://api.minimaxi.com/v1/image_generation",
@@ -153,15 +158,16 @@ def _minimax_image_enabled() -> bool:
     return bool(os.environ.get("MINIMAX_API_KEY", "").strip())
 
 
-def _minimax_image_endpoint() -> str:
+def _minimax_image_endpoint(model: str) -> str:
     """Return the MiniMax image generation endpoint for the active region."""
     explicit = os.environ.get("MINIMAX_IMAGE_ENDPOINT", "").strip()
     if explicit and urllib.parse.urlparse(explicit).scheme in ("http", "https"):
         return explicit
     region = os.environ.get("MINIMAX_API_REGION", "").strip().lower()
-    return MINIMAX_IMAGE_ENDPOINTS.get(
-        region, MINIMAX_IMAGE_ENDPOINTS[MINIMAX_DEFAULT_REGION]
+    endpoints = (
+        MINIMAX_H3_ENDPOINTS if model in MINIMAX_H3_MODELS else MINIMAX_IMAGE_ENDPOINTS
     )
+    return endpoints.get(region, endpoints[MINIMAX_DEFAULT_REGION])
 
 
 def _minimax_image_model(model: str) -> str:
@@ -175,13 +181,16 @@ def _minimax_image_model(model: str) -> str:
     return MINIMAX_DEFAULT_IMAGE_MODEL
 
 
-def _minimax_response_format(response_format: str) -> str:
+def _minimax_response_format(response_format: str, h3: bool) -> str:
     """Resolve the MiniMax response format (``url`` or ``base64``)."""
     requested = str(response_format or "").strip().lower()
-    if requested in MINIMAX_RESPONSE_FORMATS:
+    formats = (
+        MINIMAX_RESPONSE_FORMATS | {"b64_json"} if h3 else MINIMAX_RESPONSE_FORMATS
+    )
+    if requested in formats:
         return requested
     configured = os.environ.get("MINIMAX_IMAGE_RESPONSE_FORMAT", "").strip().lower()
-    if configured in MINIMAX_RESPONSE_FORMATS:
+    if configured in formats:
         return configured
     return MINIMAX_DEFAULT_RESPONSE_FORMAT
 
@@ -250,33 +259,58 @@ def _generate_minimax_image(
 ) -> dict[str, Any]:
     """Generate an image with the MiniMax image generation endpoint."""
     api_key = os.environ.get("MINIMAX_API_KEY", "").strip()
-    endpoint = _minimax_image_endpoint()
     resolved_model = _minimax_image_model(model)
-    fmt = _minimax_response_format(response_format)
-    count = n if isinstance(n, int) and 1 <= n <= MINIMAX_MAX_IMAGES else 1
+    endpoint = _minimax_image_endpoint(resolved_model)
+    h3 = resolved_model in MINIMAX_H3_MODELS
+    fmt = _minimax_response_format(response_format, h3)
+    timeout = _image_timeout()
 
     payload: dict[str, Any] = {
         "model": resolved_model,
         "prompt": prompt,
         "response_format": fmt,
-        "n": count,
+        "n": n,
     }
     ratio = str(aspect_ratio or "").strip()
-    if ratio in MINIMAX_ASPECT_RATIOS:
-        payload["aspect_ratio"] = ratio
+    if h3:
+        if seed or subject_reference:
+            return {
+                "success": False,
+                "model": resolved_model,
+                "error": "H3 text-to-image does not accept seed or subject_reference.",
+            }
+        if type(n) is not int or not 1 <= n <= 10:
+            return {
+                "success": False,
+                "model": resolved_model,
+                "error": "H3 image count must be between 1 and 10.",
+            }
+        if fmt == "base64":
+            payload["response_format"] = "b64_json"
+        if ratio:
+            payload["aspect_ratio"] = ratio
+        else:
+            payload["size"] = size or "auto"
+        timeout = max(timeout, 600.0)
     else:
-        dimensions = _minimax_dimensions(size)
-        if dimensions is not None:
-            payload["width"], payload["height"] = dimensions
-    if isinstance(seed, int) and seed > 0:
-        payload["seed"] = seed
-    if prompt_optimizer:
-        payload["prompt_optimizer"] = True
-    reference = str(subject_reference or "").strip()
-    if reference:
-        payload["subject_reference"] = [{"type": "character", "image_file": reference}]
+        if not isinstance(n, int) or not 1 <= n <= MINIMAX_MAX_IMAGES:
+            payload["n"] = 1
+        if ratio in MINIMAX_ASPECT_RATIOS:
+            payload["aspect_ratio"] = ratio
+        else:
+            dimensions = _minimax_dimensions(size)
+            if dimensions is not None:
+                payload["width"], payload["height"] = dimensions
+        if isinstance(seed, int) and seed > 0:
+            payload["seed"] = seed
+        if prompt_optimizer:
+            payload["prompt_optimizer"] = True
+        reference = str(subject_reference or "").strip()
+        if reference:
+            payload["subject_reference"] = [
+                {"type": "character", "image_file": reference}
+            ]
 
-    timeout = _image_timeout()
     try:
         raw = _post_minimax_image(endpoint, api_key, payload, timeout)
     except (urllib.error.URLError, OSError) as exc:
@@ -299,77 +333,112 @@ def _generate_minimax_image(
             "model": resolved_model,
         }
 
-    status_code = _minimax_status_code(data.get("base_resp"))
-    if status_code not in (0, "0"):
-        base_resp = data.get("base_resp") or {}
-        status_msg = ""
-        if isinstance(base_resp, dict):
-            status_msg = str(base_resp.get("status_msg") or "")
+    if not isinstance(data, dict):
         return {
             "success": False,
-            "error": (
-                f"Image generation failed (status_code {status_code})"
-                + (f": {status_msg}" if status_msg else ".")
-            ),
+            "error": "Invalid image response object.",
             "model": resolved_model,
-            "status_code": status_code,
         }
-
-    payload_data = data.get("data") or {}
-    out_dir = _output_dir(output_dir or None)
-    images: list[dict[str, Any]] = []
-    decode_errors: list[str] = []
-    for index, value in enumerate(payload_data.get("image_base64") or [], start=1):
-        try:
-            image_bytes = base64.b64decode(str(value), validate=True)
-        except (binascii.Error, ValueError) as exc:
-            decode_errors.append(f"item {index}: {exc}")
-            continue
-        extension, mime_type = _image_format(image_bytes, MINIMAX_DEFAULT_IMAGE_FORMAT)
-        stem = _safe_image_stem(prompt)
-        suffix = time.strftime("%Y%m%d-%H%M%S")
-        path = out_dir / f"{stem}-{suffix}-{index}.{extension}"
-        with open(path, "wb") as f:
-            f.write(image_bytes)
-        images.append(
-            {
-                "path": str(path),
-                "format": extension,
-                "mime_type": mime_type,
-                "revised_prompt": "",
+    if h3:
+        items = data.get("data")
+        if not isinstance(items, list):
+            return {
+                "success": False,
+                "error": "Missing H3 image response data.",
+                "model": resolved_model,
             }
-        )
-    for value in payload_data.get("image_urls") or []:
-        if value:
+    else:
+        status_code = _minimax_status_code(data.get("base_resp"))
+        if status_code not in (0, "0"):
+            base_resp = data.get("base_resp") or {}
+            status_msg = ""
+            if isinstance(base_resp, dict):
+                status_msg = str(base_resp.get("status_msg") or "")
+            return {
+                "success": False,
+                "error": (
+                    f"Image generation failed (status_code {status_code})"
+                    + (f": {status_msg}" if status_msg else ".")
+                ),
+                "model": resolved_model,
+                "status_code": status_code,
+            }
+
+        payload_data = data.get("data") or {}
+        items = [
+            {"b64_json": value} for value in payload_data.get("image_base64") or []
+        ]
+        items.extend({"url": value} for value in payload_data.get("image_urls") or [])
+
+    images: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"item {index}: invalid image record")
+            continue
+        error = item.get("error")
+        if isinstance(error, dict):
+            errors.append(f"item {index}: {error.get('message') or error.get('code')}")
+            continue
+        revised_prompt = item.get("revised_prompt") or ""
+        if item.get("url"):
             images.append(
                 {
-                    "url": str(value),
+                    "url": str(item["url"]),
                     "format": "url",
                     "mime_type": "",
-                    "revised_prompt": "",
+                    "revised_prompt": revised_prompt,
                 }
             )
+        elif item.get("b64_json"):
+            try:
+                image_bytes = base64.b64decode(item["b64_json"], validate=True)
+            except (binascii.Error, ValueError, TypeError) as exc:
+                errors.append(f"item {index}: invalid base64 data: {exc}")
+                continue
+            extension, mime_type = _image_format(
+                image_bytes, MINIMAX_DEFAULT_IMAGE_FORMAT
+            )
+            with tempfile.NamedTemporaryFile(
+                dir=_output_dir(output_dir or None),
+                prefix=f"{_safe_image_stem(prompt)}-",
+                suffix=f".{extension}",
+                delete=False,
+            ) as output:
+                output.write(image_bytes)
+            images.append(
+                {
+                    "path": output.name,
+                    "format": extension,
+                    "mime_type": mime_type,
+                    "revised_prompt": revised_prompt,
+                }
+            )
+        else:
+            errors.append(f"item {index}: missing image data")
 
     if not images:
         error_message = "The image API response did not include an image."
-        if decode_errors:
-            error_message = (
-                "The image API returned invalid base64 payload(s): "
-                + "; ".join(decode_errors)
-            )
+        if errors:
+            error_message = "; ".join(errors)
         return {
             "success": False,
             "error": error_message,
             "model": resolved_model,
         }
 
-    metadata = data.get("metadata") or {}
+    metadata = (
+        {"success_count": len(images), "failed_count": len(errors)}
+        if h3
+        else data.get("metadata") or {}
+    )
     return {
         "success": True,
         "prompt": prompt,
         "model": resolved_model,
         "requested_model": resolved_model,
-        "response_format": fmt,
+        "response_format": payload["response_format"],
+        **({"errors": errors} if errors else {}),
         "timeout": timeout,
         "images": images,
         "path": images[0].get("path", ""),
@@ -391,7 +460,7 @@ def image_generation_tools() -> list[Any]:
             "a picture."
         ),
         available_in=("full", "fast"),
-        requires_packages=("openai",),
+        requires_packages=() if _minimax_image_enabled() else ("openai",),
     )
     def generate_image(
         prompt: str,
@@ -410,11 +479,13 @@ def image_generation_tools() -> list[Any]:
 
         Args:
             prompt: Visual description of the image to generate.
-            size: One of 1024x1024, 1024x1536, 1536x1024, or auto. On the
-                MiniMax path each dimension must be 512-2048 and divisible
-                by 8, and is ignored when ``aspect_ratio`` is set.
+            size: H3 accepts auto or WIDTHxHEIGHT (655360-20000000 pixels,
+                aspect ratio from 1:3 to 3:1). For image-01 each dimension
+                must be 512-2048 and divisible by 8. Other models accept
+                1024x1024, 1024x1536, 1536x1024, or auto.
             quality: One of low, medium, high, or auto. Ignored by MiniMax.
-            model: Image model to use. Defaults to ``GEOAGENT_IMAGE_MODEL``
+            model: Image model to use, including MiniMax-H3-Image or
+                MiniMax-H3-Image-Highspeed. Defaults to ``GEOAGENT_IMAGE_MODEL``
                 when set, otherwise the backend default. MiniMax is used only
                 when no model is requested or the requested model is a
                 MiniMax model, so an explicit OpenAI model still reaches
@@ -423,10 +494,12 @@ def image_generation_tools() -> list[Any]:
             aspect_ratio: MiniMax aspect ratio (for example ``1:1`` or
                 ``16:9``). When set it takes priority over ``size``.
             response_format: MiniMax output format, ``url`` or ``base64``.
-            seed: Optional MiniMax random seed for reproducible images.
-            n: Number of MiniMax images to generate (1-9).
-            prompt_optimizer: Enable MiniMax automatic prompt optimization.
-            subject_reference: Optional MiniMax character reference image
+                H3 also accepts ``b64_json``.
+            seed: Optional image-01 random seed.
+            n: Number of MiniMax images to generate (1-10 for H3, 1-9 for image-01).
+            prompt_optimizer: Enable image-01 prompt optimization.
+                H3 enables enhancement by default.
+            subject_reference: Optional image-01 character reference image
                 (URL or base64) to keep a consistent subject.
 
         Returns:
@@ -440,6 +513,11 @@ def image_generation_tools() -> list[Any]:
             str(model or "").strip()
             or os.environ.get("GEOAGENT_IMAGE_MODEL", "").strip()
         )
+        if selected_model in MINIMAX_H3_MODELS and not _minimax_image_enabled():
+            return {
+                "success": False,
+                "error": "MINIMAX_API_KEY is required for H3 image generation.",
+            }
         if _minimax_image_enabled() and (
             not selected_model or selected_model in MINIMAX_IMAGE_MODELS
         ):
@@ -476,7 +554,13 @@ def image_generation_tools() -> list[Any]:
         requested_model = requested_model or DEFAULT_IMAGE_MODEL
         model = requested_model
 
-        from openai import OpenAI
+        try:
+            from openai import OpenAI
+        except ImportError:
+            return {
+                "success": False,
+                "error": "Install the openai extra to use the requested image model.",
+            }
 
         timeout = _image_timeout()
         client = OpenAI(timeout=timeout)
