@@ -160,7 +160,12 @@ def _minimax_image_enabled() -> bool:
 
 def _minimax_image_endpoint(model: str) -> str:
     """Return the MiniMax image generation endpoint for the active region."""
-    explicit = os.environ.get("MINIMAX_IMAGE_ENDPOINT", "").strip()
+    override = (
+        "MINIMAX_H3_IMAGE_ENDPOINT"
+        if model in MINIMAX_H3_MODELS
+        else "MINIMAX_IMAGE_ENDPOINT"
+    )
+    explicit = os.environ.get(override, "").strip()
     if explicit and urllib.parse.urlparse(explicit).scheme in ("http", "https"):
         return explicit
     region = os.environ.get("MINIMAX_API_REGION", "").strip().lower()
@@ -399,16 +404,15 @@ def _generate_minimax_image(
             extension, mime_type = _image_format(
                 image_bytes, MINIMAX_DEFAULT_IMAGE_FORMAT
             )
-            with tempfile.NamedTemporaryFile(
-                dir=_output_dir(output_dir or None),
-                prefix=f"{_safe_image_stem(prompt)}-",
-                suffix=f".{extension}",
-                delete=False,
-            ) as output:
-                output.write(image_bytes)
+            stem = _safe_image_stem(prompt)
+            suffix = time.strftime("%Y%m%d-%H%M%S")
+            path = (
+                _output_dir(output_dir or None) / f"{stem}-{suffix}-{index}.{extension}"
+            )
+            path.write_bytes(image_bytes)
             images.append(
                 {
-                    "path": output.name,
+                    "path": str(path),
                     "format": extension,
                     "mime_type": mime_type,
                     "revised_prompt": revised_prompt,
@@ -485,7 +489,8 @@ def image_generation_tools() -> list[Any]:
                 1024x1024, 1024x1536, 1536x1024, or auto.
             quality: One of low, medium, high, or auto. Ignored by MiniMax.
             model: Image model to use, including MiniMax-H3-Image or
-                MiniMax-H3-Image-Highspeed. Defaults to ``GEOAGENT_IMAGE_MODEL``
+                MiniMax-H3-Image-Highspeed. H3 uses the regional API unless
+                overridden by ``MINIMAX_H3_IMAGE_ENDPOINT``. Defaults to ``GEOAGENT_IMAGE_MODEL``
                 when set, otherwise the backend default. MiniMax is used only
                 when no model is requested or the requested model is a
                 MiniMax model, so an explicit OpenAI model still reaches

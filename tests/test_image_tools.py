@@ -29,6 +29,7 @@ def _use_minimax_env(monkeypatch):
     for name in (
         "MINIMAX_API_REGION",
         "MINIMAX_IMAGE_ENDPOINT",
+        "MINIMAX_H3_IMAGE_ENDPOINT",
         "MINIMAX_IMAGE_RESPONSE_FORMAT",
         "GEOAGENT_IMAGE_MODEL",
     ):
@@ -388,6 +389,9 @@ def test_generate_h3_images_preserves_partial_success(
 ) -> None:
     """Keep successful H3 images when another output fails."""
     _use_minimax_env(monkeypatch)
+    monkeypatch.setenv(
+        "MINIMAX_IMAGE_ENDPOINT", "https://example.com/v1/image_generation"
+    )
     monkeypatch.setenv("GEOAGENT_IMAGE_MODEL", "MiniMax-H3-Image")
     monkeypatch.setenv("GEOAGENT_IMAGE_TIMEOUT", "5")
     captured: dict = {}
@@ -467,3 +471,17 @@ def test_h3_unsupported_reference_is_reported_before_post(
     )
     assert not captured
     assert not result["success"] and "subject_reference" in result["error"]
+
+
+def test_h3_custom_endpoint_is_model_specific(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An H3 override takes priority over the H3 regional endpoint."""
+    _use_minimax_env(monkeypatch)
+    monkeypatch.setenv("MINIMAX_H3_IMAGE_ENDPOINT", "https://example.com/h3/generate")
+    captured: dict = {}
+    _stub_minimax_urlopen(
+        monkeypatch, {"data": [{"url": "https://example.com/map.jpg"}]}, captured
+    )
+
+    result = _get_generate_image().__wrapped__("Draw a map", model="MiniMax-H3-Image")
+    assert result["success"]
+    assert captured["url"] == "https://example.com/h3/generate"
