@@ -83,6 +83,7 @@ DEFAULT_MODELS = {
     "litellm": "openai/gpt-5.5",
     "openrouter": "deepseek/deepseek-chat",
     "requesty": "openai/gpt-4o-mini",
+    "atlascloud": "deepseek-ai/deepseek-v4-flash",
     "openai-compatible": "",
     "vllm": "",
 }
@@ -97,6 +98,7 @@ PROVIDERS = [
     "openai-compatible",
     "openrouter",
     "requesty",
+    "atlascloud",
     "vllm",
 ]
 MAX_CONTEXT_MESSAGES = 12
@@ -461,6 +463,8 @@ def _apply_environment_from_settings(settings):
         "openrouter_base_url": "OPENROUTER_BASE_URL",
         "requesty_api_key": "REQUESTY_API_KEY",  # pragma: allowlist secret
         "requesty_base_url": "REQUESTY_BASE_URL",
+        "atlascloud_api_key": "ATLASCLOUD_API_KEY",  # pragma: allowlist secret
+        "atlascloud_base_url": "ATLASCLOUD_BASE_URL",
         "openai_compatible_api_key": "OPENAI_COMPATIBLE_API_KEY",  # pragma: allowlist secret
         "openai_compatible_base_url": "OPENAI_COMPATIBLE_BASE_URL",
         "vllm_api_key": "VLLM_API_KEY",  # pragma: allowlist secret

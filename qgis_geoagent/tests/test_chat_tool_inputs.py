@@ -84,6 +84,13 @@ def test_requesty_provider_defaults_are_available() -> None:
     assert _default_model_for_provider("requesty") == "openai/gpt-4o-mini"
 
 
+def test_atlascloud_provider_defaults_are_available() -> None:
+    """Verify Atlas Cloud is listed with its default model."""
+    assert "atlascloud" in PROVIDERS
+    assert DEFAULT_MODELS["atlascloud"] == "deepseek-ai/deepseek-v4-flash"
+    assert _default_model_for_provider("atlascloud") == "deepseek-ai/deepseek-v4-flash"
+
+
 def test_apply_environment_sets_vllm_values(monkeypatch) -> None:
     """Verify vLLM settings are exported for chat workers."""
     monkeypatch.delenv("VLLM_BASE_URL", raising=False)
@@ -139,6 +146,25 @@ def test_apply_environment_sets_requesty_values(monkeypatch) -> None:
 
     assert os.environ["REQUESTY_BASE_URL"] == "https://requesty.test/v1"
     assert os.environ["REQUESTY_API_KEY"] == "test-key"
+
+
+def test_apply_environment_sets_atlascloud_values(monkeypatch) -> None:
+    """Verify Atlas Cloud settings are exported for chat workers."""
+    monkeypatch.delenv("ATLASCLOUD_BASE_URL", raising=False)
+    monkeypatch.delenv("ATLASCLOUD_API_KEY", raising=False)
+    settings = _FakeSettings(
+        {
+            f"{SETTINGS_PREFIX}atlascloud_base_url": "https://atlascloud.test/v1",
+            f"{SETTINGS_PREFIX}atlascloud_api_key": "test-key",
+        }
+    )
+
+    _apply_environment_from_settings(settings)
+
+    import os
+
+    assert os.environ["ATLASCLOUD_BASE_URL"] == "https://atlascloud.test/v1"
+    assert os.environ["ATLASCLOUD_API_KEY"] == "test-key"
 
 
 def test_apply_environment_syncs_credentials_saved_by_settings_dock(

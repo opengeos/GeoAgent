@@ -36,6 +36,7 @@ OpenGeoAgent supports the same provider families as GeoAgent:
 - LiteLLM
 - OpenRouter
 - Requesty
+- Atlas Cloud
 - OpenAI-compatible (any server exposing the OpenAI API)
 - vLLM
 
@@ -52,6 +53,12 @@ Requesty can be used with `vendor/model` IDs such as `openai/gpt-4o-mini`.
 Configure the Requesty API key in settings, or set `REQUESTY_API_KEY`; the
 default model is `openai/gpt-4o-mini`. Set the Requesty base URL to
 `https://router.eu.requesty.ai/v1` to use the EU region.
+
+Atlas Cloud can be used with `vendor/model` IDs such as
+`deepseek-ai/deepseek-v4-flash`. Configure the Atlas Cloud API key in settings,
+or set `ATLASCLOUD_API_KEY`; the default model is
+`deepseek-ai/deepseek-v4-flash`. The base URL defaults to
+`https://api.atlascloud.ai/v1` and can be changed in settings.
 
 The `openai-compatible` provider works with any server exposing the OpenAI
 Chat Completions API, such as llama.cpp, LM Studio, Text Generation WebUI, or
