@@ -251,6 +251,7 @@ def test_atlascloud_can_be_selected_from_environment(monkeypatch) -> None:
         "LITELLM_MODEL",
         "LITELLM_BASE_URL",
         "OPENROUTER_API_KEY",
+        "REQUESTY_API_KEY",
         "VLLM_BASE_URL",
         "VLLM_MODEL_ID",
         "OPENAI_COMPATIBLE_BASE_URL",
